@@ -50,6 +50,7 @@ include_directories(
 add_library(ndt
     src/ndt/laserscan.hpp
     src/ndt/ndt_grid.cpp
+    src/ndt/ndt_multi_grid.cpp
     src/ndt/types.hpp
 )
 

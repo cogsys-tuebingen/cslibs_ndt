@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
                        Point(8,8)};
     RollingDistribution roll;
     for(std::size_t i = 0 ; i < 5 ; ++i)
-        roll.insert(points[i]);
+        roll.add(points[i]);
 
     Point mean;
     Covariance cov;
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     std::chrono::time_point<std::chrono::system_clock> start =
             std::chrono::system_clock::now();
     for(int i = 0 ; i < 5000 ; ++i)
-        roll.insert(points[0]);
+        roll.add(points[0]);
     std::chrono::duration<double> elapsed =
             std::chrono::system_clock::now() - start;
     std::cout << "elapsed " << elapsed.count() << "s" << std::endl;

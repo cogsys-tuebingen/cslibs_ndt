@@ -1,13 +1,17 @@
 #ifndef ROLLING_DISTRIBUTION_HPP
 #define ROLLING_DISTRIBUTION_HPP
 
+/// PROJECT
 #include "types.hpp"
 
-#include <iostream>
+/// SYSTEM
+#include <memory>
 
 namespace ndt {
 class RollingDistribution {
 public:
+    typedef std::shared_ptr<RollingDistribution> Ptr;
+
     RollingDistribution() :
         mean_ptr_(mean_.data()),
         corr_ptr_(corr_.data()),
@@ -16,7 +20,7 @@ public:
     {
     }
 
-    inline void insert(const Point &sample)
+    inline void add(const Point &sample)
     {
         mean_ = (mean_ * n_1_ + sample) / n_;
         const double x = sample(0);
@@ -27,6 +31,16 @@ public:
         corr_ptr_[3] =  corr_ptr_[2];
         ++n_;
         ++n_1_;
+    }
+
+    inline void reset()
+    {
+        mean_ = Point();
+        corr_ = Covariance();
+        mean_ptr_ = mean_.data();
+        corr_ptr_ = corr_.data();
+        n_ = 1;
+        n_1_ = 0;
     }
 
     inline void mean(Point &mean) const

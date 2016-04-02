@@ -40,5 +40,20 @@ int main(int argc, char *argv[])
     cv::imshow("display", display);
     cv::waitKey(0);
 
+    /// no we put the multi grid into play
+    ndt::NDTMultiGrid multigrid(20.0, 20.0, 1.0);
+    for(ndt::Point &p : points) {
+       if(!multigrid.add(p))
+           std::cerr << "could not add point" << std::endl;
+    }
+
+    cv::Mat display_ndt;
+    ndt::renderNDTGrid(multigrid, ndt::Point(-10, -10), ndt::Point(10, 10), 0.01, display_ndt);
+    cv::imshow("display_ndt", display_ndt);
+    while(true) {
+        int key = cv::waitKey(0) & 0xFF;
+        if(key == 27)
+            break;
+    }
     return 0;
 }

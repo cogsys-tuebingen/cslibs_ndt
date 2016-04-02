@@ -38,5 +38,14 @@ int main(int argc, char *argv[])
     std::cout << "elapsed " << elapsed.count() * 1000.0 << "ms" << std::endl;
     std::cout << "elapsed " << elapsed.count() * 1000000.0 << "µs" << std::endl;
 
+    Eigen::Matrix2d test_matrix;
+    test_matrix(0,0) = 1;
+    test_matrix(0,1) = 2;
+    test_matrix(1,0) = 3;
+    test_matrix(1,1) = 4;
+    for(std::size_t i = 0 ; i < 4 ; ++i)
+        std::cout << test_matrix.data()[i] << std::endl;
+
+
     return 0;
 }

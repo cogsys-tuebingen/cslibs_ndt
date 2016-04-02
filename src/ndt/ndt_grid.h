@@ -30,13 +30,23 @@ public:
 
     inline bool add(const Point &point)
     {
-        std::size_t idx = (point(0) + origin_[0]) / resolution_;
-        std::size_t idy = (point(1) + origin_[1]) / resolution_;
+        int idx = (point(0) - origin_[0]) / resolution_;
+        int idy = (point(1) - origin_[1]) / resolution_;
         if(withinGrid(idx, idy)) {
             data_[idy * dim_x_ + idx].add(point);
             return true;
         }
         return false;
+    }
+
+    inline double sample(const Point &point)
+    {
+        std::size_t idx = (point(0) - origin_[0]) / resolution_;
+        std::size_t idy = (point(1) - origin_[1]) / resolution_;
+        if(withinGrid(idx, idy)) {
+            return data_[idy * dim_x_ + idx].sample(point);
+        }
+        return 0.0;
     }
 
     inline RollingDistribution & at (const std::size_t x,
@@ -51,6 +61,8 @@ public:
         return data_[y * dim_x_ + x];
     }
 
+
+
     /**
      * @brief Check if point is within grid area or not.
      *        Attention: Be carefull with over or underflows!
@@ -58,11 +70,13 @@ public:
      * @param idy - index y
      * @return  index in bounds
      */
-    inline bool withinGrid(const std::size_t idx,
-                           const std::size_t idy) const
+    inline bool withinGrid(const int idx,
+                           const int idy) const
     {
-        return idx < dim_x_ &&
-               idy < dim_y_;
+        return idx >= 0 &&
+               idx < (int) dim_x_ &&
+               idy >= 0 &&
+               idy < (int) dim_y_;
     }
 
 private:

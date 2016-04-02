@@ -103,6 +103,7 @@ private:
         cov_ptr_[2] = cov_ptr_[1];
         cov_ptr_[3] = (corr_ptr_[3] - mean_ptr_[1] * mean_ptr_[1]) * scale;
 
+        /// assumption that eigen value converges to major component if minor component is very small < 0.001
         if(cov_ptr_[0] < 0.001 * cov_ptr_[3]) {
             cov_ptr_[0] = 0.001 * cov_ptr_[3];
             cov_ptr_[1] = cov_ptr_[0];

@@ -19,6 +19,9 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}
 ## Eigen
 find_package(Eigen3 REQUIRED)
 
+## OpenCV
+find_package(OpenCV QUIET)
+
 ## C++11
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
@@ -65,3 +68,14 @@ add_executable(test_distribution
 target_link_libraries(test_distribution
     ndt
 )
+
+if(${OpenCV_FOUND})
+add_executable(demo_grid_visualization
+    src/optional/demo_grid_visualization.cpp
+    src/optional/visualize.hpp
+)
+target_link_libraries(demo_grid_visualization
+    ndt
+    ${OpenCV_LIBRARIES}
+)
+endif()

@@ -61,8 +61,6 @@ public:
         return data_[y * dim_x_ + x];
     }
 
-
-
     /**
      * @brief Check if point is within grid area or not.
      *        Attention: Be carefull with over or underflows!

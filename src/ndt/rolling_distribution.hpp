@@ -6,6 +6,7 @@
 
 /// SYSTEM
 #include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Eigenvalues>
 #include <memory>
 
 namespace ndt {
@@ -31,8 +32,8 @@ public:
         const double y = sample(1);
         corr_ptr_[0] = (corr_ptr_[0] * n_1_ + x * x) / n_;
         corr_ptr_[1] = (corr_ptr_[1] * n_1_ + x * y) / n_;
-        corr_ptr_[2] = (corr_ptr_[2] * n_1_ + y * y) / n_;
-        corr_ptr_[3] =  corr_ptr_[2];
+        corr_ptr_[2] =  corr_ptr_[1];
+        corr_ptr_[3] = (corr_ptr_[3] * n_1_ + y * y) / n_;
         ++n_;
         ++n_1_;
         dirty_ = true;
@@ -56,7 +57,7 @@ public:
 
     inline void covariance(Covariance &cov)
     {
-        if(n_1_ == 0)
+        if(n_1_ < 2)
             return;
 
         if(dirty_) {
@@ -67,7 +68,7 @@ public:
 
     inline double sample(const Point &point)
     {
-        if(n_1_ == 0)
+        if(n_1_ < 2)
             return 0.0;
 
         if(dirty_) {
@@ -76,7 +77,7 @@ public:
 
         Point diff = point - mean_;
         double exponent = (diff.transpose() * inv_cov_ * diff);
-        return exp(-0.5 * exponent);
+        return 1 * exp(-0.5 * exponent); // 1 / (cov_.determinant() * sqrt(2 * M_PI))
     }
 
 private:
@@ -100,18 +101,27 @@ private:
         double scale = n_1_ / ((double) n_1_ - 1);
         cov_ptr_[0] = (corr_ptr_[0] - mean_ptr_[0] * mean_ptr_[0]) * scale;
         cov_ptr_[1] = (corr_ptr_[1] - mean_ptr_[0] * mean_ptr_[1]) * scale;
-        cov_ptr_[2] = cov_ptr_[1];
+        cov_ptr_[2] =  cov_ptr_[1];
         cov_ptr_[3] = (corr_ptr_[3] - mean_ptr_[1] * mean_ptr_[1]) * scale;
 
-        /// assumption that eigen value converges to major component if minor component is very small < 0.001
-        if(cov_ptr_[0] < 0.001 * cov_ptr_[3]) {
-            cov_ptr_[0] = 0.001 * cov_ptr_[3];
-            cov_ptr_[1] = cov_ptr_[0];
-            cov_ptr_[2] = cov_ptr_[0];
-        } else if(cov_ptr_[3] < 0.001 * cov_ptr_[0]) {
-            cov_ptr_[3] = 0.001 * cov_ptr_[0];
-            cov_ptr_[1] = cov_ptr_[3];
-            cov_ptr_[2] = cov_ptr_[3];
+        Eigen::EigenSolver<Covariance> solver;
+        solver.compute(cov_);
+        Eigen::Matrix2cd eigen_vectors_complex = solver.eigenvectors();
+        Eigen::Vector2cd eigen_values_complex  = solver.eigenvalues();
+
+        double lambda_1 = eigen_values_complex(0).real();
+        double lambda_2 = eigen_values_complex(1).real();
+        Eigen::Matrix2d Q = eigen_vectors_complex.real();
+        Eigen::Matrix2d Lambda = Eigen::Matrix2d::Zero();
+
+        if(fabs(lambda_1) < 0.001 * fabs(lambda_2)) {
+            Lambda(0,0) = 0.001 * lambda_2;
+            Lambda(1,1) = lambda_2;
+            cov_ = Q * Lambda * Q.transpose();
+        } else if(fabs(lambda_2) < 0.001 * fabs(lambda_1)){
+            Lambda(0,0) = lambda_1;
+            Lambda(1,1) = 0.001 * lambda_1;
+            cov_ = Q * Lambda * Q.transpose();
         }
         inv_cov_ = cov_.inverse();
         dirty_ = false;

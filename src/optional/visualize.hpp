@@ -70,7 +70,7 @@ void renderNDTGrid(NDTMultiGrid &multi_grid,
         sample(1) += step_y;
     }
 
-    cv::normalize(sampled, sampled, cv::NORM_L2, 0, 1);
+    cv::normalize(sampled, sampled, cv::NORM_MINMAX, 0, 1);
     sampled.convertTo(dst, CV_8UC1, 255.0);
     cv::cvtColor(dst, dst, CV_GRAY2BGR);
     const int every_px = multi_grid.resolution() / resolution;
@@ -90,7 +90,7 @@ void renderNDTGrid(NDTMultiGrid &multi_grid,
             c[2] = 127;
         }
     }
-
+    cv::flip(dst, dst, 0);
 
 
 }

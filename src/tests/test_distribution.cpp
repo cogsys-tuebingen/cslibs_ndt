@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
                        Point(2,0),
                        Point(2,4),
                        Point(4,4),
-                       Point(8,8)};
+                       Point(-8,8)};
     RollingDistribution roll;
     for(std::size_t i = 0 ; i < 5 ; ++i)
         roll.add(points[i]);

@@ -24,7 +24,7 @@ struct ScanMatchingNode {
         size(0.0),
         margin(0.1),
         conv_iter(100),
-        conv_eps(1e3)
+        conv_eps(1e-3)
     {
         std::string topic("/scan");
         nh.getParam("topic", topic);
@@ -114,6 +114,10 @@ struct ScanMatchingNode {
             /// 4. Determine the corresponding normal distributions for each mapped point.
             /// 5. The score for the parameters is determined by evaluation the distribution
             ///    for each point and summing the result.
+            /// 6. Calculate the new parameter estimate by traying to optimize the score.
+            ///    This is done by performin one step of Newton's Algorithm.
+            /// 7. Go to 3. until a convergence criterion is met.
+
             score = 0.0;
             for(std::size_t i = 0; i < scan.size; ++i) {
                 if(scan.mask[i] == LaserScan::VALID) {
@@ -134,24 +138,48 @@ struct ScanMatchingNode {
                         for(std::size_t k = 0 ; k < 3 ; ++k) {
                             for(std::size_t l = 0 ; l < 3; ++l) {
                                 h[j](k,l) += double((q_cov[j] * jac.col(k)))
-                                           * double((-q_cov[j]* jac.col(l)))
-                                           + double((jac.col(l).transpose() * inv_cov[j] * jac.col(k)));
+                                        * double((-q_cov[j]* jac.col(l)))
+                                        + double((jac.col(l).transpose() * inv_cov[j] * jac.col(k)));
                                 h[j](k,l) *= s[j];
                             }
                         }
                         h[j](2,2) += double(q_cov[j] * hes) * s[j];
-                        score -= s[j];
+                        score += s[j];
                     }
                 }
             }
-            /// 6. Calculate the new parameter estimate by traying to optimize the score.
-            ///    This is done by performin one step of Newton's Algorithm.
 
-            /// 7. Go to 3. until a convergence criterion is met.
+            for(int j = 0 ; j < 4 ; ++j) {
+                Eigen::EigenSolver<Hessian> solver;
+                solver.compute(h[j]);
+                Eigen::Vector3cd eigen_values_complex  = solver.eigenvalues();
+                if(eigen_values_complex(0).real() < 0.0 ||
+                        eigen_values_complex(1).real() < 0.0 ||
+                        eigen_values_complex(2).real() < 0.0) {
+                    double max = std::numeric_limits<double>::min();
+                    for(std::size_t i = 0 ; i < 3; ++i) {
+                        for(std::size_t j = 0 ; j < 3 ; ++j) {
+                            double a = fabs(h[j](i,j));
+                            if(a > max)
+                                max = a;
+                        }
+                    }
+                    h[j] += Eigen::Matrix3d::Identity() * (1.5 * max);
+                }
+            }
+
+            /// solve the equation
+            /// save the complete transformation
 
 
+            if(fabs(theta) < conv_eps &&
+                    fabs(tx) < conv_eps &&
+                        fabs(ty) < conv_eps) {
+                break;
+            }
+
+            ++iteration;
         }
-
         delete[] points;
     }
 

@@ -49,6 +49,30 @@ public:
         return 0.0;
     }
 
+    inline bool sample(const Point &point,
+                       double      &p,
+                       Point       &mean,
+                       Covariance  &inv_cov)
+    {
+        std::size_t idx = (point(0) - origin_[0]) / resolution_;
+        std::size_t idy = (point(1) - origin_[1]) / resolution_;
+        if(withinGrid(idx, idy)) {
+            data_[idy * dim_x_ + idx].mean(mean);
+            data_[idy * dim_x_ + idx].invCovariance(inv_cov);
+            p = data_[idy * dim_x_ + idx].sample(point);
+            return true;
+        }
+        return false;
+    }
+
+    inline void index(const Point &point,
+                      std::size_t &idx,
+                      std::size_t &idy)
+    {
+        idx = (point(0) - origin_[0]) / resolution_;
+        idy = (point(1) - origin_[1]) / resolution_;
+    }
+
     inline RollingDistribution & at (const std::size_t x,
                                      const std::size_t y)
     {

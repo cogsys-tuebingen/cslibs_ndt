@@ -51,6 +51,7 @@ include_directories(
 )
 
 add_library(ndt
+    src/ndt/rolling_distribution.hpp
     src/ndt/laserscan.hpp
     src/ndt/ndt_grid.cpp
     src/ndt/ndt_multi_grid.cpp
@@ -68,6 +69,11 @@ add_executable(test_distribution
 target_link_libraries(test_distribution
     ndt
 )
+
+add_executable(ndt_scan_matching
+    src/nodes/scan_matching.cpp
+)
+
 
 if(${OpenCV_FOUND})
 add_executable(demo_grid_visualization

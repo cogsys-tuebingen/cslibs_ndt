@@ -66,6 +66,17 @@ public:
         cov = cov_;
     }
 
+    inline void invCovariance(Covariance &inv_cov)
+    {
+        if(n_1_ < 2)
+            return;
+
+        if(dirty_) {
+            update();
+        }
+        inv_cov = inv_cov_;
+    }
+
     inline double sample(const Point &point)
     {
         if(n_1_ < 2)

@@ -48,11 +48,16 @@ catkin_package(
 include_directories(
     ${catkin_INCLUDE_DIRS}
     ${Eigen3_INCLUDE_DIRS}
+    src
 )
 
 add_library(ndt
+    src/data/pointcloud.hpp
+    src/data/laserscan.hpp
+
+    src/math/distribution.hpp
+
     src/ndt/rolling_distribution.hpp
-    src/ndt/laserscan.hpp
     src/ndt/ndt_grid.cpp
     src/ndt/ndt_multi_grid.cpp
     src/ndt/types.hpp
@@ -70,10 +75,14 @@ target_link_libraries(test_distribution
     ndt
 )
 
-add_executable(ndt_scan_matching
-    src/nodes/scan_matching.cpp
-)
+#add_executable(ndt_scan_matching
+#    src/nodes/scan_matching.cpp
+#)
 
+#target_link_libraries(ndt_scan_matching
+#    ${catkin_LIBRARIES}
+#    ndt
+#)
 
 if(${OpenCV_FOUND})
 add_executable(demo_grid_visualization
@@ -84,4 +93,15 @@ target_link_libraries(demo_grid_visualization
     ndt
     ${OpenCV_LIBRARIES}
 )
+
+
+#add_executable(ndt_scan_visualization
+#    src/nodes/visualization_node.cpp
+#)
+
+#target_link_libraries(ndt_scan_visualization
+#    ${catkin_LIBRARIES}
+#    ndt
+#    ${OpenCV_LIBRARIES}
+#)
 endif()

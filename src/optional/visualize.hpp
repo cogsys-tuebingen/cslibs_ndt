@@ -10,8 +10,45 @@
 
 namespace ndt {
 void renderPoints(const std::vector<ndt::Point> &points,
+                  cv::Mat &dst,
+                  const bool flip = true)
+{
+    /// find min and max
+    double xmin = std::numeric_limits<double>::max();
+    double xmax = std::numeric_limits<double>::min();
+    double ymin = std::numeric_limits<double>::max();
+    double ymax = std::numeric_limits<double>::min();
+    for(const ndt::Point &p : points) {
+        if(p(0) < xmin)
+            xmin = p(0);
+        if(p(0) > xmax)
+            xmax = p(0);
+        if(p(1) < ymin)
+            ymin = p(1);
+        if(p(1) > ymax)
+            ymax = p(1);
+    }
+
+    double range_x = xmax - xmin;
+    double range_y = ymax - ymin;
+    double resx = range_x / dst.cols;
+    double resy = range_y / dst.rows;
+
+    for(const ndt::Point &p : points) {
+        cv::Point cvp(p(0) / resx + dst.cols / 2,
+                      p(1) / resy + dst.rows / 2);
+        cv::circle(dst, cvp, 3, cv::Scalar(255), CV_FILLED, CV_AA);
+    }
+
+    if(flip)
+        cv::flip(dst, dst, 0);
+}
+
+
+void renderPoints(const std::vector<ndt::Point> &points,
                   const cv::Size &size,
-                  cv::Mat &dst)
+                  cv::Mat &dst,
+                  const bool flip = true)
 {
     /// find min and max
     double xmin = std::numeric_limits<double>::max();
@@ -41,14 +78,16 @@ void renderPoints(const std::vector<ndt::Point> &points,
         cv::circle(dst, cvp, 3, cv::Scalar(255), CV_FILLED, CV_AA);
     }
 
-    cv::flip(dst, dst, 0);
+    if(flip)
+        cv::flip(dst, dst, 0);
 }
 
 void renderNDTGrid(NDTMultiGrid &multi_grid,
                    const Point &min,
                    const Point &max,
                    const double resolution,
-                   cv::Mat &dst)
+                   cv::Mat &dst,
+                   const bool flip = true)
 {
     const double range_x = max(0) - min(0);
     const double range_y = max(1) - min(1);
@@ -90,9 +129,8 @@ void renderNDTGrid(NDTMultiGrid &multi_grid,
             c[2] = 127;
         }
     }
-    cv::flip(dst, dst, 0);
-
-
+    if(flip)
+        cv::flip(dst, dst, 0);
 }
 }
 

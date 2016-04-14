@@ -1,7 +1,7 @@
 #ifndef NDTGRID_H
 #define NDTGRID_H
 
-#include "laserscan.hpp"
+#include "../data/laserscan.hpp"
 #include "rolling_distribution.hpp"
 
 namespace ndt {
@@ -63,6 +63,16 @@ public:
             return true;
         }
         return false;
+    }
+
+    inline std::size_t dim_x() const
+    {
+        return dim_x_;
+    }
+
+    inline std::size_t dim_y() const
+    {
+        return dim_y_;
     }
 
     inline void index(const Point &point,

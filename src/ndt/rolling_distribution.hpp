@@ -50,6 +50,11 @@ public:
         dirty_ = true;
     }
 
+    inline std::size_t n()
+    {
+        return n_;
+    }
+
     inline void mean(Point &mean) const
     {
         mean = mean_;
@@ -112,7 +117,7 @@ private:
         double scale = n_1_ / ((double) n_1_ - 1);
         cov_ptr_[0] = (corr_ptr_[0] - mean_ptr_[0] * mean_ptr_[0]) * scale;
         cov_ptr_[1] = (corr_ptr_[1] - mean_ptr_[0] * mean_ptr_[1]) * scale;
-        cov_ptr_[2] =  cov_ptr_[1];
+        cov_ptr_[2] = cov_ptr_[1];
         cov_ptr_[3] = (corr_ptr_[3] - mean_ptr_[1] * mean_ptr_[1]) * scale;
 
         Eigen::EigenSolver<Covariance> solver;

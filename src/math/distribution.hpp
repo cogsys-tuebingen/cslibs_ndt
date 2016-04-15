@@ -34,9 +34,9 @@ public:
 
     inline void reset()
     {
-        mean = Point::Zeros();
-        covariance = Matrix::Zeros();
-        correlated = Matrix::Zeros();
+        mean = Point::Zero();
+        covariance = Matrix::Zero();
+        correlated = Matrix::Zero();
         n = 1;
         n_1 = 0;
     }
@@ -44,11 +44,9 @@ public:
     inline void add(const Point &_p)
     {
         mean = (mean * n_1 + _p) / n;
-        if(n > 1) {
-            for(std::size_t i = 0 ; i < Dim ; ++i) {
-                for(std::size_t j = i ; j < Dim ; ++j) {
-                    correlated(i, j) = (correlated(i, j) * n_1 + _p(i) * _p(j)) / n;
-                }
+        for(std::size_t i = 0 ; i < Dim ; ++i) {
+            for(std::size_t j = i ; j < Dim ; ++j) {
+                correlated(i, j) = (correlated(i, j) * n_1 + _p(i) * _p(j)) / n;
             }
         }
         ++n;
@@ -101,7 +99,7 @@ public:
         return Matrix::Zeros();
     }
 
-    inline void getInversecovariance(Matrix &_inverse_covariance)
+    inline void getInverseCovariance(Matrix &_inverse_covariance)
     {
         if(n_1 >= 2) {
             if(dirty)
@@ -115,7 +113,7 @@ public:
             if(dirty)
                 update();
             Point  diff = _p - mean;
-            double exponent = -0.5 * (diff.transpose() * inverse_covariance * diff);
+            double exponent = -0.5 * double(diff.transpose() * inverse_covariance * diff);
             double denominator = 1.0 / (covariance.determinant() * sqrt_2_M_PI);
             return denominator * exp(exponent);
         }
@@ -127,7 +125,7 @@ public:
             if(dirty)
                 update();
             Point  diff = _p - mean;
-            double exponent = -0.5 * (diff.transpose() * inverse_covariance * diff);
+            double exponent = -0.5 * double(diff.transpose() * inverse_covariance * diff);
             return exp(exponent);
         }
         return 0.0;

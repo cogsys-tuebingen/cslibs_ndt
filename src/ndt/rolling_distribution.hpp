@@ -15,9 +15,13 @@ public:
     typedef std::shared_ptr<RollingDistribution> Ptr;
 
     RollingDistribution() :
+        mean_(Point::Zero()),
         mean_ptr_(mean_.data()),
+        corr_(Covariance::Zero()),
         corr_ptr_(corr_.data()),
+        inv_cov_(Covariance::Zero()),
         inv_cov_ptr_(inv_cov_.data()),
+        cov_(Covariance::Zero()),
         cov_ptr_(cov_.data()),
         dirty_(false),
         n_(1),
@@ -43,8 +47,10 @@ public:
     {
         mean_ = Point();
         corr_ = Covariance();
+        cov_ = Covariance();
         mean_ptr_ = mean_.data();
         corr_ptr_ = corr_.data();
+        cov_ptr_ = cov_.data();
         n_ = 1;
         n_1_ = 0;
         dirty_ = true;

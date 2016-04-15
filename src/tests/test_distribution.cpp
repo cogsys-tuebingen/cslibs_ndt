@@ -8,6 +8,19 @@
 
 using namespace ndt;
 
+void linspace(const double min,
+              const double max,
+              const double res,
+              std::vector<double> &values)
+{
+    const double        range = max - min;
+    const std::size_t   intervals = range / res;
+    for(std::size_t i = 0 ; i < intervals ; ++i) {
+        values.push_back(min + res * i);
+    }
+}
+
+
 int main(int argc, char *argv[])
 {
     Point points[] = { Point(0,0),
@@ -63,8 +76,43 @@ int main(int argc, char *argv[])
         std::cout << test_matrix.data()[i] << std::endl;
 
 
+    std::vector<Point> point_list;
+    /// generate horizontal lines
+    std::vector<double> xs;
+    linspace(-10.0, -1.0, 0.1, xs);
+    for(double &e : xs) {
+        point_list.push_back(Point(e, 1.0));
+        point_list.push_back(Point(e, -1.0));
+    }
+    /// generate vertial lines
+    std::vector<double> ys;
+    linspace(-10.0, 10.0, 0.1, ys);
+    for(double &e : ys) {
+        point_list.push_back(Point(1.5, e));
+        if(e < -1.0 || e > 1.0)
+            point_list.push_back(Point(-1.0, e));
+    }
 
+    roll2.reset();
+    roll.reset();
+    for(Point &p : point_list) {
+        roll2.add(p);
+        roll.add(p);
+    }
 
+    roll.mean(mean);
+    roll.covariance(cov);
+    std::cout << "-------" << std::endl;
+    std::cout << roll.n() << std::endl;
+    std::cout << mean << std::endl;
+    std::cout << cov << std::endl;
+    std::cout << roll.sample(Point(0.0, 0.0)) << std::endl;
+    std::cout << "-------" << std::endl;
+    std::cout << roll2.getN() << std::endl;
+    std::cout << roll2.getMean() << std::endl;
+    std::cout << roll2.getCovariance() << std::endl;
+    std::cout << roll2.getCovariance().determinant() << std::endl;
+    std::cout << roll2.evaluateNonNoramlized(Point(0.0, 0.0)) << std::endl;
 
     return 0;
 }

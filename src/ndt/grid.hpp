@@ -12,7 +12,7 @@ public:
     typedef std::array<std::size_t, Dim>  Index;
     typedef std::array<double, Dim>       Resolution;
     typedef Eigen::Matrix<double, Dim, 1> Point;
-    typedef math::Distribution<Dim, true> Distribution;
+    typedef math::Distribution<Dim, false> Distribution;
     typedef typename Distribution::Matrix Matrix;
 
     NDTGrid() :
@@ -118,7 +118,7 @@ public:
         if(p >= data_size)
             return 0.0;
         data[p].getMean(_mean);
-        data[p].getInversecovariance(_inverse_covariance);
+        data[p].getInverseCovariance(_inverse_covariance);
         return data[p].evaluate(_p);
     }
 
@@ -138,7 +138,7 @@ public:
         if(p >= data_size)
             return 0.0;
         data[p].getMean(_mean);
-        data[p].getInversecovariance(_inverse_covariance);
+        data[p].getInverseCovariance(_inverse_covariance);
         return data[p].evaluateNonNoramlized(_p);
     }
 

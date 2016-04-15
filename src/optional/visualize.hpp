@@ -49,6 +49,38 @@ void renderPoints(const std::vector<NDTMultiGrid2D::Point> &points,
         cv::flip(dst, dst, 0);
 }
 
+void renderNDTGrid(NDTMultiGrid2D              &grid,
+                   const NDTMultiGrid2D::Point &min,
+                   const NDTMultiGrid2D::Point &max,
+                   cv::Mat &dst)
+{
+    double scale_x = fabs((max - min)(0)) / dst.cols;
+    double scale_y = fabs((max - min)(1)) / dst.rows;
+
+    cv::Mat samples(dst.rows, dst.cols, CV_64FC1, cv::Scalar());
+    double max_value = std::numeric_limits<double>::min();
+    for(int i = 0 ; i < dst.rows ; ++i) {
+        for(int j = 0 ; j < dst.cols ; ++j) {
+            NDTMultiGrid2D::Point p = min + NDTMultiGrid2D::Point(scale_x * j, scale_y * i);
+            double value = grid.sample(p);
+            if(value > max_value) {
+                max_value = value;
+            }
+            samples.at<double>(i,j) = value;
+        }
+    }
+
+    for(int i = 0 ; i < dst.rows ; ++i) {
+        for(int j = 0 ; j < dst.cols ; ++j) {
+            cv::Vec3b &pix = dst.at<cv::Vec3b>(i,j);
+            pix[0] = samples.at<double>(i,j) / max_value * 255;
+            pix[1] = samples.at<double>(i,j) / max_value * 255;
+            pix[2] = samples.at<double>(i,j) / max_value * 255;
+        }
+    }
+}
+
+
 //void renderNDTGrid(NDTMultiGrid &multi_grid,
 //                   const Point &min,
 //                   const Point &max,

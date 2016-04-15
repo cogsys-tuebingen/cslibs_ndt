@@ -25,6 +25,8 @@ public:
 
     NDTMultiGrid(const Size       &_size,
                  const Resolution &_resolution) :
+        size(_size),
+        resolution(_resolution),
         data_size(mask.rows),
         data(new NDTGrid<Dim>[data_size])
     {
@@ -50,24 +52,40 @@ public:
         }
     }
 
-    inline NDTGrid<Dim> const & at(const Index &_index) const
+    virtual ~NDTMultiGrid()
     {
-        std::size_t p = pos(_index);
-        if(p >= data_size)
-            throw std::runtime_error("Out of bounds!");
-
-        return data[p];
+        if(data)
+            delete[] data;
     }
 
-    inline NDTGrid<Dim> & at(const Index &_index)
+    /// ---------------- META INFORMATION ---------------- ///
+    inline Size getSize() const
     {
-        std::size_t p = pos(_index);
-        if(p >= data_size)
-            throw std::runtime_error("Out of bounds!");
-
-        return data[p];
+        return size;
     }
 
+    inline void getSize(Size &_size) const
+    {
+        _size = size;
+    }
+
+    inline Resolution getResolution() const
+    {
+        return resolution;
+    }
+
+    inline void getResolution(Resolution &_resolution) const
+    {
+        _resolution = resolution;
+    }
+
+    inline bool checkIndex(const Index &_index)
+    {
+        std::size_t p = pos(_index);
+        return p < data_size;
+    }
+
+    /// ---------------- DATA ---------------------------- ///
     inline bool add(const Point &_p)
     {
         bool result = false;
@@ -131,10 +149,30 @@ public:
         return result;
     }
 
+    inline NDTGrid<Dim> const & at(const Index &_index) const
+    {
+        std::size_t p = pos(_index);
+        if(p >= data_size)
+            throw std::runtime_error("Out of bounds!");
+
+        return data[p];
+    }
+
+    inline NDTGrid<Dim> & at(const Index &_index)
+    {
+        std::size_t p = pos(_index);
+        if(p >= data_size)
+            throw std::runtime_error("Out of bounds!");
+
+        return data[p];
+    }
+
 private:
+    Size          size;
+    Size          steps;
+    Resolution    resolution;
     std::size_t   data_size;
     NDTGrid<Dim> *data;
-    Size          steps;
 
     Mask<Dim>     mask;
 

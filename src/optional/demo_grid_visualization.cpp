@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     cv::waitKey(0);
 
     /// no we put the multi grid into play
-    ndt::NDTMultiGrid2D multigrid(size, resolution);
+    ndt::NDTMultiGrid2D multigrid(size, resolution, Point(-10, -10));
     for(Point &p : points) {
         if(!multigrid.add(p))
             std::cerr << "could not add point" << std::endl;

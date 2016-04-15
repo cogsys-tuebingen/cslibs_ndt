@@ -24,37 +24,65 @@ public:
     }
 
     NDTMultiGrid(const Size       &_size,
-                 const Resolution &_resolution) :
+                 const Resolution &_resolution,
+                 const Point      &_origin = Point::Zero()) :
         size(_size),
         resolution(_resolution),
+        origin(_origin),
         data_size(mask.rows),
         data(new NDTGrid<Dim>[data_size])
     {
         Resolution offsets;
         for(std::size_t i = 0 ; i < Dim; ++i) {
-            offsets[i] = _resolution[i] / 2.0;
+            offsets[i] = +_resolution[i] / 2.0;
         }
 
         for(std::size_t i = 0 ; i < data_size ; ++i) {
-            Point origin;
+            Point o = origin;
             for(std::size_t j = 0 ; j < Dim ; ++j) {
-                origin(j) = mask[i * mask.cols] * offsets[j];
+                o(j) += mask[i * mask.cols + j] * offsets[j];
             }
-            data[i] = NDTGrid<Dim>(_size, _resolution, origin);
+            data[i] = NDTGrid<Dim>(_size, _resolution, o);
         }
 
-        steps[Dim - 1] = 1;
+        steps[0] = 1;
         if(Dim > 1) {
             std::size_t max_idx = Dim - 1;
-            for(std::size_t i = max_idx ; i > 0 ; --i) {
-                steps[i - 1] = steps[i] * 2;
+            for(std::size_t i = 1 ; i <= max_idx ; ++i) {
+                steps[i] = steps[i-1] * 2;
             }
         }
     }
 
+    NDTMultiGrid(const NDTMultiGrid &other) :
+        size(other.size),
+        resolution(other.resolution),
+        origin(other.origin),
+        data_size(other.data_size),
+        data(new NDTGrid<Dim>[data_size])
+    {
+        std::memcpy(data, other.data, sizeof(NDTGrid<Dim>) * data_size);
+    }
+
+    NDTMultiGrid & operator = (const NDTMultiGrid &other)
+    {
+        if(this != &other) {
+            size = other.size;
+            resolution = other.resolution;
+            origin = other.origin;
+            data_size = other.data_size;
+            if(data) {
+                delete [] data;
+                data = new NDTGrid<Dim>[data_size];
+            }
+            std::memcpy(data, other.data, sizeof(NDTGrid<Dim>) * data_size);
+        }
+        return *this;
+    }
+
     virtual ~NDTMultiGrid()
     {
-        if(data)
+        if(data != nullptr)
             delete[] data;
     }
 
@@ -122,7 +150,7 @@ public:
         return result;
     }
 
-    inline double sampleNonNormalize(const Point &_p)
+    inline double sampleNonNormalized(const Point &_p)
     {
         double result = 0.0;
         for(std::size_t i = 0 ; i < data_size ; ++i) {
@@ -171,6 +199,7 @@ private:
     Size          size;
     Size          steps;
     Resolution    resolution;
+    Point         origin;
     std::size_t   data_size;
     NDTGrid<Dim> *data;
 

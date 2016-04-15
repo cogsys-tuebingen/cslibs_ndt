@@ -2,6 +2,7 @@
 #define NDT_GRID_HPP
 #include "../math/distribution.hpp"
 #include <array>
+#include <iostream>
 
 namespace ndt {
 template<std::size_t Dim>
@@ -12,7 +13,7 @@ public:
     typedef std::array<std::size_t, Dim>  Index;
     typedef std::array<double, Dim>       Resolution;
     typedef Eigen::Matrix<double, Dim, 1> Point;
-    typedef math::Distribution<Dim, false> Distribution;
+    typedef math::Distribution<Dim, true> Distribution;
     typedef typename Distribution::Matrix Matrix;
 
     NDTGrid() :
@@ -34,19 +35,48 @@ public:
             data_size *= _size[i];
         }
 
-        steps[Dim - 1] = 1;
+        steps[0] = 1;
         if(Dim > 1) {
             std::size_t max_idx = Dim - 1;
-            for(std::size_t i = max_idx ; i > 0 ; --i) {
-                steps[i - 1] = steps[i] * size[i];
+            for(std::size_t i = 1 ; i <= max_idx ; ++i) {
+                steps[i] = steps[i-1] * size[i];
             }
         }
         data = new Distribution[data_size];
     }
 
+    NDTGrid(const NDTGrid &other) :
+        size(other.size),
+        steps(other.steps),
+        resolution(other.resolution),
+        origin(other.origin),
+        data_size(other.data_size),
+        data(new Distribution[data_size])
+    {
+        std::memcpy(data, other.data, sizeof(Distribution) * data_size);
+    }
+
+    NDTGrid & operator = (const NDTGrid &other)
+    {
+        if(this != &other) {
+            size = other.size;
+            steps = other.steps;
+            resolution = other.resolution;
+            origin = other.origin;
+            data_size = other.data_size;
+            if(data) {
+                delete [] data;
+            }
+            data = new Distribution[data_size];
+            std::memcpy(data, other.data, sizeof(Distribution) * data_size);
+        }
+
+        return *this;
+    }
+
     virtual ~NDTGrid()
     {
-        if(data) {
+        if(data != nullptr) {
             delete[] data;
         }
     }
@@ -77,7 +107,7 @@ public:
                          Index &index)
     {
         for(std::size_t i = 0 ; i < Dim ; ++i) {
-            int id = (_p(i) - origin(i)) / resolution(i);
+            int id = (_p(i) - origin(i)) / resolution[i];
             if(id < 0 || id >= size[i])
                 return false;
             index[i] = id;
@@ -95,8 +125,8 @@ public:
     /// ---------------- DATA ---------------------------- ///
     inline bool add(const Point &_p)
     {
-        std::size_t p = pos(_p);
-        if(p >= data_size)
+        int p = pos(_p);
+        if(p >= data_size || p < 0)
             return false;
         data[p].add(_p);
         return true;
@@ -104,8 +134,8 @@ public:
 
     inline double sample(const Point &_p)
     {
-        std::size_t p = pos(_p);
-        if(p >= data_size)
+        int p = pos(_p);
+        if(p >= data_size || p < 0)
             return 0.0;
         return data[p].evaluate(_p);
     }
@@ -114,8 +144,8 @@ public:
                          Point       &_mean,
                          Matrix      &_inverse_covariance)
     {
-        std::size_t p = pos(_p);
-        if(p >= data_size)
+        int p = pos(_p);
+        if(p >= data_size || p < 0)
             return 0.0;
         data[p].getMean(_mean);
         data[p].getInverseCovariance(_inverse_covariance);
@@ -124,8 +154,8 @@ public:
 
     inline double sampleNonNormalized(const Point &_p)
     {
-        std::size_t p = pos(_p);
-        if(p >= data_size)
+        int p = pos(_p);
+        if(p >= data_size || p < 0)
             return 0.0;
         return data[p].evaluateNonNoramlized(_p);
     }
@@ -134,8 +164,8 @@ public:
                                       Point       &_mean,
                                       Matrix      &_inverse_covariance)
     {
-        std::size_t p = pos(_p);
-        if(p >= data_size)
+        int p = pos(_p);
+        if(p >= data_size || p < 0)
             return 0.0;
         data[p].getMean(_mean);
         data[p].getInverseCovariance(_inverse_covariance);
@@ -144,8 +174,8 @@ public:
 
     inline Distribution const & at(const Index &_index) const
     {
-        std::size_t p = pos(_index);
-        if(p >= data_size)
+        int p = pos(_index);
+        if(p >= data_size || p < 0)
             throw std::runtime_error("Out of bounds!");
 
         return data[p];
@@ -153,8 +183,8 @@ public:
 
     inline Distribution & at(const Index &_index)
     {
-        std::size_t p = pos(_index);
-        if(p >= data_size)
+        int p = pos(_index);
+        if(p >= data_size || p < 0)
             throw std::runtime_error("Out of bounds!");
         return data[p];
     }
@@ -175,11 +205,12 @@ private:
         return pos;
     }
 
-    inline std::size_t pos(const Point &_p) {
-        std::size_t pos = 0;
+    inline int pos(const Point &_p) {
+        int pos = 0;
         for(std::size_t i = 0 ; i < Dim ; ++i) {
-            pos += (_p(i) - origin(i)) / resolution[i] * steps[i];
+            pos += floor((_p(i) - origin(i)) / resolution[i])* steps[i];
         }
+
         return pos;
     }
 };

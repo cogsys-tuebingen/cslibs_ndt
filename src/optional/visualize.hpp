@@ -62,13 +62,15 @@ void renderNDTGrid(NDTMultiGrid2D              &grid,
     for(int i = 0 ; i < dst.rows ; ++i) {
         for(int j = 0 ; j < dst.cols ; ++j) {
             NDTMultiGrid2D::Point p = min + NDTMultiGrid2D::Point(scale_x * j, scale_y * i);
-            double value = grid.sample(p);
+            double value = grid.sampleNonNormalized(p);
             if(value > max_value) {
                 max_value = value;
             }
             samples.at<double>(i,j) = value;
         }
     }
+
+    cv::imshow("samples", samples);
 
     for(int i = 0 ; i < dst.rows ; ++i) {
         for(int j = 0 ; j < dst.cols ; ++j) {

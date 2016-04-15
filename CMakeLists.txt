@@ -57,6 +57,11 @@ add_library(ndt
 
     src/math/distribution.hpp
 
+    src/ndt/grid.hpp
+
+
+
+
     src/ndt/rolling_distribution.hpp
     src/ndt/ndt_grid.cpp
     src/ndt/ndt_multi_grid.cpp

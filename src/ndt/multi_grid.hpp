@@ -22,6 +22,9 @@ public:
         data(nullptr)
     {
     }
+    /// NOTICE :
+    /// Displacement of 0.25 * resolution results in 0.5 displacement from grids to each other
+    /// Origin of Multigrid is in the center of the combined grid area.
 
     NDTMultiGrid(const Size       &_size,
                  const Resolution &_resolution,
@@ -34,7 +37,7 @@ public:
     {
         Resolution offsets;
         for(std::size_t i = 0 ; i < Dim; ++i) {
-            offsets[i] = +_resolution[i] / 2.0;
+            offsets[i] = +_resolution[i] * 0.25;
         }
 
         for(std::size_t i = 0 ; i < data_size ; ++i) {
@@ -111,6 +114,11 @@ public:
     {
         std::size_t p = pos(_index);
         return p < data_size;
+    }
+
+    inline Point getOrigin() const
+    {
+        return origin;
     }
 
     /// ---------------- DATA ---------------------------- ///

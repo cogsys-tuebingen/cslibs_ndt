@@ -23,7 +23,10 @@ struct fill {
         const std::size_t off = mask.cols - Iteration;
         const std::size_t div = ndt::pow2<Iteration - 1>::value;
         for(std::size_t i = 0 ; i < mask.rows; ++i) {
-            mask[i * mask.cols + off] = ((i / div) % 2);
+            if(((i / div) % 2) == 0)
+                mask[i * mask.cols + off] = -1;
+            else
+                mask[i * mask.cols + off] = 1;
         }
         fill<Iteration - 1, Mask>::assign(mask);
     }

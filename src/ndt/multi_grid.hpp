@@ -9,12 +9,12 @@ template<std::size_t Dim>
 class NDTMultiGrid {
 public:
     typedef std::shared_ptr<NDTMultiGrid<Dim>>  Ptr;
-    typedef NDTGrid<Dim>::Size                  Size;
-    typedef NDTGrid<Dim>::Index                 Index;
-    typedef NDTGrid<Dim>::Resolution            Resolution;
-    typedef NDTGrid<Dim>::Point                 Point;
-    typedef NDTGrid<Dim>::Distribution          Distribution;
-    typedef NDTGrid<Dim>::Matrix                Matrix;
+    typedef typename NDTGrid<Dim>::Size         Size;
+    typedef typename NDTGrid<Dim>::Index        Index;
+    typedef typename NDTGrid<Dim>::Resolution   Resolution;
+    typedef typename NDTGrid<Dim>::Point        Point;
+    typedef typename NDTGrid<Dim>::Distribution Distribution;
+    typedef typename NDTGrid<Dim>::Matrix       Matrix;
 
 
     NDTMultiGrid() :
@@ -26,7 +26,7 @@ public:
     NDTMultiGrid(const Size       &_size,
                  const Resolution &_resolution) :
         data_size(mask.rows),
-        data(new NDTGrid[data_size])
+        data(new NDTGrid<Dim>[data_size])
     {
         Resolution offsets;
         for(std::size_t i = 0 ; i < Dim; ++i) {
@@ -38,7 +38,7 @@ public:
             for(std::size_t j = 0 ; j < Dim ; ++j) {
                 origin(j) = mask[i * mask.cols] * offsets[j];
             }
-            data_size[i] = NDTGrid(_size, _resolution, offsets);
+            data[i] = NDTGrid<Dim>(_size, _resolution, origin);
         }
 
         steps[Dim - 1] = 1;
@@ -50,7 +50,7 @@ public:
         }
     }
 
-    inline NDTGrid const & at(const Index &_index) const
+    inline NDTGrid<Dim> const & at(const Index &_index) const
     {
         std::size_t p = pos(_index);
         if(p >= data_size)
@@ -59,13 +59,22 @@ public:
         return data[p];
     }
 
-    inline NDTGrid & at(const Index &_index)
+    inline NDTGrid<Dim> & at(const Index &_index)
     {
         std::size_t p = pos(_index);
         if(p >= data_size)
             throw std::runtime_error("Out of bounds!");
 
         return data[p];
+    }
+
+    inline bool add(const Point &_p)
+    {
+        bool result = false;
+        for(std::size_t i = 0 ; i < data_size; ++i) {
+            result |= data[i].add(_p);
+        }
+        return result;
     }
 
     inline double sample(const Point &_p)
@@ -123,11 +132,11 @@ public:
     }
 
 private:
-    std::size_t  data_size;
-    NDTGrid     *data;
-    Size         steps;
+    std::size_t   data_size;
+    NDTGrid<Dim> *data;
+    Size          steps;
 
-    Mask<Dim>    mask;
+    Mask<Dim>     mask;
 
     inline std::size_t pos(const Index &_index) {
         std::size_t p = 0;

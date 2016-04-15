@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Eigen>
 
 namespace ndt {
 namespace math {

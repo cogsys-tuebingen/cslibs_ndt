@@ -10,10 +10,10 @@ public:
     typedef std::shared_ptr<NDTGrid<Dim>> Ptr;
     typedef std::array<std::size_t, Dim>  Size;
     typedef std::array<std::size_t, Dim>  Index;
-    typedef std::array<double>            Resolution;
+    typedef std::array<double, Dim>       Resolution;
     typedef Eigen::Matrix<double, Dim, 1> Point;
     typedef math::Distribution<Dim, true> Distribution;
-    typedef Distribution::Matrix          Matrix;
+    typedef typename Distribution::Matrix Matrix;
 
     NDTGrid() :
         data_size(0),
@@ -170,14 +170,15 @@ private:
     inline std::size_t pos(const Index &_index) {
         std::size_t pos;
         for(std::size_t i = 0 ; i < Dim ; ++i) {
-            pos += _index[i] * step[i];
+            pos += _index[i] * steps[i];
         }
+        return pos;
     }
 
     inline std::size_t pos(const Point &_p) {
-        std::size_t pos;
+        std::size_t pos = 0;
         for(std::size_t i = 0 ; i < Dim ; ++i) {
-            pos += (_p(i) - origin(i)) / resolution(i) * step[i];
+            pos += (_p(i) - origin(i)) / resolution[i] * steps[i];
         }
         return pos;
     }

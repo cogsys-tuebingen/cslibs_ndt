@@ -63,11 +63,12 @@ add_library(ndt
 
 
 
-    src/ndt/rolling_distribution.hpp
-    src/ndt/ndt_grid.cpp
-    src/ndt/ndt_multi_grid.cpp
-    src/ndt/types.hpp
+#    src/ndt/rolling_distribution.hpp
+#    src/ndt/ndt_grid.cpp
+#    src/ndt/ndt_multi_grid.cpp
+#    src/ndt/types.hpp
 )
+set_target_properties(ndt PROPERTIES LINKER_LANGUAGE CXX)
 
 target_link_libraries(ndt
     ${catkin_LIBRARIES}

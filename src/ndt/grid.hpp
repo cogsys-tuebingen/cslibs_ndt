@@ -12,7 +12,7 @@ public:
     typedef std::array<std::size_t, Dim>  Index;
     typedef std::array<double>            Resolution;
     typedef Eigen::Matrix<double, Dim, 1> Point;
-    typedef math::Distribution<Dim>       Distribution;
+    typedef math::Distribution<Dim, true> Distribution;
     typedef Distribution::Matrix          Matrix;
 
     NDTGrid() :
@@ -33,6 +33,14 @@ public:
         for(std::size_t i = 0 ; i < Dim ; ++i) {
             data_size *= _size[i];
         }
+
+        steps[Dim - 1] = 1;
+        if(Dim > 1) {
+            std::size_t max_idx = Dim - 1;
+            for(std::size_t i = max_idx ; i > 0 ; --i) {
+                steps[i - 1] = steps[i] * size[i];
+            }
+        }
         data = new Distribution[data_size];
     }
 
@@ -42,6 +50,7 @@ public:
             delete[] data;
         }
     }
+
 
     /// ---------------- META INFORMATION ---------------- ///
     inline Size getSize() const
@@ -68,8 +77,8 @@ public:
                          Index &index)
     {
         for(std::size_t i = 0 ; i < Dim ; ++i) {
-            int id = (point(i) - origin(i)) / resolution(i);
-            if(id < 0)
+            int id = (_p(i) - origin(i)) / resolution(i);
+            if(id < 0 || id >= size[i])
                 return false;
             index[i] = id;
         }
@@ -78,56 +87,100 @@ public:
 
     inline bool checkIndex(const Index &_index)
     {
-        for(std::size_t i = 0 ; i < Dim ; ++i) {
-            if(_index >= size[i])
-                return false;
-        }
-        return true;
+        std::size_t p = pos(_index);
+        return p < data_size;
     }
 
 
     /// ---------------- DATA ---------------------------- ///
-
     inline bool add(const Point &_p)
     {
-
+        std::size_t p = pos(_p);
+        if(p >= data_size)
+            return false;
+        data[p].add(_p);
+        return true;
     }
 
     inline double sample(const Point &_p)
     {
-
+        std::size_t p = pos(_p);
+        if(p >= data_size)
+            return 0.0;
+        return data[p].evaluate(_p);
     }
 
     inline double sample(const Point &_p,
                          Point       &_mean,
-                         Matrix      &_covariance)
+                         Matrix      &_inverse_covariance)
     {
+        std::size_t p = pos(_p);
+        if(p >= data_size)
+            return 0.0;
+        data[p].getMean(_mean);
+        data[p].getInversecovariance(_inverse_covariance);
+        return data[p].evaluate(_p);
+    }
 
+    inline double sampleNonNormalized(const Point &_p)
+    {
+        std::size_t p = pos(_p);
+        if(p >= data_size)
+            return 0.0;
+        return data[p].evaluateNonNoramlized(_p);
+    }
+
+    inline double sampleNonNormalized(const Point &_p,
+                                      Point       &_mean,
+                                      Matrix      &_inverse_covariance)
+    {
+        std::size_t p = pos(_p);
+        if(p >= data_size)
+            return 0.0;
+        data[p].getMean(_mean);
+        data[p].getInversecovariance(_inverse_covariance);
+        return data[p].evaluateNonNoramlized(_p);
     }
 
     inline Distribution const & at(const Index &_index) const
     {
+        std::size_t p = pos(_index);
+        if(p >= data_size)
+            throw std::runtime_error("Out of bounds!");
 
+        return data[p];
     }
 
     inline Distribution & at(const Index &_index)
     {
-
+        std::size_t p = pos(_index);
+        if(p >= data_size)
+            throw std::runtime_error("Out of bounds!");
+        return data[p];
     }
-
-
-
-
 
 private:
     Size             size;
+    Size             steps;
     Resolution       resolution;
     Point            origin;
     std::size_t      data_size;
     Distribution    *data;
 
+    inline std::size_t pos(const Index &_index) {
+        std::size_t pos;
+        for(std::size_t i = 0 ; i < Dim ; ++i) {
+            pos += _index[i] * step[i];
+        }
+    }
 
-
+    inline std::size_t pos(const Point &_p) {
+        std::size_t pos;
+        for(std::size_t i = 0 ; i < Dim ; ++i) {
+            pos += (_p(i) - origin(i)) / resolution(i) * step[i];
+        }
+        return pos;
+    }
 };
 }
 #endif // NDT_GRID_HPP

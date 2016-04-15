@@ -58,7 +58,8 @@ add_library(ndt
     src/math/distribution.hpp
 
     src/ndt/grid.hpp
-
+    src/ndt/multi_grid.hpp
+    src/ndt/mask.hpp
 
 
 
@@ -78,6 +79,10 @@ add_executable(test_distribution
 
 target_link_libraries(test_distribution
     ndt
+)
+
+add_executable(test_mask
+    src/tests/test_mask.cpp
 )
 
 #add_executable(ndt_scan_matching

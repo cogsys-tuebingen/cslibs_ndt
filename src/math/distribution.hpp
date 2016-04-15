@@ -6,19 +6,19 @@
 
 namespace ndt {
 namespace math {
-template<std::size_t Dim>
+template<std::size_t Dim, bool limit_covariance = false>
 class Distribution {
 public:
-    typedef std::shared_ptr<Distribution<Dim>>            Ptr;
-    typedef Eigen::Matrix<double, Dim, 1>                 Point;
-    typedef Eigen::Matrix<double, Dim, Dim>               Matrix;
-    typedef Eigen::Matrix<double, Dim, 1>                 EigenValues;
-    typedef Eigen::Matrix<double, Dim, Dim>               EigenVectors;
-    typedef Eigen::Matrix<double, Dim, 1>                 ComplexVector;
-    typedef Eigen::Matrix<std::complex<double>, Dim, Dim> ComplexMatrix;
+    typedef std::shared_ptr<Distribution<Dim, limit_covariance>> Ptr;
+    typedef Eigen::Matrix<double, Dim, 1>                        Point;
+    typedef Eigen::Matrix<double, Dim, Dim>                      Matrix;
+    typedef Eigen::Matrix<double, Dim, 1>                        EigenValues;
+    typedef Eigen::Matrix<double, Dim, Dim>                      EigenVectors;
+    typedef Eigen::Matrix<double, Dim, 1>                        ComplexVector;
+    typedef Eigen::Matrix<std::complex<double>, Dim, Dim>        ComplexMatrix;
 
 
-    Distribution(const bool _limit_covariance  = false) :
+    Distribution() :
         mean(Point::Zero()),
         covariance(Matrix::Zero()),
         correlated(Matrix::Zero()),
@@ -26,7 +26,6 @@ public:
         n(1),
         n_1(0),
         sqrt_2_M_PI(sqrt(2 * M_PI)),
-        limit_covariance(_limit_covariance),
         dirty(false)
 
     {
@@ -41,13 +40,13 @@ public:
         n_1 = 0;
     }
 
-    inline void add(const Point &sample)
+    inline void add(const Point &_p)
     {
-        mean = (mean * n_1 + sample) / n;
+        mean = (mean * n_1 + _p) / n;
         if(n > 1) {
             for(std::size_t i = 0 ; i < Dim ; ++i) {
                 for(std::size_t j = i ; j < Dim ; ++j) {
-                    correlated(i, j) = (correlated(i, j) * n_1 + sample(i) * sample(j)) / n;
+                    correlated(i, j) = (correlated(i, j) * n_1 + _p(i) * _p(j)) / n;
                 }
             }
         }
@@ -110,11 +109,11 @@ public:
         }
     }
 
-    inline double evaluate(const Point &point) {
+    inline double evaluate(const Point &_p) {
         if(n_1 >= 2) {
             if(dirty)
                 update();
-            Point  diff = point - mean;
+            Point  diff = _p - mean;
             double exponent = -0.5 * (diff.transpose() * inverse_covariance * diff);
             double denominator = 1.0 / (covariance.determinant() * sqrt_2_M_PI);
             return denominator * exp(exponent);
@@ -122,11 +121,11 @@ public:
         return 0.0;
     }
 
-    inline double evaluateNonNoramlized(const Point &point) {
+    inline double evaluateNonNoramlized(const Point &_p) {
         if(n_1 >= 2) {
             if(dirty)
                 update();
-            Point  diff = point - mean;
+            Point  diff = _p - mean;
             double exponent = -0.5 * (diff.transpose() * inverse_covariance * diff);
             return exp(exponent);
         }
@@ -142,7 +141,6 @@ private:
     std::size_t n;
     std::size_t n_1;
     double      sqrt_2_M_PI;
-    bool        limit_covariance;
     bool        dirty;
 
     void update()

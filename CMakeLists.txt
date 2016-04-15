@@ -57,6 +57,8 @@ add_library(ndt
 
     src/math/distribution.hpp
 
+    src/convert/convert.hpp
+
     src/ndt/grid.hpp
     src/ndt/multi_grid.hpp
     src/ndt/mask.hpp

@@ -2,7 +2,6 @@
 #define ROLLING_DISTRIBUTION_HPP
 
 /// PROJECT
-#include "types.hpp"
 
 /// SYSTEM
 #include <eigen3/Eigen/Dense>
@@ -13,6 +12,13 @@ namespace ndt {
 class RollingDistribution {
 public:
     typedef std::shared_ptr<RollingDistribution> Ptr;
+    typedef Eigen::Vector2d            Point;
+    typedef Eigen::Matrix<double,1,2>  PointTransposed;
+    typedef Eigen::Vector3d            Transform;
+    typedef Eigen::Matrix3d            TransformMatrix;
+    typedef Eigen::Matrix2d            Covariance;
+    typedef Eigen::Matrix<double,2,3>  Jacobian;
+    typedef Eigen::Matrix3d            Hessian;
 
     RollingDistribution() :
         mean_(Point::Zero()),

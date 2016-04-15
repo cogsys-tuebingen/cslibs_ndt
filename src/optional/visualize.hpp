@@ -81,58 +81,6 @@ void renderNDTGrid(NDTMultiGrid2D              &grid,
         }
     }
 }
-
-
-//void renderNDTGrid(NDTMultiGrid &multi_grid,
-//                   const Point &min,
-//                   const Point &max,
-//                   const double resolution,
-//                   cv::Mat &dst,
-//                   const bool flip = true)
-//{
-//    const double range_x = max(0) - min(0);
-//    const double range_y = max(1) - min(1);
-//    const cv::Size size(range_x / resolution,
-//                        range_y / resolution);
-//    const double step_x = range_x / size.width;
-//    const double step_y = range_y / size.height;
-
-//    assert(range_x > 0.0);
-//    assert(range_y > 0.0);
-//    cv::Mat sampled = cv::Mat(size.height, size.width, CV_64FC1, cv::Scalar());
-//    Point sample = min;
-//    for(int i = 0 ; i < size.height ; ++i) {
-//        sample(0)  = min(0);
-//        for(int j = 0 ; j < size.width ; ++j) {
-//            sample(0) += step_x;
-//            sampled.at<double>(i,j) = sqrt(multi_grid.sample(sample));
-//        }
-//        sample(1) += step_y;
-//    }
-
-//    cv::normalize(sampled, sampled, cv::NORM_MINMAX, 0, 1);
-//    sampled.convertTo(dst, CV_8UC1, 255.0);
-//    cv::cvtColor(dst, dst, CV_GRAY2BGR);
-//    const int every_px = multi_grid.resolution() / resolution;
-//    for(int i = 0 ; i < size.width ; i += every_px) {
-//        for(int j = 0 ; j < size.height; ++j) {
-//            cv::Vec3b &c = dst.at<cv::Vec3b>(j,i);
-//            c[0] = 255;
-//            c[1] = 127;
-//            c[2] = 127;
-//        }
-//    }
-//    for(int i = 0 ; i < size.height ; i+=every_px) {
-//        for(int j = 0 ; j < size.width ; ++j) {
-//            cv::Vec3b &c = dst.at<cv::Vec3b>(i,j);
-//            c[0] = 255;
-//            c[1] = 127;
-//            c[2] = 127;
-//        }
-//    }
-//    if(flip)
-//        cv::flip(dst, dst, 0);
-//}
 }
 
 #endif // VISUALIZE_HPP

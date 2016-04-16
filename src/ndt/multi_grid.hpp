@@ -75,7 +75,7 @@ public:
             resolution = other.resolution;
             origin = other.origin;
             data_size = other.data_size;
-            if(data && size != former_size) {
+            if(size != former_size) {
                 delete [] data;
                 data = new NDTGrid<Dim>[data_size];
             }
@@ -86,8 +86,8 @@ public:
 
     virtual ~NDTMultiGrid()
     {
-        if(data != nullptr)
-            delete[] data;
+        delete[] data;
+        data = nullptr;
     }
 
     /// ---------------- META INFORMATION ---------------- ///

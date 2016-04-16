@@ -70,8 +70,6 @@ void renderNDTGrid(NDTMultiGrid2D              &grid,
         }
     }
 
-    cv::imshow("samples", samples);
-
     for(int i = 0 ; i < dst.rows ; ++i) {
         for(int j = 0 ; j < dst.cols ; ++j) {
             cv::Vec3b &pix = dst.at<cv::Vec3b>(i,j);

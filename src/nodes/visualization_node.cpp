@@ -13,6 +13,7 @@ struct ScanVisualizerNode {
     ros::NodeHandle   nh;
     ros::Subscriber   sub;
     double            resolution;
+    cv::Mat           display;
 
     ScanVisualizerNode() :
         nh("~"),
@@ -37,17 +38,18 @@ struct ScanVisualizerNode {
         NDTGridType::Resolution res = {resolution, resolution};
 
         ndt::NDTMultiGrid2D grid(size, res, scan.min);
+        std::vector<data::LaserScan::PointType> points;
         for(std::size_t i = 0 ; i < scan.size ; ++i) {
             if(scan.mask[i] == data::LaserScan::VALID) {
+                points.push_back(scan.points[i]);
                 if(!grid.add(scan.points[i]))
                     std::cerr << "Failed to add point [" << scan.points[i] << "]" << std::endl;
             }
         }
         /// render the grid
-        cv::Mat display(500,500, CV_8UC3, cv::Scalar());
+        display = cv::Mat (500,500, CV_8UC3, cv::Scalar());
         ndt::renderNDTGrid(grid, scan.min, scan.max, display);
-        cv::imshow("ndt", display);
-        cv::waitKey(19);
+        ndt::renderPoints(points, grid.getSize(), grid.getResolution(), display);
     }
 
 };
@@ -57,7 +59,14 @@ int main(int argc, char *argv[])
 {
     ros::init(argc, argv, "ndt_visualization_node");
     ndt::ScanVisualizerNode sn;
-    ros::spin();
+    while(ros::ok()) {
+        if(!sn.display.empty()) {
+            cv::imshow("ndt", sn.display);
+            cv::waitKey(19);
+        }
+        ros::Rate(30).sleep();
+        ros::spinOnce();
+    }
 
     return 0;
 }

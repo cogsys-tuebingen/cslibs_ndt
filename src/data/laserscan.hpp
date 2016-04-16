@@ -35,14 +35,15 @@ struct LaserScan : Pointcloud<Eigen::Vector2d> {
         if(this != &other) {
             std::size_t former_size = size;
             Pointcloud::operator =(other);
-            if(ranges && size != former_size) {
-                    delete [] ranges;
-                    ranges = new float[size];
+            if(size != former_size) {
+                delete [] ranges;
+                ranges = new float[size];
             }
             if(angles && size != former_size) {
                 delete [] angles;
                 angles = new float[size];
             }
+
             std::memcpy(ranges, other.ranges, sizeof(float) * size);
             std::memcpy(angles, other.angles, sizeof(float) * size);
             min = other.min;
@@ -68,10 +69,10 @@ struct LaserScan : Pointcloud<Eigen::Vector2d> {
     void clear() override
     {
         BaseClass::clear();
-        if(ranges != nullptr)
-            delete[] ranges;
-        if(angles != nullptr)
-            delete[] angles;
+        delete[] ranges;
+        ranges = nullptr;
+        delete[] angles;
+        angles = nullptr;
     }
 
     float     *ranges;

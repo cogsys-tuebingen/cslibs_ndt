@@ -59,16 +59,17 @@ public:
     NDTGrid & operator = (const NDTGrid &other)
     {
         if(this != &other) {
-            Size former_size = size;
             size = other.size;
             steps = other.steps;
             resolution = other.resolution;
             origin = other.origin;
+            std::size_t former_size = data_size;
             data_size = other.data_size;
-            if(data && size != former_size) {
+            if(data_size != former_size) {
                 delete [] data;
                 data = new Distribution[data_size];
             }
+
             std::memcpy(data, other.data, sizeof(Distribution) * data_size);
         }
 
@@ -77,9 +78,8 @@ public:
 
     virtual ~NDTGrid()
     {
-        if(data != nullptr) {
-            delete[] data;
-        }
+        delete[] data;
+        data = nullptr;
     }
 
 

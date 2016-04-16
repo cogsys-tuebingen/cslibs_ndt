@@ -44,14 +44,15 @@ struct Pointcloud {
         if(this != &other) {
             std::size_t former_size = size;
             size = other.size;
-            if(points && size != former_size) {
+            if(size != former_size) {
                 delete [] points;
                 points = new PointType[size];
             }
-            if(mask && size != former_size) {
+            if(size != former_size) {
                 delete [] mask;
                 mask = new char[size];
             }
+
             std::memcpy(points, other.points, sizeof(PointType) * size);
             std::memcpy(mask, other.mask, size);
         }
@@ -69,15 +70,17 @@ struct Pointcloud {
         size = _size;
         points = new PointT[size];
         mask = new char[size];
+        memset(points, 0, size * sizeof(PointT));
+        memset(mask, INVALID, size);
     }
 
     virtual void clear()
     {
         size = 0;
-        if(points != nullptr)
-            delete[] points;
-        if(mask != nullptr)
-            delete[] mask;
+        delete[] points;
+        points = nullptr;
+        delete[] mask;
+        mask = nullptr;
     }
 
     std::size_t size;

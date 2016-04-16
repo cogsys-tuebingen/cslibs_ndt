@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
             std::chrono::system_clock::now() - start;
     std::cout << "elapsed " << elapsed.count() << "s" << std::endl;
     std::cout << "elapsed " << elapsed.count() * 1000.0 << "ms" << std::endl;
-    std::cout << "elapsed " << elapsed.count() * 1000000.0 << "µs" << std::endl;
+    std::cout << "elapsed " << elapsed.count() * 1000000.0 << "ns" << std::endl;
 
    start = std::chrono::system_clock::now();
     for(int i = 0 ; i < 5000 ; ++i)

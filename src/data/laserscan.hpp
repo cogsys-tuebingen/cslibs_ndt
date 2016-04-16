@@ -66,8 +66,8 @@ struct LaserScan : Pointcloud<Eigen::Vector2d> {
             ranges = new float[_size];
             angles = new float[_size];
         }
-        memset(points, 0, size * sizeof(float));
-        memset(mask,0, size * sizeof(float));
+        memset(ranges, 0, size * sizeof(float));
+        memset(angles,0, size * sizeof(float));
     }
 
     void clear() override

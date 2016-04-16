@@ -6,6 +6,8 @@
 #include "../data/laserscan.hpp"
 #include "../convert/convert.hpp"
 
+#include <chrono>
+
 namespace ndt {
 struct ScanVisualizerNode {
     typedef ndt::NDTMultiGrid<2> NDTGridType;
@@ -29,6 +31,8 @@ struct ScanVisualizerNode {
 
     void laserscan(const sensor_msgs::LaserScanConstPtr &msg)
     {
+        std::chrono::time_point<std::chrono::system_clock> start =
+                std::chrono::system_clock::now();
         data::LaserScan scan;
         convert::convert(msg, scan);
         /// make a grid
@@ -46,6 +50,11 @@ struct ScanVisualizerNode {
                     std::cerr << "Failed to add point [" << scan.points[i] << "]" << std::endl;
             }
         }
+
+        std::chrono::duration<double> elapsed =
+                std::chrono::system_clock::now() - start;
+        std::cout << "Took : " <<  elapsed.count() * 1000.0 << "ms" << std::endl;
+
         /// render the grid
         display = cv::Mat (500,500, CV_8UC3, cv::Scalar());
         ndt::renderNDTGrid(grid, scan.min, scan.max, display);

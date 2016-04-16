@@ -107,14 +107,13 @@ target_link_libraries(demo_grid_visualization
     ${OpenCV_LIBRARIES}
 )
 
+add_executable(ndt_visualization_node
+    src/nodes/visualization_node.cpp
+)
 
-#add_executable(ndt_scan_visualization
-#    src/nodes/visualization_node.cpp
-#)
-
-#target_link_libraries(ndt_scan_visualization
-#    ${catkin_LIBRARIES}
-#    ndt
-#    ${OpenCV_LIBRARIES}
-#)
+target_link_libraries(ndt_visualization_node
+    ${catkin_LIBRARIES}
+    ndt
+    ${OpenCV_LIBRARIES}
+)
 endif()

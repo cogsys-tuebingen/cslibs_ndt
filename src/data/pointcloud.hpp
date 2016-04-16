@@ -9,7 +9,9 @@ namespace data {
 template<typename PointT>
 struct Pointcloud {
     typedef std::shared_ptr<Pointcloud<PointT>> Ptr;
-    typedef PointT PointType;
+    typedef PointT             PointType;
+    typedef Pointcloud<PointT> BaseClass;
+
     enum EntyValidity {INVALID = 0, VALID = 1};
 
     Pointcloud() :
@@ -28,6 +30,33 @@ struct Pointcloud {
         memset(mask, INVALID, size);
     }
 
+    Pointcloud(const Pointcloud &other) :
+        size(other.size),
+        points(new PointType[size]),
+        mask(new char[size])
+    {
+        std::memcpy(points, other.points, sizeof(PointType) * size);
+        std::memcpy(mask, other.mask, size);
+    }
+
+    Pointcloud & operator = (const Pointcloud &other)
+    {
+        if(this != &other) {
+            std::size_t former_size = size;
+            size = other.size;
+            if(points && size != former_size) {
+                delete [] points;
+                points = new PointType[size];
+            }
+            if(mask && size != former_size) {
+                delete [] mask;
+                mask = new char[size];
+            }
+            std::memcpy(points, other.points, sizeof(PointType) * size);
+            std::memcpy(mask, other.mask, size);
+        }
+        return *this;
+    }
 
     virtual ~Pointcloud()
     {

@@ -70,11 +70,12 @@ public:
     NDTMultiGrid & operator = (const NDTMultiGrid &other)
     {
         if(this != &other) {
+            std::size_t former_size = size;
             size = other.size;
             resolution = other.resolution;
             origin = other.origin;
             data_size = other.data_size;
-            if(data) {
+            if(data && size != former_size) {
                 delete [] data;
                 data = new NDTGrid<Dim>[data_size];
             }

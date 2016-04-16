@@ -1,77 +1,62 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
-#include "../ndt/laserscan.hpp"
-#include "../ndt/ndt_multi_grid.h"
-#include <eigen3/Eigen/Jacobi>
+
 #include "../optional/visualize.hpp"
+#include "../ndt/multi_grid.hpp"
+#include "../data/laserscan.hpp"
+#include "../convert/convert.hpp"
 
 namespace ndt {
 struct ScanVisualizerNode {
+    typedef ndt::NDTMultiGrid<2> NDTGridType;
+
     ros::NodeHandle   nh;
     ros::Subscriber   sub;
-
     double            resolution;
-    double            size;
-    double            margin;
-
-    std::size_t       conv_iter;
-    double            conv_eps;
-
-    NDTMultiGrid::Ptr ndt_grid;
-    std::vector<Point> points;
 
     ScanVisualizerNode() :
         nh("~"),
-        resolution(1.0),
-        size(0.0),
-        margin(0.1),
-        conv_iter(100),
-        conv_eps(1e-3)
+        resolution(1.0)
     {
-        std::string topic("/scan");
+        std::string topic = "/scan";
+        nh.getParam("resolution", resolution);
         nh.getParam("topic", topic);
 
         sub = nh.subscribe<sensor_msgs::LaserScan>(topic, 1, &ScanVisualizerNode::laserscan, this);
 
     }
 
-    void laserscan(const sensor_msgs::LaserScan::ConstPtr &msg)
+    void laserscan(const sensor_msgs::LaserScanConstPtr &msg)
     {
-        LaserScan scan(msg);
-        size = msg->range_max;
-        ndt_grid.reset(new NDTMultiGrid(size + margin,
-                                        size + margin,
-                                        resolution));
-        insert(scan, ndt_grid);
+        data::LaserScan scan;
+        convert::convert(msg, scan);
+        /// make a grid
+        data::LaserScan::PointType range = scan.max - scan.min;
+        NDTGridType::Size       size = {static_cast<std::size_t>(range(0) / resolution),
+                                        static_cast<std::size_t>(range(1) / resolution)};
+        NDTGridType::Resolution res = {resolution, resolution};
 
-
-        cv::Mat display;
-        ndt::renderNDTGrid(*ndt_grid, ndt::Point(-size, -size), ndt::Point(size, size), 0.01, display, false);
-        ndt::renderPoints(points, display);
-        cv::imshow("display", display);
-        cv::waitKey(19);
-
-    }
-
-    void insert(const LaserScan   &scan,
-                NDTMultiGrid::Ptr &ndt_grid)
-    {
-        points.clear();
+        ndt::NDTMultiGrid2D grid(size, res, scan.min);
         for(std::size_t i = 0 ; i < scan.size ; ++i) {
-            if(scan.mask[i] == LaserScan::VALID) {
-                ndt_grid->add(scan.points[i]);
-                points.push_back(scan.points[i]);
+            if(scan.mask[i] == data::LaserScan::VALID) {
+                if(!grid.add(scan.points[i]))
+                    std::cerr << "Failed to add point [" << scan.points[i] << "]" << std::endl;
             }
         }
+        /// render the grid
+        cv::Mat display(500,500, CV_8UC3, cv::Scalar());
+        ndt::renderNDTGrid(grid, scan.min, scan.max, display);
+        cv::imshow("ndt", display);
+        cv::waitKey(19);
     }
+
 };
 }
 
 int main(int argc, char *argv[])
 {
-    ros::init(argc, argv, "scan_matcher");
+    ros::init(argc, argv, "ndt_visualization_node");
     ndt::ScanVisualizerNode sn;
-
     ros::spin();
 
     return 0;

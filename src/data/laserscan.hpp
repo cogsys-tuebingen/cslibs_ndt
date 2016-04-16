@@ -60,10 +60,14 @@ struct LaserScan : Pointcloud<Eigen::Vector2d> {
 
     void resize(const std::size_t _size) override
     {
-        clear();
-        BaseClass::resize(_size);
-        ranges = new float[_size];
-        angles = new float[_size];
+        if(size != _size) {
+            clear();
+            BaseClass::resize(_size);
+            ranges = new float[_size];
+            angles = new float[_size];
+        }
+        memset(points, 0, size * sizeof(float));
+        memset(mask,0, size * sizeof(float));
     }
 
     void clear() override

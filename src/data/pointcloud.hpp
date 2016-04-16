@@ -66,10 +66,12 @@ struct Pointcloud {
 
     virtual void resize(const std::size_t _size)
     {
-        clear();
-        size = _size;
-        points = new PointT[size];
-        mask = new char[size];
+        if(size != _size) {
+            clear();
+            size = _size;
+            points = new PointT[size];
+            mask = new char[size];
+        }
         memset(points, 0, size * sizeof(PointT));
         memset(mask, INVALID, size);
     }

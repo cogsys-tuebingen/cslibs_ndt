@@ -11,7 +11,8 @@ struct LaserScan : Pointcloud<Eigen::Vector2d> {
 
     LaserScan() :
         ranges(nullptr),
-        angles(nullptr)
+        angles(nullptr),
+        min(Eigen::Vector2d::Zero())
     {
     }
 
@@ -29,8 +30,10 @@ struct LaserScan : Pointcloud<Eigen::Vector2d> {
             delete[] angles;
     }
 
-    float      *ranges;
-    float      *angles;
+    float           *ranges;
+    float           *angles;
+    Eigen::Vector2d  min;
+    Eigen::Vector2d  max;
 };
 }
 }

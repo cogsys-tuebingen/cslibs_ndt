@@ -7,7 +7,7 @@
 
 namespace ndt {
 inline void convert(const sensor_msgs::LaserScanConstPtr &msg,
-                    ndt::LaserScan &scan)
+                    ndt::data::LaserScan &scan)
 {
     scan.resize(msg->ranges.size());
     std::memcpy(scan.ranges, msg->ranges.data(), sizeof(float) * scan.size);
@@ -28,6 +28,9 @@ inline void convert(const sensor_msgs::LaserScanConstPtr &msg,
         }
         scan.angles[i] = angle;
     }
+
+    scan.min = Eigen::Vector2d(-range_max, -range_max);
+    scan.max = Eigen::Vector2d(range_max, range_max);
 }
 }
 

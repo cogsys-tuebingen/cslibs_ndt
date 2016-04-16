@@ -57,43 +57,5 @@ int main(int argc, char *argv[])
             break;
     }
 
-
-    //    /// orthogonal map
-    //    cv::Mat display_ndt;
-    //    ndt::renderNDTGrid(multigrid, ndt::Point(-10, -10), ndt::Point(10, 10), 0.01, display_ndt);
-    //    cv::imshow("display_ndt", display_ndt);
-    //    while(true) {
-    //        int key = cv::waitKey(0) & 0xFF;
-    //        if(key == 27)
-    //            break;
-    //    }
-
-    //    /// rotated
-    //    Eigen::Matrix2d rot;
-    //    double alpha = 0.3;
-    //    rot(0,0) = cos(alpha);
-    //    rot(0,1) = -sin(alpha);
-    //    rot(1,0) = sin(alpha);
-    //    rot(1,1) = cos(alpha);
-
-    //    ndt::NDTMultiGrid multigrid2 (20.0, 20.0, 1.0);
-    //    for(ndt::Point &p : points) {
-    //        p = rot * p;
-    //        if(!multigrid2.add(p))
-    //            std::cerr << "could not add point" << std::endl;
-    //    }
-
-    //    ndt::renderPoints(points, cv::Size(800,800), display);
-    //    cv::imshow("display", display);
-    //    cv::waitKey(0);
-
-    //    ndt::renderNDTGrid(multigrid2, ndt::Point(-10, -10), ndt::Point(10, 10), 0.01, display_ndt);
-    //    cv::imshow("display_ndt", display_ndt);
-    //    while(true) {
-    //        int key = cv::waitKey(0) & 0xFF;
-    //        if(key == 27)
-    //            break;
-    //    }
-
     return 0;
 }

@@ -6,25 +6,20 @@
 
 namespace ndt {
 namespace data {
-struct LaserScan : Pointcloud<Eigen::Vector2d> {
+struct LaserScan : Pointcloud<2> {
     typedef std::shared_ptr<LaserScan> Ptr;
-
 
     LaserScan() :
         BaseClass(),
         ranges(nullptr),
-        angles(nullptr),
-        min(PointType::Zero()),
-        max(PointType::Zero())
+        angles(nullptr)
     {
     }
 
     LaserScan(const LaserScan &other) :
         BaseClass(other),
         ranges(new float[size]),
-        angles(new float[size]),
-        min(other.min),
-        max(other.max)
+        angles(new float[size])
     {
         std::memcpy(ranges, other.ranges, sizeof(float) * size);
         std::memcpy(angles, other.angles, sizeof(float) * size);
@@ -58,7 +53,7 @@ struct LaserScan : Pointcloud<Eigen::Vector2d> {
         clear();
     }
 
-    void resize(const std::size_t _size) override
+    inline void resize(const std::size_t _size) override
     {
         if(size != _size) {
             clear();
@@ -70,7 +65,7 @@ struct LaserScan : Pointcloud<Eigen::Vector2d> {
         memset(angles,0, size * sizeof(float));
     }
 
-    void clear() override
+    inline void clear() override
     {
         BaseClass::clear();
         delete[] ranges;
@@ -81,8 +76,6 @@ struct LaserScan : Pointcloud<Eigen::Vector2d> {
 
     float     *ranges;
     float     *angles;
-    PointType  min;
-    PointType  max;
 };
 }
 }

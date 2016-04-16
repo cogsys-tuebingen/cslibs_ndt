@@ -62,7 +62,7 @@ add_library(ndt
     src/ndt/grid.hpp
     src/ndt/multi_grid.hpp
     src/ndt/mask.hpp
-
+    src/ndt/matcher.hpp
 
 
 #    src/ndt/rolling_distribution.hpp
@@ -76,33 +76,38 @@ target_link_libraries(ndt
     ${catkin_LIBRARIES}
 )
 
-add_executable(test_distribution
+add_executable(ndt_test_distribution
     src/tests/test_distribution.cpp
 )
 
-target_link_libraries(test_distribution
+target_link_libraries(ndt_test_distribution
     ndt
 )
 
-add_executable(test_mask
+add_executable(ndt_test_mask
     src/tests/test_mask.cpp
 )
 
-#add_executable(ndt_scan_matching
-#    src/nodes/scan_matching.cpp
-#)
+add_executable(ndt_test_transformation
+    src/tests/test_transformation.cpp
+)
 
-#target_link_libraries(ndt_scan_matching
-#    ${catkin_LIBRARIES}
-#    ndt
-#)
+
+add_executable(ndt_scan_matching_node
+    src/nodes/scan_matching_node.cpp
+)
+
+target_link_libraries(ndt_scan_matching_node
+    ${catkin_LIBRARIES}
+    ndt
+)
 
 if(${OpenCV_FOUND})
-add_executable(demo_grid_visualization
+add_executable(ndt_demo_grid_visualization
     src/optional/demo_grid_visualization.cpp
     src/optional/visualize.hpp
 )
-target_link_libraries(demo_grid_visualization
+target_link_libraries(ndt_demo_grid_visualization
     ndt
     ${OpenCV_LIBRARIES}
 )

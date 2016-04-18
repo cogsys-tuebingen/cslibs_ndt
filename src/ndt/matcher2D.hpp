@@ -43,7 +43,13 @@ private:
         PointType            mean;
         CovarianceMatrixType inverse_covariance;
         PointType            q;
-        double               s;
+        double               score;
+        PointType            q_inverse_covariance;
+        double               sin_theta, cos_theta;
+        PointType            jac;
+
+        /// gradient and stuff
+        GradientType gradient = GradientType::Zero();
 
         bool converged = false;
         while(!converged) {
@@ -54,9 +60,20 @@ private:
             for(std::size_t i = 0 ; i < _dst.size ; ++i) {
                 if(_dst.mask[i] == PointCloudType::VALID) {
                     points[i] = _transformation * _dst.points[i];
-                    s = grid->sampleNonNormalized(points[i], mean, inverse_covariance, q);
+                    score = grid->sampleNonNormalized(points[i], mean, inverse_covariance, q);
                     /// at this point, s must be greater than 0.0, since we work with non-normalized Gaussians.
-                    if(s > 0.0) {
+                    /// if s is 0.0 we do no need to count the sample in
+                    if(score > 0.0) {
+                        q_inverse_covariance = q.transpose() * inverse_covariance;
+                        sincos(theta, &sin_theta, &cos_theta);
+                        jac(0) = -q(0) * sin_theta - q(1) * cos_theta;
+                        jac(1) =  q(0) * cos_theta - q(1) * sin_theta;
+
+                        /// gradient computation
+                        gradient(0) -= score * q_inverse_covariance(0);
+                        gradient(1) -= score * q_inverse_covariance(1);
+                        gradient(2) -= score * double(q_inverse_covariance.dot(jac));
+                        /// hessian computation
 
                     }
                 }

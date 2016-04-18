@@ -11,8 +11,7 @@
 namespace ndt {
 class NDTMatcher2D : public NDTMatcher<2> {
 public:
-    typedef Eigen::Matrix<double,2,3>  Jacobian;
-    typedef Eigen::Matrix<double,2,3>  Hessian;
+    typedef Eigen::Matrix<double,2,3>  HessianType;
     typedef Eigen::Translation2d       Translation;
     typedef Eigen::Rotation2Dd         Rotation;
 
@@ -44,12 +43,17 @@ private:
         CovarianceMatrixType inverse_covariance;
         PointType            q;
         double               score;
+        double               g_dot;
         PointType            q_inverse_covariance;
-        double               sin_theta, cos_theta;
+        double               sin_theta;
+        double               cos_theta;
         PointType            jac;
+        PointType            hes;
+
 
         /// gradient and stuff
         GradientType gradient = GradientType::Zero();
+        HessianType  hessian  = HessianType::Zero();
 
         bool converged = false;
         while(!converged) {
@@ -68,13 +72,41 @@ private:
                         sincos(theta, &sin_theta, &cos_theta);
                         jac(0) = -q(0) * sin_theta - q(1) * cos_theta;
                         jac(1) =  q(0) * cos_theta - q(1) * sin_theta;
+                        hes(0) = -q(0) * cos_theta + q(1) * sin_theta;
+                        hes(1) = -q(0) * sin_theta - q(1) * cos_theta;
 
                         /// gradient computation
+                        g_dot = q_inverse_covariance.dot(jac);
                         gradient(0) -= score * q_inverse_covariance(0);
                         gradient(1) -= score * q_inverse_covariance(1);
-                        gradient(2) -= score * double(q_inverse_covariance.dot(jac));
+                        gradient(2) -= score * g_dot;
                         /// hessian computation
+                        hessian(0,0) = -q_inverse_covariance(0) * q_inverse_covariance(0)   /// (1)
+                                     +  inverse_covariance(0,0);                            /// (3)
+                        hessian(1,0) = -q_inverse_covariance(1) * q_inverse_covariance(0)   /// (1)
+                                     +  inverse_covariance(1,0);                            /// (3)
+                        hessian(2,0) = -g_dot * inverse_covariance(0)                       /// (1)
+                                     +  0.0; /// todo                                       /// (3)
+                        hessian(0,1) = -q_inverse_covariance(0) * q_inverse_covariance(1);  /// (1)
+                                     + inverse_covariance(0,1);                             /// (3)
+                        hessian(1,1) = -q_inverse_covariance(1) * q_inverse_covariance(1);  /// (1)
+                                     + inverse_covariance(1,1);                             /// (3)
+                        hessian(2,1) = -g_dot * inverse_covariance(1);                      /// (1)
+                                     + 0.0; /// todo                                        /// (3)
+                        hessian(0,2) = -q_inverse_covariance(0) * g_dot;                    /// (1)
+                                     + 0.0; /// todo                                        /// (3)
+                        hessian(1,2) = -q_inverse_covariance(1) * g_dot;                    /// (1)
+                                     + 0.0; /// todo                                        /// (3)
+                        hessian(2,2) = -g_dot * g_dot                                       /// (1)
+                                     +  q_inverse_covariance.dot(hes)                       /// (2)
+                                     + 0.0; /// todo                                        /// (3)
 
+                        /// (1) directly computed from Jacobian combined with q^t * InvCov
+                        /// (2) only a result for H(2,2)
+                        /// (3) [1,0].[[a,b],[c,d]].[[1],[0]] = a with i = j = 0, Jac.col(0)
+                        ///     [0,1].[[a,b],[c,d]].[[1],[0]] = c with i = 1, j = 0, Jac.col(1), Jac.col(0)
+                        ///     [1,0].[[a,b],[c,d]].[[0],[1]] = b with i = 0, j = 1, Jac.col(0), Jac.col(1)
+                        ///     [0,1].[[a,b],[c,d]].[[0],[1]] = d with i = 1, j = 1, Jac.col(1)
                     }
                 }
             }

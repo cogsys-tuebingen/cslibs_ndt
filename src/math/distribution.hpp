@@ -112,20 +112,48 @@ public:
         if(n_1 >= 2) {
             if(dirty)
                 update();
-            Point  diff = _p - mean;
-            double exponent = -0.5 * double(diff.transpose() * inverse_covariance * diff);
+            Point  q = _p - mean;
+            double exponent = -0.5 * double(q.transpose() * inverse_covariance * q);
             double denominator = 1.0 / (covariance.determinant() * sqrt_2_M_PI);
             return denominator * exp(exponent);
         }
         return 0.0;
     }
 
+    inline double evaluate(const Point &_p,
+                           Point &_q)
+    {
+        if(n_1 >= 2) {
+            if(dirty)
+                update();
+            _q = _p - mean;
+            double exponent = -0.5 * double(_q.transpose() * inverse_covariance * _q);
+            double denominator = 1.0 / (covariance.determinant() * sqrt_2_M_PI);
+            return denominator * exp(exponent);
+        }
+        return 0.0;
+
+    }
+
     inline double evaluateNonNoramlized(const Point &_p) {
         if(n_1 >= 2) {
             if(dirty)
                 update();
-            Point  diff = _p - mean;
-            double exponent = -0.5 * double(diff.transpose() * inverse_covariance * diff);
+            Point  q = _p - mean;
+            double exponent = -0.5 * double(q.transpose() * inverse_covariance * q);
+            return exp(exponent);
+        }
+        return 0.0;
+    }
+
+    inline double evaluateNonNoramlized(const Point &_p,
+                                        Point &_q)
+    {
+        if(n_1 > 2) {
+            if(dirty)
+                update();
+            _q = _p - mean;
+            double exponent = -0.5 * double(_q.transpose() * inverse_covariance * _q);
             return exp(exponent);
         }
         return 0.0;

@@ -174,6 +174,27 @@ public:
         return result;
     }
 
+    inline double sample(const Point &_p,
+                         Point       &_mean,
+                         Matrix      &_inverse_covariance,
+                         Point       &_q)
+    {
+        _mean = Point::Zero();
+        _inverse_covariance = Matrix::Zero();
+
+        double result = 0.0;
+        Point   mean = Point::Zero();
+        Point   q = Point::Zero();
+        Matrix  inverse_covariance = Matrix::Zero();
+        for(std::size_t i = 0 ; i < data_size ; ++i) {
+            result += data[i].sample(_p, mean, inverse_covariance, q);
+            _mean  += mean;
+            _q     += q;
+            _inverse_covariance += inverse_covariance;
+        }
+        return result;
+    }
+
     inline double sampleNonNormalized(const Point &_p)
     {
         double result = 0.0;
@@ -185,7 +206,8 @@ public:
 
     inline double sampleNonNormalized(const Point &_p,
                                       Point       &_mean,
-                                      Matrix      &_inverse_covariance)
+                                      Matrix      &_inverse_covariance,
+                                      Point       &_q)
     {
         _mean = Point::Zero();
         _inverse_covariance = Matrix::Zero();
@@ -193,9 +215,11 @@ public:
         double result = 0.0;
         Point   mean = Point::Zero();
         Matrix  inverse_covariance = Matrix::Zero();
+        Point   q = Point::Zero();
         for(std::size_t i = 0 ; i < data_size ; ++i) {
-            result += data[i].sampleNonNormalized(_p, mean, inverse_covariance);
+            result += data[i].sampleNonNormalized(_p, mean, inverse_covariance, q);
             _mean  += mean;
+            _q     += q;
             _inverse_covariance += inverse_covariance;
         }
         return result;

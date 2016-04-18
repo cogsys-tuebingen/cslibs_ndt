@@ -39,16 +39,11 @@ private:
         Rotation    rotation(0.0);
         PointType  *points = new PointType[_dst.size];
 
-        Jacobian  jac = Jacobian::Identity();
-        Hessian   hes = Hessian::Zero();
-
+        /// variables needed for sampling a point
         PointType            mean;
         CovarianceMatrixType inverse_covariance;
         PointType            q;
-
-        GradientType g = GradientType::Zero();
-        GradientType h = GradientType::Zero();
-        Eigen::Matrix3d hes_f = Eigen::Matrix3d::Zero();
+        double               s;
 
         bool converged = false;
         while(!converged) {
@@ -59,21 +54,11 @@ private:
             for(std::size_t i = 0 ; i < _dst.size ; ++i) {
                 if(_dst.mask[i] == PointCloudType::VALID) {
                     points[i] = _transformation * _dst.points[i];
-                    double x = points[i](0);
-                    double y = points[i](1);
-                    double s = sin(theta);
-                    double c = cos(theta);
+                    s = grid->sampleNonNormalized(points[i], mean, inverse_covariance, q);
+                    /// at this point, s must be greater than 0.0, since we work with non-normalized Gaussians.
+                    if(s > 0.0) {
 
-                    jac(0,2) = -s * x - c * y;
-                    jac(1,2) =  c * x - s * y;
-                    hes(0,2) = -c * x + s * y;
-                    hes(1,2) = -s * x - c * y;
-
-                    double score = -1.0 * grid->sample(points[i], mean, inverse_covariance);
-
-                    q = points[i] - mean;
-                    g += q.transpose() * inverse_covariance * jac;
-
+                    }
                 }
             }
 

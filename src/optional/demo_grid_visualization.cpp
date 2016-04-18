@@ -1,5 +1,6 @@
 /// PROJECT
 #include "visualize.hpp"
+#include "../data/pointcloud.hpp"
 
 void linspace(const double min,
               const double max,
@@ -34,6 +35,10 @@ int main(int argc, char *argv[])
             points.push_back(Point(-1.0, e));
     }
 
+    ndt::data::Pointcloud<2> pointcloud(points);
+    std::cout << "min " << pointcloud.min << std::endl;
+    std::cout << "max " << pointcloud.max << std::endl;
+
     ndt::NDTMultiGrid2D::Size   size = {20, 20};
     ndt::NDTMultiGrid2D::Resolution resolution = {1.0, 1.0};
 
@@ -48,6 +53,9 @@ int main(int argc, char *argv[])
         if(!multigrid.add(p))
             std::cerr << "could not add point" << std::endl;
     }
+    if(!multigrid.add(pointcloud))
+        std::cerr << "some points could not be added" << std::endl;
+
 
     ndt::renderNDTGrid(multigrid, Point(-10, -10), Point(10,10), display);
     cv::imshow("display", display);

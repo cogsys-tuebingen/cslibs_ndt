@@ -62,8 +62,8 @@ add_library(ndt
     src/ndt/grid.hpp
     src/ndt/multi_grid.hpp
     src/ndt/mask.hpp
+    src/ndt/matcher2D.hpp
     src/ndt/matcher.hpp
-
 
 #    src/ndt/rolling_distribution.hpp
 #    src/ndt/ndt_grid.cpp

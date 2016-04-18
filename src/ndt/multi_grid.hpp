@@ -3,6 +3,7 @@
 
 #include "grid.hpp"
 #include "mask.hpp"
+#include "../data/pointcloud.hpp"
 
 namespace ndt {
 template<std::size_t Dim>
@@ -25,6 +26,8 @@ public:
     /// NOTICE :
     /// Displacement of 0.25 * resolution results in 0.5 displacement from grids to each other
     /// Origin of Multigrid is in the center of the combined grid area.
+
+    /// maybe point cloud constructor
 
     NDTMultiGrid(const Size       &_size,
                  const Resolution &_resolution,
@@ -128,6 +131,18 @@ public:
         bool result = false;
         for(std::size_t i = 0 ; i < data_size; ++i) {
             result |= data[i].add(_p);
+        }
+        return result;
+    }
+
+    inline bool add(const data::Pointcloud<Dim> &_p)
+    {
+        bool result = false;
+        for(std::size_t i = 0 ; i < _p.size ; ++i) {
+            if(_p.mask[i] == data::Pointcloud<Dim>::VALID) {
+                for(std::size_t j = 0 ; j < data_size; ++j)
+                    result |= data[j].add(_p.points[i]);
+            }
         }
         return result;
     }

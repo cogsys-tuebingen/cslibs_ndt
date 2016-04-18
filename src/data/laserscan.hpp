@@ -61,8 +61,8 @@ struct LaserScan : Pointcloud<2> {
             ranges = new float[_size];
             angles = new float[_size];
         }
-        memset(ranges, 0, size * sizeof(float));
-        memset(angles,0, size * sizeof(float));
+        std::memset(ranges, 0, size * sizeof(float));
+        std::memset(angles,0, size * sizeof(float));
     }
 
     inline void clear() override

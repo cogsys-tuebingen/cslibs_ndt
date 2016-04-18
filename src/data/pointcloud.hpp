@@ -4,6 +4,7 @@
 #include <memory>
 #include <cstring>
 #include <eigen3/Eigen/Core>
+#include <vector>
 
 namespace ndt {
 namespace data {
@@ -31,8 +32,20 @@ struct Pointcloud {
         min(PointType::Zero()),
         max(PointType::Zero())
     {
-        memset(points, 0, size * sizeof(PointType));
-        memset(mask, INVALID, size);
+        std::memset(points, 0, size * sizeof(PointType));
+        std::memset(mask, INVALID, size);
+    }
+
+    Pointcloud(const std::vector<PointType> &_points) :
+        size(_points.size()),
+        points(new PointType[size]),
+        mask(new char[size]),
+        min(PointType::Zero()),
+        max(PointType::Zero())
+    {
+        std::memcpy(points, _points.data(), size * sizeof(PointType));
+        std::memset(mask, VALID, size);
+        autoAdjustLimits();
     }
 
     Pointcloud(const Pointcloud &other) :
@@ -72,6 +85,30 @@ struct Pointcloud {
     {
         clear();
     }
+
+    inline void autoAdjustLimits()
+    {
+        if(size == 0)
+            return;
+
+        PointType _min = PointType::Constant(std::numeric_limits<double>::max());
+        PointType _max = PointType::Constant(std::numeric_limits<double>::min());
+
+        for(std::size_t i = 0 ; i < size ; ++i) {
+            if(mask[i] == VALID) {
+                for(std::size_t j = 0 ; j < Dim ; ++j) {
+                    if(points[i](j) < _min(j))
+                        _min(j) = points[i](j);
+                    if(points[i](j) > _max(j))
+                        _max(j) = points[i](j);
+                }
+            }
+        }
+
+        min = _min;
+        max = _max;
+    }
+
 
     inline virtual void resize(const std::size_t _size)
     {

@@ -42,7 +42,7 @@ private:
         PointType            mean;
         CovarianceMatrixType inverse_covariance;
         PointType            q;
-        double               score;
+        double               s;
         double               g_dot;
         PointType            q_inverse_covariance;
         double               sin_theta;
@@ -52,8 +52,9 @@ private:
 
 
         /// gradient and stuff
-        GradientType gradient = GradientType::Zero();
-        HessianType  hessian  = HessianType::Zero();
+        GradientType gradient;
+        HessianType  hessian;
+        double       score;
 
         bool converged = false;
         while(!converged) {
@@ -61,13 +62,18 @@ private:
             trans    = Translation(tx, ty);
             _transformation = trans * rotation * _transformation;
 
+            gradient = GradientType::Zero();
+            hessian  = HessianType::Zero();
+            score = 0.0;
+
             for(std::size_t i = 0 ; i < _dst.size ; ++i) {
                 if(_dst.mask[i] == PointCloudType::VALID) {
                     points[i] = _transformation * _dst.points[i];
-                    score = grid->sampleNonNormalized(points[i], mean, inverse_covariance, q);
+                    s = grid->sampleNonNormalized(points[i], mean, inverse_covariance, q);
                     /// at this point, s must be greater than 0.0, since we work with non-normalized Gaussians.
                     /// if s is 0.0 we do no need to count the sample in
-                    if(score > 0.0) {
+                    if(s > 0.0) {
+                        score += s;
                         q_inverse_covariance = q.transpose() * inverse_covariance;
                         sincos(theta, &sin_theta, &cos_theta);
                         jac(0) = -q(0) * sin_theta - q(1) * cos_theta;
@@ -77,29 +83,38 @@ private:
 
                         /// gradient computation
                         g_dot = q_inverse_covariance.dot(jac);
-                        gradient(0) -= score * q_inverse_covariance(0);
-                        gradient(1) -= score * q_inverse_covariance(1);
-                        gradient(2) -= score * g_dot;
+                        gradient(0) -= s * q_inverse_covariance(0);
+                        gradient(1) -= s * q_inverse_covariance(1);
+                        gradient(2) -= s * g_dot;
                         /// hessian computation
-                        hessian(0,0) = -q_inverse_covariance(0) * q_inverse_covariance(0)   /// (1)
+                        hessian(0,0)+=  s
+                                     * -q_inverse_covariance(0) * q_inverse_covariance(0)   /// (1)
                                      +  inverse_covariance(0,0);                            /// (3)
-                        hessian(1,0) = -q_inverse_covariance(1) * q_inverse_covariance(0)   /// (1)
+                        hessian(1,0)+=  s
+                                     * -q_inverse_covariance(1) * q_inverse_covariance(0)   /// (1)
                                      +  inverse_covariance(1,0);                            /// (3)
-                        hessian(2,0) = -g_dot * inverse_covariance(0)                       /// (1)
-                                     +  0.0; /// todo                                       /// (3)
-                        hessian(0,1) = -q_inverse_covariance(0) * q_inverse_covariance(1);  /// (1)
-                                     + inverse_covariance(0,1);                             /// (3)
-                        hessian(1,1) = -q_inverse_covariance(1) * q_inverse_covariance(1);  /// (1)
-                                     + inverse_covariance(1,1);                             /// (3)
-                        hessian(2,1) = -g_dot * inverse_covariance(1);                      /// (1)
-                                     + 0.0; /// todo                                        /// (3)
-                        hessian(0,2) = -q_inverse_covariance(0) * g_dot;                    /// (1)
-                                     + 0.0; /// todo                                        /// (3)
-                        hessian(1,2) = -q_inverse_covariance(1) * g_dot;                    /// (1)
-                                     + 0.0; /// todo                                        /// (3)
-                        hessian(2,2) = -g_dot * g_dot                                       /// (1)
+                        hessian(2,0)+=  s
+                                     * -g_dot * inverse_covariance(0)                       /// (1)
+                                     +  inverse_covariance.row(0) * jac;                    /// (3)
+                        hessian(0,1)+=  s
+                                     * -q_inverse_covariance(0) * q_inverse_covariance(1)   /// (1)
+                                     +  inverse_covariance(0,1);                            /// (3)
+                        hessian(1,1)+=  s
+                                     * -q_inverse_covariance(1) * q_inverse_covariance(1)   /// (1)
+                                     +  inverse_covariance(1,1);                            /// (3)
+                        hessian(2,1)+=  s
+                                     * -g_dot * inverse_covariance(1)                       /// (1)
+                                     +  inverse_covariance.row(1) * jac;                    /// (3)
+                        hessian(0,2)+=  s
+                                     * -q_inverse_covariance(0) * g_dot                     /// (1)
+                                     +  jac.transpose() * inverse_covariance.col(0);        /// (3)
+                        hessian(1,2)+=  s
+                                     * -q_inverse_covariance(1) * g_dot                     /// (1)
+                                     +  jac.transpose() * inverse_covariance.col(1);        /// (3)
+                        hessian(2,2)+=  s
+                                     * -g_dot * g_dot                                       /// (1)
                                      +  q_inverse_covariance.dot(hes)                       /// (2)
-                                     + 0.0; /// todo                                        /// (3)
+                                     +  jac.transpose() * inverse_covariance * jac;         /// (3)
 
                         /// (1) directly computed from Jacobian combined with q^t * InvCov
                         /// (2) only a result for H(2,2)
@@ -107,24 +122,20 @@ private:
                         ///     [0,1].[[a,b],[c,d]].[[1],[0]] = c with i = 1, j = 0, Jac.col(1), Jac.col(0)
                         ///     [1,0].[[a,b],[c,d]].[[0],[1]] = b with i = 0, j = 1, Jac.col(0), Jac.col(1)
                         ///     [0,1].[[a,b],[c,d]].[[0],[1]] = d with i = 1, j = 1, Jac.col(1)
+                        ///     [1,0].[[a,b],[c,d]].J_T.col(2) = [a,b].J_T.col(2)
+                        ///     [0,1].[[a,b],[c,d]].J_T.col(2) = [c,d].J_T.col(2)
+                        ///     J_T.col(2).[[a,b],[c,d]].[[1],[0]] = J_T.col(2).[a, c]
+                        ///     J_T.col(2).[[a,b],[c,d]].[[0],[1]] = J_T.col(2).[b, d]
+                        ///     J_T.col(2).[[a,b],[c,d]].J_T.col(2)
                     }
                 }
             }
 
-
         }
 
+        std::cout << "score was " << score << std::endl;
+
         delete[] points;
-
-
-        /// 3. For each sample fo the second scan: Map the reconstructed 2D point into the
-        ///    the coordinate frame of the first scan according to the parameters.
-        /// 4. Determine the corresponding normal distributions for each mapped point.
-        /// 5. The score for the parameters is determined by evaluation the distribution
-        ///    for each point and summing the result.
-        /// 6. Calculate the new parameter estimate by traying to optimize the score.
-        ///    This is done by performin one step of Newton's Algorithm.
-        /// 7. Go to 3. until a convergence criterion is met.
 
     }
 };

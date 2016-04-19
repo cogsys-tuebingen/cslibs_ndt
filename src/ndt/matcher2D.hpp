@@ -55,6 +55,10 @@ private:
         GradientType gradient;
         HessianType  hessian;
         double       score;
+        double       tx_old;
+        double       ty_old;
+        double       theta_old;
+        std::size_t  iteration = 0;
 
         bool converged = false;
         while(!converged) {
@@ -65,6 +69,9 @@ private:
             gradient = GradientType::Zero();
             hessian  = HessianType::Zero();
             score = 0.0;
+            tx_old = tx;
+            ty_old = ty;
+            theta_old = theta;
 
             for(std::size_t i = 0 ; i < _dst.size ; ++i) {
                 if(_dst.mask[i] == PointCloudType::VALID) {
@@ -130,13 +137,29 @@ private:
                     }
                 }
             }
+            /// insert positive definite gurantee here
+            /// solve equeation here
 
+            /// check for convergence
+            if((eps(tx, tx_old, _eps) &&
+                    eps(ty, ty_old, _eps) &&
+                        eps(theta, theta_old, _eps)) ||
+                            iteration > _max_iterations)
+                break;
+            ++iteration;
         }
 
         std::cout << "score was " << score << std::endl;
 
         delete[] points;
 
+    }
+
+    inline bool eps(const double a,
+                    const double b,
+                    const double epsilon = 1e-3)
+    {
+        return fabs(a - b) < epsilon;
     }
 };
 }

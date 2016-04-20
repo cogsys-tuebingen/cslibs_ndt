@@ -92,6 +92,9 @@ add_executable(ndt_test_transformation
     src/tests/test_transformation.cpp
 )
 
+add_executable(ndt_test_solver
+    src/tests/test_solver.cpp
+)
 
 add_executable(ndt_scan_matching_node
     src/nodes/scan_matching_node.cpp

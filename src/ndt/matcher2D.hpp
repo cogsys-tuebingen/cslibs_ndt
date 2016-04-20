@@ -1,19 +1,22 @@
+
 #ifndef MATCHER2D_HPP
 #define MATCHER2D_HPP
 
-#include <memory>
 #include "multi_grid.hpp"
-#include "../data/pointcloud.hpp"
-#include <eigen3/Eigen/Geometry>
-#include <stdexcept>
 #include "matcher.hpp"
+#include "../data/pointcloud.hpp"
+
+#include <memory>
+#include <stdexcept>
+#include <eigen3/Eigen/Geometry>
+#include <eigen3/Eigen/Dense>
 
 namespace ndt {
 class NDTMatcher2D : public NDTMatcher<2> {
 public:
-    typedef Eigen::Matrix<double,2,3>  HessianType;
-    typedef Eigen::Translation2d       Translation;
-    typedef Eigen::Rotation2Dd         Rotation;
+    typedef Eigen::Matrix<double,3,3>  HessianType;
+    typedef Eigen::Translation2d       TranslationType;
+    typedef Eigen::Rotation2Dd         RotationType;
 
     NDTMatcher2D(const ResolutionType &resolution) :
         BaseClass(resolution)
@@ -30,12 +33,12 @@ private:
                  const double          _eps = 1e-3) override
     {
         _transformation.setIdentity();
-        /// 2. Initialize the parameter estimate.
-        double theta = 0.0;
+        /// todo:: initialize parameter estimate
+        double phi = 0.0;
         double tx = 0.0;
         double ty = 0.0;
-        Translation trans;
-        Rotation    rotation(0.0);
+        TranslationType trans;
+        RotationType    rotation(0.0);
         PointType  *points = new PointType[_dst.size];
 
         /// variables needed for sampling a point
@@ -53,6 +56,7 @@ private:
 
         /// gradient and stuff
         GradientType gradient;
+        GradientType delta_p;
         HessianType  hessian;
         double       score;
         double       tx_old;
@@ -62,8 +66,8 @@ private:
 
         bool converged = false;
         while(!converged) {
-            rotation = Rotation(theta);
-            trans    = Translation(tx, ty);
+            rotation = RotationType(phi);
+            trans    = TranslationType(tx, ty);
             _transformation = trans * rotation * _transformation;
 
             gradient = GradientType::Zero();
@@ -71,7 +75,7 @@ private:
             score = 0.0;
             tx_old = tx;
             ty_old = ty;
-            theta_old = theta;
+            theta_old = phi;
 
             for(std::size_t i = 0 ; i < _dst.size ; ++i) {
                 if(_dst.mask[i] == PointCloudType::VALID) {
@@ -82,7 +86,7 @@ private:
                     if(s > 0.0) {
                         score += s;
                         q_inverse_covariance = q.transpose() * inverse_covariance;
-                        sincos(theta, &sin_theta, &cos_theta);
+                        sincos(phi, &sin_theta, &cos_theta);
                         jac(0) = -q(0) * sin_theta - q(1) * cos_theta;
                         jac(1) =  q(0) * cos_theta - q(1) * sin_theta;
                         hes(0) = -q(0) * cos_theta + q(1) * sin_theta;
@@ -138,12 +142,18 @@ private:
                 }
             }
             /// insert positive definite gurantee here
+
             /// solve equeation here
+            delta_p = GradientType::Zero();
+            delta_p = hessian.jacobiSvd(Eigen::ComputeFullU | Eigen::ComputeFullV).solve(gradient);
+            tx  += delta_p(0);
+            ty  += delta_p(1);
+            phi += delta_p(2);
 
             /// check for convergence
             if((eps(tx, tx_old, _eps) &&
                     eps(ty, ty_old, _eps) &&
-                        eps(theta, theta_old, _eps)) ||
+                        eps(phi, theta_old, _eps)) ||
                             iteration > _max_iterations)
                 break;
             ++iteration;

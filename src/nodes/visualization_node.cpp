@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 
-#include "../optional/visualize.hpp"
+#include "../tests/optional/visualize.hpp"
 #include "../ndt/multi_grid.hpp"
 #include "../data/laserscan.hpp"
 #include "../convert/convert.hpp"

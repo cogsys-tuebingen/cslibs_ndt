@@ -65,10 +65,6 @@ add_library(ndt
     src/ndt/matcher2D.hpp
     src/ndt/matcher.hpp
 
-#    src/ndt/rolling_distribution.hpp
-#    src/ndt/ndt_grid.cpp
-#    src/ndt/ndt_multi_grid.cpp
-#    src/ndt/types.hpp
 )
 set_target_properties(ndt PROPERTIES LINKER_LANGUAGE CXX)
 
@@ -107,10 +103,19 @@ target_link_libraries(ndt_scan_matching_node
 
 if(${OpenCV_FOUND})
 add_executable(ndt_demo_grid_visualization
-    src/optional/demo_grid_visualization.cpp
-    src/optional/visualize.hpp
+    src/tests/optional/demo_grid_visualization.cpp
+    src/tests/optional/visualize.hpp
 )
 target_link_libraries(ndt_demo_grid_visualization
+    ndt
+    ${OpenCV_LIBRARIES}
+)
+
+add_executable(ndt_demo_matcher
+    src/tests/optional/demo_matcher.cpp
+)
+
+target_link_libraries(ndt_demo_matcher
     ndt
     ${OpenCV_LIBRARIES}
 )

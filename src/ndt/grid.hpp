@@ -133,58 +133,20 @@ public:
         return true;
     }
 
-    inline double sample(const Point &_p)
+    inline Distribution* get(const Point &_p)
     {
         int p = pos(_p);
         if(p >= data_size || p < 0)
-            return 0.0;
-        return data[p].evaluate(_p);
+            return nullptr;
+        return &data[p];
     }
 
-    inline double sample(const Point &_p,
-                         Point       &_mean,
-                         Matrix      &_inverse_covariance)
+    inline Distribution const * get(const Point &_p) const
     {
         int p = pos(_p);
         if(p >= data_size || p < 0)
-            return 0.0;
-        data[p].getMean(_mean);
-        data[p].getInverseCovariance(_inverse_covariance);
-        return data[p].evaluate(_p);
-    }
-
-    inline double sample(const Point &_p,
-                         Point       &_mean,
-                         Matrix      &_inverse_covariance,
-                         Point       &_q)
-    {
-        int p = pos(_p);
-        if(p >= data_size || p < 0)
-            return 0.0;
-        data[p].getMean(_mean);
-        data[p].getInverseCovariance(_inverse_covariance);
-        return data[p].evaluate(_p, _q);
-    }
-
-    inline double sampleNonNormalized(const Point &_p)
-    {
-        int p = pos(_p);
-        if(p >= data_size || p < 0)
-            return 0.0;
-        return data[p].evaluateNonNoramlized(_p);
-    }
-
-    inline double sampleNonNormalized(const Point &_p,
-                                      Point       &_mean,
-                                      Matrix      &_inverse_covariance,
-                                      Point       &_q)
-    {
-        int p = pos(_p);
-        if(p >= data_size || p < 0)
-            return 0.0;
-        data[p].getMean(_mean);
-        data[p].getInverseCovariance(_inverse_covariance);
-        return data[p].evaluateNonNoramlized(_p, _q);
+            return nullptr;
+        return &data[p];
     }
 
     inline Distribution const & at(const Index &_index) const

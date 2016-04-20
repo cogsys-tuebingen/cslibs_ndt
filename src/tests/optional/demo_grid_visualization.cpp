@@ -1,6 +1,6 @@
 /// PROJECT
 #include "visualize.hpp"
-#include "../data/pointcloud.hpp"
+#include "../../data/pointcloud.hpp"
 
 void linspace(const double min,
               const double max,

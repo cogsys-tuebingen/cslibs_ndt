@@ -36,6 +36,7 @@ public:
         resolution(_resolution),
         origin(_origin),
         data_size(mask.rows),
+        normalizer(1.0 / data_size),
         data(new NDTGrid<Dim>[data_size])
     {
         Resolution offsets;
@@ -164,12 +165,14 @@ public:
         _inverse_covariance = Matrix::Zero();
 
         double result = 0.0;
-        Point   mean = Point::Zero();
-        Matrix  inverse_covariance = Matrix::Zero();
         for(std::size_t i = 0 ; i < data_size ; ++i) {
-            result += data[i].sample(_p, mean, inverse_covariance);
-            _mean  += mean;
-            _inverse_covariance += inverse_covariance;
+            Distribution *distr = data[i].get(_p);
+            if(distr != nullptr &&
+                    distr->getN() >= 3) {
+                result += distr->evaluate(_p) * normalizer;
+                _mean += distr->getMean() * normalizer;
+                _inverse_covariance += distr->getInverseCovariance() * normalizer;
+            }
         }
         return result;
     }
@@ -181,16 +184,19 @@ public:
     {
         _mean = Point::Zero();
         _inverse_covariance = Matrix::Zero();
+        _q = Point::Zero();
 
         double result = 0.0;
-        Point   mean = Point::Zero();
         Point   q = Point::Zero();
-        Matrix  inverse_covariance = Matrix::Zero();
         for(std::size_t i = 0 ; i < data_size ; ++i) {
-            result += data[i].sample(_p, mean, inverse_covariance, q);
-            _mean  += mean;
-            _q     += q;
-            _inverse_covariance += inverse_covariance;
+            Distribution *distr = data[i].get(_p);
+            if(distr != nullptr &&
+                    distr->getN() >= 3) {
+                result += distr->evaluate(_p, q) * normalizer;
+                _mean += distr->getMean() * normalizer;
+                _q += q * normalizer;
+                _inverse_covariance += distr->getInverseCovariance() * normalizer;
+            }
         }
         return result;
     }
@@ -199,7 +205,11 @@ public:
     {
         double result = 0.0;
         for(std::size_t i = 0 ; i < data_size ; ++i) {
-            result += data[i].sampleNonNormalized(_p);
+            Distribution *distr = data[i].get(_p);
+            if(distr != nullptr &&
+                    distr->getN() >= 3) {
+                result += distr->evaluateNonNoramlized(_p) * normalizer;
+            }
         }
         return result;
     }
@@ -211,16 +221,19 @@ public:
     {
         _mean = Point::Zero();
         _inverse_covariance = Matrix::Zero();
+        _q = Point::Zero();
 
         double result = 0.0;
-        Point   mean = Point::Zero();
-        Matrix  inverse_covariance = Matrix::Zero();
         Point   q = Point::Zero();
         for(std::size_t i = 0 ; i < data_size ; ++i) {
-            result += data[i].sampleNonNormalized(_p, mean, inverse_covariance, q);
-            _mean  += mean;
-            _q     += q;
-            _inverse_covariance += inverse_covariance;
+            Distribution *distr = data[i].get(_p);
+            if(distr != nullptr &&
+                    distr->getN() >= 3) {
+                result += distr->evaluateNonNoramlized(_p, q) * normalizer;
+                _mean += distr->getMean() * normalizer;
+                _q += q * normalizer;
+                _inverse_covariance += distr->getInverseCovariance() * normalizer;
+            }
         }
         return result;
     }
@@ -249,6 +262,7 @@ private:
     Resolution    resolution;
     Point         origin;
     std::size_t   data_size;
+    double        normalizer;
     NDTGrid<Dim> *data;
 
     Mask<Dim>     mask;

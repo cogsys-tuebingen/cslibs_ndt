@@ -24,22 +24,21 @@ public:
     }
 
 private:
-    typename NDTGridType::Ptr grid;
-    double                    resolution;
-
     void doMatch(const PointCloudType &_dst,
                  TransformType        &_transformation,
                  const std::size_t     _max_iterations = 100,
                  const double          _eps = 1e-3) override
     {
         _transformation.setIdentity();
-        /// todo:: initialize parameter estimate
-        double phi = 0.0;
+        /// todo:: initialize parameter estimate double phi = 0.0;
         double tx = 0.0;
         double ty = 0.0;
+        double phi = 0.0;
         TranslationType trans;
         RotationType    rotation(0.0);
         PointType  *points = new PointType[_dst.size];
+
+        /// initialize the grid
 
         /// variables needed for sampling a point
         PointType            mean;
@@ -48,8 +47,8 @@ private:
         double               s;
         double               g_dot;
         PointType            q_inverse_covariance;
-        double               sin_theta;
-        double               cos_theta;
+        double               sin_phi;
+        double               cos_phi;
         PointType            jac;
         PointType            hes;
 
@@ -61,21 +60,21 @@ private:
         double       score;
         double       tx_old;
         double       ty_old;
-        double       theta_old;
+        double       phi_old;
         std::size_t  iteration = 0;
 
         bool converged = false;
         while(!converged) {
             rotation = RotationType(phi);
             trans    = TranslationType(tx, ty);
-            _transformation = trans * rotation * _transformation;
+            _transformation = trans * rotation;
 
             gradient = GradientType::Zero();
             hessian  = HessianType::Zero();
-            score = 0.0;
-            tx_old = tx;
-            ty_old = ty;
-            theta_old = phi;
+            score    = 0.0;
+            tx_old   = tx;
+            ty_old   = ty;
+            phi_old  = phi;
 
             for(std::size_t i = 0 ; i < _dst.size ; ++i) {
                 if(_dst.mask[i] == PointCloudType::VALID) {
@@ -86,11 +85,11 @@ private:
                     if(s > 0.0) {
                         score += s;
                         q_inverse_covariance = q.transpose() * inverse_covariance;
-                        sincos(phi, &sin_theta, &cos_theta);
-                        jac(0) = -q(0) * sin_theta - q(1) * cos_theta;
-                        jac(1) =  q(0) * cos_theta - q(1) * sin_theta;
-                        hes(0) = -q(0) * cos_theta + q(1) * sin_theta;
-                        hes(1) = -q(0) * sin_theta - q(1) * cos_theta;
+                        sincos(phi, &sin_phi, &cos_phi);
+                        jac(0) = -q(0) * sin_phi - q(1) * cos_phi;
+                        jac(1) =  q(0) * cos_phi - q(1) * sin_phi;
+                        hes(0) = -q(0) * cos_phi + q(1) * sin_phi;
+                        hes(1) = -q(0) * sin_phi - q(1) * cos_phi;
 
                         /// gradient computation
                         g_dot = q_inverse_covariance.dot(jac);
@@ -153,13 +152,15 @@ private:
             /// check for convergence
             if((eps(tx, tx_old, _eps) &&
                     eps(ty, ty_old, _eps) &&
-                        eps(phi, theta_old, _eps)) ||
+                        eps(phi, phi_old, _eps)) ||
                             iteration > _max_iterations)
                 break;
             ++iteration;
         }
 
+        std::cout << tx << " " << ty << " " << phi << std::endl;
         std::cout << "score was " << score << std::endl;
+        std::cout << "iterations " << iteration << std::endl;
 
         delete[] points;
 

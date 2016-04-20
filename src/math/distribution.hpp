@@ -96,7 +96,7 @@ public:
                 update();
             return inverse_covariance;
         }
-        return Matrix::Zeros();
+        return Matrix::Zero();
     }
 
     inline void getInverseCovariance(Matrix &_inverse_covariance)

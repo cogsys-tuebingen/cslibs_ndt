@@ -1,7 +1,7 @@
 #ifndef VISUALIZE_HPP
 #define VISUALIZE_HPP
 /// PROJECT
-#include "../ndt/multi_grid.hpp"
+#include "../../ndt/multi_grid.hpp"
 
 /// SYSTEM
 #include <opencv2/opencv.hpp>
@@ -15,6 +15,7 @@ void renderPoints(const std::vector<NDTMultiGrid2D::Point> &points,
                   const NDTMultiGrid2D::Size               &grid_dimension,
                   const NDTMultiGrid2D::Resolution         &resolution,
                   cv::Mat &dst,
+                  const cv::Scalar &color = cv::Scalar(255),
                   const bool render_grid = true,
                   const double visibility = 0.5,
                   const bool flip = true)
@@ -42,7 +43,7 @@ void renderPoints(const std::vector<NDTMultiGrid2D::Point> &points,
     for(const NDTMultiGrid2D::Point &p : points) {
         cv::Point cvp(p(0) * scale_x + dst.cols / 2,
                       p(1) * scale_y + dst.rows / 2);
-        cv::circle(dst, cvp, 3, cv::Scalar(255), CV_FILLED, CV_AA);
+        cv::circle(dst, cvp, 3, color, CV_FILLED, CV_AA);
     }
 
     if(flip)

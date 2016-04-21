@@ -41,6 +41,7 @@ public:
                 throw std::range_error("Point cloud boundaries are not set properly!");
             size[i] = floor(range(i) / resolution[i] + 0.5);
         }
+
         grid.reset(new NDTGridType(size, resolution, _src.min));
         grid->add(_src);
 

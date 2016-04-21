@@ -4,6 +4,7 @@
 #include <memory>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Eigen>
+#include <iostream>
 
 namespace ndt {
 namespace math {
@@ -86,6 +87,8 @@ public:
             if(dirty)
                 update();
             _covariance = covariance;
+        } else {
+            _covariance = Matrix::Zero();
         }
     }
 
@@ -105,10 +108,13 @@ public:
             if(dirty)
                 update();
             _inverse_covariance = inverse_covariance;
+        } else {
+            _inverse_covariance = Matrix::Zero();
         }
     }
 
-    inline double evaluate(const Point &_p) {
+    inline double evaluate(const Point &_p)
+    {
         if(n_1 >= 2) {
             if(dirty)
                 update();
@@ -132,7 +138,6 @@ public:
             return denominator * exp(exponent);
         }
         return 0.0;
-
     }
 
     inline double evaluateNonNoramlized(const Point &_p) {
@@ -149,7 +154,7 @@ public:
     inline double evaluateNonNoramlized(const Point &_p,
                                         Point &_q)
     {
-        if(n_1 > 2) {
+        if(n_1 >= 2) {
             if(dirty)
                 update();
             _q = _p - mean;
@@ -191,7 +196,7 @@ private:
                     max_lambda = eigen_values(i);
             }
             Matrix Lambda = Matrix::Zero();
-            double l = 0.001 * max_lambda;
+            double l = 1e-2 * max_lambda;
             for(std::size_t i = 0 ; i < Dim; ++i) {
                 if(fabs(eigen_values(i)) < fabs(l)) {
                     Lambda(i,i) = l;
@@ -200,11 +205,12 @@ private:
                 }
             }
             covariance = Q * Lambda * Q.transpose();
+            inverse_covariance = Q * Lambda.inverse() * Q.transpose();
+        } else {
+            inverse_covariance = covariance.inverse();
         }
-        inverse_covariance = covariance.inverse();
         dirty = false;
     }
-
 };
 }
 }

@@ -36,8 +36,8 @@ int main(int argc, char *argv[])
             points_src.push_back(Matcher::PointType(-1.0, e));
     }
     /// generate a second points test which is transformed
-    Matcher::RotationType    rotation       = Matcher::RotationType(0.1);
-    Matcher::TranslationType trans          = Matcher::TranslationType(0.00, 0.0);
+    Matcher::RotationType    rotation       = Matcher::RotationType(0.0);
+    Matcher::TranslationType trans          = Matcher::TranslationType(0.2, 0.0);
     Matcher::TransformType   transformation = trans * rotation;
     std::vector<Matcher::PointType> points_dst;
     for(Matcher::PointType &p : points_src) {
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 
     /// now we can try out the matching
     Matcher m(resolution);
-    m.match(pointcloud_src, pointcloud_dst, transformation, 2000, 1e-6);
+    m.match(pointcloud_src, pointcloud_dst, transformation, 4000, 1e-3);
 
     for(Matcher::PointType &p : points_dst) {
         p = transformation * p;

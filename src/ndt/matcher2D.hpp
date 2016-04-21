@@ -6,6 +6,7 @@
 #include "matcher.hpp"
 #include "../data/pointcloud.hpp"
 
+#include <fstream>
 #include <memory>
 #include <stdexcept>
 #include <eigen3/Eigen/Geometry>
@@ -19,11 +20,19 @@ public:
     typedef Eigen::Rotation2Dd         RotationType;
 
     NDTMatcher2D(const ResolutionType &resolution) :
-        BaseClass(resolution)
+        BaseClass(resolution),
+        out("/tmp/out.txt")
     {
     }
 
+    virtual ~NDTMatcher2D()
+    {
+        out.close();
+    }
+
 private:
+    std::ofstream out;
+
     void doMatch(const PointCloudType &_dst,
                  TransformType        &_transformation,
                  const std::size_t     _max_iterations = 100,
@@ -37,8 +46,6 @@ private:
         TranslationType trans;
         RotationType    rotation(0.0);
         PointType  *points = new PointType[_dst.size];
-
-        /// initialize the grid
 
         /// variables needed for sampling a point
         PointType            mean;
@@ -75,17 +82,19 @@ private:
             tx_old   = tx;
             ty_old   = ty;
             phi_old  = phi;
+            sincos(phi, &sin_phi, &cos_phi);
 
             for(std::size_t i = 0 ; i < _dst.size ; ++i) {
                 if(_dst.mask[i] == PointCloudType::VALID) {
                     points[i] = _transformation * _dst.points[i];
                     s = grid->sampleNonNormalized(points[i], mean, inverse_covariance, q);
+
                     /// at this point, s must be greater than 0.0, since we work with non-normalized Gaussians.
                     /// if s is 0.0 we do no need to count the sample in
                     if(s > 0.0) {
                         score += s;
                         q_inverse_covariance = q.transpose() * inverse_covariance;
-                        sincos(phi, &sin_phi, &cos_phi);
+
                         jac(0) = -q(0) * sin_phi - q(1) * cos_phi;
                         jac(1) =  q(0) * cos_phi - q(1) * sin_phi;
                         hes(0) = -q(0) * cos_phi + q(1) * sin_phi;
@@ -141,6 +150,18 @@ private:
                 }
             }
             /// insert positive definite gurantee here
+            double max = std::numeric_limits<double>::min();
+            double min = std::numeric_limits<double>::max();
+            for(std::size_t i = 0 ; i < 3 ; ++i) {
+                if(hessian(i,i) > max)
+                    max = hessian(i,i);
+                if(hessian(i,i) < min)
+                    min = hessian(i,i);
+            }
+            double off = max - min;
+            for(std::size_t i = 0 ; i < 3 ; ++i) {
+                hessian(i,i) += off;
+            }
 
             /// solve equeation here
             delta_p = GradientType::Zero();
@@ -148,6 +169,8 @@ private:
             tx  += delta_p(0);
             ty  += delta_p(1);
             phi += delta_p(2);
+
+            out << tx << " " << ty << " " << phi << std::endl;
 
             /// check for convergence
             if((eps(tx, tx_old, _eps) &&

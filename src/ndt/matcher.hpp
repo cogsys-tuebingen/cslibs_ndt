@@ -26,11 +26,12 @@ public:
     {
     }
 
-    inline void match(const PointCloudType &_src,
-                      const PointCloudType &_dst,
-                      TransformType        &_transformation,
-                      const std::size_t     _max_iterations = 100,
-                      const double          _eps = 1e-3)
+    inline double match(const PointCloudType &_src,
+                        const PointCloudType &_dst,
+                        TransformType        &_transformation,
+                        const std::size_t     _max_iterations = 100,
+                        const double          _eps = 1e-3,
+                        const double          _eps_rad = 1e-6)
     {
         /// range check & grid size calculation
         /// 1. Build the Normal Distribution Transform of the first scan.
@@ -45,17 +46,18 @@ public:
         grid.reset(new NDTGridType(size, resolution, _src.min));
         grid->add(_src);
 
-        doMatch(_dst, _transformation, _max_iterations, _eps);
+        return doMatch(_dst, _transformation, _max_iterations, _eps);
     }
 
 protected:
     typename NDTGridType::Ptr grid;
     ResolutionType            resolution;
 
-    virtual void doMatch(const PointCloudType &_dst,
-                         TransformType        &_transformation,
-                         const std::size_t     _max_iterations = 100,
-                         const double          _eps = 1e-3)
+    virtual double doMatch(const PointCloudType &_dst,
+                           TransformType        &_transformation,
+                           const std::size_t     _max_iterations = 100,
+                           const double          _eps = 1e-3,
+                           const double          _eps_rad = 1e-6)
     {
         /// 2. Initialize the parameter estimate.
         /// 3. For each sample fo the second scan: Map the reconstructed 2D point into the
@@ -66,7 +68,7 @@ protected:
         /// 6. Calculate the new parameter estimate by traying to optimize the score.
         ///    This is done by performin one step of Newton's Algorithm.
         /// 7. Go to 3. until a convergence criterion is met.
-
+        return 0.0;
     }
 
 };

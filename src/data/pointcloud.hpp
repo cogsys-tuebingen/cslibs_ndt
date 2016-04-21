@@ -52,8 +52,8 @@ struct Pointcloud {
         size(other.size),
         points(new PointType[size]),
         mask(new char[size]),
-        min(PointType::Zero()),
-        max(PointType::Zero())
+        min(other.min),
+        max(other.max)
     {
         std::memcpy(points, other.points, sizeof(PointType) * size);
         std::memcpy(mask, other.mask, size);

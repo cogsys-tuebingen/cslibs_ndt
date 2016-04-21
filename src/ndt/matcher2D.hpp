@@ -33,10 +33,11 @@ public:
 private:
     std::ofstream out;
 
-    void doMatch(const PointCloudType &_dst,
-                 TransformType        &_transformation,
-                 const std::size_t     _max_iterations = 100,
-                 const double          _eps = 1e-3) override
+    double doMatch(const PointCloudType &_dst,
+                   TransformType        &_transformation,
+                   const std::size_t     _max_iterations = 100,
+                   const double          _eps = 1e-3,
+                   const double          _eps_rad = 1e-6) override
     {
         _transformation.setIdentity();
         /// todo:: initialize parameter estimate double phi = 0.0;
@@ -107,33 +108,33 @@ private:
                         gradient(2) -= s * g_dot;
                         /// hessian computation
                         hessian(0,0)+=  s
-                                     * -q_inverse_covariance(0) * q_inverse_covariance(0)   /// (1)
-                                     +  inverse_covariance(0,0);                            /// (3)
+                                     * (-q_inverse_covariance(0) * q_inverse_covariance(0)   /// (1)
+                                     +  inverse_covariance(0,0));                            /// (3)
                         hessian(1,0)+=  s
-                                     * -q_inverse_covariance(1) * q_inverse_covariance(0)   /// (1)
-                                     +  inverse_covariance(1,0);                            /// (3)
+                                     * (-q_inverse_covariance(1) * q_inverse_covariance(0)   /// (1)
+                                     +  inverse_covariance(1,0));                            /// (3)
                         hessian(2,0)+=  s
-                                     * -g_dot * inverse_covariance(0)                       /// (1)
-                                     +  inverse_covariance.row(0) * jac;                    /// (3)
+                                     * (-g_dot * inverse_covariance(0)                       /// (1)
+                                     +  inverse_covariance.row(0) * jac);                    /// (3)
                         hessian(0,1)+=  s
-                                     * -q_inverse_covariance(0) * q_inverse_covariance(1)   /// (1)
-                                     +  inverse_covariance(0,1);                            /// (3)
+                                     * (-q_inverse_covariance(0) * q_inverse_covariance(1)   /// (1)
+                                     +  inverse_covariance(0,1));                            /// (3)
                         hessian(1,1)+=  s
-                                     * -q_inverse_covariance(1) * q_inverse_covariance(1)   /// (1)
-                                     +  inverse_covariance(1,1);                            /// (3)
+                                     * (-q_inverse_covariance(1) * q_inverse_covariance(1)   /// (1)
+                                     +  inverse_covariance(1,1));                            /// (3)
                         hessian(2,1)+=  s
-                                     * -g_dot * inverse_covariance(1)                       /// (1)
-                                     +  inverse_covariance.row(1) * jac;                    /// (3)
+                                     * (-g_dot * inverse_covariance(1)                       /// (1)
+                                     +  inverse_covariance.row(1) * jac);                    /// (3)
                         hessian(0,2)+=  s
-                                     * -q_inverse_covariance(0) * g_dot                     /// (1)
-                                     +  jac.transpose() * inverse_covariance.col(0);        /// (3)
+                                     * (-q_inverse_covariance(0) * g_dot                     /// (1)
+                                     +  jac.transpose() * inverse_covariance.col(0));        /// (3)
                         hessian(1,2)+=  s
-                                     * -q_inverse_covariance(1) * g_dot                     /// (1)
-                                     +  jac.transpose() * inverse_covariance.col(1);        /// (3)
+                                     * (-q_inverse_covariance(1) * g_dot                     /// (1)
+                                     +  jac.transpose() * inverse_covariance.col(1));        /// (3)
                         hessian(2,2)+=  s
-                                     * -g_dot * g_dot                                       /// (1)
-                                     +  q_inverse_covariance.dot(hes)                       /// (2)
-                                     +  jac.transpose() * inverse_covariance * jac;         /// (3)
+                                     * (-g_dot * g_dot                                       /// (1)
+                                     +  q_inverse_covariance.dot(hes)                        /// (2)
+                                     +  jac.transpose() * inverse_covariance * jac);         /// (3)
 
                         /// (1) directly computed from Jacobian combined with q^t * InvCov
                         /// (2) only a result for H(2,2)
@@ -181,11 +182,10 @@ private:
             ++iteration;
         }
 
-        std::cout << tx << " " << ty << " " << phi << std::endl;
-        std::cout << "score was " << score << std::endl;
         std::cout << "iterations " << iteration << std::endl;
 
         delete[] points;
+        return score;
 
     }
 

@@ -8,6 +8,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   tf
+  pcl_conversions
+  nav_msgs
 )
 
 ## OpenMP
@@ -21,6 +23,9 @@ find_package(Eigen3 REQUIRED)
 
 ## OpenCV
 find_package(OpenCV QUIET)
+
+## PCL
+find_package(PCL REQUIRED)
 
 ## C++11
 include(CheckCXXCompilerFlag)
@@ -48,6 +53,7 @@ catkin_package(
 include_directories(
     ${catkin_INCLUDE_DIRS}
     ${Eigen3_INCLUDE_DIRS}
+    ${PCL_INCLUDE_DIRS}
     src
 )
 
@@ -98,10 +104,14 @@ add_executable(ndt_scan_matching_node
 
 target_link_libraries(ndt_scan_matching_node
     ${catkin_LIBRARIES}
+    ${PCL_LIBRIARIES}
     ndt
+    ${OpenCV_LIBRARIES}
 )
 
 if(${OpenCV_FOUND})
+include_directories(${OpenCV_INCLUDE_DIRS})
+
 add_executable(ndt_demo_grid_visualization
     src/tests/optional/demo_grid_visualization.cpp
     src/tests/optional/visualize.hpp
@@ -118,6 +128,16 @@ add_executable(ndt_demo_matcher
 target_link_libraries(ndt_demo_matcher
     ndt
     ${OpenCV_LIBRARIES}
+)
+
+add_executable(ndt_demo_matcher_pcl
+    src/tests/optional/demo_matcher_pcl.cpp
+)
+
+target_link_libraries(ndt_demo_matcher_pcl
+    ndt
+    ${OpenCV_LIBRARIES}
+    ${PCL_LIBRARIES}
 )
 
 add_executable(ndt_visualization_node

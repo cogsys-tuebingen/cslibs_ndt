@@ -47,27 +47,6 @@ void renderPoints(const std::vector<NDTMultiGrid2D::Point> &points,
     }
 }
 
-void renderNDTGridCells(const cv::Scalar &grid_color,
-                        const NDTGrid2D  &grid,
-                        const NDTMultiGrid2D::Index &index,
-                        cv::Mat &dst)
-{
-    NDTGrid2D::Size grid_dimension = grid.getSize();
-    int offx = index[0] * 0.25 * dst.cols/grid.getSize()[0];
-    int offy = index[1] * 0.25 * dst.cols/grid.getSize()[1];
-    for(std::size_t i = 0 ; i < grid_dimension[0] ; ++i) {
-        cv::Point a(i * dst.cols / grid_dimension[0] - offx, 0 - offy);
-        cv::Point b(i * dst.cols / grid_dimension[0] - offx, dst.rows - 1 - offy);
-        cv::line(dst, a, b, grid_color, 1, CV_AA);
-    }
-
-    for(std::size_t i = 0 ; i < grid_dimension[1] ; ++i) {
-        cv::Point a(0 - offx, i * dst.rows / grid_dimension[1] - offy);
-        cv::Point b(dst.cols - 1 - offx, i * dst.rows / grid_dimension[1] - offy);
-        cv::line(dst, a, b, grid_color, 1, CV_AA);
-    }
-}
-
 void renderNDTGrid(NDTMultiGrid2D              &grid,
                    const NDTMultiGrid2D::Point &min,
                    const NDTMultiGrid2D::Point &max,

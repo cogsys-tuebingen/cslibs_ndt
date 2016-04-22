@@ -30,7 +30,7 @@ inline void convert(const sensor_msgs::LaserScanConstPtr &msg,
         if(r >= range_min &&
            r <= range_max) {
             data::LaserScan::PointType &p = scan.points[index];
-            sincos(angle, &(p(0)), &(p(1)));
+            sincos(angle, &(p(1)), &(p(0)));
             p *= r;
             scan.mask[index] = data::LaserScan::VALID;
         }

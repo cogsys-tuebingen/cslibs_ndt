@@ -17,8 +17,7 @@ void renderPoints(const std::vector<NDTMultiGrid2D::Point> &points,
                   cv::Mat &dst,
                   const cv::Scalar &color = cv::Scalar(255),
                   const bool render_grid = true,
-                  const double visibility = 0.5,
-                  const bool flip = true)
+                  const double visibility = 0.5)
 {
     double scale_x = dst.cols / (grid_dimension[0] * resolution[0]);
     double scale_y = dst.rows / (grid_dimension[1] * resolution[1]);
@@ -42,12 +41,9 @@ void renderPoints(const std::vector<NDTMultiGrid2D::Point> &points,
 
     for(const NDTMultiGrid2D::Point &p : points) {
         cv::Point cvp(p(0) * scale_x + dst.cols / 2,
-                      p(1) * scale_y + dst.rows / 2);
+                      dst.rows - 1 - (p(1) * scale_y + dst.rows / 2));
         cv::circle(dst, cvp, 3, color, CV_FILLED, CV_AA);
     }
-
-    if(flip)
-        cv::flip(dst, dst, 0);
 }
 
 void renderNDTGrid(NDTMultiGrid2D              &grid,
@@ -68,7 +64,7 @@ void renderNDTGrid(NDTMultiGrid2D              &grid,
             if(value > max_value) {
                 max_value = value;
             }
-            samples.at<double>(i,j) = value;
+            samples.at<double>(dst.rows - 1 - i,j) = value;
         }
     }
 

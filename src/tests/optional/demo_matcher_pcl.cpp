@@ -69,8 +69,8 @@ int main(int argc, char *argv[])
     ndt::NDTMultiGrid2D::Size   size = {20, 20};
     ndt::NDTMultiGrid2D::Resolution resolution = {1.0, 1.0};
     cv::Mat display = cv::Mat(800, 800, CV_8UC3, cv::Scalar());
-    ndt::renderPoints(points_src, size, resolution, display, cv::Scalar(255), false, 0.5, false);
-    ndt::renderPoints(points_dst, size, resolution, display, cv::Scalar(0,255), false, 0.5, true);
+    ndt::renderPoints(points_src, size, resolution, display, cv::Scalar(255), false, 0.5);
+    ndt::renderPoints(points_dst, size, resolution, display, cv::Scalar(0,255), false, 0.5);
     while(true) {
         cv::imshow("display", display);
         int key = cv::waitKey(0) & 0xFF;
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     }
 
     /// now we can try out the matching
-    ndt::renderPoints(points_dst, size, resolution, display, cv::Scalar(0,0,255), false, 0.5, true);
+    ndt::renderPoints(points_dst, size, resolution, display, cv::Scalar(0,0,255), false, 0.5);
     while(true) {
         cv::imshow("display", display);
         int key = cv::waitKey(0) & 0xFF;

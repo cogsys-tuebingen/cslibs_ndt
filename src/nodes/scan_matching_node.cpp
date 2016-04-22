@@ -44,14 +44,13 @@ struct ScanMatcherNode {
     void laserscan(const sensor_msgs::LaserScanConstPtr &msg)
     {
         ndt::data::LaserScan dst;
-        ndt::convert::convert(msg, dst, true);
+        ndt::convert::convert(msg, dst, false);
         if(!src) {
             src.reset(new ndt::data::LaserScan(dst));
         } else {
             NDTMatcher matcher(resolution);
             NDTMatcher::TransformType transform;
             double score = matcher.match(*src, dst, transform, 1000, 1e-6, 1e-6);
-            transform = NDTMatcher::RotationType(-M_PI_2) * transform;
             if(score < 80) {
                 src.reset(new ndt::data::LaserScan(dst));
                 return;
@@ -76,18 +75,19 @@ struct ScanMatcherNode {
             grid.add(*src);
             ndt::renderNDTGrid(grid, src->min, src->max, distribution);
             cv::cvtColor(distribution,  distribution, CV_BGR2GRAY);
-            distribution *= 0.5;
+            distribution *= 100.0 / 255.0;
 
             nav_msgs::OccupancyGrid distr_msg;
             distr_msg.header = msg->header;
             distr_msg.info.height = distribution.rows;
             distr_msg.info.width = distribution.cols;
             distr_msg.info.origin.position.x = src->min(0);
-            distr_msg.info.origin.position.y = -src->min(1);
-            distr_msg.info.origin.orientation = tf::createQuaternionMsgFromYaw(-M_PI_2);
+            distr_msg.info.origin.position.y = src->min(1);
             distr_msg.info.resolution = range(1) / distribution.rows;
-            for(int i = 0 ; i < distribution.rows * distribution.cols ; ++i)
-                distr_msg.data.push_back(distribution.at<uchar>(i));
+            for(int i = 0 ; i < distribution.rows ; ++i) {
+                for(int j = 0 ; j < distribution.cols ; ++j)
+                    distr_msg.data.push_back(distribution.at<uchar>(distribution.rows - 1 - i, j));
+            }
 
             output.header = pcl_conversions::toPCL(msg->header);
             pub_pcl.publish(output);

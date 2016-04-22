@@ -51,8 +51,8 @@ int main(int argc, char *argv[])
 
     /// show the point set
     cv::Mat display = cv::Mat(800, 800, CV_8UC3, cv::Scalar());
-    ndt::renderPoints(points_src, size, resolution, display, cv::Scalar(255), false, 0.5, false);
-    ndt::renderPoints(points_dst, size, resolution, display, cv::Scalar(0,255), false, 0.5, true);
+    ndt::renderPoints(points_src, size, resolution, display, cv::Scalar(255), false, 0.5);
+    ndt::renderPoints(points_dst, size, resolution, display, cv::Scalar(0,255), false, 0.5);
     while(true) {
         cv::imshow("display", display);
         int key = cv::waitKey(0) & 0xFF;
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     for(Matcher::PointType &p : points_dst) {
         p = transformation * p;
     }
-    ndt::renderPoints(points_dst, size, resolution, display, cv::Scalar(0,0,255), false, 0.5, true);
+    ndt::renderPoints(points_dst, size, resolution, display, cv::Scalar(0,0,255), false, 0.5);
 
     while(true) {
         cv::imshow("display", display);

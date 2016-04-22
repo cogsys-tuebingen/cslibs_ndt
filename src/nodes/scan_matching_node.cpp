@@ -50,8 +50,9 @@ struct ScanMatcherNode {
         } else {
             NDTMatcher matcher(resolution);
             NDTMatcher::TransformType transform;
-            double score = matcher.match(*src, dst, transform, 1000, 1e-6, 1e-6);
-            if(score < 80) {
+            double score = matcher.match(*src, dst, transform, 35, 1e-3, 1e-3);
+            std::cout << score << std::endl;
+            if(score < 50) {
                 src.reset(new ndt::data::LaserScan(dst));
                 return;
             }
@@ -76,6 +77,7 @@ struct ScanMatcherNode {
             ndt::renderNDTGrid(grid, src->min, src->max, distribution);
             cv::cvtColor(distribution,  distribution, CV_BGR2GRAY);
             distribution *= 100.0 / 255.0;
+           // ndt::renderNDTGridCells(cv::Scalar::all(127),grid.at({0,1}), {0,1}, distribution);
 
             nav_msgs::OccupancyGrid distr_msg;
             distr_msg.header = msg->header;

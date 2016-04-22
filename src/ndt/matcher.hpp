@@ -19,6 +19,8 @@ public:
     typedef NDTMatcher<Dim>                              BaseClass;
     typedef typename NDTMultiGrid<Dim>::Matrix           CovarianceMatrixType;
     typedef Eigen::Matrix<double, 2 * Dim - 1, 1>        GradientType;
+    typedef typename NDTMultiGrid<Dim>::Distribution     DistributionType;
+    typedef typename NDTMultiGrid<Dim>::Distributions    DistributionsType;
 
     NDTMatcher(const ResolutionType &_resolution) :
         grid(nullptr),
@@ -46,7 +48,7 @@ public:
         grid.reset(new NDTGridType(size, resolution, _src.min));
         grid->add(_src);
 
-        return doMatch(_dst, _transformation, _max_iterations, _eps);
+        return doMatch(_dst, _transformation, _max_iterations, _eps, _eps_rad);
     }
 
 protected:

@@ -196,7 +196,7 @@ private:
                     max_lambda = eigen_values(i);
             }
             Matrix Lambda = Matrix::Zero();
-            double l = 1e-1 * max_lambda;
+            double l = max_lambda * 1e-3;
             for(std::size_t i = 0 ; i < Dim; ++i) {
                 if(fabs(eigen_values(i)) < fabs(l)) {
                     Lambda(i,i) = l;

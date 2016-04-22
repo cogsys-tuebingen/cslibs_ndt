@@ -94,6 +94,11 @@ public:
         _size = size;
     }
 
+    inline Point getOrigin() const
+    {
+        return origin;
+    }
+
     inline Resolution getResolution() const
     {
         return resolution;

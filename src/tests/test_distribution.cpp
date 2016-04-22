@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
                        Point(4,4),
                        Point(-8,8)};
 
-    ndt::math::Distribution<2> roll2;
+    ndt::math::Distribution<2, true> roll2;
     RollingDistribution roll;
     for(std::size_t i = 0 ; i < 5 ; ++i) {
         roll.add(points[i]);
@@ -54,7 +54,8 @@ int main(int argc, char *argv[])
     std::cout << "-------" << std::endl;
     std::cout << roll2.getMean() << std::endl;
     std::cout << roll2.getCovariance() << std::endl;
-
+    std::cout << "inv_cov" << std::endl;
+    std::cout << roll2.getInverseCovariance() << std::endl;
 
     /// insertion test
     std::chrono::time_point<std::chrono::system_clock> start =

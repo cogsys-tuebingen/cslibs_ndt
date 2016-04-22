@@ -15,8 +15,9 @@ public:
     typedef typename NDTGrid<Dim>::Resolution   Resolution;
     typedef typename NDTGrid<Dim>::Point        Point;
     typedef typename NDTGrid<Dim>::Distribution Distribution;
-    typedef typename NDTGrid<Dim>::Matrix       Matrix;
 
+    typedef typename NDTGrid<Dim>::Matrix       Matrix;
+    typedef std::vector<Distribution*>          Distributions;
 
     NDTMultiGrid() :
         data_size(0),
@@ -126,7 +127,7 @@ public:
         return origin;
     }
 
-    /// ---------------- DATA ---------------------------- ///
+    /// ---------------- INSERTION ---------------------------- ///
     inline bool add(const Point &_p)
     {
         bool result = false;
@@ -148,55 +149,14 @@ public:
         return result;
     }
 
+    /// ---------------- SAMPLING ----------------------------- ///
     inline double sample(const Point &_p)
     {
         double result = 0.0;
         for(std::size_t i = 0 ; i < data_size ; ++i) {
-            result += data[i].sample(_p);
-        }
-        return result;
-    }
-
-    inline double sample(const Point &_p,
-                         Point       &_mean,
-                         Matrix      &_inverse_covariance)
-    {
-        _mean = Point::Zero();
-        _inverse_covariance = Matrix::Zero();
-
-        double result = 0.0;
-        for(std::size_t i = 0 ; i < data_size ; ++i) {
             Distribution *distr = data[i].get(_p);
-            if(distr != nullptr &&
-                    distr->getN() >= 3) {
-                result += distr->evaluate(_p) * normalizer;
-                _mean += distr->getMean() * normalizer;
-                _inverse_covariance += distr->getInverseCovariance() * normalizer;
-            }
-        }
-        return result;
-    }
-
-    inline double sample(const Point &_p,
-                         Point       &_mean,
-                         Matrix      &_inverse_covariance,
-                         Point       &_q)
-    {
-        _mean = Point::Zero();
-        _inverse_covariance = Matrix::Zero();
-        _q = Point::Zero();
-
-        double result = 0.0;
-        Point   q = Point::Zero();
-        for(std::size_t i = 0 ; i < data_size ; ++i) {
-            Distribution *distr = data[i].get(_p);
-            if(distr != nullptr &&
-                    distr->getN() >= 3) {
-                result += distr->evaluate(_p, q) * normalizer;
-                _mean += distr->getMean() * normalizer;
-                _q += q * normalizer;
-                _inverse_covariance += distr->getInverseCovariance() * normalizer;
-            }
+            if(distr != nullptr)
+                result += distr->evaluate(_p);
         }
         return result;
     }
@@ -206,36 +166,22 @@ public:
         double result = 0.0;
         for(std::size_t i = 0 ; i < data_size ; ++i) {
             Distribution *distr = data[i].get(_p);
-            if(distr != nullptr &&
-                    distr->getN() >= 3) {
-                result += distr->evaluateNonNoramlized(_p) * normalizer;
-            }
+            if(distr != nullptr)
+                result += distr->evaluateNonNoramlized(_p);
         }
         return result;
     }
 
-    inline double sampleNonNormalized(const Point &_p,
-                                      Point       &_mean,
-                                      Matrix      &_inverse_covariance,
-                                      Point       &_q)
-    {
-        _mean = Point::Zero();
-        _inverse_covariance = Matrix::Zero();
-        _q = Point::Zero();
 
-        double result = 0.0;
-        Point   q = Point::Zero();
+    inline void get(const Point         &_p,
+                    Distributions       &_distributions)
+    {
+        _distributions.clear();
         for(std::size_t i = 0 ; i < data_size ; ++i) {
             Distribution *distr = data[i].get(_p);
-            if(distr != nullptr &&
-                    distr->getN() >= 3) {
-                result += distr->evaluateNonNoramlized(_p, q) * normalizer;
-                _mean += distr->getMean() * normalizer;
-                _q += q * normalizer;
-                _inverse_covariance += distr->getInverseCovariance() * normalizer;
-            }
+            if(distr != nullptr)
+                _distributions.push_back(distr);
         }
-        return result;
     }
 
     inline NDTGrid<Dim> const & at(const Index &_index) const

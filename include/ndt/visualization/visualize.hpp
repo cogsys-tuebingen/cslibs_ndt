@@ -12,9 +12,9 @@ namespace ndt {
 typedef grid::MultiGrid<2> MultiGrid2DType;
 typedef grid::Grid<2>      Grid2DType;
 
-void renderPoints(const std::vector<MultiGrid2DType::Point> &points,
-                  const MultiGrid2DType::Size               &grid_dimension,
-                  const MultiGrid2DType::Resolution         &resolution,
+void renderPoints(const std::vector<MultiGrid2DType::PointType> &points,
+                  const MultiGrid2DType::SizeType               &grid_dimension,
+                  const MultiGrid2DType::ResolutionType         &resolution,
                   cv::Mat &dst,
                   const cv::Scalar &color = cv::Scalar(255),
                   const bool render_grid = true,
@@ -40,7 +40,7 @@ void renderPoints(const std::vector<MultiGrid2DType::Point> &points,
     }
 
 
-    for(const MultiGrid2DType::Point &p : points) {
+    for(const MultiGrid2DType::PointType &p : points) {
         cv::Point cvp(p(0) * scale_x + dst.cols / 2,
                       dst.rows - 1 - (p(1) * scale_y + dst.rows / 2));
         cv::circle(dst, cvp, 3, color, CV_FILLED, CV_AA);
@@ -48,8 +48,8 @@ void renderPoints(const std::vector<MultiGrid2DType::Point> &points,
 }
 
 void renderNDTGrid(MultiGrid2DType              &grid,
-                   const MultiGrid2DType::Point &min,
-                   const MultiGrid2DType::Point &max,
+                   const MultiGrid2DType::PointType &min,
+                   const MultiGrid2DType::PointType &max,
                    cv::Mat &dst)
 {
     double scale_x = fabs((max - min)(0)) / dst.cols;
@@ -60,7 +60,7 @@ void renderNDTGrid(MultiGrid2DType              &grid,
 #pragma omp parallel for reduction(max : max_value)
     for(int i = 0 ; i < dst.rows ; ++i) {
         for(int j = 0 ; j < dst.cols ; ++j) {
-            MultiGrid2DType::Point p = min + MultiGrid2DType::Point(scale_x * j, scale_y * i);
+            MultiGrid2DType::PointType p = min + MultiGrid2DType::PointType(scale_x * j, scale_y * i);
             double value = grid.sampleNonNormalized(p);
             if(value > max_value) {
                 max_value = value;

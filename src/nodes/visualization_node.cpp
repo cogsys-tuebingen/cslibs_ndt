@@ -36,9 +36,9 @@ struct ScanVisualizerNode {
         conversion::convert(msg, scan);
         /// make a grid
         data::LaserScan::PointType range = scan.range();
-        Grid2DType::Size       size = {static_cast<std::size_t>(range(0) / resolution),
+        Grid2DType::SizeType       size = {static_cast<std::size_t>(range(0) / resolution),
                                         static_cast<std::size_t>(range(1) / resolution)};
-        Grid2DType::Resolution res = {resolution, resolution};
+        Grid2DType::ResolutionType res = {resolution, resolution};
 
         ndt::MultiGrid2DType grid(size, res, scan.min);
         std::vector<data::LaserScan::PointType> points;

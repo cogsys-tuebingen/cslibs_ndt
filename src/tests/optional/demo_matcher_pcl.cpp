@@ -66,8 +66,8 @@ int main(int argc, char *argv[])
     ndt.align (result);
 
     /// show the point set
-    ndt::MultiGrid2DType::Size   size = {20, 20};
-    ndt::MultiGrid2DType::Resolution resolution = {1.0, 1.0};
+    ndt::MultiGrid2DType::SizeType   size = {20, 20};
+    ndt::MultiGrid2DType::ResolutionType resolution = {1.0, 1.0};
     cv::Mat display = cv::Mat(800, 800, CV_8UC3, cv::Scalar());
     ndt::renderPoints(points_src, size, resolution, display, cv::Scalar(255), false, 0.5);
     ndt::renderPoints(points_dst, size, resolution, display, cv::Scalar(0,255), false, 0.5);

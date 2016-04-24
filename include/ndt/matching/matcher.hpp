@@ -17,10 +17,10 @@ public:
     typedef typename PointCloudType::PointType           PointType;
 
     typedef grid::MultiGrid<Dim>                GridType;
-    typedef typename GridType::Resolution       ResolutionType;
-    typedef typename GridType::Distribution     DistributionType;
-    typedef typename GridType::Distributions    DistributionsType;
-    typedef typename GridType::Matrix           CovarianceMatrixType;
+    typedef typename GridType::ResolutionType       ResolutionType;
+    typedef typename GridType::DistributionType     DistributionType;
+    typedef typename GridType::DistributionSetType    DistributionsType;
+    typedef typename GridType::CovarianceMatrixType           CovarianceMatrixType;
 
     typedef NDTMatcher<Dim>                              BaseClass;
 
@@ -43,7 +43,7 @@ public:
         /// range check & grid size calculation
         /// 1. Build the Normal Distribution Transform of the first scan.
         PointType range = _src.range();
-        typename GridType::Size size;
+        typename GridType::SizeType size;
         for(std::size_t i = 0 ; i < Dim ; ++i) {
             if(range(i) <= 0.0)
                 throw std::range_error("Point cloud boundaries are not set properly!");

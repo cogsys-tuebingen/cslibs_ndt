@@ -10,8 +10,9 @@ namespace ndt {
 namespace data {
 template<std::size_t Dim>
 struct Pointcloud {
-    typedef Eigen::Matrix<double, Dim, 1>    PointType;
     typedef std::shared_ptr<Pointcloud<Dim>> Ptr;
+
+    typedef Eigen::Matrix<double, Dim, 1>    PointType;
     typedef Pointcloud<Dim>                  BaseClass;
 
     enum EntyValidity {INVALID = 0, VALID = 1};

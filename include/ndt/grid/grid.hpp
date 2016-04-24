@@ -11,13 +11,14 @@ namespace grid {
 template<std::size_t Dim>
 class Grid {
 public:
-    typedef std::shared_ptr<Grid<Dim>> Ptr;
-    typedef std::array<std::size_t, Dim>  Size;
-    typedef std::array<std::size_t, Dim>  Index;
-    typedef std::array<double, Dim>       Resolution;
-    typedef Eigen::Matrix<double, Dim, 1> Point;
-    typedef math::Distribution<Dim, true> Distribution;
-    typedef typename Distribution::Matrix Matrix;
+    typedef std::shared_ptr<Grid<Dim>>    Ptr;
+
+    typedef std::array<std::size_t, Dim>      SizeType;
+    typedef std::array<std::size_t, Dim>      IndexType;
+    typedef std::array<double, Dim>           ResolutionType;
+    typedef Eigen::Matrix<double, Dim, 1>     PointType;
+    typedef math::Distribution<Dim, true>     DistributionType;
+    typedef typename DistributionType::MatrixType CovarianceMatrixType;
 
     Grid() :
         data_size(0),
@@ -25,9 +26,9 @@ public:
     {
     }
 
-    Grid(const Size       &_size,
-            const Resolution &_resolution,
-            const Point      &_origin = Point::Zero()) :
+    Grid(const SizeType       &_size,
+            const ResolutionType &_resolution,
+            const PointType      &_origin = PointType::Zero()) :
         size(_size),
         resolution(_resolution),
         origin(_origin),
@@ -45,7 +46,7 @@ public:
                 steps[i] = steps[i-1] * size[i];
             }
         }
-        data = new Distribution[data_size];
+        data = new DistributionType[data_size];
     }
 
     Grid(const Grid &other) :
@@ -54,9 +55,9 @@ public:
         resolution(other.resolution),
         origin(other.origin),
         data_size(other.data_size),
-        data(new Distribution[data_size])
+        data(new DistributionType[data_size])
     {
-        std::memcpy(data, other.data, sizeof(Distribution) * data_size);
+        std::memcpy(data, other.data, sizeof(DistributionType) * data_size);
     }
 
     Grid & operator = (const Grid &other)
@@ -70,10 +71,10 @@ public:
             data_size = other.data_size;
             if(data_size != former_size) {
                 delete [] data;
-                data = new Distribution[data_size];
+                data = new DistributionType[data_size];
             }
 
-            std::memcpy(data, other.data, sizeof(Distribution) * data_size);
+            std::memcpy(data, other.data, sizeof(DistributionType) * data_size);
         }
 
         return *this;
@@ -87,33 +88,33 @@ public:
 
 
     /// ---------------- META INFORMATION ---------------- ///
-    inline Size getSize() const
+    inline SizeType getSize() const
     {
         return size;
     }
 
-    inline void getSize(Size &_size) const
+    inline void getSize(SizeType &_size) const
     {
         _size = size;
     }
 
-    inline Point getOrigin() const
+    inline PointType getOrigin() const
     {
         return origin;
     }
 
-    inline Resolution getResolution() const
+    inline ResolutionType getResolution() const
     {
         return resolution;
     }
 
-    inline void getResolution(Resolution &_resolution) const
+    inline void getResolution(ResolutionType &_resolution) const
     {
         _resolution = resolution;
     }
 
-    inline bool getIndex(const Point &_p,
-                         Index &index)
+    inline bool getIndex(const PointType &_p,
+                         IndexType &index)
     {
         for(std::size_t i = 0 ; i < Dim ; ++i) {
             int id = (_p(i) - origin(i)) / resolution[i];
@@ -124,7 +125,7 @@ public:
         return true;
     }
 
-    inline bool checkIndex(const Index &_index)
+    inline bool checkIndex(const IndexType &_index)
     {
         std::size_t p = pos(_index);
         return p < data_size;
@@ -132,7 +133,7 @@ public:
 
 
     /// ---------------- DATA ---------------------------- ///
-    inline bool add(const Point &_p)
+    inline bool add(const PointType &_p)
     {
         int p = pos(_p);
         if(p >= data_size || p < 0)
@@ -141,7 +142,7 @@ public:
         return true;
     }
 
-    inline Distribution* get(const Point &_p)
+    inline DistributionType* get(const PointType &_p)
     {
         int p = pos(_p);
         if(p >= data_size || p < 0)
@@ -149,7 +150,7 @@ public:
         return &data[p];
     }
 
-    inline Distribution const * get(const Point &_p) const
+    inline DistributionType const * get(const PointType &_p) const
     {
         int p = pos(_p);
         if(p >= data_size || p < 0)
@@ -157,7 +158,7 @@ public:
         return &data[p];
     }
 
-    inline Distribution const & at(const Index &_index) const
+    inline DistributionType const & at(const IndexType &_index) const
     {
         int p = pos(_index);
         if(p >= data_size || p < 0)
@@ -166,7 +167,7 @@ public:
         return data[p];
     }
 
-    inline Distribution & at(const Index &_index)
+    inline DistributionType & at(const IndexType &_index)
     {
         int p = pos(_index);
         if(p >= data_size || p < 0)
@@ -175,14 +176,14 @@ public:
     }
 
 private:
-    Size             size;
-    Size             steps;
-    Resolution       resolution;
-    Point            origin;
+    SizeType             size;
+    SizeType             steps;
+    ResolutionType       resolution;
+    PointType            origin;
     std::size_t      data_size;
-    Distribution    *data;
+    DistributionType    *data;
 
-    inline std::size_t pos(const Index &_index) {
+    inline std::size_t pos(const IndexType &_index) {
         std::size_t pos;
         for(std::size_t i = 0 ; i < Dim ; ++i) {
             pos += _index[i] * steps[i];
@@ -190,7 +191,7 @@ private:
         return pos;
     }
 
-    inline int pos(const Point &_p) {
+    inline int pos(const PointType &_p) {
         int pos = 0;
         for(std::size_t i = 0 ; i < Dim ; ++i) {
             pos += floor((_p(i) - origin(i)) / resolution[i])* steps[i];

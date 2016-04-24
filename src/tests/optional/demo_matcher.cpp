@@ -44,8 +44,8 @@ int main(int argc, char *argv[])
         points_dst.push_back(transformation * p);
     }
 
-    ndt::MultiGrid2DType::Size   size = {20, 20};
-    ndt::MultiGrid2DType::Resolution resolution = {1.0, 1.0};
+    ndt::MultiGrid2DType::SizeType   size = {20, 20};
+    ndt::MultiGrid2DType::ResolutionType resolution = {1.0, 1.0};
     ndt::data::Pointcloud<2> pointcloud_src(points_src);
     ndt::data::Pointcloud<2> pointcloud_dst(points_dst);
 

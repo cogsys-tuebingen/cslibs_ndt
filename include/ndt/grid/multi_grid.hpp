@@ -10,15 +10,16 @@ namespace grid {
 template<std::size_t Dim>
 class MultiGrid {
 public:
-    typedef std::shared_ptr<MultiGrid<Dim>>  Ptr;
-    typedef typename Grid<Dim>::Size         Size;
-    typedef typename Grid<Dim>::Index        Index;
-    typedef typename Grid<Dim>::Resolution   Resolution;
-    typedef typename Grid<Dim>::Point        Point;
-    typedef typename Grid<Dim>::Distribution Distribution;
+    typedef std::shared_ptr<MultiGrid<Dim>>          Ptr;
 
-    typedef typename Grid<Dim>::Matrix       Matrix;
-    typedef std::vector<Distribution*>          Distributions;
+    typedef typename Grid<Dim>::SizeType             SizeType;
+    typedef typename Grid<Dim>::IndexType            IndexType;
+    typedef typename Grid<Dim>::ResolutionType       ResolutionType;
+    typedef typename Grid<Dim>::PointType            PointType;
+    typedef typename Grid<Dim>::DistributionType     DistributionType;
+
+    typedef typename Grid<Dim>::CovarianceMatrixType CovarianceMatrixType;
+    typedef std::vector<DistributionType*>           DistributionSetType;
 
     MultiGrid() :
         data_size(0),
@@ -31,9 +32,9 @@ public:
 
     /// maybe point cloud constructor
 
-    MultiGrid(const Size       &_size,
-                 const Resolution &_resolution,
-                 const Point      &_origin = Point::Zero()) :
+    MultiGrid(const SizeType       &_size,
+              const ResolutionType &_resolution,
+              const PointType      &_origin = PointType::Zero()) :
         size(_size),
         resolution(_resolution),
         origin(_origin),
@@ -41,13 +42,13 @@ public:
         normalizer(1.0 / data_size),
         data(new Grid<Dim>[data_size])
     {
-        Resolution offsets;
+        ResolutionType offsets;
         for(std::size_t i = 0 ; i < Dim; ++i) {
             offsets[i] = +_resolution[i] * 0.25;
         }
 
         for(std::size_t i = 0 ; i < data_size ; ++i) {
-            Point o = origin;
+            PointType o = origin;
             for(std::size_t j = 0 ; j < Dim ; ++j) {
                 o(j) += mask[i * mask.cols + j] * offsets[j];
             }
@@ -97,39 +98,39 @@ public:
     }
 
     /// ---------------- META INFORMATION ---------------- ///
-    inline Size getSize() const
+    inline SizeType getSize() const
     {
         return size;
     }
 
-    inline void getSize(Size &_size) const
+    inline void getSize(SizeType &_size) const
     {
         _size = size;
     }
 
-    inline Resolution getResolution() const
+    inline ResolutionType getResolution() const
     {
         return resolution;
     }
 
-    inline void getResolution(Resolution &_resolution) const
+    inline void getResolution(ResolutionType &_resolution) const
     {
         _resolution = resolution;
     }
 
-    inline bool checkIndex(const Index &_index)
+    inline bool checkIndex(const IndexType &_index)
     {
         std::size_t p = pos(_index);
         return p < data_size;
     }
 
-    inline Point getOrigin() const
+    inline PointType getOrigin() const
     {
         return origin;
     }
 
     /// ---------------- INSERTION ---------------------------- ///
-    inline bool add(const Point &_p)
+    inline bool add(const PointType &_p)
     {
         bool result = false;
         for(std::size_t i = 0 ; i < data_size; ++i) {
@@ -151,22 +152,22 @@ public:
     }
 
     /// ---------------- SAMPLING ----------------------------- ///
-    inline double sample(const Point &_p)
+    inline double sample(const PointType &_p)
     {
         double result = 0.0;
         for(std::size_t i = 0 ; i < data_size ; ++i) {
-            Distribution *distr = data[i].get(_p);
+            DistributionType *distr = data[i].get(_p);
             if(distr != nullptr)
                 result += distr->evaluate(_p);
         }
         return result;
     }
 
-    inline double sampleNonNormalized(const Point &_p)
+    inline double sampleNonNormalized(const PointType &_p)
     {
         double result = 0.0;
         for(std::size_t i = 0 ; i < data_size ; ++i) {
-            Distribution *distr = data[i].get(_p);
+            DistributionType *distr = data[i].get(_p);
             if(distr != nullptr)
                 result += distr->evaluateNonNoramlized(_p);
         }
@@ -174,18 +175,18 @@ public:
     }
 
 
-    inline void get(const Point         &_p,
-                    Distributions       &_distributions)
+    inline void get(const PointType         &_p,
+                    DistributionSetType       &_distributions)
     {
         _distributions.clear();
         for(std::size_t i = 0 ; i < data_size ; ++i) {
-            Distribution *distr = data[i].get(_p);
+            DistributionType *distr = data[i].get(_p);
             if(distr != nullptr)
                 _distributions.push_back(distr);
         }
     }
 
-    inline Grid<Dim> const & at(const Index &_index) const
+    inline Grid<Dim> const & at(const IndexType &_index) const
     {
         std::size_t p = pos(_index);
         if(p >= data_size)
@@ -194,7 +195,7 @@ public:
         return data[p];
     }
 
-    inline Grid<Dim> & at(const Index &_index)
+    inline Grid<Dim> & at(const IndexType &_index)
     {
         std::size_t p = pos(_index);
         if(p >= data_size)
@@ -204,17 +205,17 @@ public:
     }
 
 private:
-    Size          size;
-    Size          steps;
-    Resolution    resolution;
-    Point         origin;
+    SizeType          size;
+    SizeType          steps;
+    ResolutionType    resolution;
+    PointType         origin;
     std::size_t   data_size;
     double        normalizer;
     Grid<Dim> *data;
 
     Mask<Dim>     mask;
 
-    inline std::size_t pos(const Index &_index) {
+    inline std::size_t pos(const IndexType &_index) {
         std::size_t p = 0;
         for(std::size_t i = 0 ; i < Dim ; ++i) {
             p += steps[i] * _index[i];

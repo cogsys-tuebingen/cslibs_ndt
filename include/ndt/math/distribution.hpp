@@ -12,19 +12,19 @@ template<std::size_t Dim, bool limit_covariance = false>
 class Distribution {
 public:
     typedef std::shared_ptr<Distribution<Dim, limit_covariance>> Ptr;
-    typedef Eigen::Matrix<double, Dim, 1>                        Point;
-    typedef Eigen::Matrix<double, Dim, Dim>                      Matrix;
-    typedef Eigen::Matrix<double, Dim, 1>                        EigenValues;
-    typedef Eigen::Matrix<double, Dim, Dim>                      EigenVectors;
-    typedef Eigen::Matrix<double, Dim, 1>                        ComplexVector;
-    typedef Eigen::Matrix<std::complex<double>, Dim, Dim>        ComplexMatrix;
 
+    typedef Eigen::Matrix<double, Dim, 1>                        PointType;
+    typedef Eigen::Matrix<double, Dim, Dim>                      MatrixType;
+    typedef Eigen::Matrix<double, Dim, 1>                        EigenValueSetType;
+    typedef Eigen::Matrix<double, Dim, Dim>                      EigenVectorSetType;
+    typedef Eigen::Matrix<double, Dim, 1>                        ComplexVectorType;
+    typedef Eigen::Matrix<std::complex<double>, Dim, Dim>        ComplexMatrixType;
 
     Distribution() :
-        mean(Point::Zero()),
-        covariance(Matrix::Zero()),
-        correlated(Matrix::Zero()),
-        inverse_covariance(Matrix::Zero()),
+        mean(PointType::Zero()),
+        covariance(MatrixType::Zero()),
+        correlated(MatrixType::Zero()),
+        inverse_covariance(MatrixType::Zero()),
         n(1),
         n_1(0),
         sqrt_2_M_PI(sqrt(2 * M_PI)),
@@ -35,14 +35,14 @@ public:
 
     inline void reset()
     {
-        mean = Point::Zero();
-        covariance = Matrix::Zero();
-        correlated = Matrix::Zero();
+        mean = PointType::Zero();
+        covariance = MatrixType::Zero();
+        correlated = MatrixType::Zero();
         n = 1;
         n_1 = 0;
     }
 
-    inline void add(const Point &_p)
+    inline void add(const PointType &_p)
     {
         mean = (mean * n_1 + _p) / n;
         for(std::size_t i = 0 ; i < Dim ; ++i) {
@@ -60,17 +60,17 @@ public:
         return n;
     }
 
-    inline Point getMean() const
+    inline PointType getMean() const
     {
         return mean;
     }
 
-    inline void getMean(Point &_mean) const
+    inline void getMean(PointType &_mean) const
     {
         _mean = mean;
     }
 
-    inline Matrix getCovariance()
+    inline MatrixType getCovariance()
     {
         if(n_1 >= 2) {
             if(dirty)
@@ -78,47 +78,47 @@ public:
             return covariance;
         }
 
-        return Matrix::Zero();
+        return MatrixType::Zero();
     }
 
-    inline void getCovariance(Matrix &_covariance)
+    inline void getCovariance(MatrixType &_covariance)
     {
         if(n_1 >= 2) {
             if(dirty)
                 update();
             _covariance = covariance;
         } else {
-            _covariance = Matrix::Zero();
+            _covariance = MatrixType::Zero();
         }
     }
 
-    inline Matrix getInverseCovariance()
+    inline MatrixType getInverseCovariance()
     {
         if(n_1 >= 2) {
             if(dirty)
                 update();
             return inverse_covariance;
         }
-        return Matrix::Zero();
+        return MatrixType::Zero();
     }
 
-    inline void getInverseCovariance(Matrix &_inverse_covariance)
+    inline void getInverseCovariance(MatrixType &_inverse_covariance)
     {
         if(n_1 >= 2) {
             if(dirty)
                 update();
             _inverse_covariance = inverse_covariance;
         } else {
-            _inverse_covariance = Matrix::Zero();
+            _inverse_covariance = MatrixType::Zero();
         }
     }
 
-    inline double evaluate(const Point &_p)
+    inline double evaluate(const PointType &_p)
     {
         if(n_1 >= 2) {
             if(dirty)
                 update();
-            Point  q = _p - mean;
+            PointType  q = _p - mean;
             double exponent = -0.5 * double(q.transpose() * inverse_covariance * q);
             double denominator = 1.0 / (covariance.determinant() * sqrt_2_M_PI);
             return denominator * exp(exponent);
@@ -126,8 +126,8 @@ public:
         return 0.0;
     }
 
-    inline double evaluate(const Point &_p,
-                           Point &_q)
+    inline double evaluate(const PointType &_p,
+                           PointType &_q)
     {
         if(n_1 >= 2) {
             if(dirty)
@@ -140,19 +140,19 @@ public:
         return 0.0;
     }
 
-    inline double evaluateNonNoramlized(const Point &_p) {
+    inline double evaluateNonNoramlized(const PointType &_p) {
         if(n_1 >= 2) {
             if(dirty)
                 update();
-            Point  q = _p - mean;
+            PointType  q = _p - mean;
             double exponent = -0.5 * double(q.transpose() * inverse_covariance * q);
             return exp(exponent);
         }
         return 0.0;
     }
 
-    inline double evaluateNonNoramlized(const Point &_p,
-                                        Point &_q)
+    inline double evaluateNonNoramlized(const PointType &_p,
+                                        PointType &_q)
     {
         if(n_1 >= 2) {
             if(dirty)
@@ -165,10 +165,10 @@ public:
     }
 
 private:
-    Point  mean;
-    Matrix covariance;
-    Matrix correlated;
-    Matrix inverse_covariance;
+    PointType  mean;
+    MatrixType covariance;
+    MatrixType correlated;
+    MatrixType inverse_covariance;
 
     std::size_t n;
     std::size_t n_1;
@@ -186,16 +186,16 @@ private:
         }
 
         if(limit_covariance) {
-            Eigen::EigenSolver<Matrix> solver;
+            Eigen::EigenSolver<MatrixType> solver;
             solver.compute(covariance);
-            EigenVectors Q = solver.eigenvectors().real();
-            EigenValues  eigen_values  = solver.eigenvalues().real();
+            EigenVectorSetType Q = solver.eigenvectors().real();
+            EigenValueSetType  eigen_values  = solver.eigenvalues().real();
             double max_lambda = std::numeric_limits<double>::min();
             for(std::size_t i = 0 ; i < Dim ; ++i) {
                 if(eigen_values(i) > max_lambda)
                     max_lambda = eigen_values(i);
             }
-            Matrix Lambda = Matrix::Zero();
+            MatrixType Lambda = MatrixType::Zero();
             double l = max_lambda * 1e-3;
             for(std::size_t i = 0 ; i < Dim; ++i) {
                 if(fabs(eigen_values(i)) < fabs(l)) {

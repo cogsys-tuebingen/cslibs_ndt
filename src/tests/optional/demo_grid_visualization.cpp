@@ -14,7 +14,7 @@ void linspace(const double min,
     }
 }
 
-typedef ndt::MultiGrid2DType::Point Point;
+typedef ndt::MultiGrid2DType::PointType Point;
 
 int main(int argc, char *argv[])
 {
@@ -39,8 +39,8 @@ int main(int argc, char *argv[])
     std::cout << "min " << pointcloud.min << std::endl;
     std::cout << "max " << pointcloud.max << std::endl;
 
-    ndt::MultiGrid2DType::Size   size = {20, 20};
-    ndt::MultiGrid2DType::Resolution resolution = {1.0, 1.0};
+    ndt::MultiGrid2DType::SizeType   size = {20, 20};
+    ndt::MultiGrid2DType::ResolutionType resolution = {1.0, 1.0};
 
     cv::Mat display = cv::Mat(800, 800, CV_8UC3, cv::Scalar());
     ndt::renderPoints(points, size, resolution, display);

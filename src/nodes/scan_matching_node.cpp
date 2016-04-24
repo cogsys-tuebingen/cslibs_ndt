@@ -13,7 +13,7 @@
 struct ScanMatcherNode {
     typedef ndt::grid::MultiGrid<2>            GridType;
     typedef ndt::matching::MultiGridMatcher2D  MatcherType;
-    typedef GridType::Resolution               ResolutionType;
+    typedef GridType::ResolutionType               ResolutionType;
     typedef pcl::PointCloud<pcl::PointXYZ>     PCLPointCloudType;
 
     ros::NodeHandle     nh;
@@ -68,7 +68,7 @@ struct ScanMatcherNode {
             }
 
             ndt::data::LaserScan::PointType range = src->range();
-            ndt::MultiGrid2DType::Size size = {std::size_t(range(0) / resolution[0]),
+            ndt::MultiGrid2DType::SizeType size = {std::size_t(range(0) / resolution[0]),
                                               std::size_t(range(1) / resolution[1])};
 
             cv::Mat distribution(500,500, CV_8UC3, cv::Scalar());

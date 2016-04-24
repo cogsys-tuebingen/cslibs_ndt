@@ -22,7 +22,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}
 find_package(Eigen3 REQUIRED)
 
 ## OpenCV
-find_package(OpenCV QUIET)
+find_package(OpenCV REQUIRED)
 
 ## PCL
 find_package(PCL REQUIRED)
@@ -44,7 +44,7 @@ add_definitions(-W -Wall -Wno-unused-parameter -fno-strict-aliasing -Wno-unused-
 #add_definitions(-g -rdynamic)
 
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS include
 #  LIBRARIES ndt
 #  CATKIN_DEPENDS roscpp sensor_msgs tf
 #  DEPENDS system_lib
@@ -54,23 +54,25 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
     ${Eigen3_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
-    src
+    ${OpenCV_INCLUDE_DIRS}
+    include
 )
 
 add_library(ndt
-    src/data/pointcloud.hpp
-    src/data/laserscan.hpp
+    include/ndt/data/pointcloud.hpp
+    include/ndt/data/laserscan.hpp
+    include/ndt/math/distribution.hpp
 
-    src/math/distribution.hpp
+    include/ndt/conversion/convert.hpp
 
-    src/convert/convert.hpp
+    include/ndt/matching/matcher.hpp
+    include/ndt/matching/multi_grid_matcher_2D.hpp
 
-    src/ndt/grid.hpp
-    src/ndt/multi_grid.hpp
-    src/ndt/mask.hpp
-    src/ndt/matcher2D.hpp
-    src/ndt/matcher.hpp
+    include/ndt/grid/grid.hpp
+    include/ndt/grid/multi_grid.hpp
+    include/ndt/grid/mask.hpp
 
+    include/ndt/visualization/visualize.hpp
 )
 set_target_properties(ndt PROPERTIES LINKER_LANGUAGE CXX)
 
@@ -109,12 +111,8 @@ target_link_libraries(ndt_scan_matching_node
     ${OpenCV_LIBRARIES}
 )
 
-if(${OpenCV_FOUND})
-include_directories(${OpenCV_INCLUDE_DIRS})
-
 add_executable(ndt_demo_grid_visualization
     src/tests/optional/demo_grid_visualization.cpp
-    src/tests/optional/visualize.hpp
 )
 target_link_libraries(ndt_demo_grid_visualization
     ndt
@@ -149,4 +147,3 @@ target_link_libraries(ndt_visualization_node
     ndt
     ${OpenCV_LIBRARIES}
 )
-endif()

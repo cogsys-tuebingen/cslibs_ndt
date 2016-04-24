@@ -1,16 +1,15 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
-
-#include "../tests/optional/visualize.hpp"
-#include "../ndt/multi_grid.hpp"
-#include "../data/laserscan.hpp"
-#include "../convert/convert.hpp"
-
 #include <chrono>
+
+#include <ndt/conversion/convert.hpp>
+#include <ndt/data/laserscan.hpp>
+#include <ndt/grid/multi_grid.hpp>
+#include <ndt/visualization/visualize.hpp>
 
 namespace ndt {
 struct ScanVisualizerNode {
-    typedef ndt::NDTMultiGrid<2> NDTGridType;
+    typedef ndt::grid::MultiGrid<2> Grid2DType;
 
     ros::NodeHandle   nh;
     ros::Subscriber   sub;
@@ -34,14 +33,14 @@ struct ScanVisualizerNode {
         std::chrono::time_point<std::chrono::system_clock> start =
                 std::chrono::system_clock::now();
         data::LaserScan scan;
-        convert::convert(msg, scan);
+        conversion::convert(msg, scan);
         /// make a grid
         data::LaserScan::PointType range = scan.range();
-        NDTGridType::Size       size = {static_cast<std::size_t>(range(0) / resolution),
+        Grid2DType::Size       size = {static_cast<std::size_t>(range(0) / resolution),
                                         static_cast<std::size_t>(range(1) / resolution)};
-        NDTGridType::Resolution res = {resolution, resolution};
+        Grid2DType::Resolution res = {resolution, resolution};
 
-        ndt::NDTMultiGrid2D grid(size, res, scan.min);
+        ndt::MultiGrid2DType grid(size, res, scan.min);
         std::vector<data::LaserScan::PointType> points;
         for(std::size_t i = 0 ; i < scan.size ; ++i) {
             if(scan.mask[i] == data::LaserScan::VALID) {

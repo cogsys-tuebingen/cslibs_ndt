@@ -3,10 +3,10 @@
 
 #include <sensor_msgs/LaserScan.h>
 
-#include "../data/laserscan.hpp"
+#include <ndt/data/laserscan.hpp>
 
 namespace ndt {
-namespace convert {
+namespace conversion {
 inline void convert(const sensor_msgs::LaserScanConstPtr &msg,
                     ndt::data::LaserScan &scan,
                     bool inverted = false)

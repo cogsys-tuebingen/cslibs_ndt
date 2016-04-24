@@ -1,7 +1,7 @@
 /// PROJECT
-#include "../../data/pointcloud.hpp"
-#include "../../ndt/matcher2D.hpp"
-#include "visualize.hpp"
+#include <ndt/data/pointcloud.hpp>
+#include <ndt/matching/multi_grid_matcher_2D.hpp>
+#include <ndt/visualization/visualize.hpp>
 
 void linspace(const double min,
               const double max,
@@ -15,37 +15,37 @@ void linspace(const double min,
     }
 }
 
-typedef ndt::NDTMatcher2D           Matcher;
+typedef ndt::matching::MultiGridMatcher2D   MatcherType;
 
 int main(int argc, char *argv[])
 {
-    std::vector<Matcher::PointType> points_src;
+    std::vector<MatcherType::PointType> points_src;
     /// generate horizontal lines
     std::vector<double> xs;
     linspace(-10.0, -1.0, 0.1, xs);
     for(double &e : xs) {
-        points_src.push_back(Matcher::PointType(e, 1.0));
-        points_src.push_back(Matcher::PointType(e, -1.0));
+        points_src.push_back(MatcherType::PointType(e, 1.0));
+        points_src.push_back(MatcherType::PointType(e, -1.0));
     }
     /// generate vertial lines
     std::vector<double> ys;
     linspace(-10.0, 10.0, 0.1, ys);
     for(double &e : ys) {
-        points_src.push_back(Matcher::PointType(1.5, e));
+        points_src.push_back(MatcherType::PointType(1.5, e));
         if(e < -1.0 || e > 1.0)
-            points_src.push_back(Matcher::PointType(-1.0, e));
+            points_src.push_back(MatcherType::PointType(-1.0, e));
     }
     /// generate a second points test which is transformed
-    Matcher::RotationType    rotation       = Matcher::RotationType(0.0);
-    Matcher::TranslationType trans          = Matcher::TranslationType(0.2, 0.0);
-    Matcher::TransformType   transformation = trans * rotation;
-    std::vector<Matcher::PointType> points_dst;
-    for(Matcher::PointType &p : points_src) {
+    MatcherType::RotationType    rotation       = MatcherType::RotationType(0.0);
+    MatcherType::TranslationType trans          = MatcherType::TranslationType(0.2, 0.0);
+    MatcherType::TransformType   transformation = trans * rotation;
+    std::vector<MatcherType::PointType> points_dst;
+    for(MatcherType::PointType &p : points_src) {
         points_dst.push_back(transformation * p);
     }
 
-    ndt::NDTMultiGrid2D::Size   size = {20, 20};
-    ndt::NDTMultiGrid2D::Resolution resolution = {1.0, 1.0};
+    ndt::MultiGrid2DType::Size   size = {20, 20};
+    ndt::MultiGrid2DType::Resolution resolution = {1.0, 1.0};
     ndt::data::Pointcloud<2> pointcloud_src(points_src);
     ndt::data::Pointcloud<2> pointcloud_dst(points_dst);
 
@@ -62,10 +62,10 @@ int main(int argc, char *argv[])
     cv::flip(display, display, 0);
 
     /// now we can try out the matching
-    Matcher m(resolution);
+    MatcherType m(resolution);
     m.match(pointcloud_src, pointcloud_dst, transformation, 4000, 1e-3);
 
-    for(Matcher::PointType &p : points_dst) {
+    for(MatcherType::PointType &p : points_dst) {
         p = transformation * p;
     }
     ndt::renderPoints(points_dst, size, resolution, display, cv::Scalar(0,0,255), false, 0.5);

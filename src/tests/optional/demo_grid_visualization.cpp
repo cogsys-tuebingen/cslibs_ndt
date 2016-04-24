@@ -1,6 +1,6 @@
 /// PROJECT
-#include "visualize.hpp"
-#include "../../data/pointcloud.hpp"
+#include <ndt/visualization/visualize.hpp>
+#include <ndt/data/pointcloud.hpp>
 
 void linspace(const double min,
               const double max,
@@ -14,7 +14,7 @@ void linspace(const double min,
     }
 }
 
-typedef ndt::NDTMultiGrid2D::Point Point;
+typedef ndt::MultiGrid2DType::Point Point;
 
 int main(int argc, char *argv[])
 {
@@ -39,8 +39,8 @@ int main(int argc, char *argv[])
     std::cout << "min " << pointcloud.min << std::endl;
     std::cout << "max " << pointcloud.max << std::endl;
 
-    ndt::NDTMultiGrid2D::Size   size = {20, 20};
-    ndt::NDTMultiGrid2D::Resolution resolution = {1.0, 1.0};
+    ndt::MultiGrid2DType::Size   size = {20, 20};
+    ndt::MultiGrid2DType::Resolution resolution = {1.0, 1.0};
 
     cv::Mat display = cv::Mat(800, 800, CV_8UC3, cv::Scalar());
     ndt::renderPoints(points, size, resolution, display);
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     cv::waitKey(0);
 
     /// no we put the multi grid into play
-    ndt::NDTMultiGrid2D multigrid(size, resolution, Point(-10, -10));
+    ndt::MultiGrid2DType multigrid(size, resolution, Point(-10, -10));
     for(Point &p : points) {
         if(!multigrid.add(p))
             std::cerr << "could not add point" << std::endl;

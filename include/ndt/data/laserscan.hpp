@@ -1,7 +1,7 @@
 #ifndef LASERSCAN_HPP
 #define LASERSCAN_HPP
 
-#include "pointcloud.hpp"
+#include <ndt/data/pointcloud.hpp>
 #include <eigen3/Eigen/Core>
 
 namespace ndt {

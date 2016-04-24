@@ -2,9 +2,9 @@
 #ifndef MATCHER2D_HPP
 #define MATCHER2D_HPP
 
-#include "multi_grid.hpp"
-#include "matcher.hpp"
-#include "../data/pointcloud.hpp"
+#include <ndt/grid/multi_grid.hpp>
+#include <ndt/matching/matcher.hpp>
+#include <ndt/data/pointcloud.hpp>
 
 #include <fstream>
 #include <memory>
@@ -13,23 +13,24 @@
 #include <eigen3/Eigen/Dense>
 
 namespace ndt {
+namespace matching {
 template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
 }
 
-class NDTMatcher2D : public NDTMatcher<2> {
+class MultiGridMatcher2D : public NDTMatcher<2> {
 public:
     typedef Eigen::Matrix<double,3,3>  HessianType;
     typedef Eigen::Translation2d       TranslationType;
     typedef Eigen::Rotation2Dd         RotationType;
 
-    NDTMatcher2D(const ResolutionType &resolution) :
+    MultiGridMatcher2D(const ResolutionType &resolution) :
         BaseClass(resolution),
         out("/tmp/out.txt")
     {
     }
 
-    virtual ~NDTMatcher2D()
+    virtual ~MultiGridMatcher2D()
     {
         out.close();
     }
@@ -209,6 +210,7 @@ private:
         return fabs(a - b) < epsilon;
     }
 };
+}
 }
 
 #endif // MATCHER2D_HPP

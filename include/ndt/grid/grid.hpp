@@ -1,14 +1,17 @@
 #ifndef NDT_GRID_HPP
 #define NDT_GRID_HPP
-#include "../math/distribution.hpp"
+
+#include <ndt/math/distribution.hpp>
+
 #include <array>
 #include <iostream>
 
 namespace ndt {
+namespace grid {
 template<std::size_t Dim>
-class NDTGrid {
+class Grid {
 public:
-    typedef std::shared_ptr<NDTGrid<Dim>> Ptr;
+    typedef std::shared_ptr<Grid<Dim>> Ptr;
     typedef std::array<std::size_t, Dim>  Size;
     typedef std::array<std::size_t, Dim>  Index;
     typedef std::array<double, Dim>       Resolution;
@@ -16,13 +19,13 @@ public:
     typedef math::Distribution<Dim, true> Distribution;
     typedef typename Distribution::Matrix Matrix;
 
-    NDTGrid() :
+    Grid() :
         data_size(0),
         data(nullptr)
     {
     }
 
-    NDTGrid(const Size       &_size,
+    Grid(const Size       &_size,
             const Resolution &_resolution,
             const Point      &_origin = Point::Zero()) :
         size(_size),
@@ -45,7 +48,7 @@ public:
         data = new Distribution[data_size];
     }
 
-    NDTGrid(const NDTGrid &other) :
+    Grid(const Grid &other) :
         size(other.size),
         steps(other.steps),
         resolution(other.resolution),
@@ -56,7 +59,7 @@ public:
         std::memcpy(data, other.data, sizeof(Distribution) * data_size);
     }
 
-    NDTGrid & operator = (const NDTGrid &other)
+    Grid & operator = (const Grid &other)
     {
         if(this != &other) {
             size = other.size;
@@ -76,7 +79,7 @@ public:
         return *this;
     }
 
-    virtual ~NDTGrid()
+    virtual ~Grid()
     {
         delete[] data;
         data = nullptr;
@@ -196,5 +199,6 @@ private:
         return pos;
     }
 };
+}
 }
 #endif // NDT_GRID_HPP

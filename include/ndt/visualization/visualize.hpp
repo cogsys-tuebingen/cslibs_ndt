@@ -1,7 +1,7 @@
 #ifndef VISUALIZE_HPP
 #define VISUALIZE_HPP
 /// PROJECT
-#include "../../ndt/multi_grid.hpp"
+#include <ndt/grid/multi_grid.hpp>
 
 /// SYSTEM
 #include <opencv2/opencv.hpp>
@@ -9,12 +9,12 @@
 
 namespace ndt {
 
-typedef NDTMultiGrid<2> NDTMultiGrid2D;
-typedef NDTGrid<2>      NDTGrid2D;
+typedef grid::MultiGrid<2> MultiGrid2DType;
+typedef grid::Grid<2>      Grid2DType;
 
-void renderPoints(const std::vector<NDTMultiGrid2D::Point> &points,
-                  const NDTMultiGrid2D::Size               &grid_dimension,
-                  const NDTMultiGrid2D::Resolution         &resolution,
+void renderPoints(const std::vector<MultiGrid2DType::Point> &points,
+                  const MultiGrid2DType::Size               &grid_dimension,
+                  const MultiGrid2DType::Resolution         &resolution,
                   cv::Mat &dst,
                   const cv::Scalar &color = cv::Scalar(255),
                   const bool render_grid = true,
@@ -40,16 +40,16 @@ void renderPoints(const std::vector<NDTMultiGrid2D::Point> &points,
     }
 
 
-    for(const NDTMultiGrid2D::Point &p : points) {
+    for(const MultiGrid2DType::Point &p : points) {
         cv::Point cvp(p(0) * scale_x + dst.cols / 2,
                       dst.rows - 1 - (p(1) * scale_y + dst.rows / 2));
         cv::circle(dst, cvp, 3, color, CV_FILLED, CV_AA);
     }
 }
 
-void renderNDTGrid(NDTMultiGrid2D              &grid,
-                   const NDTMultiGrid2D::Point &min,
-                   const NDTMultiGrid2D::Point &max,
+void renderNDTGrid(MultiGrid2DType              &grid,
+                   const MultiGrid2DType::Point &min,
+                   const MultiGrid2DType::Point &max,
                    cv::Mat &dst)
 {
     double scale_x = fabs((max - min)(0)) / dst.cols;
@@ -60,7 +60,7 @@ void renderNDTGrid(NDTMultiGrid2D              &grid,
 #pragma omp parallel for reduction(max : max_value)
     for(int i = 0 ; i < dst.rows ; ++i) {
         for(int j = 0 ; j < dst.cols ; ++j) {
-            NDTMultiGrid2D::Point p = min + NDTMultiGrid2D::Point(scale_x * j, scale_y * i);
+            MultiGrid2DType::Point p = min + MultiGrid2DType::Point(scale_x * j, scale_y * i);
             double value = grid.sampleNonNormalized(p);
             if(value > max_value) {
                 max_value = value;

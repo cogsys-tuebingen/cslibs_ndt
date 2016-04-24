@@ -3,8 +3,7 @@
 #include <chrono>
 
 /// PROJECT
-#include "../math/distribution.hpp"
-#include "../math/rolling_distribution.hpp"
+#include <ndt/math/distribution.hpp>
 
 using namespace ndt;
 
@@ -20,7 +19,6 @@ void linspace(const double min,
     }
 }
 
-typedef std::shared_ptr<RollingDistribution> Ptr;
 typedef Eigen::Vector2d            Point;
 typedef Eigen::Matrix<double,1,2>  PointTransposed;
 typedef Eigen::Vector3d            Transform;
@@ -37,25 +35,15 @@ int main(int argc, char *argv[])
                        Point(4,4),
                        Point(-8,8)};
 
-    ndt::math::Distribution<2, true> roll2;
-    RollingDistribution roll;
+    ndt::math::Distribution<2, true> roll;
     for(std::size_t i = 0 ; i < 5 ; ++i) {
         roll.add(points[i]);
-        roll2.add(points[i]);
     }
-
-    Point mean;
-    Covariance cov;
-    roll.mean(mean);
-    roll.covariance(cov);
-
-    std::cout << mean << std::endl;
-    std::cout << cov << std::endl;
     std::cout << "-------" << std::endl;
-    std::cout << roll2.getMean() << std::endl;
-    std::cout << roll2.getCovariance() << std::endl;
+    std::cout << roll.getMean() << std::endl;
+    std::cout << roll.getCovariance() << std::endl;
     std::cout << "inv_cov" << std::endl;
-    std::cout << roll2.getInverseCovariance() << std::endl;
+    std::cout << roll.getInverseCovariance() << std::endl;
 
     /// insertion test
     std::chrono::time_point<std::chrono::system_clock> start =
@@ -70,7 +58,7 @@ int main(int argc, char *argv[])
 
    start = std::chrono::system_clock::now();
     for(int i = 0 ; i < 5000 ; ++i)
-        roll2.add(points[0]);
+        roll.add(points[0]);
     elapsed = std::chrono::system_clock::now() - start;
     std::cout << "elapsed " << elapsed.count() << "s" << std::endl;
     std::cout << "elapsed " << elapsed.count() * 1000.0 << "ms" << std::endl;
@@ -102,26 +90,16 @@ int main(int argc, char *argv[])
             point_list.push_back(Point(-1.0, e));
     }
 
-    roll2.reset();
     roll.reset();
     for(Point &p : point_list) {
-        roll2.add(p);
         roll.add(p);
     }
-
-    roll.mean(mean);
-    roll.covariance(cov);
     std::cout << "-------" << std::endl;
-    std::cout << roll.n() << std::endl;
-    std::cout << mean << std::endl;
-    std::cout << cov << std::endl;
-    std::cout << roll.sample(Point(0.0, 0.0)) << std::endl;
-    std::cout << "-------" << std::endl;
-    std::cout << roll2.getN() << std::endl;
-    std::cout << roll2.getMean() << std::endl;
-    std::cout << roll2.getCovariance() << std::endl;
-    std::cout << roll2.getCovariance().determinant() << std::endl;
-    std::cout << roll2.evaluateNonNoramlized(Point(0.0, 0.0)) << std::endl;
+    std::cout << roll.getN() << std::endl;
+    std::cout << roll.getMean() << std::endl;
+    std::cout << roll.getCovariance() << std::endl;
+    std::cout << roll.getCovariance().determinant() << std::endl;
+    std::cout << roll.evaluateNonNoramlized(Point(0.0, 0.0)) << std::endl;
 
     return 0;
 }

@@ -1,25 +1,26 @@
 #ifndef MULTI_GRID_HPP
 #define MULTI_GRID_HPP
 
-#include "grid.hpp"
-#include "mask.hpp"
-#include "../data/pointcloud.hpp"
+#include <ndt/grid/mask.hpp>
+#include <ndt/grid/grid.hpp>
+#include <ndt/data/pointcloud.hpp>
 
 namespace ndt {
+namespace grid {
 template<std::size_t Dim>
-class NDTMultiGrid {
+class MultiGrid {
 public:
-    typedef std::shared_ptr<NDTMultiGrid<Dim>>  Ptr;
-    typedef typename NDTGrid<Dim>::Size         Size;
-    typedef typename NDTGrid<Dim>::Index        Index;
-    typedef typename NDTGrid<Dim>::Resolution   Resolution;
-    typedef typename NDTGrid<Dim>::Point        Point;
-    typedef typename NDTGrid<Dim>::Distribution Distribution;
+    typedef std::shared_ptr<MultiGrid<Dim>>  Ptr;
+    typedef typename Grid<Dim>::Size         Size;
+    typedef typename Grid<Dim>::Index        Index;
+    typedef typename Grid<Dim>::Resolution   Resolution;
+    typedef typename Grid<Dim>::Point        Point;
+    typedef typename Grid<Dim>::Distribution Distribution;
 
-    typedef typename NDTGrid<Dim>::Matrix       Matrix;
+    typedef typename Grid<Dim>::Matrix       Matrix;
     typedef std::vector<Distribution*>          Distributions;
 
-    NDTMultiGrid() :
+    MultiGrid() :
         data_size(0),
         data(nullptr)
     {
@@ -30,7 +31,7 @@ public:
 
     /// maybe point cloud constructor
 
-    NDTMultiGrid(const Size       &_size,
+    MultiGrid(const Size       &_size,
                  const Resolution &_resolution,
                  const Point      &_origin = Point::Zero()) :
         size(_size),
@@ -38,7 +39,7 @@ public:
         origin(_origin),
         data_size(mask.rows),
         normalizer(1.0 / data_size),
-        data(new NDTGrid<Dim>[data_size])
+        data(new Grid<Dim>[data_size])
     {
         Resolution offsets;
         for(std::size_t i = 0 ; i < Dim; ++i) {
@@ -50,7 +51,7 @@ public:
             for(std::size_t j = 0 ; j < Dim ; ++j) {
                 o(j) += mask[i * mask.cols + j] * offsets[j];
             }
-            data[i] = NDTGrid<Dim>(_size, _resolution, o);
+            data[i] = Grid<Dim>(_size, _resolution, o);
         }
 
         steps[0] = 1;
@@ -62,17 +63,17 @@ public:
         }
     }
 
-    NDTMultiGrid(const NDTMultiGrid &other) :
+    MultiGrid(const MultiGrid &other) :
         size(other.size),
         resolution(other.resolution),
         origin(other.origin),
         data_size(other.data_size),
-        data(new NDTGrid<Dim>[data_size])
+        data(new Grid<Dim>[data_size])
     {
-        std::memcpy(data, other.data, sizeof(NDTGrid<Dim>) * data_size);
+        std::memcpy(data, other.data, sizeof(Grid<Dim>) * data_size);
     }
 
-    NDTMultiGrid & operator = (const NDTMultiGrid &other)
+    MultiGrid & operator = (const MultiGrid &other)
     {
         if(this != &other) {
             std::size_t former_size = size;
@@ -82,14 +83,14 @@ public:
             data_size = other.data_size;
             if(size != former_size) {
                 delete [] data;
-                data = new NDTGrid<Dim>[data_size];
+                data = new Grid<Dim>[data_size];
             }
-            std::memcpy(data, other.data, sizeof(NDTGrid<Dim>) * data_size);
+            std::memcpy(data, other.data, sizeof(Grid<Dim>) * data_size);
         }
         return *this;
     }
 
-    virtual ~NDTMultiGrid()
+    virtual ~MultiGrid()
     {
         delete[] data;
         data = nullptr;
@@ -184,7 +185,7 @@ public:
         }
     }
 
-    inline NDTGrid<Dim> const & at(const Index &_index) const
+    inline Grid<Dim> const & at(const Index &_index) const
     {
         std::size_t p = pos(_index);
         if(p >= data_size)
@@ -193,7 +194,7 @@ public:
         return data[p];
     }
 
-    inline NDTGrid<Dim> & at(const Index &_index)
+    inline Grid<Dim> & at(const Index &_index)
     {
         std::size_t p = pos(_index);
         if(p >= data_size)
@@ -209,7 +210,7 @@ private:
     Point         origin;
     std::size_t   data_size;
     double        normalizer;
-    NDTGrid<Dim> *data;
+    Grid<Dim> *data;
 
     Mask<Dim>     mask;
 
@@ -222,5 +223,6 @@ private:
     }
 
 };
+}
 }
 #endif // MULTI_GRID_HPP

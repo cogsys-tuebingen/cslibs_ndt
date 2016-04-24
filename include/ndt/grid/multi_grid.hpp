@@ -39,7 +39,6 @@ public:
         resolution(_resolution),
         origin(_origin),
         data_size(mask.rows),
-        normalizer(1.0 / data_size),
         data(new Grid<Dim>[data_size])
     {
         ResolutionType offsets;
@@ -175,14 +174,12 @@ public:
     }
 
 
-    inline void get(const PointType         &_p,
-                    DistributionSetType       &_distributions)
+    inline void get(const PointType     &_p,
+                    DistributionSetType &_distributions)
     {
-        _distributions.clear();
+        _distributions.resize(data_size);
         for(std::size_t i = 0 ; i < data_size ; ++i) {
-            DistributionType *distr = data[i].get(_p);
-            if(distr != nullptr)
-                _distributions.push_back(distr);
+            _distributions[i] = data[i].get(_p);
         }
     }
 
@@ -209,11 +206,10 @@ private:
     SizeType          steps;
     ResolutionType    resolution;
     PointType         origin;
-    std::size_t   data_size;
-    double        normalizer;
-    Grid<Dim> *data;
+    std::size_t       data_size;
+    Grid<Dim>        *data;
 
-    Mask<Dim>     mask;
+    Mask<Dim>         mask;
 
     inline std::size_t pos(const IndexType &_index) {
         std::size_t p = 0;

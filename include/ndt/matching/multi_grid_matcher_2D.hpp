@@ -66,9 +66,12 @@ private:
 
 
         /// gradient and stuff
+        /// need 4 fields for that
+        /// only solve the maximal score
         GradientType gradient;
         GradientType delta_p;
         HessianType  hessian;
+
         double       score;
         double       tx_old;
         double       ty_old;
@@ -96,6 +99,8 @@ private:
                     DistributionsType distributions;
                     grid->get(p, distributions);
                     for(std::size_t j = 0 ; j < distributions.size(); ++j) {
+                        if(distributions[j] == nullptr)
+                            continue;
                         DistributionType &distribution = *distributions[j];
                         if(distribution.getN() < 3)
                             continue;

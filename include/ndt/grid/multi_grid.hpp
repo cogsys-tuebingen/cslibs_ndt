@@ -10,20 +10,22 @@ namespace grid {
 template<std::size_t Dim>
 class MultiGrid {
 public:
-    typedef std::shared_ptr<MultiGrid<Dim>>          Ptr;
+    typedef std::shared_ptr<MultiGrid<Dim>>         Ptr;
 
-    typedef typename Grid<Dim>::SizeType             SizeType;
-    typedef typename Grid<Dim>::IndexType            IndexType;
-    typedef typename Grid<Dim>::ResolutionType       ResolutionType;
-    typedef typename Grid<Dim>::PointType            PointType;
-    typedef typename Grid<Dim>::DistributionType     DistributionType;
-
-    typedef typename Grid<Dim>::CovarianceMatrixType CovarianceMatrixType;
-    typedef std::vector<DistributionType*>           DistributionSetType;
+    typedef Grid<Dim>                               GridType;
+    typedef typename std::vector<GridType>          GridSetType;
+    typedef typename GridType::SizeType             SizeType;
+    typedef typename GridType::IndexType            IndexType;
+    typedef typename GridType::ResolutionType       ResolutionType;
+    typedef typename GridType::PointCloudType       PointCloudType;
+    typedef typename GridType::PointType            PointType;
+    typedef typename GridType::CovarianceMatrixType CovarianceMatrixType;
+    typedef typename GridType::DistributionType     DistributionType;
+    typedef std::vector<DistributionType*>          DistributionSetType;
 
     MultiGrid() :
         data_size(0),
-        data(nullptr)
+        grid(nullptr)
     {
     }
     /// NOTICE :
@@ -38,8 +40,7 @@ public:
         size(_size),
         resolution(_resolution),
         origin(_origin),
-        data_size(mask.rows),
-        data(new Grid<Dim>[data_size])
+        data_size(mask.rows)
     {
         ResolutionType offsets;
         for(std::size_t i = 0 ; i < Dim; ++i) {
@@ -51,8 +52,9 @@ public:
             for(std::size_t j = 0 ; j < Dim ; ++j) {
                 o(j) += mask[i * mask.cols + j] * offsets[j];
             }
-            data[i] = Grid<Dim>(_size, _resolution, o);
+            grid_data.emplace_back(GridType(_size, _resolution, o));
         }
+        grid = grid_data.data();
 
         steps[0] = 1;
         if(Dim > 1) {
@@ -68,32 +70,26 @@ public:
         resolution(other.resolution),
         origin(other.origin),
         data_size(other.data_size),
-        data(new Grid<Dim>[data_size])
+        grid_data(other.grid_data),
+        grid(grid_data.data())
     {
-        std::memcpy(data, other.data, sizeof(Grid<Dim>) * data_size);
     }
 
     MultiGrid & operator = (const MultiGrid &other)
     {
         if(this != &other) {
-            std::size_t former_size = size;
             size = other.size;
             resolution = other.resolution;
             origin = other.origin;
             data_size = other.data_size;
-            if(size != former_size) {
-                delete [] data;
-                data = new Grid<Dim>[data_size];
-            }
-            std::memcpy(data, other.data, sizeof(Grid<Dim>) * data_size);
+            grid_data = other.grid_data;
+            grid = grid_data.data();
         }
         return *this;
     }
 
     virtual ~MultiGrid()
     {
-        delete[] data;
-        data = nullptr;
     }
 
     /// ---------------- META INFORMATION ---------------- ///
@@ -133,18 +129,18 @@ public:
     {
         bool result = false;
         for(std::size_t i = 0 ; i < data_size; ++i) {
-            result |= data[i].add(_p);
+            result |= grid[i].add(_p);
         }
         return result;
     }
 
-    inline bool add(const data::Pointcloud<Dim> &_p)
+    inline bool add(const PointCloudType &_p)
     {
         bool result = false;
         for(std::size_t i = 0 ; i < _p.size ; ++i) {
-            if(_p.mask[i] == data::Pointcloud<Dim>::VALID) {
+            if(_p.mask[i] == PointCloudType::VALID) {
                 for(std::size_t j = 0 ; j < data_size; ++j)
-                    result |= data[j].add(_p.points[i]);
+                    result |= grid[j].add(_p.points[i]);
             }
         }
         return result;
@@ -155,7 +151,7 @@ public:
     {
         double result = 0.0;
         for(std::size_t i = 0 ; i < data_size ; ++i) {
-            DistributionType *distr = data[i].get(_p);
+            DistributionType *distr = grid[i].get(_p);
             if(distr != nullptr)
                 result += distr->sample(_p);
         }
@@ -166,7 +162,7 @@ public:
     {
         double result = 0.0;
         for(std::size_t i = 0 ; i < data_size ; ++i) {
-            DistributionType *distr = data[i].get(_p);
+            DistributionType *distr = grid[i].get(_p);
             if(distr != nullptr)
                 result += distr->sampleNonNoramlized(_p);
         }
@@ -179,7 +175,7 @@ public:
     {
         _distributions.resize(data_size);
         for(std::size_t i = 0 ; i < data_size ; ++i) {
-            _distributions[i] = data[i].get(_p);
+            _distributions[i] = grid[i].get(_p);
         }
     }
 
@@ -189,7 +185,7 @@ public:
         if(p >= data_size)
             throw std::runtime_error("Out of bounds!");
 
-        return data[p];
+        return grid[p];
     }
 
     inline Grid<Dim> & at(const IndexType &_index)
@@ -198,7 +194,7 @@ public:
         if(p >= data_size)
             throw std::runtime_error("Out of bounds!");
 
-        return data[p];
+        return grid[p];
     }
 
 private:
@@ -207,7 +203,8 @@ private:
     ResolutionType    resolution;
     PointType         origin;
     std::size_t       data_size;
-    Grid<Dim>        *data;
+    GridSetType       grid_data;
+    GridType         *grid;
 
     Mask<Dim>         mask;
 

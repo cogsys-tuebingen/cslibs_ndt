@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   pcl_conversions
   nav_msgs
+  kdtree
 )
 
 ## OpenMP ##########################################################################

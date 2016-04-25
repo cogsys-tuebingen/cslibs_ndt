@@ -5,6 +5,7 @@
 #include <ndt/data/pointcloud.hpp>
 
 #include <array>
+#include <vector>
 #include <iostream>
 
 namespace ndt {
@@ -12,18 +13,20 @@ namespace grid {
 template<std::size_t Dim>
 class Grid {
 public:
-    typedef std::shared_ptr<Grid<Dim>>    Ptr;
+    typedef std::shared_ptr<Grid<Dim>>             Ptr;
 
-    typedef std::array<std::size_t, Dim>      SizeType;
-    typedef std::array<std::size_t, Dim>      IndexType;
-    typedef std::array<double, Dim>           ResolutionType;
-    typedef Eigen::Matrix<double, Dim, 1>     PointType;
-    typedef math::Distribution<Dim, true>     DistributionType;
-    typedef typename DistributionType::MatrixType CovarianceMatrixType;
+    typedef std::array<std::size_t, Dim>           SizeType;
+    typedef std::array<std::size_t, Dim>           IndexType;
+    typedef std::array<double, Dim>                ResolutionType;
+    typedef data::Pointcloud<Dim>                  PointCloudType;
+    typedef typename PointCloudType::PointType     PointType;
+    typedef math::Distribution<Dim, true>          DistributionType;
+    typedef typename std::vector<DistributionType> DistributionSetType;
+    typedef typename DistributionType::MatrixType  CovarianceMatrixType;
 
     Grid() :
         data_size(0),
-        data(nullptr)
+        grid(nullptr)
     {
     }
 
@@ -34,7 +37,7 @@ public:
         resolution(_resolution),
         origin(_origin),
         data_size(1),
-        data(nullptr)
+        grid(nullptr)
     {
         for(std::size_t i = 0 ; i < Dim ; ++i) {
             data_size *= _size[i];
@@ -47,7 +50,9 @@ public:
                 steps[i] = steps[i-1] * size[i];
             }
         }
-        data = new DistributionType[data_size];
+
+        grid_data.resize(data_size);
+        grid = grid_data.data();
     }
 
     Grid(const Grid &other) :
@@ -56,26 +61,21 @@ public:
         resolution(other.resolution),
         origin(other.origin),
         data_size(other.data_size),
-        data(new DistributionType[data_size])
+        grid_data(other.grid_data),
+        grid(grid_data.data())
     {
-        std::memcpy(data, other.data, sizeof(DistributionType) * data_size);
     }
 
     Grid & operator = (const Grid &other)
     {
         if(this != &other) {
-            size = other.size;
+            size  = other.size;
             steps = other.steps;
             resolution = other.resolution;
             origin = other.origin;
-            std::size_t former_size = data_size;
             data_size = other.data_size;
-            if(data_size != former_size) {
-                delete [] data;
-                data = new DistributionType[data_size];
-            }
-
-            std::memcpy(data, other.data, sizeof(DistributionType) * data_size);
+            grid_data = other.grid_data;
+            grid = grid_data.data();
         }
 
         return *this;
@@ -83,8 +83,6 @@ public:
 
     virtual ~Grid()
     {
-        delete[] data;
-        data = nullptr;
     }
 
 
@@ -139,15 +137,15 @@ public:
         int p = pos(_p);
         if(p >= data_size || p < 0)
             return false;
-        data[p].add(_p);
+        grid[p].add(_p);
         return true;
     }
 
-    inline bool add(const data::Pointcloud<Dim> &_p)
+    inline bool add(const PointCloudType &_p)
     {
         bool result = false;
         for(std::size_t i = 0 ; i < _p.size ; ++i) {
-            if(_p.mask[i] == data::Pointcloud<Dim>::VALID) {
+            if(_p.mask[i] == PointCloudType::VALID) {
                 result |= add(_p.points[i]);
             }
         }
@@ -161,7 +159,7 @@ public:
         int p = pos(_p);
         if(p >= data_size || p < 0)
             return nullptr;
-        return &data[p];
+        return &grid[p];
     }
 
     inline DistributionType const * get(const PointType &_p) const
@@ -169,7 +167,7 @@ public:
         int p = pos(_p);
         if(p >= data_size || p < 0)
             return nullptr;
-        return &data[p];
+        return &grid[p];
     }
 
     inline DistributionType const & at(const IndexType &_index) const
@@ -178,7 +176,7 @@ public:
         if(p >= data_size || p < 0)
             throw std::runtime_error("Out of bounds!");
 
-        return data[p];
+        return grid[p];
     }
 
     inline DistributionType & at(const IndexType &_index)
@@ -186,7 +184,7 @@ public:
         int p = pos(_index);
         if(p >= data_size || p < 0)
             throw std::runtime_error("Out of bounds!");
-        return data[p];
+        return grid[p];
     }
 
 private:
@@ -195,7 +193,9 @@ private:
     ResolutionType       resolution;
     PointType            origin;
     std::size_t          data_size;
-    DistributionType    *data;
+    DistributionSetType  grid_data;
+    DistributionType    *grid;
+
 
     inline std::size_t pos(const IndexType &_index) {
         std::size_t pos;

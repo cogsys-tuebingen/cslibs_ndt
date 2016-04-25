@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
                        Point(4,4),
                        Point(-8,8)};
 
-    ndt::math::Distribution<2, true> roll;
+    ndt::math::Distribution<2, false> roll;
     for(std::size_t i = 0 ; i < 5 ; ++i) {
         roll.add(points[i]);
     }
@@ -91,8 +91,8 @@ int main(int argc, char *argv[])
     }
 
     roll.reset();
-    for(Point &p : point_list) {
-        roll.add(p);
+    for(std::size_t i = 0 ; i < 5 ; ++i) {
+        roll.add(points[i]);
     }
     std::cout << "-------" << std::endl;
     std::cout << roll.getN() << std::endl;
@@ -100,6 +100,15 @@ int main(int argc, char *argv[])
     std::cout << roll.getCovariance() << std::endl;
     std::cout << roll.getCovariance().determinant() << std::endl;
     std::cout << roll.evaluateNonNoramlized(Point(0.0, 0.0)) << std::endl;
+
+    roll += roll;
+    std::cout << "-------" << std::endl;
+    std::cout << roll.getN() << std::endl;
+    std::cout << roll.getMean() << std::endl;
+    std::cout << roll.getCovariance() << std::endl;
+    std::cout << roll.getCovariance().determinant() << std::endl;
+    std::cout << roll.evaluateNonNoramlized(Point(0.0, 0.0)) << std::endl;
+
 
     return 0;
 }

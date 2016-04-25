@@ -48,12 +48,25 @@ public:
         mean = (mean * n_1 + _p) / n;
         for(std::size_t i = 0 ; i < Dim ; ++i) {
             for(std::size_t j = i ; j < Dim ; ++j) {
-                correlated(i, j) = (correlated(i, j) * n_1 + _p(i) * _p(j)) / n;
+                correlated(i, j) = (correlated(i, j) * n_1 + _p(i) * _p(j)) / (double) n;
             }
         }
         ++n;
         ++n_1;
         dirty = true;
+    }
+
+    inline Distribution & operator += (const Distribution &other)
+    {
+        std::size_t _n = n_1 + other.n_1;
+        PointType   _mean = (mean * n_1 + other.mean * other.n_1) / (double) _n;
+        MatrixType  _corr = (correlated * n_1 + other.correlated * other.n_1) / (double) _n;
+        n   = _n + 1;
+        n_1 = _n;
+        mean = _mean;
+        correlated = _corr;
+        dirty = true;
+        return *this;
     }
 
     inline std::size_t getN()

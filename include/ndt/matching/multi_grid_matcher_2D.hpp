@@ -19,29 +19,45 @@ template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
 }
 
-class MultiGridMatcher2D : public NDTMatcher<2> {
+class MultiGridMatcher2D : public Matcher<2> {
 public:
-    typedef Eigen::Matrix<double,3,3>  HessianType;
-    typedef Eigen::Translation2d       TranslationType;
-    typedef Eigen::Rotation2Dd         RotationType;
+    typedef grid::MultiGrid<2>                         GridType;
+    typedef typename GridType::DistributionType        DistributionType;
+    typedef typename GridType::DistributionSetType     DistributionsType;
+    typedef typename GridType::CovarianceMatrixType    CovarianceMatrixType;
+    typedef typename PointCloudType::PointType           PointType;
+    typedef Eigen::Matrix<double,3,3>                  HessianType;
+    typedef Eigen::Translation2d                       TranslationType;
+    typedef Eigen::Rotation2Dd                         RotationType;
+    typedef Eigen::Vector3d                            GradientType;
+
 
     MultiGridMatcher2D(const Parameters &params = Parameters()) :
-        BaseClass(params),
-        out("/tmp/out.txt")
+        BaseClass(params)
     {
     }
 
     virtual ~MultiGridMatcher2D()
     {
-        out.close();
     }
 
-private:
-    std::ofstream out;
-
-    double doMatch(const PointCloudType &_dst,
-                   TransformType        &_transformation) override
+    inline double match(const PointCloudType &_src,
+                        const PointCloudType &_dst,
+                        TransformType        &_transformation) override
     {
+        /// build the ndt grid for the src cloud
+        PointType range = _src.range();
+        typename GridType::SizeType size;
+        for(std::size_t i = 0 ; i < 2 ; ++i) {
+            if(range(i) <= 0.0)
+                throw std::range_error("Point cloud boundaries are not set properly!");
+            size[i] = floor(range(i) / params.resolution[i] + 0.5);
+        }
+
+        grid.reset(new GridType(size, params.resolution, _src.min));
+        grid->add(_src);
+
+        /// reset the transformation and begin matching
         _transformation.setIdentity();
         /// todo:: initialize parameter estimate double phi = 0.0;
         double          tx = 0.0;
@@ -213,8 +229,9 @@ private:
         }
 
         return max_score;
-
     }
+private:
+    typename GridType::Ptr grid;
 };
 }
 }

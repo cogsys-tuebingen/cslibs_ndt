@@ -204,7 +204,7 @@ public:
 
             /// solve equeation here
             delta_p = GradientType::Zero();
-            delta_p = hessian_entry.jacobiSvd(Eigen::ComputeFullU | Eigen::ComputeFullV).solve(gradient_entry);
+            delta_p = hessian_entry.fullPivLu().solve(gradient_entry);
             tx  += delta_p(0);
             ty  += delta_p(1);
             phi += delta_p(2);

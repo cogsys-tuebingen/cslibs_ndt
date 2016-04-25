@@ -52,12 +52,14 @@ public:
 
         grid.reset(new GridType(size, resolution, _src.min));
         grid->add(_src);
+        src = _src;
 
         return doMatch(_dst, _transformation, _max_iterations, _eps, _eps_rad);
     }
 
 protected:
-    typename GridType::Ptr grid;
+    typename GridType::Ptr    grid;
+    PointCloudType            src;
     ResolutionType            resolution;
 
     virtual double doMatch(const PointCloudType &_dst,

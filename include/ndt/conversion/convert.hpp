@@ -12,7 +12,6 @@ inline void convert(const sensor_msgs::LaserScanConstPtr &msg,
                     bool inverted = false)
 {
     scan.resize(msg->ranges.size());
-    std::memcpy(scan.ranges, msg->ranges.data(), sizeof(float) * scan.size);
 
     float angle = msg->angle_min;
     float angle_incr = msg->angle_increment;
@@ -26,7 +25,7 @@ inline void convert(const sensor_msgs::LaserScanConstPtr &msg,
         else
             index = i;
 
-        float r = scan.ranges[index];
+        float r = msg->ranges[index];
         if(r >= range_min &&
            r <= range_max) {
             data::LaserScan::PointType &p = scan.points[index];
@@ -34,6 +33,7 @@ inline void convert(const sensor_msgs::LaserScanConstPtr &msg,
             p *= r;
             scan.mask[index] = data::LaserScan::VALID;
         }
+        scan.ranges[index] = r;
         scan.angles[index] = angle;
     }
 

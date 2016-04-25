@@ -180,7 +180,7 @@ private:
     SizeType             steps;
     ResolutionType       resolution;
     PointType            origin;
-    std::size_t      data_size;
+    std::size_t          data_size;
     DistributionType    *data;
 
     inline std::size_t pos(const IndexType &_index) {

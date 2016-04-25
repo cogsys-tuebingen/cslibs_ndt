@@ -13,7 +13,7 @@
 struct ScanMatcherNode {
     typedef ndt::grid::MultiGrid<2>            GridType;
     typedef ndt::matching::MultiGridMatcher2D  MatcherType;
-    typedef GridType::ResolutionType               ResolutionType;
+    typedef GridType::ResolutionType           ResolutionType;
     typedef pcl::PointCloud<pcl::PointXYZ>     PCLPointCloudType;
 
     ros::NodeHandle     nh;
@@ -26,7 +26,7 @@ struct ScanMatcherNode {
 
     ScanMatcherNode() :
         nh("~"),
-        resolution{1.0, 1.0}
+        resolution{2.0, 2.0}
     {
         std::string topic_scan = "/scan";
         std::string topic_pcl  = "/matched";
@@ -50,12 +50,7 @@ struct ScanMatcherNode {
         } else {
             MatcherType matcher(resolution);
             MatcherType::TransformType transform;
-            double score = matcher.match(*src, dst, transform, 35, 1e-3, 1e-3);
-            std::cout << score << std::endl;
-            if(score < 50) {
-                src.reset(new ndt::data::LaserScan(dst));
-                return;
-            }
+            double score = matcher.match(*src, dst, transform, 35, 1e-6, 1e-6);
 
             PCLPointCloudType output;
 
@@ -75,9 +70,16 @@ struct ScanMatcherNode {
             ndt::MultiGrid2DType grid(size, resolution, src->min);
             grid.add(*src);
             ndt::renderNDTGrid(grid, src->min, src->max, distribution);
+            /// output display
+            if(score < 0.1){
+                std::cout << "-------------------------------" << std::endl;
+                std::cout << score << std::endl;
+                std::cout << transform.translation() << std::endl;
+                std::cout << transform.rotation() << std::endl;
+                std::cout << "-------------------------------" << std::endl;
+            }
             cv::cvtColor(distribution,  distribution, CV_BGR2GRAY);
             distribution *= 100.0 / 255.0;
-           // ndt::renderNDTGridCells(cv::Scalar::all(127),grid.at({0,1}), {0,1}, distribution);
 
             nav_msgs::OccupancyGrid distr_msg;
             distr_msg.header = msg->header;

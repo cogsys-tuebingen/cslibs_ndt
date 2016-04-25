@@ -18,31 +18,21 @@ struct LaserScan : Pointcloud<2> {
 
     LaserScan(const LaserScan &other) :
         BaseClass(other),
-        ranges(new float[size]),
-        angles(new float[size])
+        ranges_data(other.ranges_data),
+        ranges(ranges_data.data()),
+        angles_data(other.angles_data),
+        angles(angles_data.data())
     {
-        std::memcpy(ranges, other.ranges, sizeof(float) * size);
-        std::memcpy(angles, other.angles, sizeof(float) * size);
     }
 
     LaserScan & operator = (const LaserScan &other)
     {
         if(this != &other) {
-            std::size_t former_size = size;
-            Pointcloud::operator =(other);
-            if(size != former_size) {
-                delete [] ranges;
-                ranges = new float[size];
-            }
-            if(angles && size != former_size) {
-                delete [] angles;
-                angles = new float[size];
-            }
-
-            std::memcpy(ranges, other.ranges, sizeof(float) * size);
-            std::memcpy(angles, other.angles, sizeof(float) * size);
-            min = other.min;
-            max = other.max;
+            BaseClass::operator =(other);
+            ranges_data = other.ranges_data;
+            ranges = ranges_data.data();
+            angles_data = other.angles_data;
+            angles = angles_data.data();
         }
         return *this;
     }
@@ -55,26 +45,25 @@ struct LaserScan : Pointcloud<2> {
 
     inline void resize(const std::size_t _size) override
     {
-        if(size != _size) {
-            clear();
-            BaseClass::resize(_size);
-            ranges = new float[_size];
-            angles = new float[_size];
-        }
-        std::memset(ranges, 0, size * sizeof(float));
-        std::memset(angles,0, size * sizeof(float));
+        BaseClass::resize(_size);
+        ranges_data.resize(_size, 0.f);
+        ranges = ranges_data.data();
+        angles_data.resize(_size, 0.f);
+        angles = angles_data.data();
     }
 
     inline void clear() override
     {
         BaseClass::clear();
-        delete[] ranges;
+        ranges_data.clear();
         ranges = nullptr;
-        delete[] angles;
+        angles_data.clear();
         angles = nullptr;
     }
 
+    std::vector<float> ranges_data;
     float     *ranges;
+    std::vector<float> angles_data;
     float     *angles;
 };
 }

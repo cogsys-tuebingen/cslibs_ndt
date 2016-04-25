@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 
     /// now we can try out the matching
     MatcherType m(resolution);
-    m.match(pointcloud_src, pointcloud_dst, transformation, 4000, 1e-3);
+    m.match(pointcloud_src, pointcloud_dst, transformation, 4000, 1e-6);
 
     for(MatcherType::PointType &p : points_dst) {
         p = transformation * p;

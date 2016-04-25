@@ -28,56 +28,48 @@ struct Pointcloud {
 
     Pointcloud(const std::size_t _size) :
         size(_size),
-        points(new PointType[size]),
-        mask(new char[size]),
+        points_data(size, PointType::Zero()),
+        points(points_data.data()),
+        mask_data(size, INVALID),
+        mask(mask_data.data()),
         min(PointType::Zero()),
         max(PointType::Zero())
     {
-        std::memset(points, 0, size * sizeof(PointType));
-        std::memset(mask, INVALID, size);
     }
 
     Pointcloud(const std::vector<PointType> &_points) :
         size(_points.size()),
-        points(new PointType[size]),
-        mask(new char[size]),
+        points_data(_points),
+        points(points_data.data()),
+        mask_data(size, VALID),
+        mask(mask_data.data()),
         min(PointType::Zero()),
         max(PointType::Zero())
     {
-        std::memcpy(points, _points.data(), size * sizeof(PointType));
-        std::memset(mask, VALID, size);
         autoAdjustLimits();
     }
 
     Pointcloud(const Pointcloud &other) :
         size(other.size),
-        points(new PointType[size]),
-        mask(new char[size]),
+        points_data(other.points_data),
+        points(points_data.data()),
+        mask_data(other.mask_data),
+        mask(mask_data.data()),
         min(other.min),
         max(other.max)
     {
-        std::memcpy(points, other.points, sizeof(PointType) * size);
-        std::memcpy(mask, other.mask, size);
     }
 
     Pointcloud & operator = (const Pointcloud &other)
     {
         if(this != &other) {
-            std::size_t former_size = size;
             size = other.size;
             min = other.min;
             max = other.max;
-            if(size != former_size) {
-                delete [] points;
-                points = new PointType[size];
-            }
-            if(size != former_size) {
-                delete [] mask;
-                mask = new char[size];
-            }
-
-            std::memcpy(points, other.points, sizeof(PointType) * size);
-            std::memcpy(mask, other.mask, size);
+            points_data = other.points_data;
+            points = points_data.data();
+            mask_data = other.mask_data;
+            mask = mask_data.data();
         }
         return *this;
     }
@@ -93,7 +85,7 @@ struct Pointcloud {
             return;
 
         PointType _min = PointType::Constant(std::numeric_limits<double>::max());
-        PointType _max = PointType::Constant(std::numeric_limits<double>::min());
+        PointType _max = PointType::Constant(std::numeric_limits<double>::lowest());
 
         for(std::size_t i = 0 ; i < size ; ++i) {
             if(mask[i] == VALID) {
@@ -113,22 +105,19 @@ struct Pointcloud {
 
     inline virtual void resize(const std::size_t _size)
     {
-        if(size != _size) {
-            clear();
-            size = _size;
-            points = new PointType[size];
-            mask = new char[size];
-        }
-        memset(points, 0, size * sizeof(PointType));
-        memset(mask, INVALID, size);
+        size = _size;
+        points_data.resize(size, PointType::Zero());
+        points = points_data.data();
+        mask_data.resize(size, INVALID);
+        mask = mask_data.data();
     }
 
     inline virtual void clear()
     {
         size = 0;
-        delete[] points;
+        points_data.clear();
         points = nullptr;
-        delete[] mask;
+        mask_data.clear();
         mask = nullptr;
         min = PointType::Zero();
         max = PointType::Zero();
@@ -145,7 +134,9 @@ struct Pointcloud {
     }
 
     std::size_t size;
+    std::vector<PointType> points_data;
     PointType  *points;
+    std::vector<char>      mask_data;
     char       *mask;
     PointType   min;
     PointType   max;

@@ -27,6 +27,7 @@ public:
         inverse_covariance(MatrixType::Zero()),
         n(1),
         n_1(0),
+        lambda_ratio(1e-2),
         sqrt_2_M_PI(sqrt(2 * M_PI)),
         dirty(false)
 
@@ -172,6 +173,7 @@ private:
 
     std::size_t n;
     std::size_t n_1;
+    double      lambda_ratio;
     double      sqrt_2_M_PI;
     bool        dirty;
 
@@ -190,13 +192,13 @@ private:
             solver.compute(covariance);
             EigenVectorSetType Q = solver.eigenvectors().real();
             EigenValueSetType  eigen_values  = solver.eigenvalues().real();
-            double max_lambda = std::numeric_limits<double>::min();
+            double max_lambda = std::numeric_limits<double>::lowest();
             for(std::size_t i = 0 ; i < Dim ; ++i) {
                 if(eigen_values(i) > max_lambda)
                     max_lambda = eigen_values(i);
             }
             MatrixType Lambda = MatrixType::Zero();
-            double l = max_lambda * 1e-3;
+            double l = max_lambda * lambda_ratio;
             for(std::size_t i = 0 ; i < Dim; ++i) {
                 if(fabs(eigen_values(i)) < fabs(l)) {
                     Lambda(i,i) = l;

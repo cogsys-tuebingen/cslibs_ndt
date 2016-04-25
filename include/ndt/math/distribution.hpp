@@ -71,7 +71,7 @@ public:
 
     inline std::size_t getN()
     {
-        return n;
+        return n_1;
     }
 
     inline PointType getMean() const
@@ -185,7 +185,7 @@ private:
     MatrixType inverse_covariance;
 
     std::size_t n;
-    std::size_t n_1;
+    std::size_t n_1;            /// actual amount of points in distribution
     double      lambda_ratio;
     double      sqrt_2_M_PI;
     bool        dirty;

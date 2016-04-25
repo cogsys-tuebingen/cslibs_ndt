@@ -62,8 +62,8 @@ int main(int argc, char *argv[])
     cv::flip(display, display, 0);
 
     /// now we can try out the matching
-    MatcherType m(resolution);
-    m.match(pointcloud_src, pointcloud_dst, transformation, 4000, 1e-6);
+    MatcherType m;
+    m.match(pointcloud_src, pointcloud_dst, transformation);
 
     for(MatcherType::PointType &p : points_dst) {
         p = transformation * p;

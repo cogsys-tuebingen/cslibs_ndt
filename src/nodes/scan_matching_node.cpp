@@ -26,7 +26,7 @@ struct ScanMatcherNode {
 
     ScanMatcherNode() :
         nh("~"),
-        resolution{2.0, 2.0}
+        resolution{1.0, 1.0}
     {
         std::string topic_scan = "/scan";
         std::string topic_pcl  = "/matched";
@@ -48,9 +48,9 @@ struct ScanMatcherNode {
         if(!src) {
             src.reset(new ndt::data::LaserScan(dst));
         } else {
-            MatcherType matcher(resolution);
+            MatcherType matcher;
             MatcherType::TransformType transform;
-            double score = matcher.match(*src, dst, transform, 35, 1e-6, 1e-6);
+            double score = matcher.match(*src, dst, transform);
 
             PCLPointCloudType output;
 

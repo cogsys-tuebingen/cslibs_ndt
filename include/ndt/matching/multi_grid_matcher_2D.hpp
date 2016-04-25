@@ -25,8 +25,8 @@ public:
     typedef Eigen::Translation2d       TranslationType;
     typedef Eigen::Rotation2Dd         RotationType;
 
-    MultiGridMatcher2D(const ResolutionType &resolution) :
-        BaseClass(resolution),
+    MultiGridMatcher2D(const Parameters &params = Parameters()) :
+        BaseClass(params),
         out("/tmp/out.txt")
     {
     }
@@ -40,10 +40,7 @@ private:
     std::ofstream out;
 
     double doMatch(const PointCloudType &_dst,
-                   TransformType        &_transformation,
-                   const std::size_t     _max_iterations = 100,
-                   const double          _eps = 1e-3,
-                   const double          _eps_rad = 1e-6) override
+                   TransformType        &_transformation) override
     {
         _transformation.setIdentity();
         /// todo:: initialize parameter estimate double phi = 0.0;
@@ -70,7 +67,7 @@ private:
         double       tx_old;
         double       ty_old;
         double       phi_old;
-        std::size_t  iteration = 1;
+        std::size_t  iteration = 0;
 
         bool converged = false;
         while(!converged) {
@@ -130,33 +127,33 @@ private:
                             gradient_entry(2) -= s * g_dot;
                             /// hessian computation
                             hessian_entry(0,0)+=  s
-                                               * (-q_inverse_covariance(0) * q_inverse_covariance(0)   /// (1)
-                                               +  inverse_covariance(0,0));                            /// (3)
+                                    * (-q_inverse_covariance(0) * q_inverse_covariance(0)   /// (1)
+                                       +  inverse_covariance(0,0));                            /// (3)
                             hessian_entry(1,0)+=  s
-                                               * (-q_inverse_covariance(1) * q_inverse_covariance(0)   /// (1)
-                                               +  inverse_covariance(1,0));                            /// (3)
+                                    * (-q_inverse_covariance(1) * q_inverse_covariance(0)   /// (1)
+                                       +  inverse_covariance(1,0));                            /// (3)
                             hessian_entry(2,0)+=  s
-                                              * (-g_dot * inverse_covariance(0)                       /// (1)
-                                              +  inverse_covariance.row(0) * jac);                    /// (3)
+                                    * (-g_dot * inverse_covariance(0)                       /// (1)
+                                       +  inverse_covariance.row(0) * jac);                    /// (3)
                             hessian_entry(0,1)+=  s
-                                              * (-q_inverse_covariance(0) * q_inverse_covariance(1)   /// (1)
-                                              +  inverse_covariance(0,1));                            /// (3)
+                                    * (-q_inverse_covariance(0) * q_inverse_covariance(1)   /// (1)
+                                       +  inverse_covariance(0,1));                            /// (3)
                             hessian_entry(1,1)+=  s
-                                              * (-q_inverse_covariance(1) * q_inverse_covariance(1)   /// (1)
-                                              +  inverse_covariance(1,1));                            /// (3)
+                                    * (-q_inverse_covariance(1) * q_inverse_covariance(1)   /// (1)
+                                       +  inverse_covariance(1,1));                            /// (3)
                             hessian_entry(2,1)+=  s
-                                              * (-g_dot * inverse_covariance(1)                       /// (1)
-                                              +  inverse_covariance.row(1) * jac);                    /// (3)
+                                    * (-g_dot * inverse_covariance(1)                       /// (1)
+                                       +  inverse_covariance.row(1) * jac);                    /// (3)
                             hessian_entry(0,2)+=  s
-                                              * (-q_inverse_covariance(0) * g_dot                     /// (1)
-                                              +  jac.transpose() * inverse_covariance.col(0));        /// (3)
+                                    * (-q_inverse_covariance(0) * g_dot                     /// (1)
+                                       +  jac.transpose() * inverse_covariance.col(0));        /// (3)
                             hessian_entry(1,2)+=  s
-                                              * (-q_inverse_covariance(1) * g_dot                     /// (1)
-                                              +  jac.transpose() * inverse_covariance.col(1));        /// (3)
+                                    * (-q_inverse_covariance(1) * g_dot                     /// (1)
+                                       +  jac.transpose() * inverse_covariance.col(1));        /// (3)
                             hessian_entry(2,2)+=  s
-                                              * (-g_dot * g_dot                                       /// (1)
-                                              +  q_inverse_covariance.dot(hes)                        /// (2)
-                                              +  jac.transpose() * inverse_covariance * jac);         /// (3)
+                                    * (-g_dot * g_dot                                       /// (1)
+                                       +  q_inverse_covariance.dot(hes)                        /// (2)
+                                       +  jac.transpose() * inverse_covariance * jac);         /// (3)
 
                             /// (1) directly computed from Jacobian combined with q^t * InvCov
                             /// (2) only a result for H(2,2)
@@ -184,7 +181,7 @@ private:
                 }
             }
 
-            if(max_score == 0.0)
+            if(max_score < 1e-3)
                 break;
 
             /// compute the hessian with the result
@@ -205,23 +202,18 @@ private:
             phi += delta_p(2);
 
             /// check for convergence
-            if((eps(tx, tx_old, _eps) &&
-                eps(ty, ty_old, _eps) &&
-                eps(phi, phi_old, _eps_rad)) ||
-                    iteration > _max_iterations)
+            if((epsTrans(tx, tx_old) &&
+                epsTrans(ty, ty_old) &&
+                epsRot(phi, phi_old)))
                 break;
+
             ++iteration;
+            if(iteration >= params.max_iterations)
+                break;
         }
 
         return max_score;
 
-    }
-
-    inline bool eps(const double a,
-                    const double b,
-                    const double epsilon = 1e-3)
-    {
-        return fabs(a - b) < epsilon;
     }
 };
 }

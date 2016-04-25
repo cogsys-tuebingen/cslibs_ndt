@@ -106,7 +106,7 @@ struct ScanMatcherNode {
 
 int main(int argc, char *argv[])
 {
-    ros::init(argc, argv, "ndt_matcher");
+    ros::init(argc, argv, "ndt_multi_grid_matcher_node");
     ScanMatcherNode node;
     ros::spin();
 

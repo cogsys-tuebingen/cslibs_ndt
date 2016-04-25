@@ -61,7 +61,9 @@ include_directories(
 add_library(ndt
     include/ndt/data/pointcloud.hpp
     include/ndt/data/laserscan.hpp
+
     include/ndt/math/distribution.hpp
+    include/ndt/math/sgn.hpp
 
     include/ndt/conversion/convert.hpp
 
@@ -101,13 +103,23 @@ add_executable(ndt_test_solver
     src/tests/test_solver.cpp
 )
 
-add_executable(ndt_scan_matching_node
-    src/nodes/scan_matching_node.cpp
+add_executable(ndt_single_grid_scan_matching_node
+    src/nodes/single_grid_scan_matching_node.cpp
 )
 
-target_link_libraries(ndt_scan_matching_node
+target_link_libraries(ndt_single_grid_scan_matching_node
     ${catkin_LIBRARIES}
-    ${PCL_LIBRIARIES}
+    ndt
+    ${OpenCV_LIBRARIES}
+)
+
+
+add_executable(ndt_multi_grid_scan_matching_node
+    src/nodes/multi_grid_scan_matching_node.cpp
+)
+
+target_link_libraries(ndt_multi_grid_scan_matching_node
+    ${catkin_LIBRARIES}
     ndt
     ${OpenCV_LIBRARIES}
 )

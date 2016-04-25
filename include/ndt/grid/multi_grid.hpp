@@ -157,7 +157,7 @@ public:
         for(std::size_t i = 0 ; i < data_size ; ++i) {
             DistributionType *distr = data[i].get(_p);
             if(distr != nullptr)
-                result += distr->evaluate(_p);
+                result += distr->sample(_p);
         }
         return result;
     }
@@ -168,7 +168,7 @@ public:
         for(std::size_t i = 0 ; i < data_size ; ++i) {
             DistributionType *distr = data[i].get(_p);
             if(distr != nullptr)
-                result += distr->evaluateNonNoramlized(_p);
+                result += distr->sampleNonNoramlized(_p);
         }
         return result;
     }

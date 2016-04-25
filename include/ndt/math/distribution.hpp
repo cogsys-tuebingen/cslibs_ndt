@@ -127,7 +127,7 @@ public:
         }
     }
 
-    inline double evaluate(const PointType &_p)
+    inline double sample(const PointType &_p)
     {
         if(n_1 >= 2) {
             if(dirty)
@@ -140,7 +140,7 @@ public:
         return 0.0;
     }
 
-    inline double evaluate(const PointType &_p,
+    inline double sample(const PointType &_p,
                            PointType &_q)
     {
         if(n_1 >= 2) {
@@ -154,7 +154,7 @@ public:
         return 0.0;
     }
 
-    inline double evaluateNonNoramlized(const PointType &_p) {
+    inline double sampleNonNoramlized(const PointType &_p) {
         if(n_1 >= 2) {
             if(dirty)
                 update();
@@ -165,7 +165,7 @@ public:
         return 0.0;
     }
 
-    inline double evaluateNonNoramlized(const PointType &_p,
+    inline double sampleNonNoramlized(const PointType &_p,
                                         PointType &_q)
     {
         if(n_1 >= 2) {

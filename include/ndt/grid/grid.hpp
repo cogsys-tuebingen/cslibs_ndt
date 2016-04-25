@@ -2,6 +2,7 @@
 #define NDT_GRID_HPP
 
 #include <ndt/math/distribution.hpp>
+#include <ndt/data/pointcloud.hpp>
 
 #include <array>
 #include <iostream>
@@ -27,8 +28,8 @@ public:
     }
 
     Grid(const SizeType       &_size,
-            const ResolutionType &_resolution,
-            const PointType      &_origin = PointType::Zero()) :
+         const ResolutionType &_resolution,
+         const PointType      &_origin = PointType::Zero()) :
         size(_size),
         resolution(_resolution),
         origin(_origin),
@@ -142,6 +143,19 @@ public:
         return true;
     }
 
+    inline bool add(const data::Pointcloud<Dim> &_p)
+    {
+        bool result = false;
+        for(std::size_t i = 0 ; i < _p.size ; ++i) {
+            if(_p.mask[i] == data::Pointcloud<Dim>::VALID) {
+                result |= add(_p.points[i]);
+            }
+        }
+        return result;
+    }
+
+
+    /// ---------------- SAMPLING ------------------------ ///
     inline DistributionType* get(const PointType &_p)
     {
         int p = pos(_p);

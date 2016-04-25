@@ -1,4 +1,3 @@
-
 #ifndef MATCHER2D_HPP
 #define MATCHER2D_HPP
 
@@ -15,10 +14,6 @@
 
 namespace ndt {
 namespace matching {
-template <typename T> int sgn(T val) {
-    return (T(0) < val) - (val < T(0));
-}
-
 class MultiGridMatcher2D : public Matcher<2> {
 public:
     typedef grid::MultiGrid<2>                         GridType;
@@ -121,7 +116,7 @@ public:
                         GradientType        &gradient_entry = gradient[j];
                         HessianType         &hessian_entry  = hessian[j];
 
-                        double s = distribution.evaluateNonNoramlized(p, q);
+                        double s = distribution.sampleNonNoramlized(p, q);
                         distribution.getMean(mean);
                         distribution.getInverseCovariance(inverse_covariance);
 

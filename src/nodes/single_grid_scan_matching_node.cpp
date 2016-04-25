@@ -7,12 +7,12 @@
 
 #include <ndt/conversion/convert.hpp>
 #include <ndt/data/laserscan.hpp>
-#include <ndt/matching/multi_grid_matcher_2D.hpp>
+#include <ndt/matching/single_grid_matcher_2D.hpp>
 #include <ndt/visualization/visualize.hpp>
 
 struct ScanMatcherNode {
-    typedef ndt::grid::MultiGrid<2>            GridType;
-    typedef ndt::matching::MultiGridMatcher2D  MatcherType;
+    typedef ndt::grid::Grid<2>                 GridType;
+    typedef ndt::matching::SingleGridMatcher2D MatcherType;
     typedef GridType::ResolutionType           ResolutionType;
     typedef pcl::PointCloud<pcl::PointXYZ>     PCLPointCloudType;
 
@@ -22,13 +22,11 @@ struct ScanMatcherNode {
     ros::Publisher      pub_distr;
 
     ndt::data::LaserScan::Ptr dst;
-    ResolutionType            resolution_coarse;
-    ResolutionType            resolution_fine;
+    ResolutionType            resolution;
 
     ScanMatcherNode() :
         nh("~"),
-        resolution_coarse{2.0, 2.0},
-        resolution_fine{1.0, 1.0}
+        resolution{1.0, 1.0}
     {
         std::string topic_scan = "/scan";
         std::string topic_pcl  = "/matched";
@@ -50,23 +48,14 @@ struct ScanMatcherNode {
         if(!dst) {
             dst.reset(new ndt::data::LaserScan(src));
         } else {
-            MatcherType::Parameters    params_coarse;
-            params_coarse.resolution = resolution_coarse;
-            MatcherType                matcher_coarse;
-            MatcherType::TransformType prior_transform;
-            double score_coarse = matcher_coarse.match(*dst, src, prior_transform);
-
-            if(score_coarse < 1e-3)
-                prior_transform = MatcherType::TransformType::Identity();
-
-            MatcherType matcher_fine;
-            MatcherType::TransformType transform_fine;
-            double score_fine = matcher_fine.match(*dst, src, transform_fine, prior_transform);
+            MatcherType matcher;
+            MatcherType::TransformType transform;
+            double score = matcher.match(*dst, src, transform);
 
             PCLPointCloudType output;
 
             for(std::size_t i = 0 ; i < src.size ; ++i) {
-                MatcherType::PointType p_bar = transform_fine * src.points[i];
+                MatcherType::PointType p_bar = transform * src.points[i];
                 pcl::PointXYZ pcl_p;
                 pcl_p.x = p_bar(0);
                 pcl_p.y = p_bar(1);
@@ -74,23 +63,19 @@ struct ScanMatcherNode {
             }
 
             ndt::data::LaserScan::PointType range = dst->range();
-            ndt::MultiGrid2DType::SizeType  size = {std::size_t(range(0) / resolution_fine[0]),
-                                                    std::size_t(range(1) / resolution_fine[1])};
+            typename GridType::SizeType  size = {std::size_t(range(0) / resolution[0]),
+                                                 std::size_t(range(1) / resolution[1])};
 
             cv::Mat distribution(500,500, CV_8UC3, cv::Scalar());
-            ndt::MultiGrid2DType grid(size, resolution_fine, dst->min);
+            GridType grid(size, resolution, dst->min);
             grid.add(*dst);
             ndt::renderNDTGrid(grid, dst->min, dst->max, distribution);
             /// output display
-            if(score_fine < 0.1){
+            if(score < 0.1){
                 std::cout << "-------------------------------" << std::endl;
-                std::cout << score_coarse << std::endl;
-                std::cout << prior_transform.translation() << std::endl;
-                std::cout << prior_transform.rotation() << std::endl;
-                std::cout << "-------------------------------" << std::endl;
-                std::cout << score_fine << std::endl;
-                std::cout << transform_fine.translation() << std::endl;
-                std::cout << transform_fine.rotation() << std::endl;
+                std::cout << score << std::endl;
+                std::cout << transform.translation() << std::endl;
+                std::cout << transform.rotation() << std::endl;
                 std::cout << "-------------------------------" << std::endl;
             }
             cv::cvtColor(distribution,  distribution, CV_BGR2GRAY);
@@ -121,7 +106,7 @@ struct ScanMatcherNode {
 
 int main(int argc, char *argv[])
 {
-    ros::init(argc, argv, "ndt_hierarchic_grid_matcher_node");
+    ros::init(argc, argv, "ndt_single_grid_matcher_node");
     ScanMatcherNode node;
     ros::spin();
 

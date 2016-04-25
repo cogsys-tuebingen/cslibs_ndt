@@ -47,6 +47,43 @@ void renderPoints(const std::vector<MultiGrid2DType::PointType> &points,
     }
 }
 
+void renderNDTGrid(Grid2DType                       &grid,
+                   const MultiGrid2DType::PointType &min,
+                   const MultiGrid2DType::PointType &max,
+                   cv::Mat &dst)
+{
+    double scale_x = fabs((max - min)(0)) / dst.cols;
+    double scale_y = fabs((max - min)(1)) / dst.rows;
+
+    cv::Mat samples(dst.rows, dst.cols, CV_64FC1, cv::Scalar());
+    double max_value = std::numeric_limits<double>::lowest();
+#pragma omp parallel for reduction(max : max_value)
+    for(int i = 0 ; i < dst.rows ; ++i) {
+        for(int j = 0 ; j < dst.cols ; ++j) {
+            Grid2DType::PointType p = min + Grid2DType::PointType(scale_x * j, scale_y * i);
+            Grid2DType::DistributionType *distr = grid.get(p);
+            if(distr == nullptr)
+                continue;
+
+            double value = distr->sampleNonNoramlized(p);
+            if(value > max_value) {
+                max_value = value;
+            }
+            samples.at<double>(dst.rows - 1 - i,j) = value;
+        }
+    }
+
+#pragma omp parallel for
+    for(int i = 0 ; i < dst.rows ; ++i) {
+        for(int j = 0 ; j < dst.cols ; ++j) {
+            cv::Vec3b &pix = dst.at<cv::Vec3b>(i,j);
+            pix[0] = samples.at<double>(i,j) / max_value * 255;
+            pix[1] = samples.at<double>(i,j) / max_value * 255;
+            pix[2] = samples.at<double>(i,j) / max_value * 255;
+        }
+    }
+}
+
 void renderNDTGrid(MultiGrid2DType              &grid,
                    const MultiGrid2DType::PointType &min,
                    const MultiGrid2DType::PointType &max,

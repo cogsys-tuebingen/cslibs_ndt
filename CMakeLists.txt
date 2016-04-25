@@ -67,6 +67,7 @@ add_library(ndt
 
     include/ndt/matching/matcher.hpp
     include/ndt/matching/multi_grid_matcher_2D.hpp
+    include/ndt/matching/single_grid_matcher_2D.hpp
 
     include/ndt/grid/grid.hpp
     include/ndt/grid/multi_grid.hpp
@@ -105,6 +106,17 @@ add_executable(ndt_scan_matching_node
 )
 
 target_link_libraries(ndt_scan_matching_node
+    ${catkin_LIBRARIES}
+    ${PCL_LIBRIARIES}
+    ndt
+    ${OpenCV_LIBRARIES}
+)
+
+add_executable(ndt_hierarchic_scan_matching_node
+    src/nodes/hierarchic_scan_matching_node.cpp
+)
+
+target_link_libraries(ndt_hierarchic_scan_matching_node
     ${catkin_LIBRARIES}
     ${PCL_LIBRIARIES}
     ndt

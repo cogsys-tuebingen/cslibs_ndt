@@ -25,7 +25,6 @@ public:
             max_iterations(100)
         {
             resolution.fill(1.0);
-
         }
         Parameters(const ResolutionType &_resolution,
                    const double          _eps_rot,
@@ -38,11 +37,13 @@ public:
         {
         }
 
-        ResolutionType resolution;
-        double         eps_rot;
-        double         eps_trans;
-        std::size_t    max_iterations;
+        ResolutionType          resolution;
+        double                  eps_rot;
+        double                  eps_trans;
+        std::size_t             max_iterations;
     };
+
+
 
     Matcher(const Parameters &_params = Parameters()) :
         params(_params)
@@ -51,7 +52,8 @@ public:
 
     inline virtual double match(const PointCloudType &_src,
                                 const PointCloudType &_dst,
-                                TransformType        &_transformation) = 0;
+                                TransformType        &_transformation,
+                                const TransformType  &_prior_transformation = TransformType::Identity()) = 0;
 
 protected:
     Parameters                params;

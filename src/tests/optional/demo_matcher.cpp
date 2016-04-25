@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
         points_dst.push_back(transformation * p);
     }
 
-    ndt::MultiGrid2DType::SizeType   size = {20, 20};
+    ndt::MultiGrid2DType::SizeType   size = {10, 10};
     ndt::MultiGrid2DType::ResolutionType resolution = {1.0, 1.0};
     ndt::data::Pointcloud<2> pointcloud_src(points_src);
     ndt::data::Pointcloud<2> pointcloud_dst(points_dst);
@@ -62,7 +62,9 @@ int main(int argc, char *argv[])
     cv::flip(display, display, 0);
 
     /// now we can try out the matching
-    MatcherType m;
+    MatcherType::Parameters params;
+    params.max_iterations = 4000;
+    MatcherType m(params);
     m.match(pointcloud_src, pointcloud_dst, transformation);
 
     for(MatcherType::PointType &p : points_dst) {

@@ -25,7 +25,7 @@ public:
     typedef typename GridType::DistributionType        DistributionType;
     typedef typename GridType::DistributionSetType     DistributionsType;
     typedef typename GridType::CovarianceMatrixType    CovarianceMatrixType;
-    typedef typename PointCloudType::PointType           PointType;
+    typedef typename PointCloudType::PointType         PointType;
     typedef Eigen::Matrix<double,3,3>                  HessianType;
     typedef Eigen::Translation2d                       TranslationType;
     typedef Eigen::Rotation2Dd                         RotationType;
@@ -43,7 +43,8 @@ public:
 
     inline double match(const PointCloudType &_src,
                         const PointCloudType &_dst,
-                        TransformType        &_transformation) override
+                        TransformType        &_transformation,
+                        const TransformType  &_prior_transformation = TransformType::Identity()) override
     {
         /// build the ndt grid for the src cloud
         PointType range = _src.range();
@@ -57,12 +58,11 @@ public:
         grid.reset(new GridType(size, params.resolution, _src.min));
         grid->add(_src);
 
-        /// reset the transformation and begin matching
-        _transformation.setIdentity();
         /// todo:: initialize parameter estimate double phi = 0.0;
-        double          tx = 0.0;
-        double          ty = 0.0;
-        double          phi = 0.0;
+        double          tx = _prior_transformation.translation()(0);
+        double          ty = _prior_transformation.translation()(1);
+        double          phi = acos(_prior_transformation.rotation()(0,0));
+
         TranslationType trans;
         RotationType    rotation(0.0);
 
@@ -127,9 +127,9 @@ public:
 
                         /// at this point, s must be greater than 0.0, since we work with non-normalized Gaussians.
                         /// if s is 0.0 we do no need to count the sample in
-                        if(s > 0.0) {
+                        if(s > 1e-3) {
                             score[j] += s;
-                            PointType q_inverse_covariance = q.transpose() * inverse_covariance;
+                            const PointType q_inverse_covariance = q.transpose() * inverse_covariance;
 
                             jac(0) = -q(0) * sin_phi - q(1) * cos_phi;
                             jac(1) =  q(0) * cos_phi - q(1) * sin_phi;
@@ -143,33 +143,33 @@ public:
                             gradient_entry(2) -= s * g_dot;
                             /// hessian computation
                             hessian_entry(0,0)+=  s
-                                    * (-q_inverse_covariance(0) * q_inverse_covariance(0)   /// (1)
-                                       +  inverse_covariance(0,0));                            /// (3)
+                                    * (-(q_inverse_covariance(0) * q_inverse_covariance(0))   /// (1)
+                                       +  inverse_covariance(0,0));                           /// (3)
                             hessian_entry(1,0)+=  s
-                                    * (-q_inverse_covariance(1) * q_inverse_covariance(0)   /// (1)
-                                       +  inverse_covariance(1,0));                            /// (3)
+                                    * (-(q_inverse_covariance(1) * q_inverse_covariance(0))   /// (1)
+                                       +  inverse_covariance(1,0));                           /// (3)
                             hessian_entry(2,0)+=  s
-                                    * (-g_dot * inverse_covariance(0)                       /// (1)
-                                       +  inverse_covariance.row(0) * jac);                    /// (3)
+                                    * (-(g_dot * q_inverse_covariance(0))                     /// (1)
+                                       +(inverse_covariance.row(0).dot(jac)));                /// (3)
                             hessian_entry(0,1)+=  s
-                                    * (-q_inverse_covariance(0) * q_inverse_covariance(1)   /// (1)
-                                       +  inverse_covariance(0,1));                            /// (3)
+                                    * (-(q_inverse_covariance(0) * q_inverse_covariance(1))   /// (1)
+                                       +  inverse_covariance(0,1));                           /// (3)
                             hessian_entry(1,1)+=  s
-                                    * (-q_inverse_covariance(1) * q_inverse_covariance(1)   /// (1)
-                                       +  inverse_covariance(1,1));                            /// (3)
+                                    * (-(q_inverse_covariance(1) * q_inverse_covariance(1))   /// (1)
+                                       +  inverse_covariance(1,1));                           /// (3)
                             hessian_entry(2,1)+=  s
-                                    * (-g_dot * inverse_covariance(1)                       /// (1)
-                                       +  inverse_covariance.row(1) * jac);                    /// (3)
+                                    * (-(g_dot * q_inverse_covariance(1))                     /// (1)
+                                       +(inverse_covariance.row(1).dot(jac)));                /// (3)
                             hessian_entry(0,2)+=  s
-                                    * (-q_inverse_covariance(0) * g_dot                     /// (1)
-                                       +  jac.transpose() * inverse_covariance.col(0));        /// (3)
+                                    * (-(q_inverse_covariance(0) * g_dot)                     /// (1)
+                                       +(jac.transpose().dot(inverse_covariance.col(0))));    /// (3)
                             hessian_entry(1,2)+=  s
-                                    * (-q_inverse_covariance(1) * g_dot                     /// (1)
-                                       +  jac.transpose() * inverse_covariance.col(1));        /// (3)
+                                    * (-(q_inverse_covariance(1) * g_dot )                    /// (1)
+                                       +(jac.transpose() * inverse_covariance.col(1)));       /// (3)
                             hessian_entry(2,2)+=  s
-                                    * (-g_dot * g_dot                                       /// (1)
-                                       +  q_inverse_covariance.dot(hes)                        /// (2)
-                                       +  jac.transpose() * inverse_covariance * jac);         /// (3)
+                                    * (-g_dot * g_dot                                         /// (1)
+                                       +q_inverse_covariance.dot(hes)                         /// (2)
+                                       +(jac.transpose() * inverse_covariance * jac));        /// (3)
 
                             /// (1) directly computed from Jacobian combined with q^t * InvCov
                             /// (2) only a result for H(2,2)
@@ -197,9 +197,6 @@ public:
                 }
             }
 
-            if(max_score < 1e-3)
-                break;
-
             /// compute the hessian with the result
             HessianType  &hessian_entry = hessian[max_idx];
             GradientType &gradient_entry = gradient[max_idx];
@@ -216,6 +213,7 @@ public:
             tx  += delta_p(0);
             ty  += delta_p(1);
             phi += delta_p(2);
+
 
             /// check for convergence
             if((epsTrans(tx, tx_old) &&

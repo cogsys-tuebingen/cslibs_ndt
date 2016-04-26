@@ -83,7 +83,11 @@ add_library(ndt
     include/ndt/grid/multi_grid.hpp
     include/ndt/grid/mask.hpp
 
-    include/ndt/visualization/visualize.hpp
+    include/ndt/kdtree/kdtree.hpp
+
+    include/ndt/visualization/grid.hpp
+    include/ndt/visualization/multi_grid.hpp
+    include/ndt/visualization/kdtree.hpp
 )
 
 set_target_properties(ndt PROPERTIES LINKER_LANGUAGE CXX)

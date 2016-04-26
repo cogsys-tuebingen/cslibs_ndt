@@ -8,21 +8,21 @@
 #include <ndt/conversion/convert.hpp>
 #include <ndt/data/laserscan.hpp>
 #include <ndt/matching/multi_grid_matcher_2D.hpp>
-#include <ndt/visualization/visualize.hpp>
+#include <ndt/visualization/multi_grid.hpp>
 
 struct ScanMatcherNode {
-    typedef ndt::grid::MultiGrid<2>            GridType;
-    typedef ndt::matching::MultiGridMatcher2D  MatcherType;
-    typedef GridType::ResolutionType           ResolutionType;
-    typedef pcl::PointCloud<pcl::PointXYZ>     PCLPointCloudType;
+    typedef ndt::matching::MultiGridMatcher2D   MultiGridMatcher2D;
+    typedef ndt::visualization::MultiGrid2D     MultiGrid2D;
+    typedef ndt::visualization::Point2D         Point2D;
+    typedef pcl::PointCloud<pcl::PointXYZ>      PCLPointCloud3D;
 
     ros::NodeHandle     nh;
     ros::Subscriber     sub;
     ros::Publisher      pub_pcl;
     ros::Publisher      pub_distr;
 
-    ndt::data::LaserScan::Ptr dst;
-    ResolutionType            resolution;
+    ndt::data::LaserScan::Ptr   dst;
+    MultiGrid2D::ResolutionType resolution;
 
     ScanMatcherNode() :
         nh("~"),
@@ -36,7 +36,7 @@ struct ScanMatcherNode {
         nh.getParam("topic_distr", topic_distr);
 
         sub = nh.subscribe<sensor_msgs::LaserScan>(topic_scan, 1, &ScanMatcherNode::laserscan, this);
-        pub_pcl = nh.advertise<PCLPointCloudType>(topic_pcl, 1);
+        pub_pcl = nh.advertise<PCLPointCloud3D>(topic_pcl, 1);
         pub_distr = nh.advertise<nav_msgs::OccupancyGrid>(topic_distr, 1);
 
     }
@@ -48,14 +48,14 @@ struct ScanMatcherNode {
         if(!dst) {
             dst.reset(new ndt::data::LaserScan(src));
         } else {
-            MatcherType matcher;
-            MatcherType::TransformType transform;
+            MultiGridMatcher2D matcher;
+            MultiGridMatcher2D::TransformType transform;
             double score = matcher.match(*dst, src, transform);
 
-            PCLPointCloudType output;
+            PCLPointCloud3D output;
 
             for(std::size_t i = 0 ; i < src.size ; ++i) {
-                MatcherType::PointType p_bar = transform * src.points[i];
+                Point2D p_bar = transform * src.points[i];
                 pcl::PointXYZ pcl_p;
                 pcl_p.x = p_bar(0);
                 pcl_p.y = p_bar(1);
@@ -63,13 +63,16 @@ struct ScanMatcherNode {
             }
 
             ndt::data::LaserScan::PointType range = dst->range();
-            ndt::MultiGrid2DType::SizeType  size = {std::size_t(range(0) / resolution[0]),
+            MultiGrid2D::SizeType  size = {std::size_t(range(0) / resolution[0]),
                                                     std::size_t(range(1) / resolution[1])};
 
             cv::Mat distribution(500,500, CV_8UC3, cv::Scalar());
-            ndt::MultiGrid2DType grid(size, resolution, dst->min);
+            MultiGrid2D grid(size, resolution, dst->min);
             grid.add(*dst);
-            ndt::renderNDTGrid(grid, dst->min, dst->max, distribution);
+            ndt::visualization::renderMultiGrid(grid,
+                                                dst->min,
+                                                dst->max,
+                                                distribution);
             /// output display
             if(score < 0.1){
                 std::cout << "-------------------------------" << std::endl;

@@ -1,5 +1,6 @@
 /// PROJECT
-#include <ndt/visualization/visualize.hpp>
+#include <ndt/visualization/points.hpp>
+#include <ndt/visualization/multi_grid.hpp>
 #include <ndt/data/pointcloud.hpp>
 
 void linspace(const double min,
@@ -14,42 +15,43 @@ void linspace(const double min,
     }
 }
 
-typedef ndt::MultiGrid2DType::PointType Point;
+typedef ndt::visualization::MultiGrid2D MultiGrid2D;
+typedef ndt::visualization::Point2D     Point2D;
 
 int main(int argc, char *argv[])
 {
-    std::vector<Point> points;
+    std::vector<Point2D> points;
     /// generate horizontal lines
     std::vector<double> xs;
     linspace(-10.0, -1.0, 0.1, xs);
     for(double &e : xs) {
-        points.push_back(Point(e, 0.0));
-        points.push_back(Point(e, -2.0));
+        points.push_back(Point2D(e, 0.0));
+        points.push_back(Point2D(e, -2.0));
     }
     /// generate vertial lines
     std::vector<double> ys;
     linspace(-10.0, 10.0, 0.1, ys);
     for(double &e : ys) {
-        points.push_back(Point(1.5, e));
+        points.push_back(Point2D(1.5, e));
         if(e < -2.0 || e > 0.0)
-            points.push_back(Point(-1.0, e));
+            points.push_back(Point2D(-1.0, e));
     }
 
     ndt::data::Pointcloud<2> pointcloud(points);
     std::cout << "min " << pointcloud.min << std::endl;
     std::cout << "max " << pointcloud.max << std::endl;
 
-    ndt::MultiGrid2DType::SizeType   size = {20, 20};
-    ndt::MultiGrid2DType::ResolutionType resolution = {1.0, 1.0};
+    MultiGrid2D::SizeType   size = {20, 20};
+    MultiGrid2D::ResolutionType resolution = {1.0, 1.0};
 
     cv::Mat display = cv::Mat(800, 800, CV_8UC3, cv::Scalar());
-    ndt::renderPoints(points, size, resolution, display);
+    ndt::visualization::renderPoints(points, size, resolution, display);
     cv::imshow("display", display);
     cv::waitKey(0);
 
     /// no we put the multi grid into play
-    ndt::MultiGrid2DType multigrid(size, resolution, Point(-10, -10));
-    for(Point &p : points) {
+    MultiGrid2D multigrid(size, resolution, Point2D(-10, -10));
+    for(Point2D &p : points) {
         if(!multigrid.add(p))
             std::cerr << "could not add point" << std::endl;
     }
@@ -57,7 +59,7 @@ int main(int argc, char *argv[])
         std::cerr << "some points could not be added" << std::endl;
 
 
-    ndt::renderNDTGrid(multigrid, Point(-10, -10), Point(10,10), display);
+    ndt::visualization::renderMultiGrid(multigrid, Point2D(-10, -10), Point2D(10,10), display);
     cv::imshow("display", display);
     while(true) {
         int key = cv::waitKey(0) & 0xFF;

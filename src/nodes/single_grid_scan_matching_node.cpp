@@ -8,7 +8,7 @@
 #include <ndt/conversion/convert.hpp>
 #include <ndt/data/laserscan.hpp>
 #include <ndt/matching/single_grid_matcher_2D.hpp>
-#include <ndt/visualization/visualize.hpp>
+#include <ndt/visualization/grid.hpp>
 
 struct ScanMatcherNode {
     typedef ndt::grid::Grid<2>                 GridType;
@@ -69,7 +69,7 @@ struct ScanMatcherNode {
             cv::Mat distribution(500,500, CV_8UC3, cv::Scalar());
             GridType grid(size, resolution, dst->min);
             grid.add(*dst);
-            ndt::renderNDTGrid(grid, dst->min, dst->max, distribution);
+            ndt::visualization::renderGrid(grid, dst->min, dst->max, distribution);
             /// output display
             if(score < 0.1){
                 std::cout << "-------------------------------" << std::endl;

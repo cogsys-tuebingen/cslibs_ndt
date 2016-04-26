@@ -20,6 +20,7 @@ public:
     typedef typename GridType::DistributionType        DistributionType;
     typedef typename GridType::DistributionSetType     DistributionsType;
     typedef typename GridType::CovarianceMatrixType    CovarianceMatrixType;
+    typedef typename GridType::SizeType                SizeType;
     typedef typename PointCloudType::PointType         PointType;
     typedef Eigen::Matrix<double,3,3>                  HessianType;
     typedef Eigen::Translation2d                       TranslationType;

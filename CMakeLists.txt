@@ -94,6 +94,7 @@ set_target_properties(ndt PROPERTIES LINKER_LANGUAGE CXX)
 
 target_link_libraries(ndt
     ${catkin_LIBRARIES}
+    yaml-cpp
 )
 
 ## TESTS ############################################################################

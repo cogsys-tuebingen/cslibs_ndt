@@ -5,11 +5,14 @@
 #include <cstring>
 #include <eigen3/Eigen/Core>
 #include <vector>
+#include <yaml-cpp/yaml.h>
+#include <fstream>
 
 namespace ndt {
 namespace data {
 template<std::size_t Dim>
-struct Pointcloud {
+class Pointcloud {
+public:
     typedef std::shared_ptr<Pointcloud<Dim>> Ptr;
 
     typedef Eigen::Matrix<double, Dim, 1>    PointType;
@@ -133,6 +136,30 @@ struct Pointcloud {
         return max - min;
     }
 
+    inline bool save(const std::string &path)
+    {
+        YAML::Node yaml;
+        doSave(yaml);
+        std::ofstream out(path);
+        if(!out.is_open())
+            return false;
+        YAML::Emitter yaml_emitter(out);
+        yaml_emitter << yaml;
+        out.close();
+        return true;
+    }
+
+    inline bool load(const std::string &path)
+    {
+        YAML::Node yaml = YAML::LoadFile(path);
+        if(!yaml.IsMap())
+            return false;
+        doLoad(yaml);
+        return true;
+    }
+
+
+
     std::size_t size;
     std::vector<PointType> points_data;
     PointType  *points;
@@ -140,6 +167,51 @@ struct Pointcloud {
     char       *mask;
     PointType   min;
     PointType   max;
+
+protected:
+    inline virtual void doSave(YAML::Node &yaml)
+    {
+        yaml["size"] = size;
+        for(PointType &p : points_data) {
+            YAML::Node yaml_point;
+            for(std::size_t i = 0 ; i < Dim ; ++i)
+                yaml_point.push_back(p(i));
+            yaml["point_data"].push_back(yaml_point);
+        }
+        for(char m : mask_data) {
+            yaml["mask_data"].push_back(m);
+        }
+        for(std::size_t i = 0 ; i < Dim ; ++i) {
+            yaml["min"].push_back(min(i));
+            yaml["max"].push_back(max(i));
+        }
+    }
+
+    inline virtual void doLoad(YAML::Node &yaml)
+    {
+        size = yaml["size"].as<std::size_t>();
+        points_data.clear();
+        YAML::Node const &yaml_points = yaml["points_data"];
+        for(YAML::const_iterator it = yaml_points.begin() ;
+            it != yaml_points.end() ;
+            ++it) {
+            YAML::Node yaml_point = *it;
+            PointType  p;
+            for(std::size_t i = 0 ; i < Dim ; ++i) {
+                p(i) = yaml_point[i].as<double>();
+            }
+            points_data.push_back(p);
+        }
+        points = points_data.data();
+        mask_data.clear();
+        YAML::Node const &yaml_mask = yaml["mask_data"];
+        for(YAML::const_iterator it = yaml_mask.begin() ;
+            it != yaml_mask.end();
+            ++it) {
+            mask_data.push_back(it->as<char>());
+        }
+        mask = mask_data.data();
+    }
 };
 }
 }

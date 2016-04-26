@@ -6,7 +6,8 @@
 
 namespace ndt {
 namespace data {
-struct LaserScan : Pointcloud<2> {
+class LaserScan : public Pointcloud<2> {
+public:
     typedef std::shared_ptr<LaserScan> Ptr;
 
     LaserScan() :
@@ -65,6 +66,35 @@ struct LaserScan : Pointcloud<2> {
     float     *ranges;
     std::vector<float> angles_data;
     float     *angles;
+
+protected:
+    inline void doSave(YAML::Node &yaml) override
+    {
+        BaseClass::doSave(yaml);
+        for(float range : ranges_data)
+            yaml["ranges"].push_back(range);
+        for(float angle : angles_data)
+            yaml["angles"].push_back(angle);
+
+    }
+
+    inline void doLoad(YAML::Node &yaml) override
+    {
+        BaseClass::doLoad(yaml);
+        ranges_data.clear();
+        YAML::Node const &yaml_ranges = yaml["ranges"];
+        for(YAML::const_iterator it = yaml_ranges.begin() ;
+            it != yaml_ranges.end() ;
+            ++it)
+            ranges_data.push_back(it->as<float>());
+        ranges = ranges_data.data();
+        YAML::Node const &yaml_angles = yaml["angles"];
+        for(YAML::const_iterator it = yaml_angles.begin() ;
+            it != yaml_angles.end() ;
+            ++it)
+            angles_data.push_back(it->as<float>());
+        angles = angles_data.data();
+    }
 };
 }
 }

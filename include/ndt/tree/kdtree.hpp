@@ -3,6 +3,7 @@
 
 #include <cstddef>
 
+#include <ndt/data/pointcloud.hpp>
 #include <ndt/math/distribution.hpp>
 #include <kdtree/kdtree.hpp>
 
@@ -15,10 +16,9 @@ struct KDTreeNode : public kdtree::KDTreeNode<int, Dim>
     typedef kdtree::KDTree<int, Dim>                KDTreeType;
     typedef kdtree::KDTreeNode<int, Dim>            NodeBase;
     typedef math::Distribution<Dim, true>           DistributionType;
-    typedef typename std::vector<DistributionType>  DistributionSetType;
     typedef typename DistributionType::MatrixType   CovarianceMatrixType;
-
-    typedef typename DistributionType::PointType    PointType;
+    typedef data::Pointcloud<Dim>                   PointCloudType;
+    typedef typename PointCloudType::PointType      PointType;
 
     std::vector<PointType>          points;
     typename DistributionType::Ptr  distribution;
@@ -65,10 +65,10 @@ struct KDTreeNode : public kdtree::KDTreeNode<int, Dim>
 
     inline DistributionType* get()
     {
-        if(!distribution || distribution.getN() != points.size()) {
+        if(!distribution || distribution->getN() != points.size()) {
             distribution.reset(new DistributionType);
             for(const PointType &p : points) {
-                distribution.add(p);
+                distribution->add(p);
             }
         }
         return distribution.get();
@@ -76,27 +76,69 @@ struct KDTreeNode : public kdtree::KDTreeNode<int, Dim>
 };
 
 template<std::size_t Dim>
-struct KDTreeIndex
+struct KDTreeInterface
 {
-    typedef std::array<std::size_t, Dim> IndexType;
-    typedef std::array<double, Dim>      ResolutionType;
-    typedef KDTreeNode<Dim>              NodeType;
+    typedef std::array<int,    Dim>                 IndexType;
+    typedef std::array<double, Dim>                 ResolutionType;
+    typedef KDTreeNode<Dim>                         NodeType;
+    typedef typename NodeType::KDTreeType           KDtreeType;
+    typedef data::Pointcloud<Dim>                   PointCloudType;
+    typedef typename PointCloudType::PointType      PointType;
+    typedef math::Distribution<Dim, true>           DistributionType;
 
-    KDTreeIndex()
+    KDTreeInterface()
     {
         resolution.fill(0.5);
     }
 
-    KDTreeIndex(const ResolutionType &_resolution) :
+    KDTreeInterface(const ResolutionType &_resolution) :
         resolution(_resolution)
     {
     }
 
-    typename NodeType::Ptr create(const typename NodeType::PointType &_p)
+    inline typename NodeType::Ptr create(const typename NodeType::PointType &_p)
     {
         NodeType *node = new NodeType;
-        /// ... extra material
-        return NodeType::Ptr(node);
+        node->points.emplace_back(_p);
+        for(std::size_t i = 0 ; i < Dim ; ++i) {
+            node->index[i] = floor(_p(i) / resolution[i]);
+        }
+        return typename NodeType::Ptr(node);
+    }
+
+    inline DistributionType * get(const typename NodeType::PointType &_p,
+                                  typename KDtreeType::Ptr &_tree)
+    {
+        if(!_tree)
+            return nullptr;
+
+        IndexType index;
+        for(std::size_t i = 0 ; i < Dim ; ++i) {
+            index[i] = floor(_p(i) / resolution[i]);
+        }
+        typename NodeType::Ptr node;
+        if(_tree->find(index, node)) {
+            return ((NodeType *) node.get())->get();
+        }
+
+        return nullptr;
+    }
+
+    inline void insert(const typename PointCloudType::Ptr &_point_cloud,
+                       typename KDtreeType::Ptr &_tree)
+    {
+        const PointCloudType &point_cloud = *_point_cloud;
+        insert(point_cloud, _tree);
+    }
+
+    inline void insert(const PointCloudType &_point_cloud,
+                       typename KDtreeType::Ptr &_tree)
+    {
+        _tree.reset(new KDtreeType);
+        for(std::size_t i = 0 ; i < _point_cloud.size ; ++i) {
+            if(_point_cloud.mask[i] == PointCloudType::VALID)
+                _tree->insertNode(create(_point_cloud.points[i]));
+        }
     }
 
     ResolutionType resolution;

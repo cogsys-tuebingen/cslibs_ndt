@@ -21,7 +21,6 @@ void renderMultiGrid(MultiGrid2D   &grid,
 
     cv::Mat samples(dst.rows, dst.cols, CV_64FC1, cv::Scalar());
     double max_value = std::numeric_limits<double>::lowest();
-#pragma omp parallel for reduction(max : max_value)
     for(int i = 0 ; i < dst.rows ; ++i) {
         for(int j = 0 ; j < dst.cols ; ++j) {
             MultiGrid2D::PointType p = min + MultiGrid2D::PointType(scale_x * j, scale_y * i);

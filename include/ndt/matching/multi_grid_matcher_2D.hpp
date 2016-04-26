@@ -54,7 +54,6 @@ public:
         grid.reset(new GridType(size, params.resolution, _src.min));
         grid->add(_src);
 
-        /// todo:: initialize parameter estimate double phi = 0.0;
         double          tx = _prior_transformation.translation()(0);
         double          ty = _prior_transformation.translation()(1);
         double          phi = acos(_prior_transformation.rotation()(0,0));

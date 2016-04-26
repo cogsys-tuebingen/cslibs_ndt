@@ -5,17 +5,20 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <tf/tf.h>
 
+
 #include <ndt/conversion/convert.hpp>
 #include <ndt/data/laserscan.hpp>
+#include <ndt/matching/kdtree_matcher_2D.hpp>
 #include <ndt/tree/kdtree.hpp>
 #include <ndt/visualization/kdtree.hpp>
 
 struct ScanMatcherNode {
     typedef ndt::tree::KDTreeNode<2>        KDTreeNodeType;
     typedef KDTreeNodeType::KDTreeType      KDTreeType;
-    typedef ndt::tree::KDTreeIndex<3>       KDTreeIndexType;
-    typedef KDTreeIndexType::ResolutionType ResolutionType;
+    typedef ndt::tree::KDTreeInterface<2>   KDTreeInterfaceType;
+    typedef KDTreeInterfaceType::ResolutionType ResolutionType;
     typedef pcl::PointCloud<pcl::PointXYZ>  PCLPointCloudType;
+    typedef ndt::matching::KDTreeMatcher2D  MatcherType;
 
     ros::NodeHandle     nh;
     ros::Subscriber     sub;
@@ -49,56 +52,53 @@ struct ScanMatcherNode {
         if(!dst) {
             dst.reset(new ndt::data::LaserScan(src));
         } else {
-//            MatcherType matcher;
-//            MatcherType::TransformType transform;
-//            double score = matcher.match(*dst, src, transform);
+            MatcherType matcher;
+            MatcherType::TransformType transform;
+            double score = matcher.match(*dst, src, transform);
 
-//            PCLPointCloudType output;
+            PCLPointCloudType output;
 
-//            for(std::size_t i = 0 ; i < src.size ; ++i) {
-//                MatcherType::PointType p_bar = transform * src.points[i];
-//                pcl::PointXYZ pcl_p;
-//                pcl_p.x = p_bar(0);
-//                pcl_p.y = p_bar(1);
-//                output.push_back(pcl_p);
-//            }
+            for(std::size_t i = 0 ; i < src.size ; ++i) {
+                MatcherType::PointType p_bar = transform * src.points[i];
+                pcl::PointXYZ pcl_p;
+                pcl_p.x = p_bar(0);
+                pcl_p.y = p_bar(1);
+                output.push_back(pcl_p);
+            }
 
-//            ndt::data::LaserScan::PointType range = dst->range();
-//            ndt::MultiGrid2DType::SizeType  size = {std::size_t(range(0) / resolution[0]),
-//                                                    std::size_t(range(1) / resolution[1])};
+            if(score < 0.1){
+                std::cout << "-------------------------------" << std::endl;
+                std::cout << score << std::endl;
+                std::cout << transform.translation() << std::endl;
+                std::cout << transform.rotation() << std::endl;
+                std::cout << "-------------------------------" << std::endl;
+            }
 
-            /// output display
-//            if(score < 0.1){
-//                std::cout << "-------------------------------" << std::endl;
-//                std::cout << score << std::endl;
-//                std::cout << transform.translation() << std::endl;
-//                std::cout << transform.rotation() << std::endl;
-//                std::cout << "-------------------------------" << std::endl;
-//            }
+            KDTreeType::Ptr     tree;
+            KDTreeInterfaceType tree_interface(resolution);
+            tree_interface.insert(dst, tree);
 
-//            cv::Mat distribution(500,500, CV_8UC3, cv::Scalar());
-//            ndt::MultiGrid2DType grid(size, resolution, dst->min);
-//            grid.add(*dst);
-//            ndt::renderNDTGrid(grid, dst->min, dst->max, distribution);
+            cv::Mat distribution(500,500, CV_8UC3, cv::Scalar());
+            ndt::visualization::renderTree(tree, tree_interface, dst->min, dst->max, distribution);
 
-//            cv::cvtColor(distribution,  distribution, CV_BGR2GRAY);
-//            distribution *= 100.0 / 255.0;
+            cv::cvtColor(distribution,  distribution, CV_BGR2GRAY);
+            distribution *= 100.0 / 255.0;
 
-//            nav_msgs::OccupancyGrid distr_msg;
-//            distr_msg.header = msg->header;
-//            distr_msg.info.height = distribution.rows;
-//            distr_msg.info.width = distribution.cols;
-//            distr_msg.info.origin.position.x = dst->min(0);
-//            distr_msg.info.origin.position.y = dst->min(1);
-//            distr_msg.info.resolution = range(1) / distribution.rows;
-//            for(int i = 0 ; i < distribution.rows ; ++i) {
-//                for(int j = 0 ; j < distribution.cols ; ++j)
-//                    distr_msg.data.push_back(distribution.at<uchar>(distribution.rows - 1 - i, j));
-//            }
+            nav_msgs::OccupancyGrid distr_msg;
+            distr_msg.header = msg->header;
+            distr_msg.info.height = distribution.rows;
+            distr_msg.info.width = distribution.cols;
+            distr_msg.info.origin.position.x = dst->min(0);
+            distr_msg.info.origin.position.y = dst->min(1);
+            distr_msg.info.resolution = (dst->max(1) - dst->min(1)) / distribution.rows;
+            for(int i = 0 ; i < distribution.rows ; ++i) {
+                for(int j = 0 ; j < distribution.cols ; ++j)
+                    distr_msg.data.push_back(distribution.at<uchar>(distribution.rows - 1 - i, j));
+            }
 
-//            output.header = pcl_conversions::toPCL(msg->header);
-//            pub_pcl.publish(output);
-//            pub_distr.publish(distr_msg);
+            output.header = pcl_conversions::toPCL(msg->header);
+            pub_pcl.publish(output);
+            pub_distr.publish(distr_msg);
             dst.reset(new ndt::data::LaserScan(src));
        }
    }
@@ -109,7 +109,7 @@ struct ScanMatcherNode {
 
 int main(int argc, char *argv[])
 {
-    ros::init(argc, argv, "ndt_multi_grid_matcher_node");
+    ros::init(argc, argv, "ndt_kdtree_matcher_node");
     ScanMatcherNode node;
     ros::spin();
 

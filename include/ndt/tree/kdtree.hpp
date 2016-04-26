@@ -12,10 +12,13 @@ namespace tree {
 template<std::size_t Dim>
 struct KDTreeNode : public kdtree::KDTreeNode<int, Dim>
 {
-    typedef kdtree::KDTree<int, Dim>             KDTreeType;
-    typedef kdtree::KDTreeNode<int, Dim>         NodeBase;
-    typedef math::Distribution<Dim, true>        DistributionType;
-    typedef typename DistributionType::PointType PointType;
+    typedef kdtree::KDTree<int, Dim>                KDTreeType;
+    typedef kdtree::KDTreeNode<int, Dim>            NodeBase;
+    typedef math::Distribution<Dim, true>           DistributionType;
+    typedef typename std::vector<DistributionType>  DistributionSetType;
+    typedef typename DistributionType::MatrixType   CovarianceMatrixType;
+
+    typedef typename DistributionType::PointType    PointType;
 
     std::vector<PointType>          points;
     typename DistributionType::Ptr  distribution;

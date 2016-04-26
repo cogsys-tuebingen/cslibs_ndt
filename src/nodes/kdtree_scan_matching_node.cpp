@@ -7,7 +7,7 @@
 
 #include <ndt/conversion/convert.hpp>
 #include <ndt/data/laserscan.hpp>
-#include <ndt/kdtree/kdtree.hpp>
+#include <ndt/tree/kdtree.hpp>
 #include <ndt/visualization/kdtree.hpp>
 
 struct ScanMatcherNode {

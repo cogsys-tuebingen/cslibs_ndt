@@ -83,7 +83,7 @@ add_library(ndt
     include/ndt/grid/multi_grid.hpp
     include/ndt/grid/mask.hpp
 
-    include/ndt/kdtree/kdtree.hpp
+    include/ndt/tree/kdtree.hpp
 
     include/ndt/visualization/grid.hpp
     include/ndt/visualization/multi_grid.hpp

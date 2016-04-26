@@ -5,7 +5,6 @@
 #include <eigen3/Eigen/Geometry>
 
 #include <ndt/data/pointcloud.hpp>
-#include <ndt/grid/multi_grid.hpp>
 
 namespace ndt {
 namespace matching {

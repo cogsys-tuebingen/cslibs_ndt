@@ -159,6 +159,15 @@ target_link_libraries(ndt_kdtree_scan_matching_node
     ndt
 )
 
+add_executable(ndt_kdtree_cluster_node
+    src/nodes/kdtree_cluster_node.cpp
+)
+
+target_link_libraries(ndt_kdtree_cluster_node
+    ${catkin_LIBRARIES}
+    ${OpenCV_LIBRARIES}
+    ndt
+)
 
 ## DEMOS ############################################################################
 add_executable(ndt_demo_grid_visualization

@@ -14,7 +14,7 @@ struct ScanMatcherNode {
     typedef ndt::matching::MultiGridMatcher2D   MultiGridMatcher2D;
     typedef ndt::visualization::MultiGrid2D     MultiGrid2D;
     typedef ndt::visualization::Point2D         Point2D;
-    typedef pcl::PointCloud<pcl::PointXYZ>      PCLPointCloud3D;
+    typedef pcl::PointCloud<pcl::PointXYZ>      PCLPointCloudType;
 
     ros::NodeHandle     nh;
     ros::Subscriber     sub;
@@ -36,7 +36,7 @@ struct ScanMatcherNode {
         nh.getParam("topic_distr", topic_distr);
 
         sub = nh.subscribe<sensor_msgs::LaserScan>(topic_scan, 1, &ScanMatcherNode::laserscan, this);
-        pub_pcl = nh.advertise<PCLPointCloud3D>(topic_pcl, 1);
+        pub_pcl = nh.advertise<PCLPointCloudType>(topic_pcl, 1);
         pub_distr = nh.advertise<nav_msgs::OccupancyGrid>(topic_distr, 1);
 
     }
@@ -52,7 +52,7 @@ struct ScanMatcherNode {
             MultiGridMatcher2D::TransformType transform;
             double score = matcher.match(*dst, src, transform);
 
-            PCLPointCloud3D output;
+            PCLPointCloudType output;
 
             for(std::size_t i = 0 ; i < src.size ; ++i) {
                 Point2D p_bar = transform * src.points[i];

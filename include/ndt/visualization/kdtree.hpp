@@ -50,6 +50,51 @@ void renderTree(KDTree2D::Ptr     &tree,
         }
     }
 }
+
+void renderClusterDistributions(KDTree2D::Ptr     &tree,
+                                KDTreeInterface2D &interface,
+                                const Point2D     &min,
+                                const Point2D     &max,
+                                cv::Mat           &dst)
+{
+    double scale_x = fabs((max - min)(0)) / dst.cols;
+    double scale_y = fabs((max - min)(1)) / dst.rows;
+
+    KDTreeInterface2D::DistributionMapType distributions;
+    interface.getClusterDistributions(tree, distributions);
+
+    cv::Mat samples(dst.rows, dst.cols, CV_64FC1, cv::Scalar());
+    double max_value = std::numeric_limits<double>::lowest();
+    for(int i = 0 ; i < dst.rows ; ++i) {
+        for(int j = 0 ; j < dst.cols ; ++j) {
+            Point2D p = min + Point2D(scale_x * j, scale_y * i);
+
+            double value = 0.0;
+            for(auto distributions_entry : distributions) {
+                KDTreeInterface2D::DistributionType &distribution = distributions_entry.second;
+                if(distribution.getN() < 3)
+                    continue;
+                    value += distribution.sampleNonNoramlized(p);
+            }
+
+            if(value > max_value) {
+                max_value = value;
+            }
+            samples.at<double>(dst.rows - 1 - i,j) = value;
+        }
+    }
+
+#pragma omp parallel for
+    for(int i = 0 ; i < dst.rows ; ++i) {
+        for(int j = 0 ; j < dst.cols ; ++j) {
+            cv::Vec3b &pix = dst.at<cv::Vec3b>(i,j);
+            pix[0] = samples.at<double>(i,j) / max_value * 255;
+            pix[1] = samples.at<double>(i,j) / max_value * 255;
+            pix[2] = samples.at<double>(i,j) / max_value * 255;
+        }
+    }
+}
+
 }
 }
 

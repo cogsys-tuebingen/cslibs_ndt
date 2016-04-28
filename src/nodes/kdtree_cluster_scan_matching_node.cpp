@@ -8,17 +8,17 @@
 
 #include <ndt/conversion/convert.hpp>
 #include <ndt/data/laserscan.hpp>
-#include <ndt/matching/kdtree_matcher_2D.hpp>
+#include <ndt/matching/kdtree_cluster_matcher_2D.hpp>
 #include <ndt/tree/kdtree.hpp>
 #include <ndt/visualization/kdtree.hpp>
 
 struct ScanMatcherNode {
-    typedef ndt::tree::KDTreeNode<2>        KDTreeNodeType;
-    typedef KDTreeNodeType::KDTreeType      KDTreeType;
-    typedef ndt::tree::KDTreeInterface<2>   KDTreeInterfaceType;
-    typedef KDTreeInterfaceType::ResolutionType ResolutionType;
-    typedef pcl::PointCloud<pcl::PointXYZ>  PCLPointCloudType;
-    typedef ndt::matching::KDTreeMatcher2D  MatcherType;
+    typedef ndt::tree::KDTreeNode<2>               KDTreeNodeType;
+    typedef KDTreeNodeType::KDTreeType             KDTreeType;
+    typedef ndt::tree::KDTreeInterface<2>          KDTreeInterfaceType;
+    typedef KDTreeInterfaceType::ResolutionType    ResolutionType;
+    typedef pcl::PointCloud<pcl::PointXYZ>         PCLPointCloudType;
+    typedef ndt::matching::KDTreeClusterMatcher2D  MatcherType;
 
     ros::NodeHandle     nh;
     ros::Subscriber     sub;
@@ -30,7 +30,7 @@ struct ScanMatcherNode {
 
     ScanMatcherNode() :
         nh("~"),
-        resolution{1, 1}
+        resolution{0.25, 0.25}
     {
         std::string topic_scan = "/scan";
         std::string topic_pcl  = "/matched";
@@ -77,9 +77,14 @@ struct ScanMatcherNode {
             KDTreeType::Ptr     tree;
             KDTreeInterfaceType tree_interface(resolution);
             tree_interface.insert(dst, tree);
+            tree_interface.cluster(tree);
 
             cv::Mat distribution(500,500, CV_8UC3, cv::Scalar());
-            ndt::visualization::renderTree(tree, tree_interface, dst->min, dst->max, distribution);
+            ndt::visualization::renderClusterDistributions(tree,
+                                                           tree_interface,
+                                                           dst->min,
+                                                           dst->max,
+                                                           distribution);
 
             cv::cvtColor(distribution,  distribution, CV_BGR2GRAY);
             distribution *= 100.0 / 255.0;
@@ -109,7 +114,7 @@ struct ScanMatcherNode {
 
 int main(int argc, char *argv[])
 {
-    ros::init(argc, argv, "ndt_kdtree_matcher_node");
+    ros::init(argc, argv, "ndt_kdtree_cluster_scan_matching_node");
     ScanMatcherNode node;
     ros::spin();
 

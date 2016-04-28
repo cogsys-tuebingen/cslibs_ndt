@@ -78,6 +78,7 @@ add_library(ndt
     include/ndt/matching/multi_grid_matcher_2D.hpp
     include/ndt/matching/single_grid_matcher_2D.hpp
     include/ndt/matching/kdtree_matcher_2D.hpp
+    include/ndt/matching/kdtree_cluster_matcher_2D.hpp
 
     include/ndt/grid/grid.hpp
     include/ndt/grid/multi_grid.hpp
@@ -164,6 +165,16 @@ add_executable(ndt_kdtree_cluster_node
 )
 
 target_link_libraries(ndt_kdtree_cluster_node
+    ${catkin_LIBRARIES}
+    ${OpenCV_LIBRARIES}
+    ndt
+)
+
+add_executable(ndt_kdtree_cluster_scan_matching_node
+    src/nodes/kdtree_cluster_scan_matching_node.cpp
+)
+
+target_link_libraries(ndt_kdtree_cluster_scan_matching_node
     ${catkin_LIBRARIES}
     ${OpenCV_LIBRARIES}
     ndt

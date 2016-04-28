@@ -52,10 +52,11 @@ struct ScanClusterNode {
         ndt::conversion::convert(msg, scan, false);
         KDTreeType::Ptr     tree;
         KDTreeInterfaceType tree_interface(resolution);
-        tree_interface.insert(scan, tree);
+                            tree_interface.insert(scan, tree);
+                            tree_interface.cluster(tree);
+        KDTreeInterfaceType::DistributionMapType distributions;
+        tree_interface.getClusterDistributions(tree, distributions);
 
-        kdtree::KDTreeClustering<int, 2> clustering(tree);
-        clustering.cluster();
         std::chrono::duration<double> elapsed =
                 std::chrono::system_clock::now() - start;
         std::cout << "elapsed " << elapsed.count() << "s" << std::endl;

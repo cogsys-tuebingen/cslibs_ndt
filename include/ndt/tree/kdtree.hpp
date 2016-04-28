@@ -6,7 +6,7 @@
 #include <ndt/data/pointcloud.hpp>
 #include <ndt/math/distribution.hpp>
 #include <kdtree/kdtree.hpp>
-
+#include <kdtree/kdtree_clustering.hpp>
 
 namespace ndt {
 namespace tree {
@@ -14,6 +14,7 @@ template<std::size_t Dim>
 struct KDTreeNode : public kdtree::KDTreeNode<int, Dim>
 {
     typedef kdtree::KDTree<int, Dim>                KDTreeType;
+    typedef kdtree::KDTreeClustering<int, Dim>      KDTreeClusteringType;
     typedef kdtree::KDTreeNode<int, Dim>            NodeBase;
     typedef math::Distribution<Dim, true>           DistributionType;
     typedef typename DistributionType::MatrixType   CovarianceMatrixType;
@@ -78,13 +79,15 @@ struct KDTreeNode : public kdtree::KDTreeNode<int, Dim>
 template<std::size_t Dim>
 struct KDTreeInterface
 {
-    typedef std::array<int,    Dim>                 IndexType;
-    typedef std::array<double, Dim>                 ResolutionType;
-    typedef KDTreeNode<Dim>                         NodeType;
-    typedef typename NodeType::KDTreeType           KDtreeType;
-    typedef data::Pointcloud<Dim>                   PointCloudType;
-    typedef typename PointCloudType::PointType      PointType;
-    typedef math::Distribution<Dim, true>           DistributionType;
+    typedef std::array<int,    Dim>                   IndexType;
+    typedef std::array<double, Dim>                   ResolutionType;
+    typedef KDTreeNode<Dim>                           NodeType;
+    typedef typename NodeType::KDTreeType             KDtreeType;
+    typedef typename NodeType::KDTreeClusteringType   KDTreeClusteringType;
+    typedef data::Pointcloud<Dim>                     PointCloudType;
+    typedef typename PointCloudType::PointType        PointType;
+    typedef math::Distribution<Dim, true>             DistributionType;
+    typedef typename std::map<int, DistributionType>  DistributionMapType;
 
     KDTreeInterface()
     {
@@ -140,6 +143,29 @@ struct KDTreeInterface
                 _tree->insertNode(create(_point_cloud.points[i]));
         }
     }
+
+    inline void cluster(typename KDtreeType::Ptr &_tree)
+    {
+        if(!_tree)
+            return;
+        KDTreeClusteringType clustering(_tree);
+        clustering.cluster();
+    }
+
+    inline void getClusterDistributions(const typename KDtreeType::Ptr &_tree,
+                                        DistributionMapType &_distributions)
+    {
+        std::vector<typename NodeType::Ptr> leaves;
+        _tree->getLeaves(leaves);
+        for(typename NodeType::Ptr &leaf : leaves) {
+            NodeType *node = (NodeType*) leaf.get();
+            DistributionType &distr = _distributions[node->cluster];
+            for(auto &p : node->points) {
+                distr.add(p);
+            }
+        }
+    }
+
 
     ResolutionType resolution;
 

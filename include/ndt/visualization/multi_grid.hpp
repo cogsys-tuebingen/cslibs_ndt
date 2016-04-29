@@ -12,15 +12,16 @@ typedef grid::MultiGrid<2>     MultiGrid2D;
 typedef MultiGrid2D::PointType Point2D;
 
 void renderMultiGrid(MultiGrid2D   &grid,
-                   const Point2D &min,
-                   const Point2D &max,
-                   cv::Mat       &dst)
+                     const Point2D &min,
+                     const Point2D &max,
+                     cv::Mat       &dst)
 {
     double scale_x = fabs((max - min)(0)) / dst.cols;
     double scale_y = fabs((max - min)(1)) / dst.rows;
 
     cv::Mat samples(dst.rows, dst.cols, CV_64FC1, cv::Scalar());
     double max_value = std::numeric_limits<double>::lowest();
+#pragma omp parallel for
     for(int i = 0 ; i < dst.rows ; ++i) {
         for(int j = 0 ; j < dst.cols ; ++j) {
             MultiGrid2D::PointType p = min + MultiGrid2D::PointType(scale_x * j, scale_y * i);

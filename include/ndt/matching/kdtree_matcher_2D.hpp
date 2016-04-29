@@ -47,7 +47,9 @@ public:
                         const TransformType  &_prior_transformation = TransformType::Identity()) override
     {
         /// build the ndt grid for the src cloud
-        tree_interface.insert(_src, tree);
+        PointCloudType src = _src;
+        std::random_shuffle(src.points_data.begin(), src.points_data.end());
+        tree_interface.insert(src, tree);
 
         double          tx = _prior_transformation.translation()(0);
         double          ty = _prior_transformation.translation()(1);

@@ -25,6 +25,7 @@ void renderTree(KDTree2D::Ptr     &tree,
 
     cv::Mat samples(dst.rows, dst.cols, CV_64FC1, cv::Scalar());
     double max_value = std::numeric_limits<double>::lowest();
+#pragma omp parallel for
     for(int i = 0 ; i < dst.rows ; ++i) {
         for(int j = 0 ; j < dst.cols ; ++j) {
             Point2D p = min + Point2D(scale_x * j, scale_y * i);

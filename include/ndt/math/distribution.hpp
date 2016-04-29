@@ -2,6 +2,7 @@
 #define DISTRIBUTION_H
 
 #include <memory>
+#include <mutex>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Eigen>
 #include <iostream>
@@ -34,8 +35,22 @@ public:
     {
     }
 
+    Distribution(const Distribution &other)
+    {
+        std::lock_guard<std::mutex> lock(other.update_mutex);
+        mean = other.mean;
+        covariance = other.covariance;
+        correlated = other.correlated;
+        inverse_covariance  = other.inverse_covariance;
+        n = other.n;
+        n_1 = other.n_1;
+        lambda_ratio = other.lambda_ratio;
+        dirty = other.dirty;
+    }
+
     inline void reset()
     {
+        std::lock_guard<std::mutex> lock(update_mutex);
         mean = PointType::Zero();
         covariance = MatrixType::Zero();
         correlated = MatrixType::Zero();
@@ -45,6 +60,7 @@ public:
 
     inline void add(const PointType &_p)
     {
+        std::lock_guard<std::mutex> lock(update_mutex);
         mean = (mean * n_1 + _p) / n;
         for(std::size_t i = 0 ; i < Dim ; ++i) {
             for(std::size_t j = i ; j < Dim ; ++j) {
@@ -58,6 +74,9 @@ public:
 
     inline Distribution & operator += (const Distribution &other)
     {
+        std::lock_guard<std::mutex> self_lock(update_mutex);
+        std::lock_guard<std::mutex> other_lock(other.update_mutex);
+
         std::size_t _n = n_1 + other.n_1;
         PointType   _mean = (mean * n_1 + other.mean * other.n_1) / (double) _n;
         MatrixType  _corr = (correlated * n_1 + other.correlated * other.n_1) / (double) _n;
@@ -69,7 +88,7 @@ public:
         return *this;
     }
 
-    inline std::size_t getN()
+    inline std::size_t getN() const
     {
         return n_1;
     }
@@ -183,6 +202,7 @@ private:
     MatrixType covariance;
     MatrixType correlated;
     MatrixType inverse_covariance;
+    mutable std::mutex update_mutex;
 
     std::size_t n;
     std::size_t n_1;            /// actual amount of points in distribution
@@ -192,6 +212,7 @@ private:
 
     void update()
     {
+        std::lock_guard<std::mutex> lock(update_mutex);
         double scale = n_1 / (double)(n_1 - 1);
         for(std::size_t i = 0 ; i < Dim ; ++i) {
             for(std::size_t j = i ; j < Dim ; ++j) {

@@ -4,7 +4,9 @@
 #include <pcl_ros/point_cloud.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <tf/tf.h>
-
+#include <tf/transform_listener.h>
+#include <tf/transform_datatypes.h>
+#include <chrono>
 
 #include <ndt/conversion/convert.hpp>
 #include <ndt/data/laserscan.hpp>
@@ -24,13 +26,19 @@ struct ScanMatcherNode {
     ros::Subscriber     sub;
     ros::Publisher      pub_pcl;
     ros::Publisher      pub_distr;
+    tf::TransformListener tf;
 
     ndt::data::LaserScan::Ptr src;
+    tf::StampedTransform      src_transform;
     ResolutionType            resolution;
+    std::size_t               failed;
+    std::size_t               all;
 
     ScanMatcherNode() :
         nh("~"),
-        resolution{.5, .5}
+        resolution{1.0, 1.0},
+        failed(0),
+        all(0)
     {
         std::string topic_scan = "/scan";
         std::string topic_pcl  = "/matched";
@@ -47,14 +55,37 @@ struct ScanMatcherNode {
 
     void laserscan(const sensor_msgs::LaserScanConstPtr &msg)
     {
+        std::chrono::time_point<std::chrono::system_clock> start =
+                std::chrono::system_clock::now();
+
         ndt::data::LaserScan dst;
         ndt::conversion::convert(msg, dst, false);
+
+        tf::StampedTransform dst_transform;
+        try{
+            tf.waitForTransform(msg->header.frame_id, "/odom", msg->header.stamp, ros::Duration(0.1));
+            tf.lookupTransform(msg->header.frame_id, "/odom", msg->header.stamp, dst_transform);
+        }
+        catch (const tf::TransformException &ex){
+            ROS_ERROR("%s",ex.what());
+            return;
+        }
+
         if(!src) {
             src.reset(new ndt::data::LaserScan(dst));
         } else {
+            tf::Transform  diff = dst_transform.inverse() * src_transform;
+
             MatcherType matcher;
-            MatcherType::TransformType transform;
+            MatcherType::RotationType    rotation(tf::getYaw(diff.getRotation()));
+            MatcherType::TranslationType translation(diff.getOrigin().x(), diff.getOrigin().y());
+            MatcherType::TransformType   transform = translation * rotation;
             double score = matcher.match(dst, *src, transform);
+
+
+            std::chrono::duration<double> elapsed =
+                    std::chrono::system_clock::now() - start;
+            std::cout << "elapsed " << elapsed.count() * 1000.0 << "ms" << std::endl;
 
             PCLPointCloudType output;
 
@@ -72,6 +103,7 @@ struct ScanMatcherNode {
                 std::cout << transform.translation() << std::endl;
                 std::cout << transform.rotation() << std::endl;
                 std::cout << "-------------------------------" << std::endl;
+                ++failed;
             }
 
             KDTreeType::Ptr     tree;
@@ -100,6 +132,10 @@ struct ScanMatcherNode {
             pub_pcl.publish(output);
             pub_distr.publish(distr_msg);
             src.reset(new ndt::data::LaserScan(dst));
+            ++all;
+
+            src_transform = dst_transform;
+            std::cout << "success : " << failed << " " << all << " => " << (1.0 - failed / (double) all) * 100.0 << std::endl;
        }
    }
 };

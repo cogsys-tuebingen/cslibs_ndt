@@ -7,6 +7,7 @@
 #include <ndt/math/distribution.hpp>
 #include <kdtree/kdtree.hpp>
 #include <kdtree/kdtree_clustering.hpp>
+#include <mutex>
 
 namespace ndt {
 namespace tree {
@@ -23,6 +24,7 @@ struct KDTreeNode : public kdtree::KDTreeNode<int, Dim>
 
     std::vector<PointType>          points;
     typename DistributionType::Ptr  distribution;
+    mutable std::mutex              update_mutex;
 
     KDTreeNode() :
         NodeBase(),
@@ -66,6 +68,7 @@ struct KDTreeNode : public kdtree::KDTreeNode<int, Dim>
 
     inline DistributionType* get()
     {
+        std::lock_guard<std::mutex> lock(update_mutex);
         if(!distribution || distribution->getN() != points.size()) {
             distribution.reset(new DistributionType);
             for(const PointType &p : points) {

@@ -25,12 +25,12 @@ struct ScanMatcherNode {
     ros::Publisher      pub_pcl;
     ros::Publisher      pub_distr;
 
-    ndt::data::LaserScan::Ptr dst;
+    ndt::data::LaserScan::Ptr src;
     ResolutionType            resolution;
 
     ScanMatcherNode() :
         nh("~"),
-        resolution{1, 1}
+        resolution{.5, .5}
     {
         std::string topic_scan = "/scan";
         std::string topic_pcl  = "/matched";
@@ -47,19 +47,19 @@ struct ScanMatcherNode {
 
     void laserscan(const sensor_msgs::LaserScanConstPtr &msg)
     {
-        ndt::data::LaserScan src;
-        ndt::conversion::convert(msg, src, false);
-        if(!dst) {
-            dst.reset(new ndt::data::LaserScan(src));
+        ndt::data::LaserScan dst;
+        ndt::conversion::convert(msg, dst, false);
+        if(!src) {
+            src.reset(new ndt::data::LaserScan(dst));
         } else {
             MatcherType matcher;
             MatcherType::TransformType transform;
-            double score = matcher.match(*dst, src, transform);
+            double score = matcher.match(dst, *src, transform);
 
             PCLPointCloudType output;
 
-            for(std::size_t i = 0 ; i < src.size ; ++i) {
-                MatcherType::PointType p_bar = transform * src.points[i];
+            for(std::size_t i = 0 ; i < src->size ; ++i) {
+                MatcherType::PointType p_bar = transform * src->points[i];
                 pcl::PointXYZ pcl_p;
                 pcl_p.x = p_bar(0);
                 pcl_p.y = p_bar(1);
@@ -79,7 +79,7 @@ struct ScanMatcherNode {
             tree_interface.insert(dst, tree);
 
             cv::Mat distribution(500,500, CV_8UC3, cv::Scalar());
-            ndt::visualization::renderTree(tree, tree_interface, dst->min, dst->max, distribution);
+            ndt::visualization::renderTree(tree, tree_interface, dst.min, dst.max, distribution);
 
             cv::cvtColor(distribution,  distribution, CV_BGR2GRAY);
             distribution *= 100.0 / 255.0;
@@ -88,9 +88,9 @@ struct ScanMatcherNode {
             distr_msg.header = msg->header;
             distr_msg.info.height = distribution.rows;
             distr_msg.info.width = distribution.cols;
-            distr_msg.info.origin.position.x = dst->min(0);
-            distr_msg.info.origin.position.y = dst->min(1);
-            distr_msg.info.resolution = (dst->max(1) - dst->min(1)) / distribution.rows;
+            distr_msg.info.origin.position.x = dst.min(0);
+            distr_msg.info.origin.position.y = dst.min(1);
+            distr_msg.info.resolution = dst.range()(1) / distribution.rows;
             for(int i = 0 ; i < distribution.rows ; ++i) {
                 for(int j = 0 ; j < distribution.cols ; ++j)
                     distr_msg.data.push_back(distribution.at<uchar>(distribution.rows - 1 - i, j));
@@ -99,7 +99,7 @@ struct ScanMatcherNode {
             output.header = pcl_conversions::toPCL(msg->header);
             pub_pcl.publish(output);
             pub_distr.publish(distr_msg);
-            dst.reset(new ndt::data::LaserScan(src));
+            src.reset(new ndt::data::LaserScan(dst));
        }
    }
 };

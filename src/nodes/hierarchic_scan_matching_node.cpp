@@ -21,7 +21,7 @@ struct ScanMatcherNode {
     ros::Publisher      pub_pcl;
     ros::Publisher      pub_distr;
 
-    ndt::data::LaserScan::Ptr   dst;
+    ndt::data::LaserScan::Ptr   src;
     MultiGrid2D::ResolutionType resolution_coarse;
     MultiGrid2D::ResolutionType resolution_fine;
 
@@ -45,42 +45,42 @@ struct ScanMatcherNode {
 
     void laserscan(const sensor_msgs::LaserScanConstPtr &msg)
     {
-        ndt::data::LaserScan src;
-        ndt::conversion::convert(msg, src, false);
-        if(!dst) {
-            dst.reset(new ndt::data::LaserScan(src));
+        ndt::data::LaserScan dst;
+        ndt::conversion::convert(msg, dst, false);
+        if(!src) {
+            src.reset(new ndt::data::LaserScan(dst));
         } else {
             MultiGridMatcher2D::Parameters    params_coarse;
             params_coarse.resolution = resolution_coarse;
             MultiGridMatcher2D                matcher_coarse;
             MultiGridMatcher2D::TransformType prior_transform;
-            double score_coarse = matcher_coarse.match(*dst, src, prior_transform);
+            double score_coarse = matcher_coarse.match(dst, *src, prior_transform);
 
             if(score_coarse < 1e-3)
                 prior_transform = MultiGridMatcher2D::TransformType::Identity();
 
             MultiGridMatcher2D matcher_fine;
             MultiGridMatcher2D::TransformType transform_fine;
-            double score_fine = matcher_fine.match(*dst, src, transform_fine, prior_transform);
+            double score_fine = matcher_fine.match(dst, *src, transform_fine, prior_transform);
 
             PCLPointCloud3D output;
 
-            for(std::size_t i = 0 ; i < src.size ; ++i) {
-                Point2D p_bar = transform_fine * src.points[i];
+            for(std::size_t i = 0 ; i < src->size ; ++i) {
+                Point2D p_bar = transform_fine * src->points[i];
                 pcl::PointXYZ pcl_p;
                 pcl_p.x = p_bar(0);
                 pcl_p.y = p_bar(1);
                 output.push_back(pcl_p);
             }
 
-            ndt::data::LaserScan::PointType range = dst->range();
+            ndt::data::LaserScan::PointType range = src->range();
             MultiGridMatcher2D::SizeType    size = {std::size_t(range(0) / resolution_fine[0]),
                                                     std::size_t(range(1) / resolution_fine[1])};
 
             cv::Mat distribution(500,500, CV_8UC3, cv::Scalar());
-            MultiGrid2D grid(size, resolution_fine, dst->min);
-            grid.add(*dst);
-            ndt::visualization::renderMultiGrid(grid, dst->min, dst->max, distribution);
+            MultiGrid2D grid(size, resolution_fine, src->min);
+            grid.add(dst);
+            ndt::visualization::renderMultiGrid(grid, src->min, src->max, distribution);
             /// output display
             if(score_fine < 0.1){
                 std::cout << "-------------------------------" << std::endl;
@@ -100,8 +100,8 @@ struct ScanMatcherNode {
             distr_msg.header = msg->header;
             distr_msg.info.height = distribution.rows;
             distr_msg.info.width = distribution.cols;
-            distr_msg.info.origin.position.x = dst->min(0);
-            distr_msg.info.origin.position.y = dst->min(1);
+            distr_msg.info.origin.position.x = dst.min(0);
+            distr_msg.info.origin.position.y = dst.min(1);
             distr_msg.info.resolution = range(1) / distribution.rows;
             for(int i = 0 ; i < distribution.rows ; ++i) {
                 for(int j = 0 ; j < distribution.cols ; ++j)
@@ -111,7 +111,7 @@ struct ScanMatcherNode {
             output.header = pcl_conversions::toPCL(msg->header);
             pub_pcl.publish(output);
             pub_distr.publish(distr_msg);
-            dst.reset(new ndt::data::LaserScan(src));
+            src.reset(new ndt::data::LaserScan(dst));
        }
    }
 };

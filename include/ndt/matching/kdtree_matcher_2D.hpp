@@ -15,18 +15,20 @@
 namespace ndt {
 namespace matching {
 class KDTreeMatcher2D : public Matcher<2> {
+
+
+
 public:
-    typedef tree::KDTreeNode<2>                      KDTreeNodeType;
-    typedef tree::KDTreeInterface<2>                 KDTreeInterfaceType;
-    typedef KDTreeInterfaceType::DistributionMapType DistributionMapType;
-    typedef KDTreeNodeType::KDTreeType               KDTreeType;
-    typedef KDTreeNodeType::DistributionType         DistributionType;
-    typedef KDTreeNodeType::CovarianceMatrixType     CovarianceMatrixType;
-    typedef KDTreeNodeType::PointType                PointType;
-    typedef Eigen::Matrix<double,3,3>                HessianType;
-    typedef Eigen::Translation2d                     TranslationType;
-    typedef Eigen::Rotation2Dd                       RotationType;
-    typedef Eigen::Vector3d                          GradientType;
+    typedef tree::KDTreeNode<2>                     KDTreeNodeType;
+    typedef tree::KDTreeInterface<2>                KDTreeInterfaceType;
+    typedef KDTreeNodeType::KDTreeType              KDTreeType;
+    typedef KDTreeNodeType::DistributionType        DistributionType;
+    typedef KDTreeNodeType::CovarianceMatrixType    CovarianceMatrixType;
+    typedef KDTreeNodeType::PointType               PointType;
+    typedef Eigen::Matrix<double,3,3>               HessianType;
+    typedef Eigen::Translation2d                    TranslationType;
+    typedef Eigen::Rotation2Dd                      RotationType;
+    typedef Eigen::Vector3d                         GradientType;
 
 
     KDTreeMatcher2D(const Parameters &params = Parameters()) :
@@ -46,9 +48,6 @@ public:
     {
         /// build the ndt grid for the src cloud
         tree_interface.insert(_src, tree);
-        tree_interface.cluster(tree);
-        DistributionMapType distributions;
-        tree_interface.getClusterDistributions(tree, distributions);
 
         double          tx = _prior_transformation.translation()(0);
         double          ty = _prior_transformation.translation()(1);
@@ -98,74 +97,75 @@ public:
                 if(_dst.mask[i] == PointCloudType::VALID) {
                     PointType p = _transformation * _dst.points[i];
 
-                    for(auto distribution_entry : distributions) {
-                        DistributionType &distribution = distribution_entry.second;
+                    DistributionType *distribution_ptr = tree_interface.get(p, tree);
 
-                        if(distribution.getN() < 3)
-                            continue;
+                    if(distribution_ptr == nullptr)
+                        continue;
+                    if(distribution_ptr->getN() < 3)
+                        continue;
+                    DistributionType &distribution = *distribution_ptr;
 
-                        s = distribution.sampleNonNoramlized(p, q);
-                        distribution.getMean(mean);
-                        distribution.getInverseCovariance(inverse_covariance);
+                    s = distribution.sampleNonNoramlized(p, q);
+                    distribution.getMean(mean);
+                    distribution.getInverseCovariance(inverse_covariance);
 
-                        /// at this point, s must be greater than 0.0, since we work with non-normalized Gaussians.
-                        /// if s is 0.0 we do no need to count the sample in
-                        if(s > 1e-3) {
-                            score += s;
-                            const PointType q_inverse_covariance = q.transpose() * inverse_covariance;
+                    /// at this point, s must be greater than 0.0, since we work with non-normalized Gaussians.
+                    /// if s is 0.0 we do no need to count the sample in
+                    if(s > 1e-3) {
+                        score += s;
+                        const PointType q_inverse_covariance = q.transpose() * inverse_covariance;
 
-                            jac(0) = -q(0) * sin_phi - q(1) * cos_phi;
-                            jac(1) =  q(0) * cos_phi - q(1) * sin_phi;
-                            hes(0) = -q(0) * cos_phi + q(1) * sin_phi;
-                            hes(1) = -q(0) * sin_phi - q(1) * cos_phi;
+                        jac(0) = -q(0) * sin_phi - q(1) * cos_phi;
+                        jac(1) =  q(0) * cos_phi - q(1) * sin_phi;
+                        hes(0) = -q(0) * cos_phi + q(1) * sin_phi;
+                        hes(1) = -q(0) * sin_phi - q(1) * cos_phi;
 
-                            /// gradient computation
-                            double g_dot = q_inverse_covariance.dot(jac);
-                            gradient(0) -= s * q_inverse_covariance(0);
-                            gradient(1) -= s * q_inverse_covariance(1);
-                            gradient(2) -= s * g_dot;
-                            /// hessian computation
-                            hessian(0,0)+=  s
-                                    * (-(q_inverse_covariance(0) * q_inverse_covariance(0))   /// (1)
-                                       +  inverse_covariance(0,0));                           /// (3)
-                            hessian(1,0)+=  s
-                                    * (-(q_inverse_covariance(1) * q_inverse_covariance(0))   /// (1)
-                                       +  inverse_covariance(1,0));                           /// (3)
-                            hessian(2,0)+=  s
-                                    * (-(g_dot * q_inverse_covariance(0))                     /// (1)
-                                       +(inverse_covariance.row(0).dot(jac)));                /// (3)
-                            hessian(0,1)+=  s
-                                    * (-(q_inverse_covariance(0) * q_inverse_covariance(1))   /// (1)
-                                       +  inverse_covariance(0,1));                           /// (3)
-                            hessian(1,1)+=  s
-                                    * (-(q_inverse_covariance(1) * q_inverse_covariance(1))   /// (1)
-                                       +  inverse_covariance(1,1));                           /// (3)
-                            hessian(2,1)+=  s
-                                    * (-(g_dot * q_inverse_covariance(1))                     /// (1)
-                                       +(inverse_covariance.row(1).dot(jac)));                /// (3)
-                            hessian(0,2)+=  s
-                                    * (-(q_inverse_covariance(0) * g_dot)                     /// (1)
-                                       +(jac.transpose().dot(inverse_covariance.col(0))));    /// (3)
-                            hessian(1,2)+=  s
-                                    * (-(q_inverse_covariance(1) * g_dot )                    /// (1)
-                                       +(jac.transpose() * inverse_covariance.col(1)));       /// (3)
-                            hessian(2,2)+=  s
-                                    * (-g_dot * g_dot                                         /// (1)
-                                       +q_inverse_covariance.dot(hes)                         /// (2)
-                                       +(jac.transpose() * inverse_covariance * jac));        /// (3)
+                        /// gradient computation
+                        double g_dot = q_inverse_covariance.dot(jac);
+                        gradient(0) -= s * q_inverse_covariance(0);
+                        gradient(1) -= s * q_inverse_covariance(1);
+                        gradient(2) -= s * g_dot;
+                        /// hessian computation
+                        hessian(0,0)+=  s
+                                * (-(q_inverse_covariance(0) * q_inverse_covariance(0))   /// (1)
+                                   +  inverse_covariance(0,0));                           /// (3)
+                        hessian(1,0)+=  s
+                                * (-(q_inverse_covariance(1) * q_inverse_covariance(0))   /// (1)
+                                   +  inverse_covariance(1,0));                           /// (3)
+                        hessian(2,0)+=  s
+                                * (-(g_dot * q_inverse_covariance(0))                     /// (1)
+                                   +(inverse_covariance.row(0).dot(jac)));                /// (3)
+                        hessian(0,1)+=  s
+                                * (-(q_inverse_covariance(0) * q_inverse_covariance(1))   /// (1)
+                                   +  inverse_covariance(0,1));                           /// (3)
+                        hessian(1,1)+=  s
+                                * (-(q_inverse_covariance(1) * q_inverse_covariance(1))   /// (1)
+                                   +  inverse_covariance(1,1));                           /// (3)
+                        hessian(2,1)+=  s
+                                * (-(g_dot * q_inverse_covariance(1))                     /// (1)
+                                   +(inverse_covariance.row(1).dot(jac)));                /// (3)
+                        hessian(0,2)+=  s
+                                * (-(q_inverse_covariance(0) * g_dot)                     /// (1)
+                                   +(jac.transpose().dot(inverse_covariance.col(0))));    /// (3)
+                        hessian(1,2)+=  s
+                                * (-(q_inverse_covariance(1) * g_dot )                    /// (1)
+                                   +(jac.transpose() * inverse_covariance.col(1)));       /// (3)
+                        hessian(2,2)+=  s
+                                * (-g_dot * g_dot                                         /// (1)
+                                   +q_inverse_covariance.dot(hes)                         /// (2)
+                                   +(jac.transpose() * inverse_covariance * jac));        /// (3)
 
-                            /// (1) directly computed from Jacobian combined with q^t * InvCov
-                            /// (2) only a result for H(2,2)
-                            /// (3) [1,0].[[a,b],[c,d]].[[1],[0]] = a with i = j = 0, Jac.col(0)
-                            ///     [0,1].[[a,b],[c,d]].[[1],[0]] = c with i = 1, j = 0, Jac.col(1), Jac.col(0)
-                            ///     [1,0].[[a,b],[c,d]].[[0],[1]] = b with i = 0, j = 1, Jac.col(0), Jac.col(1)
-                            ///     [0,1].[[a,b],[c,d]].[[0],[1]] = d with i = 1, j = 1, Jac.col(1)
-                            ///     [1,0].[[a,b],[c,d]].J_T.col(2) = [a,b].J_T.col(2)
-                            ///     [0,1].[[a,b],[c,d]].J_T.col(2) = [c,d].J_T.col(2)
-                            ///     J_T.col(2).[[a,b],[c,d]].[[1],[0]] = J_T.col(2).[a, c]
-                            ///     J_T.col(2).[[a,b],[c,d]].[[0],[1]] = J_T.col(2).[b, d]
-                            ///     J_T.col(2).[[a,b],[c,d]].J_T.col(2)
-                        }
+                        /// (1) directly computed from Jacobian combined with q^t * InvCov
+                        /// (2) only a result for H(2,2)
+                        /// (3) [1,0].[[a,b],[c,d]].[[1],[0]] = a with i = j = 0, Jac.col(0)
+                        ///     [0,1].[[a,b],[c,d]].[[1],[0]] = c with i = 1, j = 0, Jac.col(1), Jac.col(0)
+                        ///     [1,0].[[a,b],[c,d]].[[0],[1]] = b with i = 0, j = 1, Jac.col(0), Jac.col(1)
+                        ///     [0,1].[[a,b],[c,d]].[[0],[1]] = d with i = 1, j = 1, Jac.col(1)
+                        ///     [1,0].[[a,b],[c,d]].J_T.col(2) = [a,b].J_T.col(2)
+                        ///     [0,1].[[a,b],[c,d]].J_T.col(2) = [c,d].J_T.col(2)
+                        ///     J_T.col(2).[[a,b],[c,d]].[[1],[0]] = J_T.col(2).[a, c]
+                        ///     J_T.col(2).[[a,b],[c,d]].[[0],[1]] = J_T.col(2).[b, d]
+                        ///     J_T.col(2).[[a,b],[c,d]].J_T.col(2)
                     }
                 }
 
@@ -179,7 +179,7 @@ public:
 
             /// solve equeation here
             delta_p = GradientType::Zero();
-            delta_p = hessian.jacobiSvd(Eigen::ComputeFullU | Eigen::ComputeFullV).solve(gradient);
+            delta_p = hessian.fullPivLu().solve(gradient);
             tx  += delta_p(0);
             ty  += delta_p(1);
             phi += delta_p(2);

@@ -49,8 +49,16 @@ public:
     {
     }
 
-    inline virtual double match(const PointCloudType &_src,
-                                const PointCloudType &_dst,
+    /**
+     * @brief match
+     * @param _dst - point set to match onto
+     * @param _src - point set to be matched onto _dst
+     * @param _transformation - transformation from src frame to dst frame
+     * @param _prior_transformation - initial transformation
+     * @return
+     */
+    inline virtual double match(const PointCloudType &_dst,
+                                const PointCloudType &_src,
                                 TransformType        &_transformation,
                                 const TransformType  &_prior_transformation = TransformType::Identity()) = 0;
 

@@ -37,13 +37,13 @@ public:
     {
     }
 
-    inline double match(const PointCloudType &_src,
-                        const PointCloudType &_dst,
+    inline double match(const PointCloudType &_dst,
+                        const PointCloudType &_src,
                         TransformType        &_transformation,
                         const TransformType  &_prior_transformation = TransformType::Identity()) override
     {
         /// build the ndt grid for the src cloud
-        PointType range = _src.range();
+        PointType range = _dst.range();
         typename GridType::SizeType size;
         for(std::size_t i = 0 ; i < 2 ; ++i) {
             if(range(i) <= 0.0)
@@ -51,8 +51,8 @@ public:
             size[i] = floor(range(i) / params.resolution[i] + 0.5);
         }
 
-        grid.reset(new GridType(size, params.resolution, _src.min));
-        grid->add(_src);
+        grid.reset(new GridType(size, params.resolution, _dst.min));
+        grid->add(_dst);
 
         double          tx = _prior_transformation.translation()(0);
         double          ty = _prior_transformation.translation()(1);
@@ -95,9 +95,9 @@ public:
             sincos(phi, &sin_phi, &cos_phi);
 
             /// calculate the hessian and the gradient for each grid
-            for(std::size_t i = 0 ; i < _dst.size ; ++i) {
-                if(_dst.mask[i] == PointCloudType::VALID) {
-                    PointType p = _transformation * _dst.points[i];
+            for(std::size_t i = 0 ; i < _src.size ; ++i) {
+                if(_src.mask[i] == PointCloudType::VALID) {
+                    PointType p = _transformation * _src.points[i];
 
                     DistributionsType distributions;
                     grid->get(p, distributions);

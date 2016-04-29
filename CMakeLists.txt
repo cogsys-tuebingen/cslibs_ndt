@@ -71,6 +71,8 @@ add_library(ndt
 
     include/ndt/math/distribution.hpp
     include/ndt/math/sgn.hpp
+    include/ndt/math/angle.hpp
+    include/ndt/math/euclidian.hpp
 
     include/ndt/conversion/convert.hpp
 

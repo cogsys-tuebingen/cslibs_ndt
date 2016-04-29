@@ -1,0 +1,4 @@
+#ifndef EUCLEDIAN_HPP
+#define EUCLEDIAN_HPP
+
+#endif // EUCLEDIAN_HPP

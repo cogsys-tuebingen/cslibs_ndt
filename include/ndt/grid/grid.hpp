@@ -135,7 +135,7 @@ public:
     inline bool add(const PointType &_p)
     {
         int p = pos(_p);
-        if(p >= data_size || p < 0)
+        if(p >= (int) data_size || p < 0)
             return false;
         grid[p].add(_p);
         return true;
@@ -157,7 +157,7 @@ public:
     inline DistributionType* get(const PointType &_p)
     {
         int p = pos(_p);
-        if(p >= data_size || p < 0)
+        if(p >= (int) data_size || p < 0)
             return nullptr;
         return &grid[p];
     }
@@ -165,7 +165,7 @@ public:
     inline DistributionType const * get(const PointType &_p) const
     {
         int p = pos(_p);
-        if(p >= data_size || p < 0)
+        if(p >= (int) data_size || p < 0)
             return nullptr;
         return &grid[p];
     }
@@ -173,7 +173,7 @@ public:
     inline DistributionType const & at(const IndexType &_index) const
     {
         int p = pos(_index);
-        if(p >= data_size || p < 0)
+        if(p >= (int) data_size || p < 0)
             throw std::runtime_error("Out of bounds!");
 
         return grid[p];
@@ -182,7 +182,7 @@ public:
     inline DistributionType & at(const IndexType &_index)
     {
         int p = pos(_index);
-        if(p >= data_size || p < 0)
+        if(p >= (int) data_size || p < 0)
             throw std::runtime_error("Out of bounds!");
         return grid[p];
     }
@@ -208,7 +208,10 @@ private:
     inline int pos(const PointType &_p) {
         int pos = 0;
         for(std::size_t i = 0 ; i < Dim ; ++i) {
-            pos += floor((_p(i) - origin(i)) / resolution[i])* steps[i];
+            int id = floor((_p(i) - origin(i)) / resolution[i]);
+            if(id < 0 || id >= size[i])
+                return -1;
+            pos += id * steps[i];
         }
 
         return pos;

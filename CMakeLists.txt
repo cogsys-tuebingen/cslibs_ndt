@@ -26,7 +26,7 @@ find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
 
 ## PCL #############################################################################
-find_package(PCL REQUIRED)
+find_package(PCL 1.7 REQUIRED)
 
 ## C++11 ###########################################################################
 include(CheckCXXCompilerFlag)
@@ -90,6 +90,7 @@ add_library(ndt
     include/ndt/visualization/grid.hpp
     include/ndt/visualization/multi_grid.hpp
     include/ndt/visualization/kdtree.hpp
+    include/ndt/visualization/points.hpp
 )
 
 set_target_properties(ndt PROPERTIES LINKER_LANGUAGE CXX)
@@ -167,6 +168,16 @@ add_executable(ndt_kdtree_cluster_node
 
 target_link_libraries(ndt_kdtree_cluster_node
     ${catkin_LIBRARIES}
+    ${OpenCV_LIBRARIES}
+    ndt
+)
+
+## TOOLS ############################################################################
+add_executable(ndt_scan_matcher
+    src/tools/scan_matcher.cpp
+)
+
+target_link_libraries(ndt_scan_matcher
     ${OpenCV_LIBRARIES}
     ndt
 )

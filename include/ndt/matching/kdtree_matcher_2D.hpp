@@ -174,7 +174,7 @@ public:
             }
 
             /// insert positive definite gurantee here
-            double off = hessian.maxCoeff() - hessian.minCoeff();
+            double off = 1.5 * hessian.maxCoeff() - hessian.minCoeff();
             for(std::size_t i = 0 ; i < 3 ; ++i) {
                 hessian(i,i) += off;
             }

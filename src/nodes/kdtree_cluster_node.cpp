@@ -49,7 +49,7 @@ struct ScanClusterNode {
         std::chrono::time_point<std::chrono::system_clock> start =
                 std::chrono::system_clock::now();
         ndt::data::LaserScan scan;
-        ndt::conversion::convert(msg, scan, false);
+        ndt::conversion::convert(msg, scan);
         KDTreeType::Ptr     tree;
         KDTreeInterfaceType tree_interface(resolution);
                             tree_interface.insert(scan, tree);

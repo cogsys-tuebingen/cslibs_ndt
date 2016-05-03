@@ -46,7 +46,7 @@ struct ScanMatcherNode {
     void laserscan(const sensor_msgs::LaserScanConstPtr &msg)
     {
         ndt::data::LaserScan dst;
-        ndt::conversion::convert(msg, dst, false);
+        ndt::conversion::convert(msg, dst);
         if(!src) {
             src.reset(new ndt::data::LaserScan(dst));
         } else {

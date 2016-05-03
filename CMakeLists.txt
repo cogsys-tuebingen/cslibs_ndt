@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   kdtree
 )
 
+#set(CMAKE_BUILD_TYPE Debug)
+
 ## OpenMP ##########################################################################
 find_package(OpenMP REQUIRED)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -44,7 +46,10 @@ endif()
 add_definitions(-W -Wall -Wno-unused-parameter
                 -fno-strict-aliasing -Wno-unused-function
                 -Wno-deprecated-register)
-#add_definitions("-Ofast -march=native -ffast-math")
+#add_definitions(-mavx)
+add_definitions(-msse2)
+add_definitions(-msse4)
+add_definitions(-Ofast -march=native -ffast-math)
 #add_definitions(-g -rdynamic)
 
 ## CATKIN ###########################################################################

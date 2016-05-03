@@ -176,7 +176,7 @@ protected:
             YAML::Node yaml_point;
             for(std::size_t i = 0 ; i < Dim ; ++i)
                 yaml_point.push_back(p(i));
-            yaml["point_data"].push_back(yaml_point);
+            yaml["points_data"].push_back(yaml_point);
         }
         for(char m : mask_data) {
             yaml["mask_data"].push_back(m);
@@ -211,6 +211,11 @@ protected:
             mask_data.push_back(it->as<char>());
         }
         mask = mask_data.data();
+        for(std::size_t i = 0 ; i < Dim ; ++i) {
+            min(i) = yaml["min"][i].as<double>();
+            max(i) = yaml["max"][i].as<double>();
+        }
+
     }
 };
 }

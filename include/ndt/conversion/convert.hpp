@@ -7,38 +7,37 @@
 
 namespace ndt {
 namespace conversion {
-inline void convert(const sensor_msgs::LaserScanConstPtr &msg,
-                    ndt::data::LaserScan &scan,
-                    bool inverted = false)
+inline void convert(const sensor_msgs::LaserScanConstPtr &_msg,
+                    ndt::data::LaserScan &_scan,
+                    const float _range_min = -1.f,
+                    const float _range_max = -1.f)
 {
-    scan.resize(msg->ranges.size());
+    float range_min = _range_min;
+    float range_max = _range_max;
+    if(range_min < 0.f)
+        range_min = _msg->range_min;
+    if(range_max < 0.f)
+        range_max = _msg->range_max;
 
-    float angle = msg->angle_min;
-    float angle_incr = msg->angle_increment;
-    float range_min = msg->range_min;
-    float range_max = msg->range_max;
+    _scan.resize(_msg->ranges.size());
+    float angle = _msg->angle_min;
+    float angle_incr = _msg->angle_increment;
 
-    for(std::size_t i = 0 ; i < scan.size ; ++i, angle+=angle_incr) {
-        std::size_t index;
-        if(inverted)
-            index = scan.size - 1 - i;
-        else
-            index = i;
-
-        float r = msg->ranges[index];
+    for(std::size_t i = 0 ; i < _scan.size ; ++i, angle+=angle_incr) {
+        float r = _msg->ranges[i];
         if(r >= range_min &&
            r <= range_max) {
-            data::LaserScan::PointType &p = scan.points[index];
+            data::LaserScan::PointType &p = _scan.points[i];
             sincos(angle, &(p(1)), &(p(0)));
             p *= r;
-            scan.mask[index] = data::LaserScan::VALID;
+            _scan.mask[i] = data::LaserScan::VALID;
         }
-        scan.ranges[index] = r;
-        scan.angles[index] = angle;
+        _scan.ranges[i] = r;
+        _scan.angles[i] = angle;
     }
 
-    scan.min = Eigen::Vector2d(-range_max, -range_max);
-    scan.max = Eigen::Vector2d(range_max, range_max);
+    _scan.min = Eigen::Vector2d(-range_max, -range_max);
+    _scan.max = Eigen::Vector2d(range_max, range_max);
 }
 }
 }

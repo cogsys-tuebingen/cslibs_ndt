@@ -25,6 +25,8 @@ struct ScanMatcherNode {
     ros::Publisher        pub_distr;
     tf::TransformListener tf;
 
+    float                       range_min;
+    float                       range_max;
     ndt::data::LaserScan::Ptr   src;
     tf::StampedTransform        src_transform;
     MultiGrid2D::ResolutionType resolution;
@@ -33,6 +35,8 @@ struct ScanMatcherNode {
 
     ScanMatcherNode() :
         nh("~"),
+        range_min(-1.f),
+        range_max(-1.f),
         resolution{0.5, 0.5},
         failed(0),
         all(0)
@@ -40,9 +44,12 @@ struct ScanMatcherNode {
         std::string topic_scan = "/scan";
         std::string topic_pcl  = "/matched";
         std::string topic_distr = "/distribution";
+
         nh.getParam("topic_scan", topic_scan);
         nh.getParam("topic_pcl", topic_pcl);
         nh.getParam("topic_distr", topic_distr);
+        nh.getParam("range_min", range_min);
+        nh.getParam("range_max", range_max);
 
         sub = nh.subscribe<sensor_msgs::LaserScan>(topic_scan, 1, &ScanMatcherNode::laserscan, this);
         pub_pcl = nh.advertise<PCLPointCloudType>(topic_pcl, 1);
@@ -57,7 +64,7 @@ struct ScanMatcherNode {
 
         /// match old points to the current ones
         ndt::data::LaserScan dst;
-        ndt::conversion::convert(msg, dst, false);
+        ndt::conversion::convert(msg, dst, range_min, range_max);
 
         tf::StampedTransform dst_transform;
         try{
@@ -105,22 +112,23 @@ struct ScanMatcherNode {
                                                 dst.min,
                                                 dst.max,
                                                 distribution);
+            std::cout << score << std::endl;
             /// output display
-            if(score < 0.1){
+            if(score < 200){
                 std::cout << "-------------------------------" << std::endl;
                 std::cout << score << std::endl;
                 std::cout << transform.translation() << std::endl;
                 std::cout << transform.rotation() << std::endl;
                 std::cout << "-------------------------------" << std::endl;
 
-//                {
-//                    std::stringstream ss_dst;
-//                    std::stringstream ss_src;
-//                    ss_dst << "/tmp/dst_" << failed << ".scan";
-//                    ss_src << "/tmp/src_" << failed << ".scan";
-//                    dst.save(ss_dst.str());
-//                    src->save(ss_src.str());
-//                }
+                {
+                    std::stringstream ss_dst;
+                    std::stringstream ss_src;
+                    ss_dst << "/tmp/dst_" << failed << ".scan";
+                    ss_src << "/tmp/src_" << failed << ".scan";
+                    dst.save(ss_dst.str());
+                    src->save(ss_src.str());
+                }
                 ++failed;
             }
             cv::cvtColor(distribution,  distribution, CV_BGR2GRAY);
@@ -145,7 +153,7 @@ struct ScanMatcherNode {
             ++all;
 
             src_transform = dst_transform;
-            std::cout << "success : " << failed << " " << all << " => " << (1.0 - failed / (double) all) * 100.0 << std::endl;
+            /// std::cout << "success : " << failed << " " << all << " => " << (1.0 - failed / (double) all) * 100.0 << std::endl;
        }
    }
 };

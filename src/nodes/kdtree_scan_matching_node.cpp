@@ -28,6 +28,8 @@ struct ScanMatcherNode {
     ros::Publisher      pub_distr;
     tf::TransformListener tf;
 
+    float                     range_min;
+    float                     range_max;
     ndt::data::LaserScan::Ptr src;
     tf::StampedTransform      src_transform;
     ResolutionType            resolution;
@@ -36,6 +38,8 @@ struct ScanMatcherNode {
 
     ScanMatcherNode() :
         nh("~"),
+        range_min(-1.f),
+        range_max(-1.f),
         resolution{1.0, 1.0},
         failed(0),
         all(0)
@@ -46,6 +50,8 @@ struct ScanMatcherNode {
         nh.getParam("topic_scan", topic_scan);
         nh.getParam("topic_pcl", topic_pcl);
         nh.getParam("topic_distr", topic_distr);
+        nh.getParam("range_min", range_min);
+        nh.getParam("range_max", range_max);
 
         sub = nh.subscribe<sensor_msgs::LaserScan>(topic_scan, 1, &ScanMatcherNode::laserscan, this);
         pub_pcl = nh.advertise<PCLPointCloudType>(topic_pcl, 1);
@@ -59,7 +65,7 @@ struct ScanMatcherNode {
                 std::chrono::system_clock::now();
 
         ndt::data::LaserScan dst;
-        ndt::conversion::convert(msg, dst, false);
+        ndt::conversion::convert(msg, dst);
 
         tf::StampedTransform dst_transform;
         try{

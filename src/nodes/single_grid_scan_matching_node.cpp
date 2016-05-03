@@ -16,16 +16,21 @@ struct ScanMatcherNode {
     typedef GridType::ResolutionType           ResolutionType;
     typedef pcl::PointCloud<pcl::PointXYZ>     PCLPointCloudType;
 
+
     ros::NodeHandle     nh;
     ros::Subscriber     sub;
     ros::Publisher      pub_pcl;
     ros::Publisher      pub_distr;
 
+    float                       range_min;
+    float                       range_max;
     ndt::data::LaserScan::Ptr src;
     ResolutionType            resolution;
 
     ScanMatcherNode() :
         nh("~"),
+        range_min(-1.f),
+        range_max(-1.f),
         resolution{1.0, 1.0}
     {
         std::string topic_scan = "/scan";
@@ -34,6 +39,8 @@ struct ScanMatcherNode {
         nh.getParam("topic_scan", topic_scan);
         nh.getParam("topic_pcl", topic_pcl);
         nh.getParam("topic_distr", topic_distr);
+        nh.getParam("range_min", range_min);
+        nh.getParam("range_max", range_max);
 
         sub = nh.subscribe<sensor_msgs::LaserScan>(topic_scan, 1, &ScanMatcherNode::laserscan, this);
         pub_pcl = nh.advertise<PCLPointCloudType>(topic_pcl, 1);
@@ -45,7 +52,7 @@ struct ScanMatcherNode {
     {
         /// match old points to the current ones
         ndt::data::LaserScan dst;
-        ndt::conversion::convert(msg, dst, false);
+        ndt::conversion::convert(msg, dst, range_min, range_max);
         if(!src) {
             src.reset(new ndt::data::LaserScan(dst));
         } else {

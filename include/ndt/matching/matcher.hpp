@@ -22,7 +22,9 @@ public:
             eps_rot(1e-6),
             eps_trans(1e-3),
             max_iterations(100),
-            max_step_corrections(2)
+            max_step_corrections(2),
+            lambda(2.0),
+            alpha(0.5)
         {
             resolution.fill(1.0);
         }
@@ -30,12 +32,16 @@ public:
                    const double          _eps_rot,
                    const double          _eps_trans,
                    const std::size_t     _max_iterations,
-                   const std::size_t     _max_step_corrections) :
+                   const std::size_t     _max_step_corrections,
+                   const double _lambda,
+                   const double _alpha) :
             resolution(_resolution),
             eps_rot(_eps_rot),
             eps_trans(_eps_trans),
             max_iterations(_max_iterations),
-            max_step_corrections(_max_step_corrections)
+            max_step_corrections(_max_step_corrections),
+            lambda(_lambda),
+            alpha(_alpha)
         {
         }
 
@@ -44,6 +50,8 @@ public:
         double                  eps_trans;
         std::size_t             max_iterations;
         std::size_t             max_step_corrections;
+        double                  lambda;
+        double                  alpha;
 
     };
 

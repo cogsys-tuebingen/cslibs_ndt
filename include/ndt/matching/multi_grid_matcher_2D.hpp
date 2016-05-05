@@ -65,8 +65,7 @@ public:
         /// only solve the maximal score
         max_score             = std::numeric_limits<double>::lowest();
         iteration             = 0;
-        lambda                = 1.0;
-        alpha                 = 0.5;
+        lambda                = params.lambda;
         step_corrections      = 0;
 
 
@@ -188,7 +187,7 @@ public:
                 tx      = prev_tx;
                 ty      = prev_ty;
                 phi     = prev_phi;
-                lambda *= alpha;
+                lambda *= params.alpha;
                 rotation        = RotationType(phi);
                 translation     = TranslationType(tx, ty);
                 transformation  = translation * rotation;
@@ -273,7 +272,6 @@ private:
 
     std::size_t                 iteration;
     double                      lambda;
-    double                      alpha;
     std::size_t                 step_corrections;
 
 

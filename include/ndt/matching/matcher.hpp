@@ -21,18 +21,21 @@ public:
         Parameters() :
             eps_rot(1e-6),
             eps_trans(1e-3),
-            max_iterations(100)
+            max_iterations(100),
+            max_step_corrections(2)
         {
             resolution.fill(1.0);
         }
         Parameters(const ResolutionType &_resolution,
                    const double          _eps_rot,
                    const double          _eps_trans,
-                   const std::size_t     _max_iterations) :
+                   const std::size_t     _max_iterations,
+                   const std::size_t     _max_step_corrections) :
             resolution(_resolution),
             eps_rot(_eps_rot),
             eps_trans(_eps_trans),
-            max_iterations(_max_iterations)
+            max_iterations(_max_iterations),
+            max_step_corrections(_max_step_corrections)
         {
         }
 
@@ -40,6 +43,8 @@ public:
         double                  eps_rot;
         double                  eps_trans;
         std::size_t             max_iterations;
+        std::size_t             max_step_corrections;
+
     };
 
 

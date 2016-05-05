@@ -27,16 +27,14 @@ int main(int argc, char *argv[])
     src.load(path_src);
     dst.load(path_dst);
 
-    MatcherType::RotationType rot(M_PI);
-
-    srand(0);
-    double rr  = 0.05;
-    for(std::size_t i = 0 ; i < src.size ; ++i) {
+//    srand(0);
+//    double rr  = 0.05;
+//    for(std::size_t i = 0 ; i < src.size ; ++i) {
 //        src.points_data[i](0) += rr - (std::rand() % 1000) / 1000.0 * (rr * 2);
 //        src.points_data[i](1) += rr - (std::rand() % 1000) / 1000.0 * (rr * 2);
-//        dst.points_data[i] = rot * dst.points_data[i];
-//        src.points_data[i] = rot * src.points_data[i];
-    }
+////        dst.points_data[i] = rot * dst.points_data[i];
+////        src.points_data[i] = rot * src.points_data[i];
+//    }
 
     /// now let us render the input, so we can get some overview ;)
     ndt::visualization::Size2D   size = {30, 30};
@@ -64,15 +62,13 @@ int main(int argc, char *argv[])
             break;
     }
 
-    MatcherType matcher;
+    MatcherType::Parameters params;
+    params.max_step_corrections = 5;
+    params.eps_rot = 1e-3;
+    MatcherType matcher(params);
     MatcherType::TransformType  transform = MatcherType::TransformType::Identity();
     double score = matcher.match(dst, src, transform);
-    std::cout << "-------------------------------" << std::endl;
-    std::cout << score << std::endl;
-    std::cout << transform.translation() << std::endl;
-    std::cout << transform.rotation() << std::endl;
-    std::cout << "-------------------------------" << std::endl;
-
+    matcher.printDebugInfo();
     for(auto &p : src.points_data) {
         p = transform * p;
     }

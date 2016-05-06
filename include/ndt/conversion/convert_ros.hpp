@@ -2,7 +2,6 @@
 #define CONVERT_HPP
 
 #include <sensor_msgs/LaserScan.h>
-
 #include <ndt/data/laserscan.hpp>
 
 namespace ndt {
@@ -31,6 +30,8 @@ inline void convert(const sensor_msgs::LaserScanConstPtr &_msg,
             sincos(angle, &(p(1)), &(p(0)));
             p *= r;
             _scan.mask[i] = data::LaserScan::VALID;
+        } else {
+            _scan.mask[i] = data::LaserScan::INVALID;
         }
         _scan.ranges[i] = r;
         _scan.angles[i] = angle;

@@ -8,7 +8,7 @@
 #include <tf/transform_datatypes.h>
 #include <chrono>
 
-#include <ndt/conversion/convert.hpp>
+#include <ndt/conversion/convert_ros.hpp>
 #include <ndt/data/laserscan.hpp>
 #include <ndt/matching/kdtree_matcher_2D.hpp>
 #include <ndt/tree/kdtree.hpp>
@@ -82,16 +82,20 @@ struct ScanMatcherNode {
         } else {
             tf::Transform  diff = dst_transform.inverse() * src_transform;
 
-            MatcherType matcher;
+            MatcherType::Parameters params;
+            params.eps_rot = 1e-3;
+            params.max_step_corrections = 5;
+            MatcherType matcher(params);
             MatcherType::RotationType    rotation(tf::getYaw(diff.getRotation()));
             MatcherType::TranslationType translation(diff.getOrigin().x(), diff.getOrigin().y());
-            MatcherType::TransformType   transform = translation * rotation;
+            MatcherType::TransformType   prior_transform = translation * rotation;
+            MatcherType::TransformType   transform = prior_transform;
             double score = matcher.match(dst, *src, transform);
 
-
-            std::chrono::duration<double> elapsed =
-                    std::chrono::system_clock::now() - start;
-            std::cout << "elapsed " << elapsed.count() * 1000.0 << "ms" << std::endl;
+            std::chrono::microseconds elapsed =
+                    std::chrono::duration_cast<std::chrono::microseconds>
+                    (std::chrono::system_clock::now() - start);
+            std::cout << "elapsed " << elapsed.count() / 1000.0 << " ms" << std::endl;
 
             PCLPointCloudType output;
 
@@ -103,14 +107,10 @@ struct ScanMatcherNode {
                 output.push_back(pcl_p);
             }
 
-            if(score < 0.1){
-                std::cout << "-------------------------------" << std::endl;
-                std::cout << score << std::endl;
-                std::cout << transform.translation() << std::endl;
-                std::cout << transform.rotation() << std::endl;
-                std::cout << "-------------------------------" << std::endl;
+
+            matcher.printDebugInfo();
+            if(score < 50)
                 ++failed;
-            }
 
             KDTreeType::Ptr     tree;
             KDTreeInterfaceType tree_interface(resolution);

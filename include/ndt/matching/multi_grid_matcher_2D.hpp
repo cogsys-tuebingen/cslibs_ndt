@@ -28,8 +28,8 @@ public:
     typedef Eigen::Vector3d                            GradientType;
 
 
-    MultiGridMatcher2D(const Parameters &params = Parameters()) :
-        BaseClass(params),
+    MultiGridMatcher2D(const Parameters &_params = Parameters()) :
+        BaseClass(_params),
         rotation(0.0)
     {
     }
@@ -58,8 +58,11 @@ public:
         /// reset all the members
         tx        = _prior_transformation.translation()(0);
         ty        = _prior_transformation.translation()(1);
-        phi       = acos(_prior_transformation.rotation()(0,0));
-
+        phi       = atan2(_prior_transformation.rotation()(1,0),
+                          _prior_transformation.rotation()(0,0));
+        prev_tx = tx;
+        prev_ty = ty;
+        prev_phi = phi;
         /// gradient and stuff
         /// need 4 fields for that
         /// only solve the maximal score
@@ -230,6 +233,10 @@ public:
 
             ++iteration;
         }
+
+        rotation        = RotationType(phi);
+        translation     = TranslationType(tx, ty);
+        transformation  = translation * rotation;
         _transformation = transformation;
 
         return max_score;

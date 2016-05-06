@@ -31,9 +31,12 @@ public:
     typedef Eigen::Vector3d                         GradientType;
 
 
-    KDTreeMatcher2D(const Parameters &params = Parameters()) :
-        BaseClass(params),
-        tree_interface(params.resolution)
+    KDTreeMatcher2D(const Parameters &_params = Parameters(),
+                    const bool _shuffle = false) :
+        BaseClass(_params),
+        tree_interface(_params.resolution),
+        shuffle(_shuffle),
+        rotation(0.0)
     {
     }
 
@@ -47,67 +50,60 @@ public:
                         const TransformType  &_prior_transformation = TransformType::Identity()) override
     {
         /// build the ndt grid for the src cloud
-        PointCloudType src = _src;
-        std::random_shuffle(src.points_data.begin(), src.points_data.end());
-        tree_interface.insert(src, tree);
+        PointCloudType dst = _dst;
+        if(shuffle) {
+            /// TODO: Move Shuffle to tree insertion!
+            std::random_shuffle(dst.points_data.begin(), dst.points_data.end());
+        }
+        tree_interface.insert(dst, tree);
 
-        double          tx = _prior_transformation.translation()(0);
-        double          ty = _prior_transformation.translation()(1);
-        double          phi = acos(_prior_transformation.rotation()(0,0));
+        /// reset all the members
+        tx        = _prior_transformation.translation()(0);
+        ty        = _prior_transformation.translation()(1);
+        phi       = acos(_prior_transformation.rotation()(0,0));
 
-        TranslationType trans;
-        RotationType    rotation(0.0);
-
-        /// variables needed for sampling a point
-        double          sin_phi;
-        double          cos_phi;
-
-
-        double       score;
-        GradientType gradient;
-        HessianType  hessian;
-        GradientType delta_p;
-
-        PointType            mean;
-        PointType            q;
-        CovarianceMatrixType inverse_covariance;
-        PointType            jac;
-        PointType            hes;
-        double               s;
-
-        double       tx_old;
-        double       ty_old;
-        double       phi_old;
-        std::size_t  iteration = 0;
+        /// gradient and stuff
+        /// need 4 fields for that
+        /// only solve the maximal score
+        max_score             = std::numeric_limits<double>::lowest();
+        iteration             = 0;
+        lambda                = params.lambda;
+        step_corrections      = 0;
 
         bool converged = false;
         while(!converged) {
-            rotation = RotationType(phi);
-            trans    = TranslationType(tx, ty);
-            _transformation = trans * rotation;
+            rotation        = RotationType(phi);
+            translation     = TranslationType(tx, ty);
+            transformation  = translation * rotation;
 
             gradient = GradientType::Zero();
             hessian  = HessianType::Zero();
-            score = 0.0;
-            tx_old   = tx;
-            ty_old   = ty;
-            phi_old  = phi;
+            score    = 0.0;
+
+            double sin_phi;
+            double cos_phi;
             sincos(phi, &sin_phi, &cos_phi);
 
             /// calculate the hessian and the gradient for each grid
             for(std::size_t i = 0 ; i < _dst.size ; ++i) {
-                if(_dst.mask[i] == PointCloudType::VALID) {
-                    PointType p = _transformation * _dst.points[i];
+                if(_src.mask[i] == PointCloudType::VALID) {
+                    PointType p = transformation * _src.points[i];
 
                     DistributionType *distribution_ptr = tree_interface.get(p, tree);
 
                     if(distribution_ptr == nullptr)
                         continue;
+                    DistributionType &distribution = *distribution_ptr;
                     if(distribution_ptr->getN() < 3)
                         continue;
-                    DistributionType &distribution = *distribution_ptr;
 
-                    s = distribution.sampleNonNoramlized(p, q);
+                    PointType            mean;
+                    PointType            q;
+                    CovarianceMatrixType inverse_covariance;
+                    PointType            jac;
+                    PointType            hes;
+
+                    double s = distribution.sampleNonNoramlized(p, q);
                     distribution.getMean(mean);
                     distribution.getInverseCovariance(inverse_covariance);
 
@@ -156,52 +152,103 @@ public:
                                 * (-g_dot * g_dot                                         /// (1)
                                    +q_inverse_covariance.dot(hes)                         /// (2)
                                    +(jac.transpose() * inverse_covariance * jac));        /// (3)
-
-                        /// (1) directly computed from Jacobian combined with q^t * InvCov
-                        /// (2) only a result for H(2,2)
-                        /// (3) [1,0].[[a,b],[c,d]].[[1],[0]] = a with i = j = 0, Jac.col(0)
-                        ///     [0,1].[[a,b],[c,d]].[[1],[0]] = c with i = 1, j = 0, Jac.col(1), Jac.col(0)
-                        ///     [1,0].[[a,b],[c,d]].[[0],[1]] = b with i = 0, j = 1, Jac.col(0), Jac.col(1)
-                        ///     [0,1].[[a,b],[c,d]].[[0],[1]] = d with i = 1, j = 1, Jac.col(1)
-                        ///     [1,0].[[a,b],[c,d]].J_T.col(2) = [a,b].J_T.col(2)
-                        ///     [0,1].[[a,b],[c,d]].J_T.col(2) = [c,d].J_T.col(2)
-                        ///     J_T.col(2).[[a,b],[c,d]].[[1],[0]] = J_T.col(2).[a, c]
-                        ///     J_T.col(2).[[a,b],[c,d]].[[0],[1]] = J_T.col(2).[b, d]
-                        ///     J_T.col(2).[[a,b],[c,d]].J_T.col(2)
                     }
                 }
 
             }
 
-            /// insert positive definite gurantee here
-            double off = 1.5 * hessian.maxCoeff() - hessian.minCoeff();
+            /// now we have to check wether the score increased or not
+            /// if not, we have to adjust the step size
+            if(score < max_score) {
+                tx      = prev_tx;
+                ty      = prev_ty;
+                phi     = prev_phi;
+                lambda *= params.alpha;
+                rotation        = RotationType(phi);
+                translation     = TranslationType(tx, ty);
+                transformation  = translation * rotation;
+                ++step_corrections;
+            } else {
+                if(iteration > 0 &&
+                        epsTrans(tx, prev_tx) &&
+                        epsTrans(ty, prev_ty) &&
+                        epsRot(phi, prev_phi))
+                    break;
+
+                max_score = score;
+                prev_tx   = tx;
+                prev_ty   = ty;
+                prev_phi  = phi;
+                step_corrections = 0;
+            }
+
+            if(step_corrections >= params.max_step_corrections)
+                break;
+
+            if(iteration >= params.max_iterations)
+                break;
+
+            /// positive definiteness
+            double off = hessian.maxCoeff() - hessian.minCoeff();
             for(std::size_t i = 0 ; i < 3 ; ++i) {
                 hessian(i,i) += off;
             }
-
             /// solve equeation here
             delta_p = GradientType::Zero();
             delta_p = hessian.fullPivLu().solve(gradient);
-            tx  += delta_p(0);
-            ty  += delta_p(1);
-            phi += delta_p(2);
-
-            /// check for convergence
-            if((epsTrans(tx, tx_old) &&
-                epsTrans(ty, ty_old) &&
-                epsRot(phi, phi_old)))
-                break;
+            tx  += delta_p(0) * lambda;
+            ty  += delta_p(1) * lambda;
+            phi += delta_p(2) * lambda;
 
             ++iteration;
-            if(iteration >= params.max_iterations)
-                break;
-        }
 
-        return score;
+        }
+        _transformation = transformation;
+
+        return max_score;
     }
+
+
+    void printDebugInfo()
+    {
+        std::cout << "----------------------------------" << std::endl;
+        std::cout << "score : " << max_score << std::endl;
+        std::cout << "translation : " << std::endl;
+        std::cout << transformation.translation() << std::endl;
+        std::cout << "rotation : " << std::endl;
+        std::cout << transformation.rotation() << std::endl;
+        std::cout << "iterations : " << iteration << std::endl;
+        std::cout << "lambda : " << lambda << std::endl;
+        std::cout << "step corrections : " << step_corrections << std::endl;
+        std::cout << "----------------------------------" << std::endl;
+
+    }
+
 private:
-    typename KDTreeType::Ptr tree;
-    KDTreeInterfaceType          tree_interface;
+    typename KDTreeType::Ptr    tree;
+    KDTreeInterfaceType         tree_interface;
+    bool                        shuffle;
+
+    double tx;
+    double ty;
+    double phi;
+    double prev_tx;
+    double prev_ty;
+    double prev_phi;
+    double max_score;
+
+    TransformType    transformation;
+    TranslationType  translation;
+    RotationType     rotation;
+
+    double           score;
+    GradientType     gradient;
+    HessianType      hessian;
+    GradientType     delta_p;
+
+    std::size_t      iteration;
+    double           lambda;
+    std::size_t      step_corrections;
 
 };
 }

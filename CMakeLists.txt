@@ -27,8 +27,16 @@ find_package(Eigen3 REQUIRED)
 ## OpenCV ##########################################################################
 find_package(OpenCV REQUIRED)
 
-## PCL #############################################################################
-find_package(PCL 1.7 REQUIRED)
+## MRPT ############################################################################
+find_package(MRPT QUIET)
+if(${MRPT_FOUND})
+    message("Building with MRPT support!")
+    add_definitions("-DMRPT")
+    set(MRPT_DEPENDENT_SRCS
+        include/ndt/conversion/convert_mrpt.hpp
+    )
+endif()
+
 
 ## C++11 ###########################################################################
 include(CheckCXXCompilerFlag)
@@ -39,7 +47,7 @@ if(COMPILER_SUPPORTS_CXX11)
 elseif(COMPILER_SUPPORTS_CXX0X)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 else()
-        message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
 ## FLAGS ############################################################################
@@ -55,8 +63,8 @@ add_definitions(-Ofast -march=native -ffast-math)
 ## CATKIN ###########################################################################
 catkin_package(
   INCLUDE_DIRS include
-#  LIBRARIES ndt
-#  CATKIN_DEPENDS roscpp sensor_msgs tf
+  LIBRARIES ndt
+  CATKIN_DEPENDS kdtree
 #  DEPENDS system_lib
 )
 
@@ -64,8 +72,8 @@ catkin_package(
 include_directories(
     ${catkin_INCLUDE_DIRS}
     ${Eigen3_INCLUDE_DIRS}
-    ${PCL_INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
+    ${MRPT_INCLUDE_DIRS}
     include
 )
 
@@ -79,7 +87,7 @@ add_library(ndt
     include/ndt/math/angle.hpp
     include/ndt/math/euclidian.hpp
 
-    include/ndt/conversion/convert.hpp
+    include/ndt/conversion/convert_ros.hpp
 
     include/ndt/matching/matcher.hpp
     include/ndt/matching/multi_grid_matcher_2D.hpp
@@ -96,6 +104,8 @@ add_library(ndt
     include/ndt/visualization/multi_grid.hpp
     include/ndt/visualization/kdtree.hpp
     include/ndt/visualization/points.hpp
+
+    ${MRPT_DEPENDENT_SRCS}
 )
 
 set_target_properties(ndt PROPERTIES LINKER_LANGUAGE CXX)
@@ -202,15 +212,5 @@ add_executable(ndt_demo_matcher
 
 target_link_libraries(ndt_demo_matcher
     ${OpenCV_LIBRARIES}
-    ndt
-)
-
-add_executable(ndt_demo_matcher_pcl
-    src/tests/optional/demo_matcher_pcl.cpp
-)
-
-target_link_libraries(ndt_demo_matcher_pcl
-    ${OpenCV_LIBRARIES}
-    ${PCL_LIBRARIES}
     ndt
 )

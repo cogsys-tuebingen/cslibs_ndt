@@ -5,7 +5,7 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <tf/tf.h>
 
-#include <ndt/conversion/convert.hpp>
+#include <ndt/conversion/convert_ros.hpp>
 #include <ndt/data/laserscan.hpp>
 #include <ndt/matching/single_grid_matcher_2D.hpp>
 #include <ndt/visualization/grid.hpp>

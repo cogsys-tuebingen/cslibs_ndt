@@ -7,7 +7,7 @@
 #include <fstream>
 #include <chrono>
 
-#include <ndt/conversion/convert.hpp>
+#include <ndt/conversion/convert_ros.hpp>
 #include <ndt/data/laserscan.hpp>
 #include <ndt/matching/kdtree_matcher_2D.hpp>
 #include <ndt/tree/kdtree.hpp>

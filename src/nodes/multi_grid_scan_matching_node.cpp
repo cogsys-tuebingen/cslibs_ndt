@@ -8,7 +8,7 @@
 #include <tf/transform_datatypes.h>
 #include <chrono>
 
-#include <ndt/conversion/convert.hpp>
+#include <ndt/conversion/convert_ros.hpp>
 #include <ndt/data/laserscan.hpp>
 #include <ndt/matching/multi_grid_matcher_2D.hpp>
 #include <ndt/visualization/multi_grid.hpp>
@@ -32,17 +32,19 @@ struct ScanMatcherNode {
     MultiGrid2D::ResolutionType resolution;
     std::size_t                 failed;
     std::size_t                 all;
+    std::size_t                 count;
 
     ScanMatcherNode() :
         nh("~"),
         range_min(-1.f),
         range_max(-1.f),
-        resolution{0.5, 0.5},
+        resolution{1.0, 1.0},
         failed(0),
-        all(0)
+        all(0),
+        count(0)
     {
-        std::string topic_scan = "/scan";
-        std::string topic_pcl  = "/matched";
+        std::string topic_scan  = "/scan";
+        std::string topic_pcl   = "/matched";
         std::string topic_distr = "/distribution";
 
         nh.getParam("topic_scan", topic_scan);
@@ -55,6 +57,11 @@ struct ScanMatcherNode {
         pub_pcl = nh.advertise<PCLPointCloudType>(topic_pcl, 1);
         pub_distr = nh.advertise<nav_msgs::OccupancyGrid>(topic_distr, 1);
 
+        std::cout << "topic_scan : " << topic_scan << std::endl;
+        std::cout << "topic_pcl : " << topic_pcl << std::endl;
+        std::cout << "topic_distr : " << topic_distr << std::endl;
+        std::cout << "range_min : " << range_min << std::endl;
+        std::cout << "range_max : " << range_max << std::endl;
     }
 
     void laserscan(const sensor_msgs::LaserScanConstPtr &msg)
@@ -80,17 +87,23 @@ struct ScanMatcherNode {
             src_transform = dst_transform;
             src.reset(new ndt::data::LaserScan(dst));
         } else {
-            tf::Transform  diff = dst_transform.inverse() * src_transform;
+            tf::Transform  diff = (dst_transform.inverse() * src_transform);
 
-            MatcherType matcher;
+            MatcherType::Parameters params;
+            params.max_step_corrections = 5;
+            params.eps_rot = 1e-6;
+            params.lambda = 1.0;
+            MatcherType matcher(params);
             MatcherType::RotationType    rotation(tf::getYaw(diff.getRotation()));
             MatcherType::TranslationType translation(diff.getOrigin().x(), diff.getOrigin().y());
-            MatcherType::TransformType   transform = translation * rotation;
+            MatcherType::TransformType   prior_transform = translation * rotation;
+            MatcherType::TransformType   transform = prior_transform;
             double score = matcher.match(dst, *src, transform);
 
-            std::chrono::duration<double> elapsed =
-                    std::chrono::system_clock::now() - start;
-            std::cout << "elapsed " << elapsed.count() * 1000.0 << "ms" << std::endl;
+            std::chrono::microseconds elapsed =
+                    std::chrono::duration_cast<std::chrono::microseconds>
+                    (std::chrono::system_clock::now() - start);
+            std::cout << "elapsed " << elapsed.count() / 1000.0 << " ms" << std::endl;
 
             PCLPointCloudType output;
             for(std::size_t i = 0 ; i < src->size ; ++i) {
@@ -101,61 +114,69 @@ struct ScanMatcherNode {
                 output.push_back(pcl_p);
             }
 
-            ndt::data::LaserScan::PointType range = src->range();
-            MultiGrid2D::SizeType  size = {std::size_t(range(0) / resolution[0]),
-                                           std::size_t(range(1) / resolution[1])};
+//            ndt::data::LaserScan::PointType range = src->range();
+//            MultiGrid2D::SizeType  size = {std::size_t(range(0) / resolution[0]),
+//                                           std::size_t(range(1) / resolution[1])};
 
-            cv::Mat distribution(500,500, CV_8UC3, cv::Scalar());
-            MultiGrid2D grid(size, resolution, dst.min);
-            grid.add(dst);
-            ndt::visualization::renderMultiGrid(grid,
-                                                dst.min,
-                                                dst.max,
-                                                distribution);
-            std::cout << score << std::endl;
+//            cv::Mat distribution(500,500, CV_8UC3, cv::Scalar());
+//            MultiGrid2D grid(size, resolution, dst.min);
+//            grid.add(dst);
+//            ndt::visualization::renderMultiGrid(grid,
+//                                                dst.min,
+//                                                dst.max,
+//                                                distribution);
+            matcher.printDebugInfo();
             /// output display
-            if(score < 200){
-                std::cout << "-------------------------------" << std::endl;
-                std::cout << score << std::endl;
-                std::cout << transform.translation() << std::endl;
-                std::cout << transform.rotation() << std::endl;
-                std::cout << "-------------------------------" << std::endl;
+            if(score < 50){
+//                std::cout << "-------------------------------" << std::endl;
+//                std::cout << score << std::endl;
+//                std::cout << transform.translation() << std::endl;
+//                std::cout << transform.rotation() << std::endl;
+//                std::cout << "-------------------------------" << std::endl;
 
-                {
-                    std::stringstream ss_dst;
-                    std::stringstream ss_src;
-                    ss_dst << "/tmp/dst_" << failed << ".scan";
-                    ss_src << "/tmp/src_" << failed << ".scan";
-                    dst.save(ss_dst.str());
-                    src->save(ss_src.str());
-                }
+//                {
+//                    std::stringstream ss_dst;
+//                    std::stringstream ss_src;
+//                    ss_dst << "/tmp/dst_" << failed << ".scan";
+//                    ss_src << "/tmp/src_" << failed << ".scan";
+//                    dst.save(ss_dst.str());
+//                    src->save(ss_src.str());
+//                }
                 ++failed;
             }
-            cv::cvtColor(distribution,  distribution, CV_BGR2GRAY);
-            distribution *= 100.0 / 255.0;
+//            cv::cvtColor(distribution,  distribution, CV_BGR2GRAY);
+//            distribution *= 100.0 / 255.0;
 
-            nav_msgs::OccupancyGrid distr_msg;
-            distr_msg.header = msg->header;
-            distr_msg.info.height = distribution.rows;
-            distr_msg.info.width = distribution.cols;
-            distr_msg.info.origin.position.x = dst.min(0);
-            distr_msg.info.origin.position.y = dst.min(1);
-            distr_msg.info.resolution = range(1) / distribution.rows;
-            for(int i = 0 ; i < distribution.rows ; ++i) {
-                for(int j = 0 ; j < distribution.cols ; ++j)
-                    distr_msg.data.push_back(distribution.at<uchar>(distribution.rows - 1 - i, j));
-            }
+//            nav_msgs::OccupancyGrid distr_msg;
+//            distr_msg.header = msg->header;
+//            distr_msg.info.height = distribution.rows;
+//            distr_msg.info.width = distribution.cols;
+//            distr_msg.info.origin.position.x = dst.min(0);
+//            distr_msg.info.origin.position.y = dst.min(1);
+//            distr_msg.info.resolution = range(1) / distribution.rows;
+//            for(int i = 0 ; i < distribution.rows ; ++i) {
+//                for(int j = 0 ; j < distribution.cols ; ++j)
+//                    distr_msg.data.push_back(distribution.at<uchar>(distribution.rows - 1 - i, j));
+//            }
+
+//            pub_distr.publish(distr_msg);
 
             output.header = pcl_conversions::toPCL(msg->header);
             pub_pcl.publish(output);
-            pub_distr.publish(distr_msg);
-            src.reset(new ndt::data::LaserScan(dst));
+
+            if(count >= 5) {
+                src.reset(new ndt::data::LaserScan(dst));
+                src_transform = dst_transform;
+                count = 0;
+            }
+            ++count;
+
             ++all;
 
-            src_transform = dst_transform;
+
             /// std::cout << "success : " << failed << " " << all << " => " << (1.0 - failed / (double) all) * 100.0 << std::endl;
-       }
-   }
+        }
+    }
 };
 
 

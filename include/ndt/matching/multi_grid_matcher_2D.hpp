@@ -187,7 +187,6 @@ public:
             }
             /// now we have to check wether the score increased or not
             /// if not, we have to adjust the step size
-            std::cout << "curr and max : " << current_max_score << " " << max_score << std::endl;
             if(current_max_score < max_score) {
                 tx      = prev_tx;
                 ty      = prev_ty;
@@ -202,7 +201,6 @@ public:
                         epsTrans(tx, prev_tx) &&
                         epsTrans(ty, prev_ty) &&
                         epsRot(phi, prev_phi)) {
-                    std::cout << "eps converged" << std::endl;
                     break;
                 }
 
@@ -215,12 +213,10 @@ public:
             }
 
             if(step_corrections >= params.max_step_corrections) {
-                std::cout << "too many step corrections : " << step_corrections << " vs. " << params.max_step_corrections << std::endl;
                 break;
             }
 
             if(iteration >= params.max_iterations) {
-                std::cout << "reached max iterations" <<  std::endl;
                 break;
             }
 
@@ -239,6 +235,7 @@ public:
             /// solve equeation here
             delta_p = GradientType::Zero();
             delta_p = (-hessian_entry).fullPivLu().solve(gradient_entry);
+
             tx  += delta_p(0) * lambda;
             ty  += delta_p(1) * lambda;
             phi += delta_p(2) * lambda;
@@ -292,8 +289,6 @@ protected:
     std::size_t                 iteration;
     double                      lambda;
     std::size_t                 step_corrections;
-
-
 };
 }
 }

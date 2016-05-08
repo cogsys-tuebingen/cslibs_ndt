@@ -46,7 +46,7 @@ void renderPoints(const std::vector<Point2D> &points,
     for(const Point2D &p : points) {
         cv::Point cvp(p(0) * scale_x + dst.cols / 2,
                       dst.rows - 1 - (p(1) * scale_y + dst.rows / 2));
-        cv::circle(dst, cvp, 3, color, CV_FILLED, CV_AA);
+        cv::circle(dst, cvp, 2, color, CV_FILLED, CV_AA);
     }
 }
 }

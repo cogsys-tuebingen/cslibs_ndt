@@ -1,6 +1,8 @@
 #ifndef DISTRIBUTION_H
 #define DISTRIBUTION_H
 
+#undef NDEBUG
+#include <assert.h>
 #include <memory>
 #include <mutex>
 #include <eigen3/Eigen/Core>
@@ -26,6 +28,7 @@ public:
         covariance(MatrixType::Zero()),
         correlated(MatrixType::Zero()),
         inverse_covariance(MatrixType::Zero()),
+        guardian_of_the_galaxy(0xDEADBEEF),
         n(1),
         n_1(0),
         lambda_ratio(1e-2),
@@ -42,6 +45,7 @@ public:
         covariance = other.covariance;
         correlated = other.correlated;
         inverse_covariance  = other.inverse_covariance;
+        guardian_of_the_galaxy = other.guardian_of_the_galaxy;
         n = other.n;
         n_1 = other.n_1;
         lambda_ratio = other.lambda_ratio;
@@ -60,6 +64,7 @@ public:
 
     inline void add(const PointType &_p)
     {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
         std::lock_guard<std::mutex> lock(update_mutex);
         mean = (mean * n_1 + _p) / n;
         for(std::size_t i = 0 ; i < Dim ; ++i) {
@@ -70,10 +75,12 @@ public:
         ++n;
         ++n_1;
         dirty = true;
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
     }
 
     inline Distribution & operator += (const Distribution &other)
     {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
         std::lock_guard<std::mutex> self_lock(update_mutex);
         std::lock_guard<std::mutex> other_lock(other.update_mutex);
 
@@ -85,37 +92,42 @@ public:
         mean = _mean;
         correlated = _corr;
         dirty = true;
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
         return *this;
     }
 
     inline std::size_t getN() const
     {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
         return n_1;
     }
 
     inline PointType getMean() const
     {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
         return mean;
     }
 
     inline void getMean(PointType &_mean) const
     {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
         _mean = mean;
     }
 
     inline MatrixType getCovariance()
     {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
         if(n_1 >= 2) {
             if(dirty)
                 update();
             return covariance;
         }
-
         return MatrixType::Zero();
     }
 
     inline void getCovariance(MatrixType &_covariance)
     {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
         if(n_1 >= 2) {
             if(dirty)
                 update();
@@ -123,10 +135,14 @@ public:
         } else {
             _covariance = MatrixType::Zero();
         }
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
     }
 
     inline MatrixType getInverseCovariance()
     {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
         if(n_1 >= 2) {
             if(dirty)
                 update();
@@ -137,6 +153,8 @@ public:
 
     inline void getInverseCovariance(MatrixType &_inverse_covariance)
     {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
         if(n_1 >= 2) {
             if(dirty)
                 update();
@@ -148,6 +166,8 @@ public:
 
     inline double sample(const PointType &_p)
     {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
         if(n_1 >= 2) {
             if(dirty)
                 update();
@@ -160,8 +180,10 @@ public:
     }
 
     inline double sample(const PointType &_p,
-                           PointType &_q)
+                         PointType &_q)
     {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
         if(n_1 >= 2) {
             if(dirty)
                 update();
@@ -174,9 +196,12 @@ public:
     }
 
     inline double sampleNonNoramlized(const PointType &_p) {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
         if(n_1 >= 2) {
             if(dirty)
                 update();
+
             PointType  q = _p - mean;
             double exponent = -0.5 * double(q.transpose() * inverse_covariance * q);
             return exp(exponent);
@@ -185,8 +210,10 @@ public:
     }
 
     inline double sampleNonNoramlized(const PointType &_p,
-                                        PointType &_q)
+                                      PointType &_q)
     {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
         if(n_1 >= 2) {
             if(dirty)
                 update();
@@ -203,6 +230,7 @@ private:
     MatrixType correlated;
     MatrixType inverse_covariance;
     mutable std::mutex update_mutex;
+    int                guardian_of_the_galaxy;
 
     std::size_t n;
     std::size_t n_1;            /// actual amount of points in distribution
@@ -212,6 +240,8 @@ private:
 
     void update()
     {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
         std::lock_guard<std::mutex> lock(update_mutex);
         double scale = n_1 / (double)(n_1 - 1);
         for(std::size_t i = 0 ; i < Dim ; ++i) {
@@ -246,6 +276,8 @@ private:
             inverse_covariance = covariance.inverse();
         }
         dirty = false;
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
     }
 };
 }

@@ -47,7 +47,7 @@ public:
         if(Dim > 1) {
             std::size_t max_idx = Dim - 1;
             for(std::size_t i = 1 ; i <= max_idx ; ++i) {
-                steps[i] = steps[i-1] * size[i];
+                steps[i] = steps[i-1] * size[i-1];
             }
         }
 
@@ -130,7 +130,7 @@ public:
         int p = pos(_p);
         if(p == -1)
             return false;
-        grid[p].add(_p);
+        grid_data.at(p).add(_p);
         return true;
     }
 
@@ -188,6 +188,17 @@ private:
     std::size_t          data_size;
     DistributionSetType  grid_data;
     DistributionType    *grid;
+
+    inline int pos(const IndexType &_index) {
+        int pos = 0;
+        for(std::size_t i = 0 ; i < Dim ; ++i) {
+            if(_index[i] >= size[i])
+                return -1;
+
+            pos += _index[i] * steps[i];
+        }
+        return pos;
+    }
 
     inline int pos(const PointType &_p) {
         int pos = 0;

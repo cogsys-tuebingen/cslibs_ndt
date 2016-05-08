@@ -8,8 +8,10 @@
 namespace ndt {
 namespace visualization {
 
-typedef grid::MultiGrid<2>     MultiGrid2D;
-typedef MultiGrid2D::PointType Point2D;
+typedef grid::MultiGrid<2>                   MultiGrid2D;
+typedef grid::MultiGrid<2>::DistributionType Distribution2D;
+typedef MultiGrid2D::PointType               Point2D;
+
 
 void renderMultiGrid(MultiGrid2D   &grid,
                      const Point2D &min,
@@ -25,6 +27,17 @@ void renderMultiGrid(MultiGrid2D   &grid,
     for(int i = 0 ; i < dst.rows ; ++i) {
         for(int j = 0 ; j < dst.cols ; ++j) {
             MultiGrid2D::PointType p = min + MultiGrid2D::PointType(scale_x * j, scale_y * i);
+//            {
+//            Distribution2D *distr = grid.at({1,1}).get(p);
+//            if(distr == nullptr)
+//                continue;
+//            if(distr->getN() < 3)
+//                continue;
+//            if(distr->getCovariance()(1,1) > 0.7)
+//                continue;
+
+//            double value = distr->sampleNonNoramlized(p);
+//            }
             double value = grid.sampleNonNormalized(p);
             if(value > max_value) {
                 max_value = value;

@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     }
     /// generate a second points test which is transformed
     MultiGridMatcher2D::RotationType    rotation       = MultiGridMatcher2D::RotationType(0.0);
-    MultiGridMatcher2D::TranslationType trans          = MultiGridMatcher2D::TranslationType(0.2, 0.0);
+    MultiGridMatcher2D::TranslationType trans          = MultiGridMatcher2D::TranslationType(-0.2, 0.0);
     MultiGridMatcher2D::TransformType   transformation = trans * rotation;
     std::vector<MultiGridMatcher2D::PointType> points_dst;
     for(MultiGridMatcher2D::PointType &p : points_src) {
@@ -72,18 +72,22 @@ int main(int argc, char *argv[])
         if(key == 27)
             break;
     }
-    cv::flip(display, display, 0);
 
     /// now we can try out the matching
     MultiGridMatcher2D::Parameters params;
     params.max_iterations = 4000;
+    params.eps_trans = 1e-10;
+    params.eps_rot = 1e-10;
+    params.lambda = 2;
+    params.max_step_corrections = 10;
     MultiGridMatcher2D m(params);
-    m.match(pointcloud_src, pointcloud_dst, transformation);
+    m.match(pointcloud_dst, pointcloud_src, transformation);
+    m.printDebugInfo();
 
-    for(MultiGridMatcher2D::PointType &p : points_dst) {
+    for(MultiGridMatcher2D::PointType &p : points_src) {
         p = transformation * p;
     }
-    ndt::visualization::renderPoints(points_dst,
+    ndt::visualization::renderPoints(points_src,
                                      size,
                                      resolution,
                                      display,

@@ -44,6 +44,16 @@ public:
     {
     }
 
+    inline typename KDTreeType::Ptr getTree()
+    {
+        return tree;
+    }
+
+    inline KDTreeInterfaceType &getInterface()
+    {
+        return tree_interface;
+    }
+
     inline double match(const PointCloudType &_src,
                         const PointCloudType &_dst,
                         TransformType        &_transformation,
@@ -57,11 +67,15 @@ public:
         }
         tree_interface.insert(dst, tree);
 
+
         /// reset all the members
         tx        = _prior_transformation.translation()(0);
         ty        = _prior_transformation.translation()(1);
-        phi       = acos(_prior_transformation.rotation()(0,0));
-
+        phi       = atan2(_prior_transformation.rotation()(1,0),
+                          _prior_transformation.rotation()(0,0));
+        prev_tx = tx;
+        prev_ty = ty;
+        prev_phi = phi;
         /// gradient and stuff
         /// need 4 fields for that
         /// only solve the maximal score
@@ -70,6 +84,8 @@ public:
         lambda                = params.lambda;
         step_corrections      = 0;
 
+
+
         bool converged = false;
         while(!converged) {
             rotation        = RotationType(phi);
@@ -77,15 +93,14 @@ public:
             transformation  = translation * rotation;
 
             gradient = GradientType::Zero();
-            hessian  = HessianType::Zero();
-            score    = 0.0;
-
-            double sin_phi;
-            double cos_phi;
+            hessian = HessianType::Zero();
+            score = 0.0;
+            double  sin_phi;
+            double  cos_phi;
             sincos(phi, &sin_phi, &cos_phi);
 
             /// calculate the hessian and the gradient for each grid
-            for(std::size_t i = 0 ; i < _dst.size ; ++i) {
+            for(std::size_t i = 0 ; i < _src.size ; ++i) {
                 if(_src.mask[i] == PointCloudType::VALID) {
                     PointType p = transformation * _src.points[i];
 
@@ -100,8 +115,8 @@ public:
                     PointType            mean;
                     PointType            q;
                     CovarianceMatrixType inverse_covariance;
-                    PointType            jac;
-                    PointType            hes;
+                    PointType            jac = PointType::Zero();
+                    PointType            hes = PointType::Zero();
 
                     double s = distribution.sampleNonNoramlized(p, q);
                     distribution.getMean(mean);
@@ -113,57 +128,70 @@ public:
                         score += s;
                         const PointType q_inverse_covariance = q.transpose() * inverse_covariance;
 
-                        jac(0) = -q(0) * sin_phi - q(1) * cos_phi;
-                        jac(1) =  q(0) * cos_phi - q(1) * sin_phi;
-                        hes(0) = -q(0) * cos_phi + q(1) * sin_phi;
-                        hes(1) = -q(0) * sin_phi - q(1) * cos_phi;
+                        jac(0) = -p(0) * sin_phi - p(1) * cos_phi;
+                        jac(1) =  p(0) * cos_phi - p(1) * sin_phi;
+                        hes(0) = -p(0) * cos_phi + p(1) * sin_phi;
+                        hes(1) = -p(0) * sin_phi - p(1) * cos_phi;
 
-                        /// gradient computation
-                        double g_dot = q_inverse_covariance.dot(jac);
-                        gradient(0) -= s * q_inverse_covariance(0);
-                        gradient(1) -= s * q_inverse_covariance(1);
-                        gradient(2) -= s * g_dot;
-                        /// hessian computation
-                        hessian(0,0)+=  s
-                                * (-(q_inverse_covariance(0) * q_inverse_covariance(0))   /// (1)
-                                   +  inverse_covariance(0,0));                           /// (3)
-                        hessian(1,0)+=  s
-                                * (-(q_inverse_covariance(1) * q_inverse_covariance(0))   /// (1)
-                                   +  inverse_covariance(1,0));                           /// (3)
-                        hessian(2,0)+=  s
-                                * (-(g_dot * q_inverse_covariance(0))                     /// (1)
-                                   +(inverse_covariance.row(0).dot(jac)));                /// (3)
-                        hessian(0,1)+=  s
-                                * (-(q_inverse_covariance(0) * q_inverse_covariance(1))   /// (1)
-                                   +  inverse_covariance(0,1));                           /// (3)
-                        hessian(1,1)+=  s
-                                * (-(q_inverse_covariance(1) * q_inverse_covariance(1))   /// (1)
-                                   +  inverse_covariance(1,1));                           /// (3)
-                        hessian(2,1)+=  s
-                                * (-(g_dot * q_inverse_covariance(1))                     /// (1)
-                                   +(inverse_covariance.row(1).dot(jac)));                /// (3)
-                        hessian(0,2)+=  s
-                                * (-(q_inverse_covariance(0) * g_dot)                     /// (1)
-                                   +(jac.transpose().dot(inverse_covariance.col(0))));    /// (3)
-                        hessian(1,2)+=  s
-                                * (-(q_inverse_covariance(1) * g_dot )                    /// (1)
-                                   +(jac.transpose() * inverse_covariance.col(1)));       /// (3)
-                        hessian(2,2)+=  s
-                                * (-g_dot * g_dot                                         /// (1)
-                                   +q_inverse_covariance.dot(hes)                         /// (2)
-                                   +(jac.transpose() * inverse_covariance * jac));        /// (3)
+                        //                            /// gradient computation
+                        double g_dot = q_inverse_covariance.transpose() * jac;
+                        gradient(0) += s * q_inverse_covariance(0);
+                        gradient(1) += s * q_inverse_covariance(1);
+                        gradient(2) += s * g_dot;
+
+                        hessian(0,0)+= -s * (
+                                    (-q_inverse_covariance(0) * -q_inverse_covariance(0))   /// (1)
+                                    +(-inverse_covariance(0,0)));                           /// (3)
+                        hessian(1,0)+= -s * (
+                                    (-q_inverse_covariance(1) * -q_inverse_covariance(0))   /// (1)
+                                    +(-inverse_covariance(1,0)));                           /// (3)
+                        hessian(2,0)+= -s * (
+                                    (-g_dot * -q_inverse_covariance(0))                     /// (1)
+                                    +(-inverse_covariance.row(0).dot(jac)));                /// (3)
+                        hessian(0,1)+= -s * (
+                                    (-q_inverse_covariance(0) * -q_inverse_covariance(1))   /// (1)
+                                    +(-inverse_covariance(0,1)));                           /// (3)
+                        hessian(1,1)+= -s * (
+                                    (-q_inverse_covariance(1) * -q_inverse_covariance(1))   /// (1)
+                                    +(-inverse_covariance(1,1)));                           /// (3)
+                        hessian(2,1)+= -s * (
+                                    (-g_dot * -q_inverse_covariance(1))                     /// (1)
+                                    +(-inverse_covariance.row(1).dot(jac)));                /// (3)
+                        hessian(0,2)+= -s * (
+                                    (-q_inverse_covariance(0) * -g_dot)                     /// (1)
+                                    +(-jac.transpose() * inverse_covariance.col(0)));        /// (3)
+                        hessian(1,2)+= -s * (
+                                    (-q_inverse_covariance(1) * -g_dot )                    /// (1)
+                                    +(-jac.transpose() * inverse_covariance.col(1)));        /// (3)
+                        hessian(2,2)+= -s * (
+                                    (-g_dot * -g_dot)                                       /// (1)
+                                    +(-q_inverse_covariance.transpose() * hes)              /// (2)
+                                    +(-jac.transpose() * inverse_covariance * jac));        /// (3)
+
+
+                        /// (1) directly computed from Jacobian combined with q^t * InvCov
+                        /// (2) only a result for H(2,2)
+                        /// (3) [1,0].[[a,b],[c,d]].[[1],[0]] = a with i = j = 0, Jac.col(0)
+                        ///     [0,1].[[a,b],[c,d]].[[1],[0]] = c with i = 1, j = 0, Jac.col(1), Jac.col(0)
+                        ///     [1,0].[[a,b],[c,d]].[[0],[1]] = b with i = 0, j = 1, Jac.col(0), Jac.col(1)
+                        ///     [0,1].[[a,b],[c,d]].[[0],[1]] = d with i = 1, j = 1, Jac.col(1)
+                        ///     [1,0].[[a,b],[c,d]].J_T.col(2) = [a,b].J_T.col(2)
+                        ///     [0,1].[[a,b],[c,d]].J_T.col(2) = [c,d].J_T.col(2)
+                        ///     J_T.col(2).[[a,b],[c,d]].[[1],[0]] = J_T.col(2).[a, c]
+                        ///     J_T.col(2).[[a,b],[c,d]].[[0],[1]] = J_T.col(2).[b, d]
+                        ///     J_T.col(2).[[a,b],[c,d]].J_T.col(2)
                     }
                 }
-
             }
 
             /// now we have to check wether the score increased or not
             /// if not, we have to adjust the step size
+            std::cout << "curr and max : " << score << " " << max_score << std::endl;
             if(score < max_score) {
-                tx      = prev_tx;
-                ty      = prev_ty;
-                phi     = prev_phi;
-                lambda *= params.alpha;
+                tx              = prev_tx;
+                ty              = prev_ty;
+                phi             = prev_phi;
+                lambda         *= params.alpha;
                 rotation        = RotationType(phi);
                 translation     = TranslationType(tx, ty);
                 transformation  = translation * rotation;
@@ -172,8 +200,10 @@ public:
                 if(iteration > 0 &&
                         epsTrans(tx, prev_tx) &&
                         epsTrans(ty, prev_ty) &&
-                        epsRot(phi, prev_phi))
+                        epsRot(phi, prev_phi)) {
+                    std::cout << "eps converged" << std::endl;
                     break;
+                }
 
                 max_score = score;
                 prev_tx   = tx;
@@ -182,30 +212,42 @@ public:
                 step_corrections = 0;
             }
 
-            if(step_corrections >= params.max_step_corrections)
+            if(step_corrections >= params.max_step_corrections) {
+                std::cout << "too many step corrections : " << step_corrections << " vs. " << params.max_step_corrections << std::endl;
                 break;
-
-            if(iteration >= params.max_iterations)
-                break;
-
-            /// positive definiteness
-            double off = hessian.maxCoeff() - hessian.minCoeff();
-            for(std::size_t i = 0 ; i < 3 ; ++i) {
-                hessian(i,i) += off;
             }
+
+            if(iteration >= params.max_iterations) {
+                std::cout << "reached max iterations" <<  std::endl;
+                break;
+            }
+
+            /// compute the hessian with the result
+            /// positive definiteness
+            Eigen::EigenSolver<HessianType> hessian_solver(hessian, false);
+            double min_eigen_value = hessian_solver.eigenvalues().real().minCoeff();
+            if(min_eigen_value < 0) {
+                double lambda = 1.1 * min_eigen_value - 1;
+                hessian += Eigen::Vector3d (-lambda, -lambda, -lambda).asDiagonal();
+            }
+
             /// solve equeation here
             delta_p = GradientType::Zero();
-            delta_p = hessian.fullPivLu().solve(gradient);
+            delta_p = (-hessian).fullPivLu().solve(gradient);
             tx  += delta_p(0) * lambda;
             ty  += delta_p(1) * lambda;
             phi += delta_p(2) * lambda;
 
             ++iteration;
-
         }
+
+        rotation        = RotationType(phi);
+        translation     = TranslationType(tx, ty);
+        transformation  = translation * rotation;
         _transformation = transformation;
 
         return max_score;
+
     }
 
 

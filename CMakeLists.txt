@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   kdtree
 )
 
-#set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Debug)
 
 ## OpenMP ##########################################################################
 find_package(OpenMP REQUIRED)

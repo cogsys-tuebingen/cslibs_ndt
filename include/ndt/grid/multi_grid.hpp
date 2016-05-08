@@ -44,7 +44,7 @@ public:
     {
         ResolutionType offsets;
         for(std::size_t i = 0 ; i < Dim; ++i) {
-            offsets[i] = +_resolution[i] * 0.25;
+            offsets[i] = _resolution[i] * 0.5;
         }
 
         for(std::size_t i = 0 ; i < data_size ; ++i) {
@@ -58,8 +58,7 @@ public:
 
         steps[0] = 1;
         if(Dim > 1) {
-            std::size_t max_idx = Dim - 1;
-            for(std::size_t i = 1 ; i <= max_idx ; ++i) {
+            for(std::size_t i = 1 ; i < Dim ; ++i) {
                 steps[i] = steps[i-1] * 2;
             }
         }

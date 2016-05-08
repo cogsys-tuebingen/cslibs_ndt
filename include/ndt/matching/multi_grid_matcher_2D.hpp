@@ -57,10 +57,9 @@ public:
         grid->add(_dst);
 
         /// reset all the members
-        tx        = _prior_transformation.translation()(0);
-        ty        = _prior_transformation.translation()(1);
-        phi       = atan2(_prior_transformation.rotation()(1,0),
-                          _prior_transformation.rotation()(0,0));
+        tx        = 0.0;
+        ty        = 0.0;
+        phi       = 0.0;
         prev_tx = tx;
         prev_ty = ty;
         prev_phi = phi;
@@ -78,7 +77,7 @@ public:
         while(!converged) {
             rotation        = RotationType(phi);
             translation     = TranslationType(tx, ty);
-            transformation  = translation * rotation;
+            transformation  = translation * rotation * _prior_transformation;
 
             gradient.fill(GradientType::Zero());
             hessian.fill(HessianType::Zero());
@@ -196,7 +195,7 @@ public:
                 lambda *= params.alpha;
                 rotation        = RotationType(phi);
                 translation     = TranslationType(tx, ty);
-                transformation  = translation * rotation;
+                transformation  = translation * rotation * _prior_transformation;
                 ++step_corrections;
             } else {
                 if(iteration > 0 &&
@@ -212,6 +211,7 @@ public:
                 prev_ty   = ty;
                 prev_phi  = phi;
                 step_corrections = 0;
+                lambda = params.lambda;
             }
 
             if(step_corrections >= params.max_step_corrections) {
@@ -248,7 +248,7 @@ public:
 
         rotation        = RotationType(phi);
         translation     = TranslationType(tx, ty);
-        transformation  = translation * rotation;
+        transformation  = translation * rotation * _prior_transformation;
         _transformation = transformation;
 
         return max_score;
@@ -269,7 +269,7 @@ public:
 
     }
 
-private:
+protected:
     typename GridType::Ptr grid;
 
     double tx;

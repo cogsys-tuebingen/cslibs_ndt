@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
             points_src.push_back(MultiGridMatcher2D::PointType(-1.0, e));
     }
     /// generate a second points test which is transformed
-    MultiGridMatcher2D::RotationType    rotation       = MultiGridMatcher2D::RotationType(0.0);
+    MultiGridMatcher2D::RotationType    rotation       = MultiGridMatcher2D::RotationType(0.3);
     MultiGridMatcher2D::TranslationType trans          = MultiGridMatcher2D::TranslationType(-0.2, 0.0);
     MultiGridMatcher2D::TransformType   transformation = trans * rotation;
     std::vector<MultiGridMatcher2D::PointType> points_dst;
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     }
 
     MultiGridMatcher2D::SizeType   size = {10, 10};
-    MultiGridMatcher2D::ResolutionType resolution = {1.0, 1.0};
+    MultiGridMatcher2D::ResolutionType resolution = {2.0, 2.0};
     ndt::data::Pointcloud<2> pointcloud_src(points_src);
     ndt::data::Pointcloud<2> pointcloud_dst(points_dst);
 
@@ -75,14 +75,20 @@ int main(int argc, char *argv[])
 
     /// now we can try out the matching
     MultiGridMatcher2D::Parameters params;
-    params.max_iterations = 4000;
-    params.eps_trans = 1e-10;
-    params.eps_rot = 1e-10;
+    params.resolution = resolution;
+    params.max_iterations = 35;
     params.lambda = 2;
-    params.max_step_corrections = 10;
-    MultiGridMatcher2D m(params);
-    m.match(pointcloud_dst, pointcloud_src, transformation);
-    m.printDebugInfo();
+    params.max_step_corrections = 5;
+    MultiGridMatcher2D m_scale_1(params);
+    m_scale_1.match(pointcloud_dst, pointcloud_src, transformation);
+    m_scale_1.printDebugInfo();
+    params.resolution[0] *= 0.5;
+    params.resolution[1] *= 0.5;
+    MultiGridMatcher2D m_scale_2(params);
+    MultiGridMatcher2D::TransformType prior = transformation;
+    m_scale_2.match(pointcloud_dst, pointcloud_src, transformation, prior);
+    m_scale_2.printDebugInfo();
+
 
     for(MultiGridMatcher2D::PointType &p : points_src) {
         p = transformation * p;

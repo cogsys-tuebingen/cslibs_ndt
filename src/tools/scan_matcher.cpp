@@ -4,12 +4,14 @@
 #include <ndt/matching/multi_grid_matcher_2D.hpp>
 #include <ndt/matching/kdtree_matcher_2D.hpp>
 #include <ndt/visualization/multi_grid.hpp>
+#include <ndt/matching/multi_matcher.hpp>
 
 #include <string>
 
-typedef ndt::matching::MultiGridMatcher2D      MatcherType;
-typedef ndt::visualization::MultiGrid2D     MultiGrid2D;
-typedef ndt::visualization::Point2D         Point2D;
+typedef ndt::matching::MultiGridMatcher2D        MatcherType;
+typedef ndt::visualization::MultiGrid2D          MultiGrid2D;
+typedef ndt::visualization::Point2D              Point2D;
+typedef ndt::matching::MultiMatcher<MatcherType> MultiMatcherType;
 
 int main(int argc, char *argv[])
 {
@@ -31,7 +33,7 @@ int main(int argc, char *argv[])
 
 
 //    src = dst;
-//    MatcherType::RotationType    rotation       = MatcherType::RotationType(0.1);
+//    MatcherType::RotationType    rotation       = MatcherType::RotationType(0.3);
 //    MatcherType::TranslationType trans          = MatcherType::TranslationType(-0.5, 0.0);
 //    MatcherType::TransformType   transformation = trans * rotation;
 //    for(MatcherType::PointType &p : src.points_data) {
@@ -73,17 +75,24 @@ int main(int argc, char *argv[])
             break;
     }
 
+    MultiMatcherType::ParameterSet param_set;
     MatcherType::Parameters params;
-    params.max_iterations = 4000;
-    params.eps_trans = 1e-10;
-    params.eps_rot = 1e-10;
+    params.max_iterations = 30;
+    params.eps_trans = 1e-3;
+    params.eps_rot = 1e-3;
     params.lambda = 2;
     params.resolution = resolution;
     params.max_step_corrections = 10;
-    MatcherType matcher(params);
-    MatcherType::TransformType  transform = MatcherType::TransformType::Identity();
-    double score = matcher.match(dst, src, transform);
-    matcher.printDebugInfo();
+    param_set.push_back(params);
+    params.resolution[0] *= 0.5;
+    params.resolution[1] *= 0.5;
+    params.lambda = 2;
+    param_set.push_back(params);
+    MultiMatcherType::TransformType transform;
+    MultiMatcherType multi_matcher(param_set);
+    multi_matcher.match(dst, src, transform);
+
+
     for(auto &p : src.points_data) {
         p = transform * p;
     }

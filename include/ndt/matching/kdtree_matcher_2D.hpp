@@ -54,8 +54,8 @@ public:
         return tree_interface;
     }
 
-    inline double match(const PointCloudType &_src,
-                        const PointCloudType &_dst,
+    inline double match(const PointCloudType &_dst,
+                        const PointCloudType &_src,
                         TransformType        &_transformation,
                         const TransformType  &_prior_transformation = TransformType::Identity()) override
     {
@@ -67,15 +67,13 @@ public:
         }
         tree_interface.insert(dst, tree);
 
-
         /// reset all the members
-        tx        = _prior_transformation.translation()(0);
-        ty        = _prior_transformation.translation()(1);
-        phi       = atan2(_prior_transformation.rotation()(1,0),
-                          _prior_transformation.rotation()(0,0));
-        prev_tx = tx;
-        prev_ty = ty;
-        prev_phi = phi;
+        tx        = 0.0;
+        ty        = 0.0;
+        phi       = 0.0;
+        prev_tx   = tx;
+        prev_ty   = ty;
+        prev_phi  = phi;
         /// gradient and stuff
         /// need 4 fields for that
         /// only solve the maximal score
@@ -84,16 +82,14 @@ public:
         lambda                = params.lambda;
         step_corrections      = 0;
 
-
-
         bool converged = false;
         while(!converged) {
             rotation        = RotationType(phi);
             translation     = TranslationType(tx, ty);
-            transformation  = translation * rotation;
+            transformation  = translation * rotation * _prior_transformation;
 
             gradient = GradientType::Zero();
-            hessian = HessianType::Zero();
+            hessian  = HessianType::Zero();
             score = 0.0;
             double  sin_phi;
             double  cos_phi;
@@ -105,7 +101,6 @@ public:
                     PointType p = transformation * _src.points[i];
 
                     DistributionType *distribution_ptr = tree_interface.get(p, tree);
-
                     if(distribution_ptr == nullptr)
                         continue;
                     DistributionType &distribution = *distribution_ptr;
@@ -180,6 +175,7 @@ public:
                         ///     J_T.col(2).[[a,b],[c,d]].[[1],[0]] = J_T.col(2).[a, c]
                         ///     J_T.col(2).[[a,b],[c,d]].[[0],[1]] = J_T.col(2).[b, d]
                         ///     J_T.col(2).[[a,b],[c,d]].J_T.col(2)
+
                     }
                 }
             }
@@ -188,13 +184,13 @@ public:
             /// if not, we have to adjust the step size
             std::cout << "curr and max : " << score << " " << max_score << std::endl;
             if(score < max_score) {
-                tx              = prev_tx;
-                ty              = prev_ty;
-                phi             = prev_phi;
-                lambda         *= params.alpha;
+                tx      = prev_tx;
+                ty      = prev_ty;
+                phi     = prev_phi;
+                lambda *= params.alpha;
                 rotation        = RotationType(phi);
                 translation     = TranslationType(tx, ty);
-                transformation  = translation * rotation;
+                transformation  = translation * rotation * _prior_transformation;
                 ++step_corrections;
             } else {
                 if(iteration > 0 &&
@@ -210,6 +206,7 @@ public:
                 prev_ty   = ty;
                 prev_phi  = phi;
                 step_corrections = 0;
+                lambda = params.lambda;
             }
 
             if(step_corrections >= params.max_step_corrections) {
@@ -222,7 +219,7 @@ public:
                 break;
             }
 
-            /// compute the hessian with the result
+
             /// positive definiteness
             Eigen::EigenSolver<HessianType> hessian_solver(hessian, false);
             double min_eigen_value = hessian_solver.eigenvalues().real().minCoeff();
@@ -243,13 +240,11 @@ public:
 
         rotation        = RotationType(phi);
         translation     = TranslationType(tx, ty);
-        transformation  = translation * rotation;
+        transformation  = translation * rotation * _prior_transformation;
         _transformation = transformation;
 
         return max_score;
-
     }
-
 
     void printDebugInfo()
     {

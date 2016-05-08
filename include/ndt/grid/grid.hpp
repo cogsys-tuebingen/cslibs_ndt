@@ -117,25 +117,18 @@ public:
     {
         for(std::size_t i = 0 ; i < Dim ; ++i) {
             int id = (_p(i) - origin(i)) / resolution[i];
-            if(id < 0 || id >= size[i])
+            if(id == -1)
                 return false;
             index[i] = id;
         }
         return true;
     }
 
-    inline bool checkIndex(const IndexType &_index)
-    {
-        std::size_t p = pos(_index);
-        return p < data_size;
-    }
-
-
     /// ---------------- DATA ---------------------------- ///
     inline bool add(const PointType &_p)
     {
         int p = pos(_p);
-        if(p >= (int) data_size || p < 0)
+        if(p == -1)
             return false;
         grid[p].add(_p);
         return true;
@@ -157,7 +150,7 @@ public:
     inline DistributionType* get(const PointType &_p)
     {
         int p = pos(_p);
-        if(p >= (int) data_size || p < 0)
+        if(p == -1)
             return nullptr;
         return &grid[p];
     }
@@ -165,7 +158,7 @@ public:
     inline DistributionType const * get(const PointType &_p) const
     {
         int p = pos(_p);
-        if(p >= (int) data_size || p < 0)
+        if(p == -1)
             return nullptr;
         return &grid[p];
     }
@@ -173,7 +166,7 @@ public:
     inline DistributionType const & at(const IndexType &_index) const
     {
         int p = pos(_index);
-        if(p >= (int) data_size || p < 0)
+        if(p == -1)
             throw std::runtime_error("Out of bounds!");
 
         return grid[p];
@@ -182,7 +175,7 @@ public:
     inline DistributionType & at(const IndexType &_index)
     {
         int p = pos(_index);
-        if(p >= (int) data_size || p < 0)
+        if(p == -1)
             throw std::runtime_error("Out of bounds!");
         return grid[p];
     }
@@ -195,15 +188,6 @@ private:
     std::size_t          data_size;
     DistributionSetType  grid_data;
     DistributionType    *grid;
-
-
-    inline std::size_t pos(const IndexType &_index) {
-        std::size_t pos;
-        for(std::size_t i = 0 ; i < Dim ; ++i) {
-            pos += _index[i] * steps[i];
-        }
-        return pos;
-    }
 
     inline int pos(const PointType &_p) {
         int pos = 0;

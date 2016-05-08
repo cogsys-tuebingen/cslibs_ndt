@@ -91,6 +91,7 @@ add_library(ndt
 
     include/ndt/matching/matcher.hpp
     include/ndt/matching/multi_grid_matcher_2D.hpp
+    include/ndt/matching/multi_matcher.hpp
     include/ndt/matching/single_grid_matcher_2D.hpp
     include/ndt/matching/kdtree_matcher_2D.hpp
 

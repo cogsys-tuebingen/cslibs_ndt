@@ -92,7 +92,7 @@ struct ScanMatcherNode {
             MatcherType::Parameters params;
             params.max_step_corrections = 5;
             params.eps_rot = 1e-6;
-            params.lambda = 1.0;
+            params.lambda = MatcherType::LambdaType::Constant(1.0);
             MatcherType matcher(params);
             MatcherType::RotationType    rotation(tf::getYaw(diff.getRotation()));
             MatcherType::TranslationType translation(diff.getOrigin().x(), diff.getOrigin().y());

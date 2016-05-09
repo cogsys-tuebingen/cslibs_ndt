@@ -191,7 +191,10 @@ public:
                 tx      = prev_tx;
                 ty      = prev_ty;
                 phi     = prev_phi;
-                lambda *= params.alpha;
+                lambda[0] *= params.alpha;
+                lambda[1] *= params.alpha;
+                lambda[2] *= params.alpha;
+
                 rotation        = RotationType(phi);
                 translation     = TranslationType(tx, ty);
                 transformation  = translation * rotation * _prior_transformation;
@@ -236,9 +239,9 @@ public:
             delta_p = GradientType::Zero();
             delta_p = (-hessian_entry).fullPivLu().solve(gradient_entry);
 
-            tx  += delta_p(0) * lambda;
-            ty  += delta_p(1) * lambda;
-            phi += delta_p(2) * lambda;
+            tx  += delta_p(0) * lambda[0];
+            ty  += delta_p(1) * lambda[1];
+            phi += delta_p(2) * lambda[2];
 
             ++iteration;
         }
@@ -287,7 +290,7 @@ protected:
     GradientType                delta_p;
 
     std::size_t                 iteration;
-    double                      lambda;
+    LambdaType                  lambda;
     std::size_t                 step_corrections;
 };
 }

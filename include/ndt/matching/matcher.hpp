@@ -14,6 +14,7 @@ public:
     typedef std::shared_ptr<Matcher>                     Ptr;
     typedef data::Pointcloud<Dim>                        PointCloudType;
     typedef std::array<double, Dim>                      ResolutionType;
+    typedef Eigen::Matrix<double, 6, 1>                  LambdaType;        /// TODO : Move lambda to matcher directlyht
     typedef Eigen::Transform<double, Dim, Eigen::Affine> TransformType;
     typedef Matcher<Dim>                                 BaseClass;
 
@@ -23,7 +24,7 @@ public:
             eps_trans(1e-3),
             max_iterations(100),
             max_step_corrections(2),
-            lambda(2.0),
+            lambda(LambdaType::Constant(1.0)),
             alpha(0.5)
         {
             resolution.fill(1.0);
@@ -33,7 +34,7 @@ public:
                    const double          _eps_trans,
                    const std::size_t     _max_iterations,
                    const std::size_t     _max_step_corrections,
-                   const double _lambda,
+                   const LambdaType &_lambda,
                    const double _alpha) :
             resolution(_resolution),
             eps_rot(_eps_rot),
@@ -50,7 +51,7 @@ public:
         double                  eps_trans;
         std::size_t             max_iterations;
         std::size_t             max_step_corrections;
-        double                  lambda;
+        LambdaType              lambda;
         double                  alpha;
 
     };

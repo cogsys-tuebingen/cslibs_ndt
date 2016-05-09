@@ -80,13 +80,14 @@ int main(int argc, char *argv[])
     params.max_iterations = 30;
     params.eps_trans = 1e-3;
     params.eps_rot = 1e-3;
-    params.lambda = 2;
+    params.lambda(0) = 2;
+    params.lambda(1) = 2;
+    params.lambda(2) = 2;
     params.resolution = resolution;
     params.max_step_corrections = 10;
     param_set.push_back(params);
     params.resolution[0] *= 0.5;
     params.resolution[1] *= 0.5;
-    params.lambda = 2;
     param_set.push_back(params);
     MultiMatcherType::TransformType transform;
     MultiMatcherType multi_matcher(param_set);

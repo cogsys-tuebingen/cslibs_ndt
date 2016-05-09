@@ -231,9 +231,9 @@ public:
             /// solve equeation here
             delta_p = GradientType::Zero();
             delta_p = (-hessian).fullPivLu().solve(gradient);
-            tx  += delta_p(0) * lambda;
-            ty  += delta_p(1) * lambda;
-            phi += delta_p(2) * lambda;
+            tx  += delta_p(0) * lambda(0);
+            ty  += delta_p(1) * lambda(1);
+            phi += delta_p(2) * lambda(2);
 
             ++iteration;
         }
@@ -284,7 +284,7 @@ private:
     GradientType     delta_p;
 
     std::size_t      iteration;
-    double           lambda;
+    LambdaType       lambda;
     std::size_t      step_corrections;
 
 };

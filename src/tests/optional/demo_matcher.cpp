@@ -84,17 +84,19 @@ int main(int argc, char *argv[])
         params.max_iterations = 30;
         params.eps_trans = 1e-3;
         params.eps_rot = 1e-3;
-        params.lambda = 3;
+        params.lambda(0) = 3;
+        params.lambda(1) = 3;
+        params.lambda(2) = 1;
         params.resolution = resolution;
         params.max_step_corrections = 10;
         param_set.push_back(params);
         params.resolution[0] *= 0.5;
         params.resolution[1] *= 0.5;
-        params.lambda = 1.5;
+        params.lambda = params.lambda * 0.5;
         param_set.push_back(params);
         params.resolution[0] *= 0.5;
         params.resolution[1] *= 0.5;
-        params.lambda = 1;
+        params.lambda = params.lambda * 0.5;
         param_set.push_back(params);
         std::chrono::time_point<std::chrono::system_clock> start =
                 std::chrono::system_clock::now();

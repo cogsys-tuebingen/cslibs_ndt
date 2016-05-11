@@ -4,6 +4,7 @@
 #include <ndt/grid/multi_grid.hpp>
 #include <ndt/matching/matcher.hpp>
 #include <ndt/data/pointcloud.hpp>
+#include <ndt/math/angle.hpp>
 
 #include <array>
 #include <fstream>
@@ -242,6 +243,7 @@ public:
             tx  += delta_p(0) * lambda[0];
             ty  += delta_p(1) * lambda[1];
             phi += delta_p(2) * lambda[2];
+            phi = math::wrapAngle(phi);
 
             ++iteration;
         }

@@ -1,7 +1,6 @@
 /// PROJECT
 #include <ndt/data/pointcloud.hpp>
 #include <ndt/matching/multi_grid_matcher_2D.hpp>
-#include <ndt/matching/multi_matcher.hpp>
 #include <ndt/visualization/multi_grid.hpp>
 #include <ndt/visualization/points.hpp>
 
@@ -20,7 +19,6 @@ void linspace(const double min,
 typedef ndt::matching::MultiGridMatcher2D   MultiGridMatcher2D;
 typedef ndt::visualization::MultiGrid2D     MultiGrid2D;
 typedef ndt::visualization::Point2D         Point2D;
-typedef ndt::matching::MultiMatcher<MultiGridMatcher2D> MultiMatcherType;
 
 int main(int argc, char *argv[])
 {
@@ -44,15 +42,15 @@ int main(int argc, char *argv[])
     for(std::size_t i = 0 ; i < 10 ; ++i) {
         /// generate a second points test which is transformed
         MultiGridMatcher2D::RotationType    rotation       = MultiGridMatcher2D::RotationType(0.1 * i);
-        MultiGridMatcher2D::TranslationType trans          = MultiGridMatcher2D::TranslationType(-0.0, 0.0);
+        MultiGridMatcher2D::TranslationType trans          = MultiGridMatcher2D::TranslationType(-0.2, 0.0);
         MultiGridMatcher2D::TransformType   transformation = trans * rotation;
         std::vector<MultiGridMatcher2D::PointType> points_dst;
         for(MultiGridMatcher2D::PointType &p : points_src) {
             points_dst.push_back(transformation * p);
         }
 
-        MultiGridMatcher2D::SizeType   size = {10, 10};
-        MultiGridMatcher2D::ResolutionType resolution = {5.0, 5.0};
+        MultiGridMatcher2D::SizeType   size = {20, 20};
+        MultiGridMatcher2D::ResolutionType resolution = {1.0, 1.0};
         ndt::data::Pointcloud<2> pointcloud_src(points_src);
         ndt::data::Pointcloud<2> pointcloud_dst(points_dst);
 
@@ -79,33 +77,23 @@ int main(int argc, char *argv[])
 
         /// now we can try out the matching
 
-        MultiMatcherType::ParameterSet param_set;
         MultiGridMatcher2D::Parameters params;
-        params.max_iterations = 30;
+        params.max_iterations = 100;
         params.eps_trans = 1e-3;
         params.eps_rot = 1e-3;
-        params.lambda(0) = 3;
-        params.lambda(1) = 3;
-        params.lambda(2) = 1;
-        params.resolution = resolution;
-        params.max_step_corrections = 10;
-        param_set.push_back(params);
-        params.resolution[0] *= 0.5;
-        params.resolution[1] *= 0.5;
-        params.lambda = params.lambda * 0.5;
-        param_set.push_back(params);
-        params.resolution[0] *= 0.5;
-        params.resolution[1] *= 0.5;
-        params.lambda = params.lambda * 0.5;
-        param_set.push_back(params);
+        params.max_step_corrections = 100;
+        params.alpha = 2;
+        params.lambda = MultiGridMatcher2D::LambdaType::Constant(0.1);
+
         std::chrono::time_point<std::chrono::system_clock> start =
                 std::chrono::system_clock::now();
-        MultiMatcherType multi_matcher(param_set);
+        MultiGridMatcher2D multi_matcher(params);
         multi_matcher.match(pointcloud_dst, pointcloud_src, transformation, prior);
         std::chrono::microseconds elapsed =
                 std::chrono::duration_cast<std::chrono::microseconds>
                 (std::chrono::system_clock::now() - start);
         std::cout << "elapsed " << elapsed.count() / 1000.0 << " ms" << std::endl;
+        multi_matcher.printDebugInfo();
 
         std::vector<MultiGridMatcher2D::PointType> points_src_corr = points_src;
         for(MultiGridMatcher2D::PointType &p : points_src_corr) {

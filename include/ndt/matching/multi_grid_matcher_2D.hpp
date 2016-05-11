@@ -73,7 +73,6 @@ public:
         step_corrections      = 0;
 
 
-
         bool converged = false;
         while(!converged) {
             rotation        = RotationType(phi);
@@ -200,6 +199,7 @@ public:
                 translation     = TranslationType(tx, ty);
                 transformation  = translation * rotation * _prior_transformation;
                 ++step_corrections;
+                lambda *= params.alpha;
             } else {
                 if(iteration > 0 &&
                         epsTrans(tx, prev_tx) &&
@@ -213,7 +213,8 @@ public:
                 prev_ty   = ty;
                 prev_phi  = phi;
                 step_corrections = 0;
-                lambda = params.lambda;
+//                lambda = params.lambda;
+                lambda /= params.alpha;
             }
 
             if(step_corrections >= params.max_step_corrections) {
@@ -240,9 +241,9 @@ public:
             delta_p = GradientType::Zero();
             delta_p = (-hessian_entry).fullPivLu().solve(gradient_entry);
 
-            tx  += delta_p(0) * lambda[0];
-            ty  += delta_p(1) * lambda[1];
-            phi += delta_p(2) * lambda[2];
+            tx  += delta_p(0) * lambda(0);
+            ty  += delta_p(1) * lambda(1);
+            phi += delta_p(2) * lambda(2);
             phi = math::wrapAngle(phi);
 
             ++iteration;

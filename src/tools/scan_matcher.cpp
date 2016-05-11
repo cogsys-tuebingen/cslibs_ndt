@@ -9,7 +9,7 @@
 #include <string>
 #include <chrono>
 
-typedef ndt::matching::MultiGridMatcher2D        MatcherType;
+typedef ndt::matching::KDTreeMatcher2D        MatcherType;
 typedef ndt::visualization::MultiGrid2D          MultiGrid2D;
 typedef ndt::visualization::Point2D              Point2D;
 typedef ndt::matching::MultiMatcher<MatcherType> MultiMatcherType;
@@ -79,21 +79,18 @@ int main(int argc, char *argv[])
     std::chrono::time_point<std::chrono::system_clock> start =
             std::chrono::system_clock::now();
 
-    MultiMatcherType::ParameterSet param_set;
     MatcherType::Parameters params;
-    params.resolution[0] = 2.0;
-    params.resolution[1] = 2.0;
-    param_set.push_back(params);
-    params.resolution[0] *= 0.5;
-    params.resolution[1] *= 0.5;
-    param_set.push_back(params);
-    MultiMatcherType::TransformType transform;
-    MultiMatcherType multi_matcher(param_set);
-    multi_matcher.match(dst, src, transform);
+    params.max_iterations = 30;
+    params.max_step_corrections = 1;
+    params.alpha = 2;
+    MatcherType::TransformType transform;
+    MatcherType matcher(params);
+    matcher.match(dst, src, transform);
     std::chrono::microseconds elapsed =
             std::chrono::duration_cast<std::chrono::microseconds>
             (std::chrono::system_clock::now() - start);
     std::cout << "elapsed " << elapsed.count() / 1000.0 << " ms" << std::endl;
+    matcher.printDebugInfo();
 
     for(auto &p : src.points_data) {
         p = transform * p;

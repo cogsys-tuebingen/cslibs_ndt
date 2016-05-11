@@ -182,7 +182,6 @@ public:
 
             /// now we have to check wether the score increased or not
             /// if not, we have to adjust the step size
-            std::cout << "curr and max : " << score << " " << max_score << std::endl;
             if(score < max_score) {
                 tx      = prev_tx;
                 ty      = prev_ty;
@@ -197,7 +196,6 @@ public:
                         epsTrans(tx, prev_tx) &&
                         epsTrans(ty, prev_ty) &&
                         epsRot(phi, prev_phi)) {
-                    std::cout << "eps converged" << std::endl;
                     break;
                 }
 
@@ -206,16 +204,15 @@ public:
                 prev_ty   = ty;
                 prev_phi  = phi;
                 step_corrections = 0;
-                lambda = params.lambda;
+//                lambda = params.lambda;
+                lambda /= params.alpha;
             }
 
             if(step_corrections >= params.max_step_corrections) {
-                std::cout << "too many step corrections : " << step_corrections << " vs. " << params.max_step_corrections << std::endl;
                 break;
             }
 
             if(iteration >= params.max_iterations) {
-                std::cout << "reached max iterations" <<  std::endl;
                 break;
             }
 
@@ -285,6 +282,7 @@ private:
 
     std::size_t      iteration;
     LambdaType       lambda;
+    double           alpha;
     std::size_t      step_corrections;
 
 };

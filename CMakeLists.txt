@@ -91,7 +91,7 @@ add_library(ndt
 
     include/ndt/matching/matcher.hpp
     include/ndt/matching/multi_grid_matcher_2D.hpp
-#    include/ndt/matching/multi_matcher.hpp
+    include/ndt/matching/multi_matcher.hpp
     include/ndt/matching/single_grid_matcher_2D.hpp
     include/ndt/matching/kdtree_matcher_2D.hpp
 
@@ -189,14 +189,14 @@ target_link_libraries(ndt_kdtree_cluster_node
 )
 
 ## TOOLS ############################################################################
-#add_executable(ndt_scan_matcher
-#    src/tools/scan_matcher.cpp
-#)
+add_executable(ndt_scan_matcher
+    src/tools/scan_matcher.cpp
+)
 
-#target_link_libraries(ndt_scan_matcher
-#    ${OpenCV_LIBRARIES}
-#    ndt
-#)
+target_link_libraries(ndt_scan_matcher
+    ${OpenCV_LIBRARIES}
+    ndt
+)
 
 ## DEMOS ############################################################################
 add_executable(ndt_demo_grid_visualization

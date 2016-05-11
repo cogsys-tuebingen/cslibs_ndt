@@ -20,12 +20,12 @@ public:
 
     struct Parameters {
         Parameters() :
-            eps_rot(1e-6),
+            eps_rot(1e-3),
             eps_trans(1e-3),
             max_iterations(100),
-            max_step_corrections(2),
-            lambda(LambdaType::Constant(1.0)),
-            alpha(0.5)
+            max_step_corrections(10),
+            lambda(LambdaType::Constant(0.1)),
+            alpha(2.0)
         {
             resolution.fill(1.0);
         }

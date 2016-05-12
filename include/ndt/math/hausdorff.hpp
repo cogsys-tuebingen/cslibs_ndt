@@ -67,6 +67,9 @@ template<std::size_t Dim>
 inline double hausdorffMPE(const ndt::data::Pointcloud<Dim> &src,
                            const ndt::data::Pointcloud<Dim> &dst)
 {
+    /// normally a product of different probabilities
+    /// this yields almost always 0 ... try this little workaround
+
     if(src.size == 0)
         return std::numeric_limits<double>::max();
 

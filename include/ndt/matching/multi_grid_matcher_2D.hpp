@@ -72,7 +72,6 @@ public:
         lambda                = params.lambda;
         step_corrections      = 0;
 
-
         bool converged = false;
         while(!converged) {
             rotation        = RotationType(phi);
@@ -213,8 +212,9 @@ public:
                 prev_ty   = ty;
                 prev_phi  = phi;
                 step_corrections = 0;
-//                lambda = params.lambda;
-                lambda /= params.alpha;
+                if(current_max_score > max_score)
+                    lambda /= params.alpha;
+
             }
 
             if(step_corrections >= params.max_step_corrections) {

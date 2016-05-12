@@ -28,6 +28,7 @@ public:
         covariance(MatrixType::Zero()),
         correlated(MatrixType::Zero()),
         inverse_covariance(MatrixType::Zero()),
+        determinant(0.0),
         guardian_of_the_galaxy(0xDEADBEEF),
         n(1),
         n_1(0),
@@ -45,6 +46,7 @@ public:
         covariance = other.covariance;
         correlated = other.correlated;
         inverse_covariance  = other.inverse_covariance;
+        determinant = other.determinant;
         guardian_of_the_galaxy = other.guardian_of_the_galaxy;
         n = other.n;
         n_1 = other.n_1;
@@ -189,7 +191,7 @@ public:
                 update();
             _q = _p - mean;
             double exponent = -0.5 * double(_q.transpose() * inverse_covariance * _q);
-            double denominator = 1.0 / (covariance.determinant() * sqrt_2_M_PI);
+            double denominator = 1.0 / (determinant * sqrt_2_M_PI);
             return denominator * exp(exponent);
         }
         return 0.0;
@@ -229,8 +231,9 @@ private:
     MatrixType covariance;
     MatrixType correlated;
     MatrixType inverse_covariance;
+    double     determinant;
     mutable std::mutex update_mutex;
-    int                guardian_of_the_galaxy;
+    int        guardian_of_the_galaxy;
 
     std::size_t n;
     std::size_t n_1;            /// actual amount of points in distribution
@@ -275,6 +278,7 @@ private:
         } else {
             inverse_covariance = covariance.inverse();
         }
+        determinant = covariance.determinant();
         dirty = false;
         assert(guardian_of_the_galaxy == 0xDEADBEEF);
 

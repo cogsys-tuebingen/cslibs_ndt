@@ -78,6 +78,9 @@ int main(int argc, char *argv[])
         /// now we can try out the matching
 
         MultiGridMatcher2D::Parameters params;
+        params.eps_rot = 1e-6;
+        params.eps_trans = 1e-6;
+        params.alpha = 1.5;
         params.lambda = MultiGridMatcher2D::LambdaType::Constant(0.1);
         std::chrono::time_point<std::chrono::system_clock> start =
                 std::chrono::system_clock::now();

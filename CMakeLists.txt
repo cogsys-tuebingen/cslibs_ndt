@@ -200,7 +200,7 @@ target_link_libraries(ndt_scan_matcher
 
 ## DEMOS ############################################################################
 add_executable(ndt_demo_grid_visualization
-    src/tests/optional/demo_grid_visualization.cpp
+    src/tests/demo_grid_visualization.cpp
 )
 target_link_libraries(ndt_demo_grid_visualization
     ${OpenCV_LIBRARIES}
@@ -208,7 +208,7 @@ target_link_libraries(ndt_demo_grid_visualization
 )
 
 add_executable(ndt_demo_matcher
-    src/tests/optional/demo_matcher.cpp
+    src/tests/demo_matcher.cpp
 )
 
 target_link_libraries(ndt_demo_matcher

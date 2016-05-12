@@ -205,7 +205,8 @@ public:
                 prev_phi  = phi;
                 step_corrections = 0;
 //                lambda = params.lambda;
-                lambda /= params.alpha;
+                if(score > max_score)
+                    lambda /= params.alpha;
             }
 
             if(step_corrections >= params.max_step_corrections) {

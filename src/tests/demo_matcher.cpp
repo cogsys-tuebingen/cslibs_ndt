@@ -3,6 +3,7 @@
 #include <ndt/matching/multi_grid_matcher_2D.hpp>
 #include <ndt/visualization/multi_grid.hpp>
 #include <ndt/visualization/points.hpp>
+#include <ndt/math/hausdorff.hpp>
 
 void linspace(const double min,
               const double max,
@@ -89,13 +90,21 @@ int main(int argc, char *argv[])
         std::chrono::microseconds elapsed =
                 std::chrono::duration_cast<std::chrono::microseconds>
                 (std::chrono::system_clock::now() - start);
-        std::cout << "elapsed " << elapsed.count() / 1000.0 << " ms" << std::endl;
-        multi_matcher.printDebugInfo();
 
         std::vector<MultiGridMatcher2D::PointType> points_src_corr = points_src;
         for(MultiGridMatcher2D::PointType &p : points_src_corr) {
             p = transformation * p;
         }
+
+
+        multi_matcher.printDebugInfo();
+        std::cout << "elapsed " << elapsed.count() / 1000.0 << " ms" << std::endl;
+        std::cout << "hausdorff " << ndt::math::hausdorff<2>(pointcloud_dst, ndt::data::Pointcloud<2>(points_src_corr)) << std::endl;
+        std::cout << "hausdorff_frac " << ndt::math::hausdorffFraction<2>(pointcloud_dst, ndt::data::Pointcloud<2>(points_src_corr), 0.1) << std::endl;
+        std::cout << "hausdorff_avg " << ndt::math::hausdorffAvg<2>(pointcloud_dst, ndt::data::Pointcloud<2>(points_src_corr)) << std::endl;
+        std::cout << "hausdorff_mpe " << ndt::math::hausdorffMPE<2>(pointcloud_dst, ndt::data::Pointcloud<2>(points_src_corr), 0.5, 0.5, 2.0) << std::endl;
+
+
         ndt::visualization::renderPoints(points_src_corr,
                                          size,
                                          resolution,

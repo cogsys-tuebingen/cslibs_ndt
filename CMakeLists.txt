@@ -14,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 #set(CMAKE_BUILD_TYPE Debug)
-set(BUILD_TESTS False)
+set(BUILD_TESTS True)
 set(BUILD_NODES False)
 set(BUILD_TOOLS False)
 
@@ -96,6 +96,7 @@ add_library(ndt
     include/ndt/math/sgn.hpp
     include/ndt/math/angle.hpp
     include/ndt/math/euclidian.hpp
+    include/ndt/math/hausdorff.hpp
 
     include/ndt/conversion/convert_ros.hpp
 

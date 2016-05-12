@@ -13,7 +13,10 @@ find_package(catkin REQUIRED COMPONENTS
   kdtree
 )
 
-set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_BUILD_TYPE Debug)
+set(BUILD_TESTS False)
+set(BUILD_NODES False)
+set(BUILD_TOOLS False)
 
 ## OpenMP ##########################################################################
 find_package(OpenMP REQUIRED)
@@ -25,8 +28,15 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}
 find_package(Eigen3 REQUIRED)
 
 ## OpenCV ##########################################################################
-find_package(OpenCV REQUIRED)
-
+find_package(OpenCV QUIET)
+if(${OpenCV_FOUND})
+set(OPENCV_DEPENDENT_SRCS
+    include/ndt/visualization/grid.hpp
+    include/ndt/visualization/multi_grid.hpp
+    include/ndt/visualization/kdtree.hpp
+    include/ndt/visualization/points.hpp
+)
+endif()
 ## MRPT ############################################################################
 find_package(MRPT QUIET)
 if(${MRPT_FOUND})
@@ -101,11 +111,7 @@ add_library(ndt
 
     include/ndt/tree/kdtree.hpp
 
-    include/ndt/visualization/grid.hpp
-    include/ndt/visualization/multi_grid.hpp
-    include/ndt/visualization/kdtree.hpp
-    include/ndt/visualization/points.hpp
-
+    ${OPENCV_DEPENDENT_SRCS}
     ${MRPT_DEPENDENT_SRCS}
 )
 
@@ -116,6 +122,7 @@ target_link_libraries(ndt
     yaml-cpp
 )
 
+if(${BUILD_TESTS} AND ${OpenCV_FOUND})
 ## TESTS ############################################################################
 add_executable(ndt_test_distribution
     src/tests/test_distribution.cpp
@@ -137,6 +144,27 @@ add_executable(ndt_test_solver
     src/tests/test_solver.cpp
 )
 
+
+## DEMOS ############################################################################
+add_executable(ndt_demo_grid_visualization
+    src/tests/demo_grid_visualization.cpp
+)
+target_link_libraries(ndt_demo_grid_visualization
+    ${OpenCV_LIBRARIES}
+    ndt
+)
+
+add_executable(ndt_demo_matcher
+    src/tests/demo_matcher.cpp
+)
+
+target_link_libraries(ndt_demo_matcher
+    ${OpenCV_LIBRARIES}
+    ndt
+)
+endif()
+
+if(${BUILD_NODES} AND ${OpenCV_FOUND})
 ## NODES ############################################################################
 add_executable(ndt_single_grid_scan_matching_node
     src/nodes/single_grid_scan_matching_node.cpp
@@ -187,7 +215,9 @@ target_link_libraries(ndt_kdtree_cluster_node
     ${OpenCV_LIBRARIES}
     ndt
 )
+endif()
 
+if(${BUILD_TOOLS} AND ${OpenCV_FOUND})
 ## TOOLS ############################################################################
 add_executable(ndt_scan_matcher
     src/tools/scan_matcher.cpp
@@ -197,21 +227,4 @@ target_link_libraries(ndt_scan_matcher
     ${OpenCV_LIBRARIES}
     ndt
 )
-
-## DEMOS ############################################################################
-add_executable(ndt_demo_grid_visualization
-    src/tests/demo_grid_visualization.cpp
-)
-target_link_libraries(ndt_demo_grid_visualization
-    ${OpenCV_LIBRARIES}
-    ndt
-)
-
-add_executable(ndt_demo_matcher
-    src/tests/demo_matcher.cpp
-)
-
-target_link_libraries(ndt_demo_matcher
-    ${OpenCV_LIBRARIES}
-    ndt
-)
+endif()

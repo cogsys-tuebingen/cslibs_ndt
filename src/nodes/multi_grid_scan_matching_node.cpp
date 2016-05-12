@@ -25,8 +25,8 @@ struct ScanMatcherNode {
     ros::Publisher        pub_distr;
     tf::TransformListener tf;
 
-    float                       range_min;
-    float                       range_max;
+    double                       range_min;
+    double                      range_max;
     ndt::data::LaserScan::Ptr   src;
     tf::StampedTransform        src_transform;
     MultiGrid2D::ResolutionType resolution;
@@ -36,8 +36,8 @@ struct ScanMatcherNode {
 
     ScanMatcherNode() :
         nh("~"),
-        range_min(-1.f),
-        range_max(-1.f),
+        range_min(-1.0),
+        range_max(-1.0),
         resolution{1.0, 1.0},
         failed(0),
         all(0),

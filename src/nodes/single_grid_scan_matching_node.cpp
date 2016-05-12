@@ -22,15 +22,15 @@ struct ScanMatcherNode {
     ros::Publisher      pub_pcl;
     ros::Publisher      pub_distr;
 
-    float                       range_min;
-    float                       range_max;
+    double                       range_min;
+    double                       range_max;
     ndt::data::LaserScan::Ptr src;
     ResolutionType            resolution;
 
     ScanMatcherNode() :
         nh("~"),
-        range_min(-1.f),
-        range_max(-1.f),
+        range_min(-1.0),
+        range_max(-1.0),
         resolution{1.0, 1.0}
     {
         std::string topic_scan = "/scan";

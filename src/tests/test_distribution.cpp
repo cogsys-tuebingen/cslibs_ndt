@@ -91,8 +91,12 @@ int main(int argc, char *argv[])
     }
 
     roll.reset();
+    ndt::math::Distribution<2, false> roll2;
     for(std::size_t i = 0 ; i < 5 ; ++i) {
         roll.add(points[i]);
+    }
+    for(std::size_t i = 0 ; i < 4 ; ++i) {
+        roll2.add(points[i]);
     }
     std::cout << "-------" << std::endl;
     std::cout << roll.getN() << std::endl;
@@ -101,7 +105,7 @@ int main(int argc, char *argv[])
     std::cout << roll.getCovariance().determinant() << std::endl;
     std::cout << roll.sampleNonNoramlized(Point(0.0, 0.0)) << std::endl;
 
-    roll += roll;
+    roll += roll2;
     std::cout << "-------" << std::endl;
     std::cout << roll.getN() << std::endl;
     std::cout << roll.getMean() << std::endl;

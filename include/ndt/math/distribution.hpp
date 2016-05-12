@@ -51,7 +51,7 @@ public:
         n = other.n;
         n_1 = other.n_1;
         lambda_ratio = other.lambda_ratio;
-        dirty = other.dirty;
+        dirty = true;
     }
 
     inline void reset()
@@ -62,6 +62,7 @@ public:
         correlated = MatrixType::Zero();
         n = 1;
         n_1 = 0;
+        dirty = true;
     }
 
     inline void add(const PointType &_p)

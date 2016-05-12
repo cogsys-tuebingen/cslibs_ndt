@@ -4,6 +4,7 @@
 #include <ndt/visualization/multi_grid.hpp>
 #include <ndt/visualization/points.hpp>
 #include <ndt/math/hausdorff.hpp>
+#include <ndt/matching/kdtree_matcher_2D.hpp>
 
 void linspace(const double min,
               const double max,
@@ -17,7 +18,7 @@ void linspace(const double min,
     }
 }
 
-typedef ndt::matching::MultiGridMatcher2D   MultiGridMatcher2D;
+typedef ndt::matching::KDTreeMatcher2D      MultiGridMatcher2D;
 typedef ndt::visualization::MultiGrid2D     MultiGrid2D;
 typedef ndt::visualization::Point2D         Point2D;
 
@@ -50,7 +51,7 @@ int main(int argc, char *argv[])
             points_dst.push_back(transformation * p);
         }
 
-        MultiGridMatcher2D::SizeType   size = {20, 20};
+        MultiGrid2D::SizeType   size = {20, 20};
         MultiGridMatcher2D::ResolutionType resolution = {1.0, 1.0};
         ndt::data::Pointcloud<2> pointcloud_src(points_src);
         ndt::data::Pointcloud<2> pointcloud_dst(points_dst);
@@ -81,7 +82,7 @@ int main(int argc, char *argv[])
         MultiGridMatcher2D::Parameters params;
         params.eps_rot = 1e-6;
         params.eps_trans = 1e-6;
-        params.alpha = 1.5;
+        params.alpha = 1.45;
         params.lambda = MultiGridMatcher2D::LambdaType::Constant(0.1);
         std::chrono::time_point<std::chrono::system_clock> start =
                 std::chrono::system_clock::now();
@@ -102,7 +103,7 @@ int main(int argc, char *argv[])
         std::cout << "hausdorff " << ndt::math::hausdorff<2>(pointcloud_dst, ndt::data::Pointcloud<2>(points_src_corr)) << std::endl;
         std::cout << "hausdorff_frac " << ndt::math::hausdorffFraction<2>(pointcloud_dst, ndt::data::Pointcloud<2>(points_src_corr), 0.1) << std::endl;
         std::cout << "hausdorff_avg " << ndt::math::hausdorffAvg<2>(pointcloud_dst, ndt::data::Pointcloud<2>(points_src_corr)) << std::endl;
-        std::cout << "hausdorff_mpe " << ndt::math::hausdorffMPE<2>(pointcloud_dst, ndt::data::Pointcloud<2>(points_src_corr), 0.5, 0.5, 2.0) << std::endl;
+        std::cout << "hausdorff_mpe " << ndt::math::hausdorffMPE<2>(pointcloud_dst, ndt::data::Pointcloud<2>(points_src_corr)) << std::endl;
 
 
         ndt::visualization::renderPoints(points_src_corr,

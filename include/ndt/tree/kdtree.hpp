@@ -22,9 +22,7 @@ struct KDTreeNode : public kdtree::KDTreeNode<int, Dim>
     typedef data::Pointcloud<Dim>                   PointCloudType;
     typedef typename PointCloudType::PointType      PointType;
 
-    std::vector<PointType>          points;
     typename DistributionType::Ptr  distribution;
-    mutable std::mutex              update_mutex;
 
     KDTreeNode() :
         NodeBase(),
@@ -32,9 +30,16 @@ struct KDTreeNode : public kdtree::KDTreeNode<int, Dim>
     {
     }
 
+    KDTreeNode(const PointType &_p) :
+        NodeBase(),
+        distribution(new DistributionType)
+    {
+        distribution->add(_p);
+    }
+
+
     KDTreeNode(const KDTreeNode &other) :
         NodeBase(other),
-        points(other.points),
         distribution(other.distribution)
     {
     }
@@ -55,27 +60,22 @@ struct KDTreeNode : public kdtree::KDTreeNode<int, Dim>
     inline void overwrite(const typename NodeBase::Ptr &other) override
     {
         KDTreeNode *other_ptr = (KDTreeNode*) other.get();
-        points.insert(points.end(),
-                      other_ptr->points.begin(),
-                      other_ptr->points.end());
+        if(other_ptr->distribution) {
+            if(!distribution || distribution->getN() == 0) {
+                if(other_ptr->distribution && other_ptr->distribution->getN() > 0) {
+                    distribution = other_ptr->distribution;
+                }
+            } else {
+                if(other_ptr->distribution && other_ptr->distribution->getN() > 0)
+                    (*distribution) += *(other_ptr->distribution);
+            }
+        }
     }
 
     inline void split(const typename NodeBase::Ptr &other) override
     {
         NodeBase::split(other);
-        points.clear();
-    }
-
-    inline DistributionType* get()
-    {
-        std::lock_guard<std::mutex> lock(update_mutex);
-        if(!distribution || distribution->getN() != points.size()) {
-            distribution.reset(new DistributionType);
-            for(const PointType &p : points) {
-                distribution->add(p);
-            }
-        }
-        return distribution.get();
+        distribution.reset();
     }
 };
 
@@ -104,11 +104,12 @@ struct KDTreeInterface
 
     inline typename NodeType::Ptr create(const typename NodeType::PointType &_p)
     {
-        NodeType *node = new NodeType;
-        node->points.emplace_back(_p);
+        NodeType *node = new NodeType(_p);
+
         for(std::size_t i = 0 ; i < Dim ; ++i) {
             node->index[i] = floor(_p(i) / resolution[i]);
         }
+
         return typename NodeType::Ptr(node);
     }
 
@@ -122,9 +123,10 @@ struct KDTreeInterface
         for(std::size_t i = 0 ; i < Dim ; ++i) {
             index[i] = floor(_p(i) / resolution[i]);
         }
+
         typename NodeType::Ptr node;
         if(_tree->find(index, node)) {
-            return ((NodeType *) node.get())->get();
+            return ((NodeType*) node.get())->distribution.get();
         }
 
         return nullptr;
@@ -161,11 +163,10 @@ struct KDTreeInterface
         std::vector<typename NodeType::Ptr> leaves;
         _tree->getLeaves(leaves);
         for(typename NodeType::Ptr &leaf : leaves) {
-            NodeType *node = (NodeType*) leaf.get();
+            NodeType *node = leaf.get();
             DistributionType &distr = _distributions[node->cluster];
-            for(auto &p : node->points) {
-                distr.add(p);
-            }
+            if(node->distribution)
+                distr += *(node->distribution);
         }
     }
 

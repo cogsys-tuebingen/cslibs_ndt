@@ -5,6 +5,7 @@
 #include <ndt/matching/matcher.hpp>
 #include <ndt/data/pointcloud.hpp>
 #include <ndt/math/angle.hpp>
+#include <ndt/math/hausdorff.hpp>
 
 #include <array>
 #include <fstream>
@@ -254,7 +255,21 @@ public:
         transformation  = translation * rotation * _prior_transformation;
         _transformation = transformation;
 
-        return max_score;
+        /// todo exchange through kdtree nn ...
+        std::size_t accepted = 0;
+        std::size_t size_valid = 0;
+        for(std::size_t i = 0 ; i < _dst.size ; ++i) {
+            if(_src.mask[i] == PointCloudType::VALID) {
+                PointType p = transformation * _src.points[i];
+                double h = ndt::math::hausdorff<2>(p, _dst);
+                if(h < 0.1)
+                    ++accepted;
+                ++size_valid;
+            }
+        }
+
+        return accepted / (double) size_valid;
+
     }
 
     void printDebugInfo()

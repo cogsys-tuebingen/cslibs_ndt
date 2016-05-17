@@ -262,7 +262,7 @@ public:
             if(_src.mask[i] == PointCloudType::VALID) {
                 PointType p = transformation * _src.points[i];
                 double h = ndt::math::hausdorff<2>(p, _dst);
-                if(h < 0.1)
+                if(h < 0.5)
                     ++accepted;
                 ++size_valid;
             }

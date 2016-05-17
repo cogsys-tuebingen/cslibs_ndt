@@ -8,6 +8,9 @@ namespace math {
 
 inline double wrapAngle(const double angle )
 {
+    if(fabs(angle) < _2_M_PI)
+        return angle;
+
     return angle - _2_M_PI * floor( angle / _2_M_PI );
 }
 }

@@ -16,7 +16,7 @@
 
 namespace ndt {
 namespace matching {
-class MultiGridMatcher2D : public Matcher<2> {
+class MultiGridMatcher2DLS : public Matcher<2> {
 public:
     typedef grid::MultiGrid<2>                         GridType;
     typedef typename GridType::DistributionType        DistributionType;
@@ -30,14 +30,63 @@ public:
     typedef Eigen::Rotation2Dd                         RotationType;
     typedef Eigen::Vector3d                            GradientType;
 
+    struct LineSearch {
+        double min;
+        double max;
+        double value;
+        bool   lower;
 
-    MultiGridMatcher2D(const Parameters &_params = Parameters()) :
+        LineSearch(const double _min,
+                   const double _max) :
+            min(_min),
+            max(_max),
+            value((max - min) / 2.0),
+            lower(false)
+        {
+        }
+
+        void reset(const double _min,
+                   const double _max)
+        {
+            min = _min;
+            max = _max;
+            value = ((max - min)  / 2.0);
+            lower = false;
+        }
+
+        double next(const bool success)
+        {
+            if(success) {
+                if(lower) {
+                    max = value;
+                } else {
+                    min = value;
+                }
+                value = (max - min) / 2.0;
+            } else {
+                lower = !lower;
+            }
+
+            if(lower) {
+                return (value - min) / 2.0;
+            } else {
+                return (max - value) / 2.0;
+            }
+        }
+
+
+
+    };
+
+
+    MultiGridMatcher2DLS(const Parameters &_params = Parameters()) :
         BaseClass(_params),
+        line_search(0.001, _params.alpha),
         rotation(0.0)
     {
     }
 
-    virtual ~MultiGridMatcher2D()
+    virtual ~MultiGridMatcher2DLS()
     {
     }
 
@@ -187,6 +236,9 @@ public:
             }
             /// now we have to check wether the score increased or not
             /// if not, we have to adjust the step size
+            ///
+            ///  use line search to determine lambda
+            ///
             if(current_max_score < max_score) {
                 tx      = prev_tx;
                 ty      = prev_ty;
@@ -309,7 +361,14 @@ protected:
 
     std::size_t                 iteration;
     LambdaType                  lambda;
+    LineSearch                  line_search;
     std::size_t                 step_corrections;
+
+    void lineSearch(const PointCloudType &_src,
+                    const GradientType   &_g)
+    {
+        /// here we optimize lambda
+    }
 
 };
 }

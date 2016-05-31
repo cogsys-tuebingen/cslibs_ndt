@@ -29,7 +29,7 @@ void renderGrid(Grid2D        &grid,
             if(distr == nullptr)
                 continue;
 
-            double value = distr->sampleNonNoramlized(p);
+            double value = distr->sampleNonNormalized(p);
             if(value > max_value) {
                 max_value = value;
             }

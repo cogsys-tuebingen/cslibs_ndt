@@ -106,7 +106,7 @@ public:
                         continue;
                     DistributionType &distribution = *distribution_ptr;
 
-                    s = distribution.sampleNonNoramlized(p, q);
+                    s = distribution.sampleNonNormalized(p, q);
                     distribution.getMean(mean);
                     distribution.getInverseCovariance(inverse_covariance);
 

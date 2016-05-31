@@ -1,6 +1,7 @@
 /// PROJECT
 #include <ndt/data/pointcloud.hpp>
 #include <ndt/matching/multi_grid_matcher_2D.hpp>
+#include <ndt/matching/multi_grid_matcher_2D_ls.hpp>
 #include <ndt/visualization/multi_grid.hpp>
 #include <ndt/visualization/points.hpp>
 #include <ndt/math/hausdorff.hpp>
@@ -18,7 +19,7 @@ void linspace(const double min,
     }
 }
 
-typedef ndt::matching::KDTreeMatcher2D      MultiGridMatcher2D;
+typedef ndt::matching::MultiGridMatcher2DLS MultiGridMatcher2D;
 typedef ndt::visualization::MultiGrid2D     MultiGrid2D;
 typedef ndt::visualization::Point2D         Point2D;
 

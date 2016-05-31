@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     std::cout << roll.getMean() << std::endl;
     std::cout << roll.getCovariance() << std::endl;
     std::cout << roll.getCovariance().determinant() << std::endl;
-    std::cout << roll.sampleNonNoramlized(Point(0.0, 0.0)) << std::endl;
+    std::cout << roll.sampleNonNormalized(Point(0.0, 0.0)) << std::endl;
 
     roll += roll2;
     std::cout << "-------" << std::endl;
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
     std::cout << roll.getMean() << std::endl;
     std::cout << roll.getCovariance() << std::endl;
     std::cout << roll.getCovariance().determinant() << std::endl;
-    std::cout << roll.sampleNonNoramlized(Point(0.0, 0.0)) << std::endl;
+    std::cout << roll.sampleNonNormalized(Point(0.0, 0.0)) << std::endl;
 
 
     return 0;

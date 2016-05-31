@@ -198,7 +198,7 @@ public:
         return 0.0;
     }
 
-    inline double sampleNonNoramlized(const PointType &_p) {
+    inline double sampleNonNormalized(const PointType &_p) {
         assert(guardian_of_the_galaxy == 0xDEADBEEF);
 
         if(n_1 >= 2) {
@@ -212,7 +212,7 @@ public:
         return 0.0;
     }
 
-    inline double sampleNonNoramlized(const PointType &_p,
+    inline double sampleNonNormalized(const PointType &_p,
                                       PointType &_q)
     {
         assert(guardian_of_the_galaxy == 0xDEADBEEF);

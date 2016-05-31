@@ -115,7 +115,7 @@ public:
                     PointType            jac = PointType::Zero();
                     PointType            hes = PointType::Zero();
 
-                    double s = distribution.sampleNonNoramlized(p, q);
+                    double s = distribution.sampleNonNormalized(p, q);
                     distribution.getMean(mean);
                     distribution.getInverseCovariance(inverse_covariance);
 

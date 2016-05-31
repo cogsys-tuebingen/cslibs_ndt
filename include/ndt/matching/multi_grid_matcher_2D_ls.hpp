@@ -67,11 +67,7 @@ public:
                 lower = !lower;
             }
 
-            if(lower) {
-                return (value + min) / 2.0;
-            } else {
-                return (max + value) / 2.0;
-            }
+            return value;
         }
 
 

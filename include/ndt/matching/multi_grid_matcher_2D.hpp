@@ -20,7 +20,7 @@ class MultiGridMatcher2D : public Matcher<2> {
 public:
     typedef grid::MultiGrid<2>                         GridType;
     typedef typename GridType::DistributionType        DistributionType;
-    typedef typename GridType::DistributionSetType     DistributionsType;
+        typedef typename GridType::DistributionSetType     DistributionsType;
     typedef typename GridType::CovarianceMatrixType    CovarianceMatrixType;
     typedef typename GridType::SizeType                SizeType;
     typedef typename PointCloudType::PointType         PointType;
@@ -150,10 +150,10 @@ public:
                                         +(-inverse_covariance.row(1).dot(jac)));                /// (3)
                             hessian_entry(0,2)+= -s * (
                                         (-q_inverse_covariance(0) * -g_dot)                     /// (1)
-                                       +(-jac.transpose() * inverse_covariance.col(0)));        /// (3)
+                                        +(-jac.transpose() * inverse_covariance.col(0)));        /// (3)
                             hessian_entry(1,2)+= -s * (
                                         (-q_inverse_covariance(1) * -g_dot )                    /// (1)
-                                       +(-jac.transpose() * inverse_covariance.col(1)));        /// (3)
+                                        +(-jac.transpose() * inverse_covariance.col(1)));        /// (3)
                             hessian_entry(2,2)+= -s * (
                                         (-g_dot * -g_dot)                                       /// (1)
                                         +(-q_inverse_covariance.transpose() * hes)              /// (2)
@@ -191,15 +191,12 @@ public:
                 tx      = prev_tx;
                 ty      = prev_ty;
                 phi     = prev_phi;
-                lambda[0] *= params.alpha;
-                lambda[1] *= params.alpha;
-                lambda[2] *= params.alpha;
+                lambda *= params.alpha;
 
                 rotation        = RotationType(phi);
                 translation     = TranslationType(tx, ty);
                 transformation  = translation * rotation * _prior_transformation;
                 ++step_corrections;
-                lambda *= params.alpha;
             } else {
                 if(iteration > 0 &&
                         epsTrans(tx, prev_tx) &&
@@ -268,7 +265,26 @@ public:
             }
         }
 
-        return accepted / (double) size_valid;
+        if(size_valid > 0)
+            return accepted / (double) size_valid;
+        else
+            return 0;
+        //        double p_src = 0;
+        //        std::size_t size_valid = 0;
+        //        for(std::size_t i = 0 ; i < _dst.size ; ++i) {
+        //            if(_src.mask[i] == PointCloudType::VALID) {
+        //                PointType p = transformation * _src.points[i];
+        //                double h = math::hausdorff<2>(p, _dst);
+
+        //                if(h != std::numeric_limits<double>::infinity())
+        //                    p_src += exp(-2.0*h);
+        //                ++size_valid;
+        //            }
+        //        }
+        //        if(size_valid == 0)
+        //            return 0;
+        //        else
+        //            return p_src / size_valid;
 
     }
 

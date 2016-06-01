@@ -112,7 +112,6 @@ add_library(ndt
     include/ndt/grid/mask.hpp
 
     include/ndt/tree/kdtree.hpp
-    include/ndt/tree/kdtree_confidence.hpp
 
     ${OPENCV_DEPENDENT_SRCS}
     ${MRPT_DEPENDENT_SRCS}

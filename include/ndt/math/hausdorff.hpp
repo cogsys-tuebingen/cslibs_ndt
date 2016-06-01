@@ -95,7 +95,7 @@ inline double hausdorffMPE(const ndt::data::Pointcloud<Dim> &_src,
     /// this yields almost always 0 ... try this little workaround
 
     if(_src.size == 0)
-        return std::numeric_limits<double>::infinity();
+        return 0;
 
     double p_src = 0.0;
     std::size_t size_valid = 0;
@@ -107,7 +107,7 @@ inline double hausdorffMPE(const ndt::data::Pointcloud<Dim> &_src,
     }
 
     if(size_valid == 0)
-        return std::numeric_limits<double>::infinity();
+        return 0;
     else
         return p_src / size_valid;
 }

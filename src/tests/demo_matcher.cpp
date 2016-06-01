@@ -19,9 +19,10 @@ void linspace(const double min,
     }
 }
 
-typedef ndt::matching::MultiGridMatcher2DLS MultiGridMatcher2D;
+typedef ndt::matching::MultiGridMatcher2D   MultiGridMatcher2D;
 typedef ndt::visualization::MultiGrid2D     MultiGrid2D;
 typedef ndt::visualization::Point2D         Point2D;
+//
 
 int main(int argc, char *argv[])
 {

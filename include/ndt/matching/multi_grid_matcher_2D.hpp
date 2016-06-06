@@ -255,9 +255,16 @@ public:
         /// todo exchange through kdtree nn ...
         std::size_t accepted = 0;
         std::size_t size_valid = 0;
+        DistributionType matching_distribution;
         for(std::size_t i = 0 ; i < _dst.size ; ++i) {
             if(_src.mask[i] == PointCloudType::VALID) {
                 PointType p = transformation * _src.points[i];
+                std::size_t nn_id = ndt::math::nearestNeighbour<2>(_dst, p);
+                if(nn_id != std::numeric_limits<std::size_t>::infinity()) {
+                    PointType nn = _dst.points[nn_id];
+                    matching_distribution.add(nn - p);
+                }
+
                 double h = ndt::math::hausdorff<2>(p, _dst);
                 if(h < 0.5)
                     ++accepted;

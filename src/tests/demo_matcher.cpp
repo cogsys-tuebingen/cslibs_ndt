@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
         MultiGridMatcher2D::Parameters params;
         params.eps_rot = 1e-6;
         params.eps_trans = 1e-6;
-        params.alpha = 1.0; // 1.45;
+        params.alpha = 2.0; // 1.45;
         params.lambda = MultiGridMatcher2D::LambdaType::Constant(0.1);
         std::chrono::time_point<std::chrono::system_clock> start =
                 std::chrono::system_clock::now();
@@ -98,6 +98,9 @@ int main(int argc, char *argv[])
         for(MultiGridMatcher2D::PointType &p : points_src_corr) {
             p = transformation * p;
         }
+
+        std::cout << "hausdorff covariance" << std::endl;
+        std::cout << ndt::math::haussdorffCovariance<2>(points_dst, points_src_corr) << std::endl;
 
 
         multi_matcher.printDebugInfo();

@@ -1,6 +1,7 @@
 /// PROJECT
 #include <ndt/data/pointcloud.hpp>
 #include <ndt/matching/multi_grid_matcher_2D.hpp>
+#include <ndt/matching/multi_grid_matcher_2D_ls.hpp>
 #include <ndt/visualization/multi_grid.hpp>
 #include <ndt/visualization/points.hpp>
 #include <ndt/math/hausdorff.hpp>
@@ -18,9 +19,10 @@ void linspace(const double min,
     }
 }
 
-typedef ndt::matching::KDTreeMatcher2D      MultiGridMatcher2D;
+typedef ndt::matching::MultiGridMatcher2D   MultiGridMatcher2D;
 typedef ndt::visualization::MultiGrid2D     MultiGrid2D;
 typedef ndt::visualization::Point2D         Point2D;
+//
 
 int main(int argc, char *argv[])
 {
@@ -82,7 +84,7 @@ int main(int argc, char *argv[])
         MultiGridMatcher2D::Parameters params;
         params.eps_rot = 1e-6;
         params.eps_trans = 1e-6;
-        params.alpha = 1.45;
+        params.alpha = 2.0; // 1.45;
         params.lambda = MultiGridMatcher2D::LambdaType::Constant(0.1);
         std::chrono::time_point<std::chrono::system_clock> start =
                 std::chrono::system_clock::now();
@@ -96,6 +98,9 @@ int main(int argc, char *argv[])
         for(MultiGridMatcher2D::PointType &p : points_src_corr) {
             p = transformation * p;
         }
+
+        std::cout << "hausdorff covariance" << std::endl;
+        std::cout << ndt::math::haussdorffCovariance<2>(points_dst, points_src_corr) << std::endl;
 
 
         multi_matcher.printDebugInfo();

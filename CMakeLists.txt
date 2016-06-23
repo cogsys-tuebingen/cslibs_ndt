@@ -102,6 +102,7 @@ set(NDT_HEADERS
 
     include/ndt/matching/matcher.hpp
     include/ndt/matching/multi_grid_matcher_2D.hpp
+    include/ndt/matching/multi_grid_matcher_2D_ls.hpp
     include/ndt/matching/multi_matcher.hpp
     include/ndt/matching/single_grid_matcher_2D.hpp
     include/ndt/matching/kdtree_matcher_2D.hpp
@@ -111,7 +112,6 @@ set(NDT_HEADERS
     include/ndt/grid/mask.hpp
 
     include/ndt/tree/kdtree.hpp
-    include/ndt/tree/kdtree_confidence.hpp
 
     ${OPENCV_DEPENDENT_SRCS}
     ${MRPT_DEPENDENT_SRCS}

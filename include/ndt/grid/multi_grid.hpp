@@ -163,7 +163,7 @@ public:
         for(std::size_t i = 0 ; i < data_size ; ++i) {
             DistributionType *distr = grid[i].get(_p);
             if(distr != nullptr)
-                result += distr->sampleNonNoramlized(_p);
+                result += distr->sampleNonNormalized(_p);
         }
         return result;
     }

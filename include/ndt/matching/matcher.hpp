@@ -91,6 +91,13 @@ protected:
         return fabs(a - b) < params.eps_rot;
     }
 
+    inline bool eps(const double a,
+                    const double b,
+                    const double e)
+    {
+        return fabs(a - b) < e;
+    }
+
 };
 }
 }

@@ -28,20 +28,22 @@ public:
         covariance(MatrixType::Zero()),
         correlated(MatrixType::Zero()),
         inverse_covariance(MatrixType::Zero()),
+        eigen_values(EigenValueSetType::Zero()),
+        eigen_vectors(EigenVectorSetType::Zero()),
         determinant(0.0),
         guardian_of_the_galaxy(0xDEADBEEF),
         n(1),
         n_1(0),
         lambda_ratio(1e-2),
         sqrt_2_M_PI(sqrt(2 * M_PI)),
-        dirty(false)
-
+        dirty(false),
+        dirty_eigen(false)
     {
     }
 
     Distribution(const Distribution &other)
     {
-        std::lock_guard<std::mutex> lock(other.update_mutex);
+        std::lock_guard<std::recursive_mutex> lock(other.update_mutex);
         mean = other.mean;
         covariance = other.covariance;
         correlated = other.correlated;
@@ -52,23 +54,26 @@ public:
         n_1 = other.n_1;
         lambda_ratio = other.lambda_ratio;
         dirty = true;
+        dirty_eigen = true;
     }
 
     inline void reset()
     {
-        std::lock_guard<std::mutex> lock(update_mutex);
+        std::lock_guard<std::recursive_mutex> lock(update_mutex);
         mean = PointType::Zero();
         covariance = MatrixType::Zero();
         correlated = MatrixType::Zero();
         n = 1;
         n_1 = 0;
         dirty = true;
+        dirty_eigen = true;
     }
 
+    /// Modification
     inline void add(const PointType &_p)
     {
         assert(guardian_of_the_galaxy == 0xDEADBEEF);
-        std::lock_guard<std::mutex> lock(update_mutex);
+        std::lock_guard<std::recursive_mutex> lock(update_mutex);
         mean = (mean * n_1 + _p) / n;
         for(std::size_t i = 0 ; i < Dim ; ++i) {
             for(std::size_t j = i ; j < Dim ; ++j) {
@@ -78,14 +83,15 @@ public:
         ++n;
         ++n_1;
         dirty = true;
+        dirty_eigen = true;
         assert(guardian_of_the_galaxy == 0xDEADBEEF);
     }
 
     inline Distribution & operator += (const Distribution &other)
     {
         assert(guardian_of_the_galaxy == 0xDEADBEEF);
-        std::lock_guard<std::mutex> self_lock(update_mutex);
-        std::lock_guard<std::mutex> other_lock(other.update_mutex);
+        std::lock_guard<std::recursive_mutex> self_lock(update_mutex);
+        std::lock_guard<std::recursive_mutex> other_lock(other.update_mutex);
 
         std::size_t _n = n_1 + other.n_1;
         PointType   _mean = (mean * n_1 + other.mean * other.n_1) / (double) _n;
@@ -95,10 +101,12 @@ public:
         mean = _mean;
         correlated = _corr;
         dirty = true;
+        dirty_eigen = true;
         assert(guardian_of_the_galaxy == 0xDEADBEEF);
         return *this;
     }
 
+    /// Distribution properties
     inline std::size_t getN() const
     {
         assert(guardian_of_the_galaxy == 0xDEADBEEF);
@@ -167,6 +175,65 @@ public:
         }
     }
 
+    inline EigenValueSetType getEigenValues(const bool _abs = false)
+    {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
+        if(n_1 >= 2) {
+            if(dirty_eigen)
+                updateEigen();
+
+            if(_abs)
+                return eigen_values.cwiseAbs();
+            else
+                return eigen_values;
+        }
+        return EigenValueSetType::Zero();
+    }
+
+    inline void getEigenValues(EigenValueSetType &_eigen_values,
+                               const double _abs = false)
+    {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
+        if(n_1 >= 2) {
+            if(dirty_eigen)
+                updateEigen();
+            if(_abs)
+                _eigen_values = eigen_values.cwiseAbs();
+            else
+                _eigen_values = eigen_values;
+        } else {
+            _eigen_values = EigenValueSetType::Zero();
+        }
+    }
+
+    inline EigenVectorSetType getEigenVectors()
+    {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
+        if(n_1 >= 2) {
+            if(dirty_eigen)
+                updateEigen();
+            return eigen_vectors;
+        }
+        return EigenVectorSetType::Zero();
+    }
+
+    inline void getEigenVectors(EigenVectorSetType &_eigen_vectors)
+    {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
+        if(n_1 >= 2) {
+            if(dirty_eigen)
+                updateEigen();
+            _eigen_vectors = eigen_vectors;
+        } else {
+            _eigen_vectors = EigenVectorSetType::Zero();
+        }
+    }
+
+    /// Evaluation
     inline double sample(const PointType &_p)
     {
         assert(guardian_of_the_galaxy == 0xDEADBEEF);
@@ -198,7 +265,7 @@ public:
         return 0.0;
     }
 
-    inline double sampleNonNoramlized(const PointType &_p) {
+    inline double sampleNonNormalized(const PointType &_p) {
         assert(guardian_of_the_galaxy == 0xDEADBEEF);
 
         if(n_1 >= 2) {
@@ -212,7 +279,7 @@ public:
         return 0.0;
     }
 
-    inline double sampleNonNoramlized(const PointType &_p,
+    inline double sampleNonNormalized(const PointType &_p,
                                       PointType &_q)
     {
         assert(guardian_of_the_galaxy == 0xDEADBEEF);
@@ -228,25 +295,29 @@ public:
     }
 
 private:
-    PointType  mean;
-    MatrixType covariance;
-    MatrixType correlated;
-    MatrixType inverse_covariance;
-    double     determinant;
-    mutable std::mutex update_mutex;
-    int        guardian_of_the_galaxy;
+    PointType                    mean;
+    MatrixType                   covariance;
+    MatrixType                   correlated;
+    MatrixType                   inverse_covariance;
+    EigenValueSetType            eigen_values;
+    EigenVectorSetType           eigen_vectors;
+
+    double                       determinant;
+    mutable std::recursive_mutex update_mutex;
+    int                          guardian_of_the_galaxy;
 
     std::size_t n;
     std::size_t n_1;            /// actual amount of points in distribution
     double      lambda_ratio;
     double      sqrt_2_M_PI;
     bool        dirty;
+    bool        dirty_eigen;
 
-    void update()
+    inline void update()
     {
         assert(guardian_of_the_galaxy == 0xDEADBEEF);
 
-        std::lock_guard<std::mutex> lock(update_mutex);
+        std::lock_guard<std::recursive_mutex> lock(update_mutex);
         double scale = n_1 / (double)(n_1 - 1);
         for(std::size_t i = 0 ; i < Dim ; ++i) {
             for(std::size_t j = i ; j < Dim ; ++j) {
@@ -256,10 +327,9 @@ private:
         }
 
         if(limit_covariance) {
-            Eigen::EigenSolver<MatrixType> solver;
-            solver.compute(covariance);
-            EigenVectorSetType Q = solver.eigenvectors().real();
-            EigenValueSetType  eigen_values  = solver.eigenvalues().real();
+            if(dirty_eigen)
+                updateEigen();
+
             double max_lambda = std::numeric_limits<double>::lowest();
             for(std::size_t i = 0 ; i < Dim ; ++i) {
                 if(eigen_values(i) > max_lambda)
@@ -274,8 +344,8 @@ private:
                     Lambda(i,i) = eigen_values(i);
                 }
             }
-            covariance = Q * Lambda * Q.transpose();
-            inverse_covariance = Q * Lambda.inverse() * Q.transpose();
+            covariance = eigen_vectors * Lambda * eigen_vectors.transpose();
+            inverse_covariance = eigen_vectors * Lambda.inverse() * eigen_vectors.transpose();
         } else {
             inverse_covariance = covariance.inverse();
         }
@@ -283,6 +353,16 @@ private:
         dirty = false;
         assert(guardian_of_the_galaxy == 0xDEADBEEF);
 
+    }
+
+    inline void updateEigen()
+    {
+        std::lock_guard<std::recursive_mutex> lock(update_mutex);
+        Eigen::EigenSolver<MatrixType> solver;
+        solver.compute(covariance);
+        eigen_vectors = solver.eigenvectors().real();
+        eigen_values  = solver.eigenvalues().real();
+        dirty_eigen = false;
     }
 };
 }

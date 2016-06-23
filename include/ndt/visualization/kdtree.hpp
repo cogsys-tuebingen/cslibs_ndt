@@ -33,7 +33,7 @@ void renderTree(KDTree2D::Ptr     &tree,
             if(distr == nullptr)
                 continue;
 
-            double value = distr->sampleNonNoramlized(p);
+            double value = distr->sampleNonNormalized(p);
             if(value > max_value) {
                 max_value = value;
             }
@@ -75,7 +75,7 @@ void renderClusterDistributions(KDTree2D::Ptr     &tree,
                 KDTreeInterface2D::DistributionType &distribution = distributions_entry.second;
                 if(distribution.getN() < 3)
                     continue;
-                    value += distribution.sampleNonNoramlized(p);
+                    value += distribution.sampleNonNormalized(p);
             }
 
             if(value > max_value) {

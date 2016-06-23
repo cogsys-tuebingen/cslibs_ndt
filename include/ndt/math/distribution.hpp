@@ -28,6 +28,8 @@ public:
         covariance(MatrixType::Zero()),
         correlated(MatrixType::Zero()),
         inverse_covariance(MatrixType::Zero()),
+        eigen_values(EigenValueSetType::Zero()),
+        eigen_vectors(EigenVectorSetType::Zero()),
         determinant(0.0),
         guardian_of_the_galaxy(0xDEADBEEF),
         n(1),
@@ -65,6 +67,7 @@ public:
         dirty = true;
     }
 
+    /// Modification
     inline void add(const PointType &_p)
     {
         assert(guardian_of_the_galaxy == 0xDEADBEEF);
@@ -99,6 +102,7 @@ public:
         return *this;
     }
 
+    /// Distribution properties
     inline std::size_t getN() const
     {
         assert(guardian_of_the_galaxy == 0xDEADBEEF);
@@ -167,6 +171,57 @@ public:
         }
     }
 
+    inline EigenValueSetType getEigenValues()
+    {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
+        if(n_1 >= 2) {
+            if(dirty)
+                update();
+            return eigen_values;
+        }
+        return EigenValueSetType::Zero();
+    }
+
+    inline void getEigenValues(EigenValueSetType &_eigen_values)
+    {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
+        if(n_1 >= 2) {
+            if(dirty)
+                update();
+            _eigen_values = eigen_values;
+        } else {
+            _eigen_values = EigenValueSetType::Zero();
+        }
+    }
+
+    inline EigenVectorSetType getEigenVectors()
+    {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
+        if(n_1 >= 2) {
+            if(dirty)
+                update();
+            return eigen_vectors;
+        }
+        return EigenVectorSetType::Zero();
+    }
+
+    inline void getEigenVectors(EigenVectorSetType &_eigen_vectors)
+    {
+        assert(guardian_of_the_galaxy == 0xDEADBEEF);
+
+        if(n_1 >= 2) {
+            if(dirty)
+                update();
+            _eigen_vectors = eigen_vectors;
+        } else {
+            _eigen_vectors = EigenVectorSetType::Zero();
+        }
+    }
+
+    /// Evaluation
     inline double sample(const PointType &_p)
     {
         assert(guardian_of_the_galaxy == 0xDEADBEEF);
@@ -228,13 +283,16 @@ public:
     }
 
 private:
-    PointType  mean;
-    MatrixType covariance;
-    MatrixType correlated;
-    MatrixType inverse_covariance;
-    double     determinant;
+    PointType          mean;
+    MatrixType         covariance;
+    MatrixType         correlated;
+    MatrixType         inverse_covariance;
+    EigenValueSetType  eigen_values;
+    EigenVectorSetType eigen_vectors;
+
+    double             determinant;
     mutable std::mutex update_mutex;
-    int        guardian_of_the_galaxy;
+    int                guardian_of_the_galaxy;
 
     std::size_t n;
     std::size_t n_1;            /// actual amount of points in distribution
@@ -255,11 +313,12 @@ private:
             }
         }
 
+        Eigen::EigenSolver<MatrixType> solver;
+        solver.compute(covariance);
+        eigen_vectors = solver.eigenvectors().real();
+        eigen_values  = solver.eigenvalues().real();
+
         if(limit_covariance) {
-            Eigen::EigenSolver<MatrixType> solver;
-            solver.compute(covariance);
-            EigenVectorSetType Q = solver.eigenvectors().real();
-            EigenValueSetType  eigen_values  = solver.eigenvalues().real();
             double max_lambda = std::numeric_limits<double>::lowest();
             for(std::size_t i = 0 ; i < Dim ; ++i) {
                 if(eigen_values(i) > max_lambda)
@@ -274,8 +333,8 @@ private:
                     Lambda(i,i) = eigen_values(i);
                 }
             }
-            covariance = Q * Lambda * Q.transpose();
-            inverse_covariance = Q * Lambda.inverse() * Q.transpose();
+            covariance = eigen_vectors * Lambda * eigen_vectors.transpose();
+            inverse_covariance = eigen_vectors * Lambda.inverse() * eigen_vectors.transpose();
         } else {
             inverse_covariance = covariance.inverse();
         }

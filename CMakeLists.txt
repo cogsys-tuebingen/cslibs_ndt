@@ -88,7 +88,7 @@ include_directories(
 )
 
 ## NDT ##############################################################################
-add_library(ndt
+set(NDT_HEADERS
     include/ndt/data/pointcloud.hpp
     include/ndt/data/laserscan.hpp
 
@@ -117,21 +117,12 @@ add_library(ndt
     ${MRPT_DEPENDENT_SRCS}
 )
 
-set_target_properties(ndt PROPERTIES LINKER_LANGUAGE CXX)
-
-target_link_libraries(ndt
-    ${catkin_LIBRARIES}
-    yaml-cpp
-)
+add_custom_target(show_headers_in_qt SOURCES ${NDT_HEADERS})
 
 if(${BUILD_TESTS} AND ${OpenCV_FOUND})
 ## TESTS ############################################################################
 add_executable(ndt_test_distribution
     src/tests/test_distribution.cpp
-)
-
-target_link_libraries(ndt_test_distribution
-    ndt
 )
 
 add_executable(ndt_test_mask
@@ -153,7 +144,7 @@ add_executable(ndt_demo_grid_visualization
 )
 target_link_libraries(ndt_demo_grid_visualization
     ${OpenCV_LIBRARIES}
-    ndt
+    yaml-cpp
 )
 
 add_executable(ndt_demo_matcher
@@ -162,7 +153,7 @@ add_executable(ndt_demo_matcher
 
 target_link_libraries(ndt_demo_matcher
     ${OpenCV_LIBRARIES}
-    ndt
+    yaml-cpp
 )
 endif()
 
@@ -175,7 +166,7 @@ add_executable(ndt_single_grid_scan_matching_node
 target_link_libraries(ndt_single_grid_scan_matching_node
     ${catkin_LIBRARIES}
     ${OpenCV_LIBRARIES}
-    ndt
+    yaml-cpp
 )
 
 add_executable(ndt_multi_grid_scan_matching_node
@@ -185,7 +176,7 @@ add_executable(ndt_multi_grid_scan_matching_node
 target_link_libraries(ndt_multi_grid_scan_matching_node
     ${catkin_LIBRARIES}
     ${OpenCV_LIBRARIES}
-    ndt
+    yaml-cpp
 )
 
 add_executable(ndt_hierarchic_scan_matching_node
@@ -195,7 +186,7 @@ add_executable(ndt_hierarchic_scan_matching_node
 target_link_libraries(ndt_hierarchic_scan_matching_node
     ${catkin_LIBRARIES}
     ${OpenCV_LIBRARIES}
-    ndt
+    yaml-cpp
 )
 
 add_executable(ndt_kdtree_scan_matching_node
@@ -205,7 +196,7 @@ add_executable(ndt_kdtree_scan_matching_node
 target_link_libraries(ndt_kdtree_scan_matching_node
     ${catkin_LIBRARIES}
     ${OpenCV_LIBRARIES}
-    ndt
+    yaml-cpp
 )
 
 add_executable(ndt_kdtree_cluster_node
@@ -215,7 +206,7 @@ add_executable(ndt_kdtree_cluster_node
 target_link_libraries(ndt_kdtree_cluster_node
     ${catkin_LIBRARIES}
     ${OpenCV_LIBRARIES}
-    ndt
+    yaml-cpp
 )
 endif()
 
@@ -227,6 +218,6 @@ add_executable(ndt_scan_matcher
 
 target_link_libraries(ndt_scan_matcher
     ${OpenCV_LIBRARIES}
-    ndt
+    yaml-cpp
 )
 endif()

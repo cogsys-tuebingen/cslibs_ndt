@@ -73,7 +73,7 @@ add_definitions(-Ofast -march=native -ffast-math)
 ## CATKIN ###########################################################################
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ndt
+  LIBRARIES 
   CATKIN_DEPENDS kdtree
 #  DEPENDS system_lib
 )

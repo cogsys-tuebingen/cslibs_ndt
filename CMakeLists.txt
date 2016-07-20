@@ -105,13 +105,13 @@ set(NDT_HEADERS
     include/ndt/matching/multi_grid_matcher_2D_ls.hpp
     include/ndt/matching/multi_matcher.hpp
     include/ndt/matching/single_grid_matcher_2D.hpp
-    #include/ndt/matching/kdtree_matcher_2D.hpp
+    include/ndt/matching/kdtree_matcher_2D.hpp
 
     include/ndt/grid/grid.hpp
     include/ndt/grid/multi_grid.hpp
     include/ndt/grid/mask.hpp
 
-    #include/ndt/tree/kdtree.hpp
+    include/ndt/tree/kdtree.hpp
 
     ${OPENCV_DEPENDENT_SRCS}
     ${MRPT_DEPENDENT_SRCS}

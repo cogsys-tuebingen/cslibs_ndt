@@ -5,7 +5,7 @@
 #include <ndt/visualization/multi_grid.hpp>
 #include <ndt/visualization/points.hpp>
 #include <ndt/math/hausdorff.hpp>
-//#include <ndt/matching/kdtree_matcher_2D.hpp>
+#include <ndt/matching/kdtree_matcher_2D.hpp>
 
 void linspace(const double min,
               const double max,

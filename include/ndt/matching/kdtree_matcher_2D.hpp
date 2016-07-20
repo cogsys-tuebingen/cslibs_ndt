@@ -21,22 +21,24 @@ class KDTreeMatcher2D : public Matcher<2> {
 
 
 public:
-    typedef tree::KDTreeNode<2>                     KDTreeNodeType;
-    typedef tree::KDTreeInterface<2>                KDTreeInterfaceType;
-    typedef KDTreeNodeType::KDTreeType              KDTreeType;
-    typedef KDTreeNodeType::DistributionType        DistributionType;
-    typedef KDTreeNodeType::CovarianceMatrixType    CovarianceMatrixType;
-    typedef KDTreeNodeType::PointType               PointType;
+
     typedef Eigen::Matrix<double,3,3>               HessianType;
     typedef Eigen::Translation2d                    TranslationType;
     typedef Eigen::Rotation2Dd                      RotationType;
     typedef Eigen::Vector3d                         GradientType;
+    typedef PointCloudType::PointType               PointType;
+    typedef ndt::math::Distribution<2, true>        DistributionType;
+    typedef DistributionType::MatrixType            CovarianceMatrixType;
 
+    typedef ndt::tree::Index<2>                                 IndexType;
+    typedef ndt::tree::NodeData<2>                              NodeDataType;
+    typedef kdtree::unbuffered::KDTree<IndexType, NodeDataType> KDTreeType;
+    typedef KDTreeType::NodeType                                KDNodeType;
 
     KDTreeMatcher2D(const Parameters &_params = Parameters(),
                     const bool _shuffle = false) :
         BaseClass(_params),
-        tree_interface(_params.resolution),
+        index(_params.resolution),
         shuffle(_shuffle),
         rotation(0.0)
     {
@@ -51,11 +53,6 @@ public:
         return tree;
     }
 
-    inline KDTreeInterfaceType &getInterface()
-    {
-        return tree_interface;
-    }
-
     inline double match(const PointCloudType &_dst,
                         const PointCloudType &_src,
                         TransformType        &_transformation,
@@ -67,7 +64,11 @@ public:
             /// TODO: Move Shuffle to tree insertion!
             std::random_shuffle(dst.points_data.begin(), dst.points_data.end());
         }
-        tree_interface.insert(dst, tree);
+
+        for(auto &p : dst.points_data) {
+            tree->insert_bulk(index.create(p), p);
+        }
+        tree->load_bulk();
 
         /// reset all the members
         tx        = 0.0;
@@ -102,11 +103,14 @@ public:
                 if(_src.mask[i] == PointCloudType::VALID) {
                     PointType p = transformation * _src.points[i];
 
-                    DistributionType *distribution_ptr = tree_interface.get(p, tree);
-                    if(distribution_ptr == nullptr)
+                    KDNodeType *node = tree->find(index.create(p));
+                    if(node == nullptr)
                         continue;
-                    DistributionType &distribution = *distribution_ptr;
-                    if(distribution_ptr->getN() < 3)
+                    if(!node->data.distribution)
+                        continue;
+
+                    DistributionType &distribution = *(node->data.distribution);
+                    if(distribution.getN() < 3)
                         continue;
 
                     PointType            mean;
@@ -277,8 +281,8 @@ public:
     }
 
 private:
-    typename KDTreeType::Ptr    tree;
-    KDTreeInterfaceType         tree_interface;
+    KDTreeType::Ptr             tree;
+    IndexType                   index;
     bool                        shuffle;
 
     double tx;

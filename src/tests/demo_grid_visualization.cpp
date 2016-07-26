@@ -2,6 +2,7 @@
 #include <ndt/visualization/points.hpp>
 #include <ndt/visualization/multi_grid.hpp>
 #include <ndt/data/pointcloud.hpp>
+#include <ndt/visualization/kdtree.hpp>
 
 void linspace(const double min,
               const double max,
@@ -15,8 +16,12 @@ void linspace(const double min,
     }
 }
 
-typedef ndt::visualization::MultiGrid2D MultiGrid2D;
-typedef ndt::visualization::Point2D     Point2D;
+typedef ndt::visualization::MultiGrid2D  MultiGrid2D;
+typedef ndt::visualization::Point2D      Point2D;
+typedef ndt::visualization::KDIndex2D    KDIndex2D;
+typedef ndt::visualization::KDNodeData2D KDNodeData2D;
+typedef ndt::visualization::KDTree2D     KDTree2D;
+typedef ndt::visualization::KDNode2D     KDNode2D;
 
 int main(int argc, char *argv[])
 {
@@ -58,8 +63,22 @@ int main(int argc, char *argv[])
     if(!multigrid.add(pointcloud))
         std::cerr << "some points could not be added" << std::endl;
 
-
     ndt::visualization::renderMultiGrid(multigrid, Point2D(-10, -10), Point2D(10,10), display);
+    cv::imshow("display", display);
+    while(true) {
+        int key = cv::waitKey(0) & 0xFF;
+        if(key == 27)
+            break;
+    }
+
+    KDIndex2D index({2.0, 2.0});
+    KDTree2D::Ptr  tree(new KDTree2D);
+    for(Point2D &p : points) {
+        tree->insert_bulk(index.create(p), p);
+    }
+    tree->load_bulk();
+
+    ndt::visualization::renderTree(tree, index, Point2D(-10, -10), Point2D(10,10), display);
     cv::imshow("display", display);
     while(true) {
         int key = cv::waitKey(0) & 0xFF;

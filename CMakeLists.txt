@@ -33,7 +33,7 @@ if(${OpenCV_FOUND})
 set(OPENCV_DEPENDENT_SRCS
     include/ndt/visualization/grid.hpp
     include/ndt/visualization/multi_grid.hpp
-    include/ndt/visualization/kdtree.hpp
+   # include/ndt/visualization/kdtree.hpp
     include/ndt/visualization/points.hpp
 )
 endif()

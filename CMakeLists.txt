@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ndt)
+project(cslibs_ndt)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -74,7 +74,7 @@ add_definitions(-Ofast -march=native -ffast-math)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES 
-  CATKIN_DEPENDS kdtree
+  CATKIN_DEPENDS cslibs_indexed_storage
 #  DEPENDS system_lib
 )
 

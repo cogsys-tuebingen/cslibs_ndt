@@ -10,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   pcl_conversions
   nav_msgs
-  kdtree
+  cslibs_indexed_storage
 )
 
 #set(CMAKE_BUILD_TYPE Debug)

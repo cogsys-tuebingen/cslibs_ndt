@@ -13,39 +13,37 @@ include(cmake/cslibs_ndt_add_unit_test_gtest.cmake)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  sensor_msgs
-  tf
-  pcl_conversions
-  nav_msgs
-  cslibs_indexed_storage
+    cslibs_math
+    cslibs_math_2d
+    cslibs_math_3d
+    cslibs_indexed_storage
 )
 
 #set(CMAKE_BUILD_TYPE Debug)
-set(BUILD_TESTS True)
-set(BUILD_NODES False)
-set(BUILD_TOOLS False)
+#set(BUILD_TESTS True)
+#set(BUILD_NODES False)
+#set(BUILD_TOOLS False)
 
 
 ## OpenCV ##########################################################################
-find_package(OpenCV QUIET)
-if(${OpenCV_FOUND})
-set(OPENCV_DEPENDENT_SRCS
-    include/ndt/visualization/grid.hpp
-    include/ndt/visualization/multi_grid.hpp
-   # include/ndt/visualization/kdtree.hpp
-    include/ndt/visualization/points.hpp
-)
-endif()
+#find_package(OpenCV QUIET)
+#if(${OpenCV_FOUND})
+#set(OPENCV_DEPENDENT_SRCS
+#    include/ndt/visualization/grid.hpp
+#    include/ndt/visualization/multi_grid.hpp
+#   # include/ndt/visualization/kdtree.hpp
+#    include/ndt/visualization/points.hpp
+#)
+#endif()
 ## MRPT ############################################################################
-find_package(MRPT QUIET)
-if(${MRPT_FOUND})
-    message("Building with MRPT support!")
-    add_definitions("-DMRPT")
-    set(MRPT_DEPENDENT_SRCS
-        include/ndt/conversion/convert_mrpt.hpp
-    )
-endif()
+#find_package(MRPT QUIET)
+#if(${MRPT_FOUND})
+#    message("Building with MRPT support!")
+#    add_definitions("-DMRPT")
+#    set(MRPT_DEPENDENT_SRCS
+#        include/ndt/conversion/convert_mrpt.hpp
+#    )
+#endif()
 
 ## CATKIN ###########################################################################
 catkin_package(

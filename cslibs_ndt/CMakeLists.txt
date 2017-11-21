@@ -9,15 +9,50 @@ include(cmake/cslibs_ndt_openmp.cmake)
 include(cmake/cslibs_ndt_show_headers.cmake)
 include(cmake/cslibs_ndt_add_unit_test_gtest.cmake)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
     cslibs_math
     cslibs_math_2d
     cslibs_math_3d
     cslibs_indexed_storage
 )
+
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES 
+  CATKIN_DEPENDS cslibs_indexed_storage
+#  DEPENDS system_lib
+)
+
+include_directories(
+    include
+    ${catkin_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIR}
+    ${OpenCV_INCLUDE_DIRS}
+)
+
+cslibs_ndt_show_headers()
+
+
+add_executable(tmp
+    src/tmp.cpp
+)
+
+target_link_libraries(tmp
+    ${catkin_LIBRARIES}
+)
+
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+
+
+
+
+#install(TARGETS ${PROJECT_NAME}_static_maps
+#                ${PROJECT_NAME}_dynamic_maps
+#        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#        RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION})
+
 
 #set(CMAKE_BUILD_TYPE Debug)
 #set(BUILD_TESTS True)
@@ -45,24 +80,6 @@ find_package(catkin REQUIRED COMPONENTS
 #    )
 #endif()
 
-## CATKIN ###########################################################################
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES 
-  CATKIN_DEPENDS cslibs_indexed_storage
-#  DEPENDS system_lib
-)
-
-## INCLUDES #########################################################################
-include_directories(
-    ${catkin_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIR}
-    ${OpenCV_INCLUDE_DIRS}
-    ${MRPT_INCLUDE_DIRS}
-    include
-)
-
-cslibs_ndt_show_headers()
 
 #if(${BUILD_TESTS} AND ${OpenCV_FOUND})
 ### TESTS ############################################################################

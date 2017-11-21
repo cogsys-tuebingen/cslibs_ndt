@@ -43,12 +43,12 @@ public:
         return data_;
     }
 
-    inline double sample(const cslibs_math_2d::Point2d &p)
+    inline double sample(const cslibs_math_2d::Point2d &p) const
     {
         return data_.sample(p);
     }
 
-    inline void insert(const cslibs_math_2d::Point2d &p)
+    inline void add(const cslibs_math_2d::Point2d &p)
     {
         data_.add(p);
     }

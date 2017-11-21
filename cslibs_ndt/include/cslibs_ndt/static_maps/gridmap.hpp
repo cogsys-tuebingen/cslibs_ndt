@@ -33,56 +33,62 @@ public:
     using distribution_t        = DistributionContainer<2, limit_covariance>;
     using storage_t             = cis::Storage<distribution_t, index_t, cis::backend::array::Array>;
 
-    Gridmap(const pose_t        &origin,
-            const double         resolution) :
+    Gridmap(const pose_t   &origin,
+            const double    resolution,
+            const double    height,
+            const double    width) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
-        min_chunk_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
-        max_chunk_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
-        min_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
+        min_index_{{static_cast<int>(std::floor(origin.tx() * resolution_inv_),
+                                     std::floor(origin.ty() * resolution_inv_))}},
+        max_index_{{static_cast<int>(std::floor((origin.tx() + width)  * resolution_inv_),
+                                     std::floor((origin.ty() + height) * resolution_inv_))}},
         storage_(new storage_t)
     {
+        storage_->template set<cis::option::tags::array_offset>(min_index_[0],
+                                                                min_index_[1]);
+        storage_->template set<cis::option::tags::array_size>(static_cast<std::size_t>(max_index_[0] - min_index_[0] + 1),
+                                                              static_cast<std::size_t>(max_index_[1] - min_index_[1] + 1));
     }
 
     Gridmap(const double origin_x,
             const double origin_y,
             const double origin_phi,
-            const double resolution) :
+            const double resolution,
+            const double height,
+            const double width) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         w_T_m_(origin_x, origin_y, origin_phi),
         m_T_w_(w_T_m_.inverse()),
-        min_chunk_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
-        max_chunk_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
-        min_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
+        min_index_{{static_cast<int>(std::floor(origin_x * resolution_inv_),
+                                     std::floor(origin_y * resolution_inv_))}},
+        max_index_{{static_cast<int>(std::floor((origin_x + width)  * resolution_inv_),
+                                     std::floor((origin_y + height) * resolution_inv_))}},
         storage_(new storage_t)
     {
+        storage_->template set<cis::option::tags::array_offset>(min_index_[0],
+                                                                min_index_[1]);
+        storage_->template set<cis::option::tags::array_size>(static_cast<std::size_t>(max_index_[0] - min_index_[0] + 1),
+                                                              static_cast<std::size_t>(max_index_[1] - min_index_[1] + 1));
     }
 
     inline cslibs_math_2d::Point2d getMin() const
     {
         lock_t l(storage_mutex_);
-        return cslibs_math_2d::Point2d(min_chunk_index_[0] * resolution_,
-                min_chunk_index_[1] * resolution_);
+        return cslibs_math_2d::Point2d(w_T_m_.translation());
     }
 
     inline cslibs_math_2d::Point2d getMax() const
     {
         lock_t l(storage_mutex_);
-        return cslibs_math_2d::Point2d(max_chunk_index_[0] * resolution_,
-                max_chunk_index_[1] * resolution_);
+        return cslibs_math_2d::Point2d(w_T_m_.tx() + width_,
+                                       w_T_m_.ty() + height_);
     }
 
     inline cslibs_math_2d::Pose2d getOrigin() const
-    {
-        cslibs_math_2d::Transform2d origin = w_T_m_;
-        origin.translation() =  getMin();
-        return origin;
-    }
-
-    inline cslibs_math_2d::Pose2d getInitialOrigin() const
     {
         return w_T_m_;
     }
@@ -93,13 +99,13 @@ public:
         {
             lock_t l(storage_mutex_);
             const index_t index = toIndex(point);
-            distribution_t *distribution = storage_->get(index);
-            if(distribution == nullptr) {
+            if(storage_->get(index) == nullptr) {
                 distribution = &(storage_->insert(index, distribution_t()));
             }
-            updateChunkIndices(index);
         }
-
+        distribution->lock();
+        distribution->add(point);
+        distribution->unlock();
     }
 
     inline double at(const cslibs_math_2d::Point2d &point) const
@@ -116,16 +122,16 @@ public:
         return distribution != nullptr ? get() : 0.0;
     }
 
-    inline index_t getMinChunkIndex() const
+    inline index_t getMinIndex() const
     {
         lock_t l(storage_mutex_);
-        return min_chunk_index_;
+        return min_index_;
     }
 
-    inline index_t getMaxChunkIndex() const
+    inline index_t getMaxIndex() const
     {
         lock_t l(storage_mutex_);
-        return max_chunk_index_;
+        return max_index_;
     }
 
     inline distribution_t const * getDistribution(const index_t &distribution_index) const
@@ -146,28 +152,21 @@ public:
     }
 
 protected:
-    const double                      resolution_;
-    const double                      resolution_inv_;
-    cslibs_math_2d::Transform2d       w_T_m_;
-    cslibs_math_2d::Transform2d       m_T_w_;
+    const double                        resolution_;
+    const double                        resolution_inv_;
+    const cslibs_math_2d::Transform2d   w_T_m_;
+    const cslibs_math_2d::Transform2d   m_T_w_;
+    const double                        height_;
+    const double                        width_;
 
-    mutable index_t                    min_chunk_index_;
-    mutable index_t                    max_chunk_index_;
-    mutable index_t                    min_index_;
-    mutable mutex_t                    storage_mutex_;
-    mutable std::shared_ptr<storage_t> storage_;
-    mutable std::size_t                height_;
-    mutable std::size_t                width_;
+    mutable index_t                     min_index_;
+    mutable index_t                     max_index_;
+    mutable mutex_t                     storage_mutex_;
+    mutable std::shared_ptr<storage_t>  storage_;
 
-    inline void updateChunkIndices(const index_t &chunk_index) const
-    {
-        min_chunk_index_ = cslibs_math::common::min(min_chunk_index_, chunk_index);
-        max_chunk_index_ = cslibs_math::common::max(max_chunk_index_, chunk_index);
-    }
 
     inline index_t toIndex(const cslibs_math_2d::Point2d &p_w) const
     {
-        /// offset and rounding correction!
         const cslibs_math_2d::Point2d p_m = m_T_w_ * p_w;
         return {{static_cast<int>(p_m(0) * resolution_inv_),
                  static_cast<int>(p_m(1) * resolution_inv_)}};

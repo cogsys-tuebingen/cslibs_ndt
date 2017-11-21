@@ -38,9 +38,8 @@ public:
         resolution_inv_(1.0 / resolution_),
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
-        min_chunk_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
-        max_chunk_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
         min_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
+        max_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
         storage_(new storage_t)
     {
     }
@@ -53,9 +52,8 @@ public:
         resolution_inv_(1.0 / resolution_),
         w_T_m_(origin_x, origin_y, origin_phi),
         m_T_w_(w_T_m_.inverse()),
-        min_chunk_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
-        max_chunk_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
         min_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
+        max_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
         storage_(new storage_t)
     {
     }
@@ -63,15 +61,15 @@ public:
     inline cslibs_math_2d::Point2d getMin() const
     {
         lock_t l(storage_mutex_);
-        return cslibs_math_2d::Point2d(min_chunk_index_[0] * resolution_,
-                min_chunk_index_[1] * resolution_);
+        return cslibs_math_2d::Point2d(min_index_[0] * resolution_,
+                                       min_index_[1] * resolution_);
     }
 
     inline cslibs_math_2d::Point2d getMax() const
     {
         lock_t l(storage_mutex_);
-        return cslibs_math_2d::Point2d(max_chunk_index_[0] * resolution_,
-                max_chunk_index_[1] * resolution_);
+        return cslibs_math_2d::Point2d((max_index_[0] + 1) * resolution_,
+                                       (max_index_[1] + 1) * resolution_);
     }
 
     inline cslibs_math_2d::Pose2d getOrigin() const
@@ -92,13 +90,15 @@ public:
         {
             lock_t l(storage_mutex_);
             const index_t index = toIndex(point);
-            distribution_t *distribution = storage_->get(index);
+            distribution = storage_->get(index);
             if(distribution == nullptr) {
                 distribution = &(storage_->insert(index, distribution_t()));
             }
-            updateChunkIndices(index);
+            updateIndices(index);
         }
-
+        distribution->lock();
+        distribution->add(point);
+        distribution->unlock();
     }
 
     inline double at(const cslibs_math_2d::Point2d &point) const
@@ -115,16 +115,16 @@ public:
         return distribution != nullptr ? get() : 0.0;
     }
 
-    inline index_t getMinChunkIndex() const
+    inline index_t getMinIndex() const
     {
         lock_t l(storage_mutex_);
-        return min_chunk_index_;
+        return min_index_;
     }
 
-    inline index_t getMaxChunkIndex() const
+    inline index_t getMaxIndex() const
     {
         lock_t l(storage_mutex_);
-        return max_chunk_index_;
+        return max_index_;
     }
 
     inline distribution_t const * getDistribution(const index_t &distribution_index) const
@@ -144,29 +144,35 @@ public:
         return resolution_;
     }
 
-protected:
-    const double                      resolution_;
-    const double                      resolution_inv_;
-    cslibs_math_2d::Transform2d       w_T_m_;
-    cslibs_math_2d::Transform2d       m_T_w_;
-
-    mutable index_t                    min_chunk_index_;
-    mutable index_t                    max_chunk_index_;
-    mutable index_t                    min_index_;
-    mutable mutex_t                    storage_mutex_;
-    mutable std::shared_ptr<storage_t> storage_;
-    mutable std::size_t                height_;
-    mutable std::size_t                width_;
-
-    inline void updateChunkIndices(const index_t &chunk_index) const
+    inline double getHeight() const
     {
-        min_chunk_index_ = cslibs_math::common::min(min_chunk_index_, chunk_index);
-        max_chunk_index_ = cslibs_math::common::max(max_chunk_index_, chunk_index);
+        return (max_index_[0] - min_index_[0] + 1) * resolution_;
+    }
+
+    inline double getWidth() const
+    {
+        return (max_index_[1] - min_index_[1] + 1) * resolution_;
+    }
+
+protected:
+    const double                        resolution_;
+    const double                        resolution_inv_;
+    const cslibs_math_2d::Transform2d   w_T_m_;
+    const cslibs_math_2d::Transform2d   m_T_w_;
+
+    mutable index_t                     min_index_;
+    mutable index_t                     max_index_;
+    mutable mutex_t                     storage_mutex_;
+    mutable std::shared_ptr<storage_t>  storage_;
+
+    inline void updateIndices(const index_t &chunk_index) const
+    {
+        min_index_ = cslibs_math::common::min(min_index_, chunk_index);
+        max_index_ = cslibs_math::common::max(max_index_, chunk_index);
     }
 
     inline index_t toIndex(const cslibs_math_2d::Point2d &p_w) const
     {
-        /// offset and rounding correction!
         const cslibs_math_2d::Point2d p_m = m_T_w_ * p_w;
         return {{static_cast<int>(p_m(0) * resolution_inv_),
                  static_cast<int>(p_m(1) * resolution_inv_)}};

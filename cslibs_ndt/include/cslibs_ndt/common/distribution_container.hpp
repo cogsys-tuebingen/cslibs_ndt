@@ -13,7 +13,13 @@ public:
     using mutex_t        = std::mutex;
     using lock_t         = std::unique_lock<mutex_t>;
 
-    inline DistributionContainer() = default;
+    enum Action {NONE, ALLOCATED, TOUCHED};
+
+    inline DistributionContainer() :
+        action_(ALLOCATED)
+    {
+    }
+
     inline virtual ~DistributionContainer() = default;
 
     inline DistributionContainer(const DistributionContainer &other) :
@@ -38,6 +44,22 @@ public:
         return *this;
     }
 
+    inline void setTouched()
+    {
+        if(action_ != ALLOCATED)
+            action_ = TOUCHED;
+    }
+
+    inline void setNone()
+    {
+        action_ = NONE;
+    }
+
+    inline Action getAction() const
+    {
+        return action_;
+    }
+
     inline operator const distribution_t& () const
     {
         return data_;
@@ -46,6 +68,11 @@ public:
     inline double sample(const cslibs_math_2d::Point2d &p) const
     {
         return data_.sample(p);
+    }
+
+    inline double sampleNonNormalized(const cslibs_math_2d::Point2d &p) const
+    {
+        return data_.sampleNonNormalized(p);
     }
 
     inline void add(const cslibs_math_2d::Point2d &p)
@@ -93,6 +120,7 @@ public:
     }
 
 private:
+    Action          action_;
     mutable mutex_t data_mutex_;
     distribution_t  data_;
 

@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
     cslibs_math_2d
     cslibs_math_3d
     cslibs_indexed_storage
+    cslibs_utility
 )
 
 catkin_package(

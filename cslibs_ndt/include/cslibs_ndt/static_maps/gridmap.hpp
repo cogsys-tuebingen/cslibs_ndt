@@ -16,6 +16,7 @@
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/array/array.hpp>
 
+#include <cslibs_utility/synchronized/wrap_around.hpp>
 
 namespace cis = cslibs_indexed_storage;
 
@@ -32,6 +33,7 @@ public:
     using lock_t                = std::unique_lock<mutex_t>;
     using distribution_container_t  = DistributionContainer<2>;
     using storage_t                 = cis::Storage<distribution_container_t, index_t, cis::backend::array::Array>;
+    using container_handle_t        = cslibs_utility::synchronized::WrapAround<distribution_container_t, &distribution_container_t::data_mutex_>;
 
     Gridmap(const pose_t   &origin,
             const double    resolution,
@@ -95,13 +97,13 @@ public:
 
     inline void add(const cslibs_math_2d::Point2d &point)
     {
-        distribution_container_t::handle_t distribution;
+        container_handle_t distribution;
         {
             lock_t l(storage_mutex_);
             const index_t index = toIndex(point);
-            distribution = distribution_container_t::handle_t(storage_->get(index));
+            distribution = container_handle_t(storage_->get(index));
             if(distribution.empty()) {
-                distribution = distribution_container_t::handle_t(&(storage_->insert(index, distribution_container_t())));
+                distribution = container_handle_t(&(storage_->insert(index, distribution_container_t())));
             }
         }
         distribution->data().add(point);
@@ -112,7 +114,7 @@ public:
     {
 
         const index_t index                = toIndex(point);
-        const distribution_container_t::handle_t distribution = getDistribution(index);
+        const container_handle_t distribution = getDistribution(index);
         auto  get = [distribution, &point](){
             double p = distribution->data().sample(point);
             return p;
@@ -124,7 +126,7 @@ public:
     {
 
         const index_t index                = toIndex(point);
-        const distribution_container_t::handle_t distribution = getDistribution(index);
+        const container_handle_t distribution = getDistribution(index);
         auto  get = [distribution, &point](){
             double p = distribution->data().sampleNonNormalized(point);
             return p;
@@ -144,16 +146,16 @@ public:
         return max_index_;
     }
 
-    inline distribution_container_t::handle_t const getDistribution(const index_t &distribution_index) const
+    inline container_handle_t const getDistribution(const index_t &distribution_index) const
     {
         lock_t l(storage_mutex_);
-        return distribution_container_t::handle_t(storage_->get(distribution_index));
+        return container_handle_t(storage_->get(distribution_index));
     }
 
-    inline distribution_container_t::handle_t getDistribution(const index_t &distribution_index)
+    inline container_handle_t getDistribution(const index_t &distribution_index)
     {
         lock_t l(storage_mutex_);
-        return distribution_container_t::handle_t(storage_->get(distribution_index));
+        return container_handle_t(storage_->get(distribution_index));
     }
 
     inline double getResolution() const

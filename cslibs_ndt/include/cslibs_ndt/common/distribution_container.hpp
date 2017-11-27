@@ -6,14 +6,86 @@
 #include <cslibs_math_2d/linear/point.hpp>
 
 namespace cslibs_ndt {
-template<std::size_t Dim, bool limit_covariance = false>
+template<std::size_t Dim>
 class DistributionContainer {
 public:
-    using distribution_t = cslibs_math::statistics::Distribution<Dim, limit_covariance>;
+    using distribution_container_t = DistributionContainer<Dim>;
+    using distribution_t = cslibs_math::statistics::Distribution<Dim>;
     using mutex_t        = std::mutex;
     using lock_t         = std::unique_lock<mutex_t>;
-
     enum Action {NONE, ALLOCATED, TOUCHED};
+
+    class Handle {
+    public:
+        inline Handle() :
+            distribution_(nullptr)
+        {
+        }
+
+        inline Handle(distribution_container_t *container) :
+            distribution_(container)
+        {
+            if(distribution_ != nullptr)
+                distribution_->data_mutex_.lock();
+        }
+
+        virtual inline ~Handle()
+        {
+            if(distribution_ != nullptr)
+               distribution_->data_mutex_.unlock();
+        }
+
+        inline bool empty() const
+        {
+            return static_cast<bool>(distribution_);
+        }
+
+        inline const distribution_t& data() const
+        {
+            return distribution_->data_;
+        }
+
+        inline distribution_t& data()
+        {
+            return distribution_->data_;
+        }
+
+        inline operator distribution_t* ()
+        {
+            return distribution_;
+        }
+
+        inline operator distribution_t const *() const
+        {
+            return distribution_;
+        }
+
+        inline distribution_container_t * operator -> ()
+        {
+            return distribution_;
+        }
+
+        inline distribution_container_t const * operator -> () const
+        {
+            return distribution_;
+        }
+
+        inline operator distribution_container_t* ()
+        {
+            return distribution_;
+        }
+
+        inline operator distribution_container_t const *() const
+        {
+            return distribution_;
+        }
+
+    private:
+        distribution_container_t   *distribution_;
+    };
+
+    using handle_t = Handle;
+    friend class Handle;
 
     inline DistributionContainer() :
         action_(ALLOCATED)
@@ -65,21 +137,6 @@ public:
         return data_;
     }
 
-    inline double sample(const cslibs_math_2d::Point2d &p) const
-    {
-        return data_.sample(p);
-    }
-
-    inline double sampleNonNormalized(const cslibs_math_2d::Point2d &p) const
-    {
-        return data_.sampleNonNormalized(p);
-    }
-
-    inline void add(const cslibs_math_2d::Point2d &p)
-    {
-        data_.add(p);
-    }
-
     inline operator distribution_t& ()
     {
         return data_;
@@ -107,16 +164,6 @@ public:
 
     inline void merge(const DistributionContainer &)
     {
-    }
-
-    inline void lock() const
-    {
-        data_mutex_.lock();
-    }
-
-    inline void unlock() const
-    {
-        data_mutex_.unlock();
     }
 
 private:

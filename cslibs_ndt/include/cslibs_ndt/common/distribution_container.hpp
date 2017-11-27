@@ -25,19 +25,19 @@ public:
         inline Handle(distribution_container_t *container) :
             distribution_(container)
         {
-            if(distribution_ != nullptr)
+            if(distribution_)
                 distribution_->data_mutex_.lock();
         }
 
         virtual inline ~Handle()
         {
-            if(distribution_ != nullptr)
+            if(distribution_)
                distribution_->data_mutex_.unlock();
         }
 
         inline bool empty() const
         {
-            return static_cast<bool>(distribution_);
+            return distribution_ == nullptr;
         }
 
         inline const distribution_t& data() const

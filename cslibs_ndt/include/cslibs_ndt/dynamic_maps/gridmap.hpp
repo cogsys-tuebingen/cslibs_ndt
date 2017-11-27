@@ -85,16 +85,18 @@ public:
 
     inline void add(const cslibs_math_2d::Point2d &point)
     {
-        distribution_container_t::handle_t distribution;
+        distribution_container_t* distribution;
         {
             lock_t l(storage_mutex_);
             const index_t index = toIndex(point);
-            distribution = distribution_container_t::handle_t(storage_->get(index));
-            if(distribution.empty()) {
-                distribution = distribution_container_t::handle_t(&(storage_->insert(index, distribution_container_t())));
+            distribution = storage_->get(index);
+            if(distribution == nullptr) {
+                distribution = &(storage_->insert(index, distribution_container_t()));
             }
             updateIndices(index);
         }
+
+        distribution_container_t::handle_t h(distribution);
         distribution->data().add(point);
         distribution->setTouched();
     }
@@ -181,8 +183,8 @@ protected:
     inline index_t toIndex(const cslibs_math_2d::Point2d &p_w) const
     {
         const cslibs_math_2d::Point2d p_m = m_T_w_ * p_w;
-        return {{static_cast<int>(std::floor(p_m(0) * resolution_inv_ + 0.5)),
-                 static_cast<int>(std::floor(p_m(1) * resolution_inv_ + 0.5))}};
+        return {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
+                 static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
     }
 
 };

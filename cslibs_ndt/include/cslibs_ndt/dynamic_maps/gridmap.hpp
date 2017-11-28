@@ -16,8 +16,6 @@
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
 
-#include <cslibs_utility/synchronized/wrap_around.hpp>
-
 namespace cis = cslibs_indexed_storage;
 
 namespace cslibs_ndt {

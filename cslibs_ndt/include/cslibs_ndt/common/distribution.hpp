@@ -10,63 +10,42 @@
 
 namespace cslibs_ndt {
 template<std::size_t Dim>
-class DistributionContainer;
-
-template<std::size_t Dim>
-class DistributionContainer {
+class Distribution {
 public:
-    using distribution_container_t = DistributionContainer<Dim>;
+    using distribution_container_t = Distribution<Dim>;
     using distribution_t = cslibs_math::statistics::Distribution<Dim>;
     using mutex_t        = std::mutex;
     using lock_t         = std::unique_lock<mutex_t>;
-    enum Action {NONE, ALLOCATED, TOUCHED};
 
-    using handle_t = cslibs_utility::synchronized::WrapAround<distribution_container_t>;
+    using handle_t       = cslibs_utility::synchronized::WrapAround<distribution_container_t>;
     using const_handle_t = cslibs_utility::synchronized::WrapAround<const distribution_container_t>;
 
-    inline DistributionContainer() :
-        action_(ALLOCATED)
+    inline Distribution()
     {
     }
 
-    inline virtual ~DistributionContainer() = default;
+    inline virtual ~Distribution() = default;
 
-    inline DistributionContainer(const DistributionContainer &other) :
+    inline Distribution(const Distribution &other) :
         data_(other.data_)
     {
     }
 
-   inline  DistributionContainer(DistributionContainer &&other) :
+   inline  Distribution(Distribution &&other) :
         data_(std::move(other.data_))
     {
     }
 
-    inline DistributionContainer& operator = (const DistributionContainer &other)
+    inline Distribution& operator = (const Distribution &other)
     {
         data_ = other.data_;
         return *this;
     }
 
-    inline DistributionContainer& operator = (DistributionContainer &&other)
+    inline Distribution& operator = (Distribution &&other)
     {
         data_ = std::move(other.data_);
         return *this;
-    }
-
-    inline void setTouched()
-    {
-        if(action_ != ALLOCATED)
-            action_ = TOUCHED;
-    }
-
-    inline void setNone()
-    {
-        action_ = NONE;
-    }
-
-    inline Action getAction() const
-    {
-        return action_;
     }
 
     inline operator const distribution_t& () const
@@ -99,7 +78,7 @@ public:
         return data_;
     }
 
-    inline void merge(const DistributionContainer &)
+    inline void merge(const Distribution &)
     {
     }
 
@@ -115,7 +94,6 @@ public:
 
 private:
     mutable mutex_t data_mutex_;
-    Action          action_;
     distribution_t  data_;
 
 };

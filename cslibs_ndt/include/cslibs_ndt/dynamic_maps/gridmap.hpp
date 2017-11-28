@@ -9,7 +9,7 @@
 #include <cslibs_math_2d/linear/pose.hpp>
 #include <cslibs_math_2d/linear/point.hpp>
 
-#include <cslibs_ndt/common/distribution_container.hpp>
+#include <cslibs_ndt/common/distribution.hpp>
 
 #include <cslibs_math/common/array.hpp>
 
@@ -28,7 +28,7 @@ public:
     using index_t                   = std::array<int, 2>;
     using mutex_t                   = std::mutex;
     using lock_t                    = std::unique_lock<mutex_t>;
-    using distribution_container_t  = DistributionContainer<2>;
+    using distribution_container_t  = Distribution<2>;
 
     using storage_t                 = cis::Storage<distribution_container_t, index_t, cis::backend::kdtree::KDTree>;
 
@@ -99,7 +99,6 @@ public:
 
         distribution_container_t::handle_t h = distribution->getHandle();
         distribution->data().add(point);
-        distribution->setTouched();
     }
 
     inline double sample(const cslibs_math_2d::Point2d &point) const

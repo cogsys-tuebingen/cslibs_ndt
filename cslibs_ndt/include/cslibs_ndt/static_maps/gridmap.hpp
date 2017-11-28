@@ -9,7 +9,7 @@
 #include <cslibs_math_2d/linear/pose.hpp>
 #include <cslibs_math_2d/linear/point.hpp>
 
-#include <cslibs_ndt/common/distribution_container.hpp>
+#include <cslibs_ndt/common/distribution.hpp>
 
 #include <cslibs_math/common/array.hpp>
 
@@ -26,14 +26,18 @@ template<bool limit_covariance = false>
 class Gridmap
 {
 public:
-    using Ptr                   = std::shared_ptr<Gridmap>;
-    using pose_t                = cslibs_math_2d::Pose2d;
-    using index_t               = std::array<int, 2>;
-    using mutex_t               = std::mutex;
-    using lock_t                = std::unique_lock<mutex_t>;
-    using distribution_container_t  = DistributionContainer<2>;
-    using storage_t                 = cis::Storage<distribution_container_t, index_t, cis::backend::array::Array>;
-    using container_handle_t        = cslibs_utility::synchronized::WrapAround<distribution_container_t>;
+    using Ptr                       = std::shared_ptr<Gridmap>;
+    using pose_t                    = cslibs_math_2d::Pose2d;
+    using point_t                   = cslibs_math_2d::Point2d;
+    using index_t                   = std::array<int, 2>;
+    using mutex_t                   = std::mutex;
+    using lock_t                    = std::unique_lock<mutex_t>;
+    using distribution_t            = Distribution<2>;
+    using distribution_handle_t     = cslibs_utility::synchronized::WrapAround<distribution_t>;
+    using storage_t                 = cis::Storage<distribution_t, index_t, cis::backend::array::Array>;
+    using storage_ptr_t             = std::shared_ptr<storage_t>;
+    using storage_array_t           = std::array<storage_ptr_t, 4>;
+    using offest_array_t            = std::array<point_t, 3>;
 
     Gridmap(const pose_t   &origin,
             const double    resolution,
@@ -77,16 +81,16 @@ public:
                                                               static_cast<std::size_t>(max_index_[1] - min_index_[1] + 1));
     }
 
-    inline cslibs_math_2d::Point2d getMin() const
+    inline point_t getMin() const
     {
         lock_t l(storage_mutex_);
-        return cslibs_math_2d::Point2d(w_T_m_.translation());
+        return point_t(w_T_m_.translation());
     }
 
-    inline cslibs_math_2d::Point2d getMax() const
+    inline point_t getMax() const
     {
         lock_t l(storage_mutex_);
-        return cslibs_math_2d::Point2d(w_T_m_.tx() + width_,
+        return point_t(w_T_m_.tx() + width_,
                                        w_T_m_.ty() + height_);
     }
 
@@ -95,26 +99,25 @@ public:
         return w_T_m_;
     }
 
-    inline void add(const cslibs_math_2d::Point2d &point)
+    inline void add(const point_t &point)
     {
-        container_handle_t distribution;
+        distribution_handle_t distribution;
         {
             lock_t l(storage_mutex_);
             const index_t index = toIndex(point);
-            distribution = container_handle_t(storage_->get(index));
+            distribution = distribution_handle_t(storage_->get(index));
             if(distribution.empty()) {
-                distribution = container_handle_t(&(storage_->insert(index, distribution_container_t())));
+                distribution = distribution_handle_t(&(storage_->insert(index, distribution_t())));
             }
         }
         distribution->data().add(point);
-        distribution->setTouched();
     }
 
-    inline double sample(const cslibs_math_2d::Point2d &point) const
+    inline double sample(const point_t &point) const
     {
 
         const index_t index                = toIndex(point);
-        const container_handle_t distribution = getDistribution(index);
+        const distribution_handle_t distribution = getDistribution(index);
         auto  get = [distribution, &point](){
             double p = distribution->data().sample(point);
             return p;
@@ -122,11 +125,11 @@ public:
         return distribution.empty() ? 0.0 : get();
     }
 
-    inline double sampleNonNormalized(const cslibs_math_2d::Point2d &point) const
+    inline double sampleNonNormalized(const point_t &point) const
     {
 
         const index_t index                = toIndex(point);
-        const container_handle_t distribution = getDistribution(index);
+        const distribution_handle_t distribution = getDistribution(index);
         auto  get = [distribution, &point](){
             double p = distribution->data().sampleNonNormalized(point);
             return p;
@@ -146,16 +149,16 @@ public:
         return max_index_;
     }
 
-    inline container_handle_t const getDistribution(const index_t &distribution_index) const
+    inline distribution_handle_t const getDistribution(const index_t &distribution_index) const
     {
         lock_t l(storage_mutex_);
-        return container_handle_t(storage_->get(distribution_index));
+        return distribution_handle_t(storage_->get(distribution_index));
     }
 
-    inline container_handle_t getDistribution(const index_t &distribution_index)
+    inline distribution_handle_t getDistribution(const index_t &distribution_index)
     {
         lock_t l(storage_mutex_);
-        return container_handle_t(storage_->get(distribution_index));
+        return distribution_handle_t(storage_->get(distribution_index));
     }
 
     inline double getResolution() const
@@ -177,9 +180,9 @@ protected:
     mutable std::shared_ptr<storage_t>  storage_;
 
 
-    inline index_t toIndex(const cslibs_math_2d::Point2d &p_w) const
+    inline index_t toIndex(const point_t &p_w) const
     {
-        const cslibs_math_2d::Point2d p_m = m_T_w_ * p_w;
+        const point_t p_m = m_T_w_ * p_w;
         return {{static_cast<int>(p_m(0) * resolution_inv_),
                  static_cast<int>(p_m(1) * resolution_inv_)}};
     }

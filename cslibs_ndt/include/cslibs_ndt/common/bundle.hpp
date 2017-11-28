@@ -1,0 +1,82 @@
+#ifndef CSLIBS_NDT_BUNDLE_HPP
+#define CSLIBS_NDT_BUNDLE_HPP
+
+#include <array>
+
+namespace cslibs_ndt {
+template<typename T, std::size_t Size>
+class Bundle {
+public:
+    using bundle_t = Bundle<T, Size>;
+    using data_t   = std::array<T, Size>;
+
+    inline Bundle()
+    {
+    }
+
+    inline virtual ~Bundle() = default;
+
+    inline Bundle(const Bundle &other) :
+        data_(other.data_)
+    {
+    }
+
+   inline  Bundle(Bundle &&other) :
+        data_(std::move(other.data_))
+    {
+    }
+
+    inline Bundle& operator = (const Bundle &other)
+    {
+        data_ = other.data_;
+        return *this;
+    }
+
+    inline Bundle& operator = (Bundle &&other)
+    {
+        data_ = std::move(other.data_);
+        return *this;
+    }
+
+
+    inline T& operator [] (const std::size_t i)
+    {
+        return data_[i];
+    }
+
+    inline T const& operator [] (const std::size_t i) const
+    {
+        return data_[i];
+    }
+
+    inline T& at (const std::size_t i)
+    {
+        return data_[i];
+    }
+
+    inline T const& at (const std::size_t i) const
+    {
+        return data_[i];
+    }
+
+    inline const data_t& data() const
+    {
+        return data_;
+    }
+
+    inline data_t& data()
+    {
+        return data_;
+    }
+
+    inline void merge(const Bundle &)
+    {
+    }
+
+private:
+    data_t  data_;
+
+};
+}
+
+#endif // CSLIBS_NDT_BUNDLE_HPP

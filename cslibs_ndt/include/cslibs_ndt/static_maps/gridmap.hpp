@@ -26,18 +26,21 @@ template<bool limit_covariance = false>
 class Gridmap
 {
 public:
-    using Ptr                       = std::shared_ptr<Gridmap>;
-    using pose_t                    = cslibs_math_2d::Pose2d;
-    using point_t                   = cslibs_math_2d::Point2d;
-    using index_t                   = std::array<int, 2>;
-    using mutex_t                   = std::mutex;
-    using lock_t                    = std::unique_lock<mutex_t>;
-    using distribution_t            = Distribution<2>;
-    using distribution_handle_t     = cslibs_utility::synchronized::WrapAround<distribution_t>;
-    using storage_t                 = cis::Storage<distribution_t, index_t, cis::backend::array::Array>;
-    using storage_ptr_t             = std::shared_ptr<storage_t>;
-    using storage_array_t           = std::array<storage_ptr_t, 4>;
-    using offest_array_t            = std::array<point_t, 3>;
+    using Ptr                               = std::shared_ptr<Gridmap>;
+    using pose_t                            = cslibs_math_2d::Pose2d;
+    using point_t                           = cslibs_math_2d::Point2d;
+    using index_t                           = std::array<int, 2>;
+    using mutex_t                           = std::mutex;
+    using lock_t                            = std::unique_lock<mutex_t>;
+    using distribution_t                    = Distribution<2>;
+    using distribution_handle_t             = cslibs_utility::synchronized::WrapAround<distribution_t>;
+    using distribution_storage_t            = cis::Storage<distribution_t, index_t, cis::backend::array::Array>;
+    using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;
+    using distribution_storage_array_t      = std::array<distribution_storage_ptr_t, 4>;
+    using offest_array_t                    = std::array<point_t, 3>;
+    using distribution_bundle_t             = std::array<distribution_t*, 4>;
+    using distribution_bundle_storage_t     = cis::Storage<distribution_t, index_t, cis::backend::array::Array>;
+    using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_storage_t>;
 
     Gridmap(const pose_t   &origin,
             const double    resolution,
@@ -51,7 +54,7 @@ public:
                                      std::floor(origin.ty() * resolution_inv_))}},
         max_index_{{static_cast<int>(std::floor((origin.tx() + width)  * resolution_inv_),
                                      std::floor((origin.ty() + height) * resolution_inv_))}},
-        storage_(new storage_t)
+        storage_(new distribution_storage_t)
     {
         storage_->template set<cis::option::tags::array_offset>(min_index_[0],
                                                                 min_index_[1]);
@@ -73,7 +76,7 @@ public:
                                      std::floor(origin_y * resolution_inv_))}},
         max_index_{{static_cast<int>(std::floor((origin_x + width)  * resolution_inv_),
                                      std::floor((origin_y + height) * resolution_inv_))}},
-        storage_(new storage_t)
+        storage_(new distribution_storage_t)
     {
         storage_->template set<cis::option::tags::array_offset>(min_index_[0],
                                                                 min_index_[1]);
@@ -177,7 +180,7 @@ protected:
     mutable index_t                     min_index_;
     mutable index_t                     max_index_;
     mutable mutex_t                     storage_mutex_;
-    mutable std::shared_ptr<storage_t>  storage_;
+    mutable std::shared_ptr<distribution_storage_t>  storage_;
 
 
     inline index_t toIndex(const point_t &p_w) const

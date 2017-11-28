@@ -21,6 +21,9 @@ public:
     using lock_t         = std::unique_lock<mutex_t>;
     enum Action {NONE, ALLOCATED, TOUCHED};
 
+    using handle_t = cslibs_utility::synchronized::WrapAround<distribution_container_t>;
+    using const_handle_t = cslibs_utility::synchronized::WrapAround<const distribution_container_t>;
+
     inline DistributionContainer() :
         action_(ALLOCATED)
     {
@@ -100,9 +103,18 @@ public:
     {
     }
 
-    mutable mutex_t data_mutex_;
+    inline handle_t getHandle()
+    {
+        return handle_t(this, &data_mutex_);
+    }
+
+    inline const_handle_t getHandle() const
+    {
+        return const_handle_t(this, &data_mutex_);
+    }
 
 private:
+    mutable mutex_t data_mutex_;
     Action          action_;
     distribution_t  data_;
 

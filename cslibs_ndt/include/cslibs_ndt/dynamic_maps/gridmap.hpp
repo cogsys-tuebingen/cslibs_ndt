@@ -31,7 +31,6 @@ public:
     using mutex_t                   = std::mutex;
     using lock_t                    = std::unique_lock<mutex_t>;
     using distribution_container_t  = DistributionContainer<2>;
-    using container_handle_t        = cslibs_utility::synchronized::WrapAround<distribution_container_t, &distribution_container_t::data_mutex_>;
 
     using storage_t                 = cis::Storage<distribution_container_t, index_t, cis::backend::kdtree::KDTree>;
 
@@ -100,15 +99,15 @@ public:
             updateIndices(index);
         }
 
-        container_handle_t h(distribution);
+        distribution_container_t::handle_t h = distribution->getHandle();
         distribution->data().add(point);
         distribution->setTouched();
     }
 
     inline double sample(const cslibs_math_2d::Point2d &point) const
     {
-        const index_t index                = toIndex(point);
-        const container_handle_t distribution = getDistribution(index);
+        const index_t index = toIndex(point);
+        const distribution_container_t::const_handle_t distribution = getDistribution(index);
         auto  get = [distribution, &point](){
             double p = distribution->data().sample(point);
             return p;
@@ -120,7 +119,7 @@ public:
     inline double sampleNonNormalized(const cslibs_math_2d::Point2d &point) const
     {
         const index_t index = toIndex(point);
-        const container_handle_t distribution = getDistribution(index);
+        const distribution_container_t::const_handle_t distribution = getDistribution(index);
         auto  get = [distribution, &point](){
             double p = distribution->data().sampleNonNormalized(point);
             return p;
@@ -140,16 +139,18 @@ public:
         return max_index_;
     }
 
-    inline container_handle_t const getDistribution(const index_t &distribution_index) const
+    inline distribution_container_t::const_handle_t const getDistribution(const index_t &distribution_index) const
     {
         lock_t l(storage_mutex_);
-        return container_handle_t(storage_->get(distribution_index));
+        const distribution_container_t *d = storage_->get(distribution_index);
+        return d ? d->getHandle() : distribution_container_t::const_handle_t();
     }
 
-    inline container_handle_t getDistribution(const index_t &distribution_index)
+    inline distribution_container_t::handle_t getDistribution(const index_t &distribution_index)
     {
         lock_t l(storage_mutex_);
-        return container_handle_t(storage_->get(distribution_index));
+        distribution_container_t *d = storage_->get(distribution_index);
+        return d ? d->getHandle() : distribution_container_t::handle_t();
     }
 
     inline double getResolution() const

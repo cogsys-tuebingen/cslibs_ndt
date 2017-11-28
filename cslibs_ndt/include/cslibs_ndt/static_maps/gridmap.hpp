@@ -33,7 +33,7 @@ public:
     using lock_t                = std::unique_lock<mutex_t>;
     using distribution_container_t  = DistributionContainer<2>;
     using storage_t                 = cis::Storage<distribution_container_t, index_t, cis::backend::array::Array>;
-    using container_handle_t        = cslibs_utility::synchronized::WrapAround<distribution_container_t, &distribution_container_t::data_mutex_>;
+    using container_handle_t        = cslibs_utility::synchronized::WrapAround<distribution_container_t>;
 
     Gridmap(const pose_t   &origin,
             const double    resolution,

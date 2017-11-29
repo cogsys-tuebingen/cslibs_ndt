@@ -13,7 +13,7 @@ template<std::size_t Dim>
 class Distribution {
 public:
     using distribution_container_t = Distribution<Dim>;
-    using distribution_t = cslibs_math::statistics::Distribution<Dim>;
+    using distribution_t = cslibs_math::statistics::Distribution<Dim, 3>;
     using mutex_t        = std::mutex;
     using lock_t         = std::unique_lock<mutex_t>;
 

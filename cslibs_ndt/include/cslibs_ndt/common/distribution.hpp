@@ -12,6 +12,9 @@ namespace cslibs_ndt {
 template<std::size_t Dim>
 class Distribution {
 public:
+    /// insert a probabilistic decay function and model map update via bresenham
+    /// use the standard occupancy grid map update model
+
     using distribution_container_t = Distribution<Dim>;
     using distribution_t = cslibs_math::statistics::Distribution<Dim, 3>;
     using mutex_t        = std::mutex;

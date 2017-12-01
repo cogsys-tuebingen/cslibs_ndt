@@ -4,9 +4,11 @@
 #include <mutex>
 
 #include <cslibs_math/statistics/distribution.hpp>
-#include <cslibs_math_2d/linear/point.hpp>
-
 #include <cslibs_utility/synchronized/wrap_around.hpp>
+
+#include <cslibs_indexed_storage/storage.hpp>
+#include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
+
 
 namespace cslibs_ndt {
 template<std::size_t Dim>
@@ -22,6 +24,8 @@ public:
 
     using handle_t       = cslibs_utility::synchronized::WrapAround<distribution_container_t>;
     using const_handle_t = cslibs_utility::synchronized::WrapAround<const distribution_container_t>;
+
+
 
     inline Distribution()
     {

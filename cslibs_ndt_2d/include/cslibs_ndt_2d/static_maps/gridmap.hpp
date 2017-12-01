@@ -1,5 +1,5 @@
-#ifndef CSLIBS_CSLIBS_NDT_STATIC_GRIDMAP_HPP
-#define CSLIBS_CSLIBS_NDT_STATIC_GRIDMAP_HPP
+#ifndef CSLIBS_NDT_2D_STATIC_GRIDMAP_HPP
+#define CSLIBS_NDT_2D_STATIC_GRIDMAP_HPP
 
 #include <array>
 #include <vector>
@@ -20,7 +20,7 @@
 
 namespace cis = cslibs_indexed_storage;
 
-namespace cslibs_ndt {
+namespace cslibs_ndt_2d {
 namespace static_maps {
 template<bool limit_covariance = false>
 class Gridmap
@@ -32,7 +32,7 @@ public:
     using index_t                           = std::array<int, 2>;
     using mutex_t                           = std::mutex;
     using lock_t                            = std::unique_lock<mutex_t>;
-    using distribution_t                    = Distribution<2>;
+    using distribution_t                    = cslibs_ndt::Distribution<2>;
     using distribution_handle_t             = cslibs_utility::synchronized::WrapAround<distribution_t>;
     using distribution_storage_t            = cis::Storage<distribution_t, index_t, cis::backend::array::Array>;
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;
@@ -195,4 +195,4 @@ protected:
 
 
 
-#endif // CSLIBS_GRIDMAPS_DYNAMIC_GRIDMAP_HPP
+#endif // CSLIBS_NDT_2D_STATIC_GRIDMAP_HPP

@@ -11,8 +11,6 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <depend>cslibs_math</depend>
-  <depend>cslibs_math_2d</depend>
-  <depend>cslibs_math_3d</depend>
   <depend>cslibs_indexed_storage</depend>
   <depend>cslibs_utility</depend>
 

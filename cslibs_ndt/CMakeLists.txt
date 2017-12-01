@@ -10,37 +10,26 @@ include(cmake/cslibs_ndt_show_headers.cmake)
 include(cmake/cslibs_ndt_add_unit_test_gtest.cmake)
 
 find_package(catkin REQUIRED COMPONENTS
-    cslibs_math
+    cslibs_ndt
     cslibs_math_2d
-    cslibs_math_3d
-    cslibs_indexed_storage
-    cslibs_utility
 )
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES 
-  CATKIN_DEPENDS cslibs_indexed_storage
-#  DEPENDS system_lib
+  CATKIN_DEPENDS cslibs_math cslibs_utility
+  CFG_EXTRAS     cslibs_ndt_enable_c++11.cmake
+                 cslibs_ndt_extras.cmake
+                 cslibs_ndt_show_headers.cmake
+                 cslibs_ndt_add_unit_test_gtest.cmake
 )
 
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIR}
-    ${OpenCV_INCLUDE_DIRS}
 )
 
 cslibs_ndt_show_headers()
-
-
-add_executable(tmp
-    src/tmp.cpp
-)
-
-target_link_libraries(tmp
-    ${catkin_LIBRARIES}
-)
 
 install(DIRECTORY include/${PROJECT_NAME}/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})

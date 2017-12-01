@@ -237,8 +237,8 @@ public:
 
         inline void updateIndices(const index_t &chunk_index) const
         {
-            min_index_ = cslibs_math::common::min(min_index_, chunk_index);
-            max_index_ = cslibs_math::common::max(max_index_, chunk_index);
+            min_index_ = std::min(min_index_, chunk_index);
+            max_index_ = std::max(max_index_, chunk_index);
         }
 
         inline index_t toIndex(const point_t &p_w,

@@ -1,5 +1,5 @@
-#ifndef CSLIBS_NDT_2D_DYNAMIC_GRIDMAP_HPP
-#define CSLIBS_NDT_2D_DYNAMIC_GRIDMAP_HPP
+#ifndef CSLIBS_NDT_3D_DYNAMIC_GRIDMAP_HPP
+#define CSLIBS_NDT_3D_DYNAMIC_GRIDMAP_HPP
 
 #include <array>
 #include <vector>
@@ -61,6 +61,10 @@ public:
         storage_{{distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t),
+                 distribution_storage_ptr_t(new distribution_storage_t),
+                 distribution_storage_ptr_t(new distribution_storage_t),
+                 distribution_storage_ptr_t(new distribution_storage_t),
+                 distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t)}},
         bundle_storage_(new distribution_bundle_storage_t)
     {
@@ -100,7 +104,7 @@ public:
         {
             lock_t l(bundle_storage_mutex_);
             const index_t bi = toBundleIndex(p);
-            bundle = bundle_storage_->get(bi);
+            distribution_bundle_t *bundle = bundle_storage_->get(bi);
             if(!bundle) {
                 distribution_bundle_t b;
                 b[0] = getAllocate(storage_[0], toIndex(p));
@@ -260,7 +264,4 @@ protected:
 };
 }
 }
-
-
-
-#endif // CSLIBS_NDT_2D_DYNAMIC_GRIDMAP_HPP
+#endif // CSLIBS_NDT_3D_DYNAMIC_GRIDMAP_HPP

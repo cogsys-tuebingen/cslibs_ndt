@@ -85,7 +85,7 @@ public:
     {
         lock_t l(bundle_storage_mutex_);
         return point_t(min_index_[0] * bundle_resolution_,
-                min_index_[1] * bundle_resolution_);
+                       min_index_[1] * bundle_resolution_);
     }
 
     inline point_t getMax() const

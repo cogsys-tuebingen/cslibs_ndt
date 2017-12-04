@@ -10,14 +10,15 @@ include(cmake/cslibs_ndt_show_headers.cmake)
 include(cmake/cslibs_ndt_add_unit_test_gtest.cmake)
 
 find_package(catkin REQUIRED COMPONENTS
-    cslibs_ndt
-    cslibs_math_2d
+    cslibs_math
+    cslibs_indexed_storage
+    cslibs_utility
 )
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES 
-  CATKIN_DEPENDS cslibs_math cslibs_utility
+  CATKIN_DEPENDS cslibs_math cslibs_utility cslibs_indexed_storage
   CFG_EXTRAS     cslibs_ndt_enable_c++11.cmake
                  cslibs_ndt_extras.cmake
                  cslibs_ndt_show_headers.cmake

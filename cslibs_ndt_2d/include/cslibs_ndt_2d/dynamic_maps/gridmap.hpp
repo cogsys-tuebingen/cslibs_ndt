@@ -26,6 +26,7 @@ class Gridmap
 public:
     using Ptr                               = std::shared_ptr<Gridmap>;
     using pose_t                            = cslibs_math_2d::Pose2d;
+    using transform_t                       = cslibs_math_2d::Transform2d;
     using point_t                           = cslibs_math_2d::Point2d;
     using index_t                           = std::array<int, 2>;
     using mutex_t                           = std::mutex;
@@ -94,14 +95,14 @@ public:
                 (max_index_[1] + 1) * bundle_resolution_);
     }
 
-    inline cslibs_math_2d::Pose2d getOrigin() const
+    inline pose_t getOrigin() const
     {
         cslibs_math_2d::Transform2d origin = w_T_m_;
         origin.translation() = getMin();
         return origin;
     }
 
-    inline cslibs_math_2d::Pose2d getInitialOrigin() const
+    inline pose_t getInitialOrigin() const
     {
         return w_T_m_;
     }
@@ -215,8 +216,8 @@ protected:
     const double                                    resolution_inv_;
     const double                                    bundle_resolution_;
     const double                                    bundle_resolution_inv_;
-    const cslibs_math_2d::Transform2d               w_T_m_;
-    const cslibs_math_2d::Transform2d               m_T_w_;
+    const transform_t                               w_T_m_;
+    const transform_t                               m_T_w_;
     const offest_array_t                            offsets_;
 
     mutable index_t                                 min_index_;

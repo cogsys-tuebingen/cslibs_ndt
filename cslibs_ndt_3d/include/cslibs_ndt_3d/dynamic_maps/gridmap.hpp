@@ -1,13 +1,13 @@
-#ifndef CSLIBS_NDT_2D_PROBABILISTIC_DYNAMIC_GRIDMAP_HPP
-#define CSLIBS_NDT_2D_PROBABILISTIC_DYNAMIC_GRIDMAP_HPP
+#ifndef CSLIBS_NDT_2D_DYNAMIC_GRIDMAP_HPP
+#define CSLIBS_NDT_2D_DYNAMIC_GRIDMAP_HPP
 
 #include <array>
 #include <vector>
 #include <cmath>
 #include <memory>
 
-#include <cslibs_math_2d/linear/pose.hpp>
-#include <cslibs_math_2d/linear/point.hpp>
+#include <cslibs_math_3d/linear/pose.hpp>
+#include <cslibs_math_3d/linear/point.hpp>
 
 #include <cslibs_ndt/common/distribution.hpp>
 #include <cslibs_ndt/common/bundle.hpp>
@@ -21,72 +21,43 @@ namespace cis = cslibs_indexed_storage;
 
 namespace cslibs_ndt_2d {
 namespace dynamic_maps {
-class ScaledGridmap
+class Gridmap
 {
 public:
-    using Ptr                               = std::shared_ptr<ScaledGridmap>;
-    using pose_t                            = cslibs_math_2d::Pose2d;
-    using point_t                           = cslibs_math_2d::Point2d;
-    using index_t                           = std::array<int, 2>;
+    using Ptr                               = std::shared_ptr<Gridmap>;
+    using pose_t                            = cslibs_math_3d::Pose3d;
+    using transform_t                       = cslibs_math_3d::Transform3d;
+    using point_t                           = cslibs_math_3d::Point3d;
+    using index_t                           = std::array<int, 3>;
     using mutex_t                           = std::mutex;
     using lock_t                            = std::unique_lock<mutex_t>;
-    using distribution_t                    = cslibs_ndt::Distribution<2>;
+    using distribution_t                    = cslibs_ndt::Distribution<3>;
     using distribution_storage_t            = cis::Storage<distribution_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;
-    using distribution_storage_array_t      = std::array<distribution_storage_ptr_t, 4>;
-    using offest_array_t                    = std::array<point_t, 3>;
-
-    template<typename bundle_t>
-    struct Probable {
-        bundle_t bundle;
-        double   scale;
-
-        inline void merge(const Probable &)
-        {
-        }
-    };
-
-    using distribution_bundle_t             = Probable<cslibs_ndt::Bundle<distribution_t*, 4>>;
-    using distribution_const_bundle_t       = Probable<cslibs_ndt::Bundle<const distribution_t*, 4>>;
+    using distribution_storage_array_t      = std::array<distribution_storage_ptr_t, 8>;
+    using offest_array_t                    = std::array<point_t, 7>;
+    using distribution_bundle_t             = cslibs_ndt::Bundle<distribution_t*, 8>;
+    using distribution_const_bundle_t       = cslibs_ndt::Bundle<const distribution_t*, 8>;
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
 
-    ScaledGridmap(const pose_t        &origin,
-            const double         resolution,
-            const double         default_scale = 0.5) :
+    Gridmap(const pose_t        &origin,
+            const double         resolution) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
-        offsets_{{point_t(-bundle_resolution_, 0.0), point_t(0.0, -bundle_resolution_), point_t(-bundle_resolution_)}},
-        default_scale_(default_scale),
-        min_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
-        max_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
-        storage_{{distribution_storage_ptr_t(new distribution_storage_t),
-                 distribution_storage_ptr_t(new distribution_storage_t),
-                 distribution_storage_ptr_t(new distribution_storage_t),
-                 distribution_storage_ptr_t(new distribution_storage_t)}},
-        bundle_storage_(new distribution_bundle_storage_t)
-    {
-    }
-
-    ScaledGridmap(const double origin_x,
-            const double origin_y,
-            const double origin_phi,
-            const double resolution,
-            const double default_scale = 0.5) :
-        resolution_(resolution),
-        resolution_inv_(1.0 / resolution_),
-        bundle_resolution_(0.5 * resolution_),
-        bundle_resolution_inv_(1.0 / bundle_resolution_),
-        w_T_m_(origin_x, origin_y, origin_phi),
-        m_T_w_(w_T_m_.inverse()),
-        offsets_{{point_t(-bundle_resolution_, 0.0), point_t(0.0, -bundle_resolution_), point_t(-bundle_resolution_)}},
-        default_scale_(default_scale),
-        min_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
-        max_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
+        offsets_{{point_t(-bundle_resolution_, 0.0, 0.0),
+                  point_t(0.0, -bundle_resolution_, 0.0),
+                  point_t(-bundle_resolution_, -bundle_resolution_, 0.0),
+                  point_t(0.0, 0.0, -bundle_resolution_),
+                  point_t(-bundle_resolution_, 0.0, -bundle_resolution_),
+                  point_t(0.0, -bundle_resolution_, -bundle_resolution_),
+                  point_t(-bundle_resolution_)}},
+        min_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
+        max_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
         storage_{{distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t),
@@ -99,29 +70,29 @@ public:
     {
         lock_t l(bundle_storage_mutex_);
         return point_t(min_index_[0] * bundle_resolution_,
-                min_index_[1] * bundle_resolution_);
+                       min_index_[1] * bundle_resolution_,
+                       min_index_[2] * bundle_resolution_);
     }
 
     inline point_t getMax() const
     {
         lock_t l(bundle_storage_mutex_);
         return point_t((max_index_[0] + 1) * bundle_resolution_,
-                (max_index_[1] + 1) * bundle_resolution_);
+                       (max_index_[1] + 1) * bundle_resolution_,
+                       (max_index_[2] + 1) * bundle_resolution_);
     }
 
-    inline cslibs_math_2d::Pose2d getOrigin() const
+    inline pose_t getOrigin() const
     {
-        cslibs_math_2d::Transform2d origin = w_T_m_;
+        pose_t origin = w_T_m_;
         origin.translation() = getMin();
         return origin;
     }
 
-    inline cslibs_math_2d::Pose2d getInitialOrigin() const
+    inline pose_t getInitialOrigin() const
     {
         return w_T_m_;
     }
-
-
 
     inline void add(const point_t &p)
     {
@@ -132,19 +103,26 @@ public:
             bundle = bundle_storage_->get(bi);
             if(!bundle) {
                 distribution_bundle_t b;
-                b.bundle[0] = getAllocate(storage_[0], toIndex(p));
-                b.bundle[1] = getAllocate(storage_[1], toIndex(p, offsets_[0]));
-                b.bundle[2] = getAllocate(storage_[2], toIndex(p, offsets_[1]));
-                b.bundle[3] = getAllocate(storage_[3], toIndex(p, offsets_[2]));
-                b.scale = default_scale_;
+                b[0] = getAllocate(storage_[0], toIndex(p));
+                b[1] = getAllocate(storage_[1], toIndex(p, offsets_[0]));
+                b[2] = getAllocate(storage_[2], toIndex(p, offsets_[1]));
+                b[3] = getAllocate(storage_[3], toIndex(p, offsets_[2]));
+                b[4] = getAllocate(storage_[4], toIndex(p, offsets_[3]));
+                b[5] = getAllocate(storage_[5], toIndex(p, offsets_[4]));
+                b[6] = getAllocate(storage_[6], toIndex(p, offsets_[5]));
+                b[7] = getAllocate(storage_[7], toIndex(p, offsets_[6]));
                 bundle = &(bundle_storage_->insert(bi, b));
             }
             updateIndices(bi);
         }
-        bundle->bundle.at(0)->getHandle()->data().add(p);
-        bundle->bundle.at(1)->getHandle()->data().add(p);
-        bundle->bundle.at(2)->getHandle()->data().add(p);
-        bundle->bundle.at(3)->getHandle()->data().add(p);
+        bundle->at(0)->getHandle()->data().add(p);
+        bundle->at(1)->getHandle()->data().add(p);
+        bundle->at(2)->getHandle()->data().add(p);
+        bundle->at(3)->getHandle()->data().add(p);
+        bundle->at(4)->getHandle()->data().add(p);
+        bundle->at(5)->getHandle()->data().add(p);
+        bundle->at(6)->getHandle()->data().add(p);
+        bundle->at(7)->getHandle()->data().add(p);
     }
 
     inline double sample(const point_t &p) const
@@ -156,10 +134,14 @@ public:
             bundle = bundle_storage_->get(bi);
         }
         auto evaluate = [&p, &bundle]() {
-            return 0.25 * (bundle->bundle.at(0)->data().sample(p) +
-                           bundle->bundle.at(1)->data().sample(p) +
-                           bundle->bundle.at(2)->data().sample(p) +
-                           bundle->bundle.at(3)->data().sample(p)) * bundle->scale;
+            return 0.125 * (bundle->at(0)->data().sample(p) +
+                            bundle->at(1)->data().sample(p) +
+                            bundle->at(2)->data().sample(p) +
+                            bundle->at(3)->data().sample(p) +
+                            bundle->at(4)->data().sample(p) +
+                            bundle->at(5)->data().sample(p) +
+                            bundle->at(6)->data().sample(p) +
+                            bundle->at(7)->data().sample(p));
         };
         return bundle ? evaluate() : 0.0;
     }
@@ -174,10 +156,14 @@ public:
             bundle = bundle_storage_->get(bi);
         }
         auto evaluate = [&p, &bundle]() {
-            return 0.25 * (bundle->bundle.at(0)->data().sampleNonNormalized(p) +
-                           bundle->bundle.at(1)->data().sampleNonNormalized(p) +
-                           bundle->bundle.at(2)->data().sampleNonNormalized(p) +
-                           bundle->bundle.at(3)->data().sampleNonNormalized(p)) * bundle->scale;
+            return 0.125 * (bundle->at(0)->data().sampleNonNormalized(p) +
+                            bundle->at(1)->data().sampleNonNormalized(p) +
+                            bundle->at(2)->data().sampleNonNormalized(p) +
+                            bundle->at(3)->data().sampleNonNormalized(p) +
+                            bundle->at(4)->data().sampleNonNormalized(p) +
+                            bundle->at(5)->data().sampleNonNormalized(p) +
+                            bundle->at(6)->data().sampleNonNormalized(p) +
+                            bundle->at(7)->data().sampleNonNormalized(p));
         };
         return bundle ? evaluate() : 0.0;
     }
@@ -231,10 +217,9 @@ protected:
     const double                                    resolution_inv_;
     const double                                    bundle_resolution_;
     const double                                    bundle_resolution_inv_;
-    const cslibs_math_2d::Transform2d               w_T_m_;
-    const cslibs_math_2d::Transform2d               m_T_w_;
+    const transform_t                               w_T_m_;
+    const transform_t                               m_T_w_;
     const offest_array_t                            offsets_;
-    const double                                    default_scale_;
 
     mutable index_t                                 min_index_;
     mutable index_t                                 max_index_;
@@ -278,4 +263,4 @@ protected:
 
 
 
-#endif // CSLIBS_NDT_2D_PROBABILISTIC_DYNAMIC_GRIDMAP_HPP
+#endif // CSLIBS_NDT_2D_DYNAMIC_GRIDMAP_HPP

@@ -21,10 +21,6 @@
 
 namespace cis = cslibs_indexed_storage;
 
-namespace cslibs_ndt_2d {
-namespace static_maps {
-namespace cis = cslibs_indexed_storage;
-
 namespace cslibs_ndt_3d {
 namespace static_maps {
 class Gridmap

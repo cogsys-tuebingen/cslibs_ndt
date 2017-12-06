@@ -19,7 +19,7 @@
 
 namespace cis = cslibs_indexed_storage;
 
-namespace cslibs_ndt_2d {
+namespace cslibs_ndt_3d {
 namespace dynamic_maps {
 class Gridmap
 {
@@ -104,7 +104,7 @@ public:
         {
             lock_t l(bundle_storage_mutex_);
             const index_t bi = toBundleIndex(p);
-            distribution_bundle_t *bundle = bundle_storage_->get(bi);
+            bundle = bundle_storage_->get(bi);
             if(!bundle) {
                 distribution_bundle_t b;
                 b[0] = getAllocate(storage_[0], toIndex(p));
@@ -119,6 +119,7 @@ public:
             }
             updateIndices(bi);
         }
+
         bundle->at(0)->getHandle()->data().add(p);
         bundle->at(1)->getHandle()->data().add(p);
         bundle->at(2)->getHandle()->data().add(p);
@@ -251,16 +252,17 @@ protected:
     {
         const point_t p_m = (m_T_w_ * p_w) + off;
         return {{static_cast<int>(p_m(0) * resolution_inv_),
-                        static_cast<int>(p_m(1) * resolution_inv_)}};
+                        static_cast<int>(p_m(1) * resolution_inv_),
+                        static_cast<int>(p_m(2) * resolution_inv_)}};
     }
 
     inline index_t toBundleIndex(const point_t &p_w) const
     {
         const point_t p_m = m_T_w_ * p_w;
         return {{static_cast<int>(p_m(0) * bundle_resolution_inv_),
-                        static_cast<int>(p_m(1) * bundle_resolution_inv_)}};
+                        static_cast<int>(p_m(1) * bundle_resolution_inv_),
+                        static_cast<int>(p_m(2) * bundle_resolution_inv_)}};
     }
-
 };
 }
 }

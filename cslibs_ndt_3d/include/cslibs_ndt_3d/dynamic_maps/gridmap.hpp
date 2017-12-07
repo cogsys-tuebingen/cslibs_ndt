@@ -130,6 +130,39 @@ public:
         bundle->at(7)->getHandle()->data().add(p);
     }
 
+    inline void add(const point_t &p,
+                    index_t &bi)
+    {
+        distribution_bundle_t *bundle;
+        bi = toBundleIndex(p);
+        {
+            lock_t l(bundle_storage_mutex_);
+            bundle = bundle_storage_->get(bi);
+            if(!bundle) {
+                distribution_bundle_t b;
+                b[0] = getAllocate(storage_[0], toIndex(p));
+                b[1] = getAllocate(storage_[1], toIndex(p, offsets_[0]));
+                b[2] = getAllocate(storage_[2], toIndex(p, offsets_[1]));
+                b[3] = getAllocate(storage_[3], toIndex(p, offsets_[2]));
+                b[4] = getAllocate(storage_[4], toIndex(p, offsets_[3]));
+                b[5] = getAllocate(storage_[5], toIndex(p, offsets_[4]));
+                b[6] = getAllocate(storage_[6], toIndex(p, offsets_[5]));
+                b[7] = getAllocate(storage_[7], toIndex(p, offsets_[6]));
+                bundle = &(bundle_storage_->insert(bi, b));
+            }
+            updateIndices(bi);
+        }
+
+        bundle->at(0)->getHandle()->data().add(p);
+        bundle->at(1)->getHandle()->data().add(p);
+        bundle->at(2)->getHandle()->data().add(p);
+        bundle->at(3)->getHandle()->data().add(p);
+        bundle->at(4)->getHandle()->data().add(p);
+        bundle->at(5)->getHandle()->data().add(p);
+        bundle->at(6)->getHandle()->data().add(p);
+        bundle->at(7)->getHandle()->data().add(p);
+    }
+
     inline double sample(const point_t &p) const
     {
         const index_t bi = toBundleIndex(p);

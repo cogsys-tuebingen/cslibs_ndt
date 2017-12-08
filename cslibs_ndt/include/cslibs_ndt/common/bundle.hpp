@@ -10,19 +10,22 @@ public:
     using bundle_t = Bundle<T, Size>;
     using data_t   = std::array<T, Size>;
 
-    inline Bundle()
+    inline Bundle() :
+        id_(n_ ++)
     {
     }
 
     inline virtual ~Bundle() = default;
 
     inline Bundle(const Bundle &other) :
-        data_(other.data_)
+        data_(other.data_),
+        id_(n_ ++)
     {
     }
 
    inline  Bundle(Bundle &&other) :
-        data_(std::move(other.data_))
+        data_(std::move(other.data_)),
+        id_(n_ ++)
     {
     }
 
@@ -73,10 +76,19 @@ public:
     {
     }
 
-private:
-    data_t  data_;
+    inline const int& id() const
+    {
+        return id_;
+    }
 
+private:
+    data_t     data_;
+    const int  id_;
+    static int n_;
 };
+
+template<typename T, std::size_t Size>
+int Bundle<T, Size>::n_ = 0;
 }
 
 #endif // CSLIBS_NDT_BUNDLE_HPP

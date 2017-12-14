@@ -13,6 +13,7 @@
 #include <cslibs_ndt/common/bundle.hpp>
 
 #include <cslibs_math/common/array.hpp>
+#include <cslibs_math/common/floor.hpp>
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
@@ -283,18 +284,18 @@ protected:
     inline index_t toIndex(const point_t &p_w,
                            const point_t &off = point_t()) const
     {
-        const point_t p_m = (m_T_w_ * p_w) + off;
-        return {{static_cast<int>(p_m(0) * resolution_inv_),
-                        static_cast<int>(p_m(1) * resolution_inv_),
-                        static_cast<int>(p_m(2) * resolution_inv_)}};
+        const point_t p_m = (m_T_w_ * p_w) + off;        
+        return {{static_cast<int>(cslibs_math::common::floor(p_m(0) * resolution_inv_)),
+                 static_cast<int>(cslibs_math::common::floor(p_m(1) * resolution_inv_)),
+                 static_cast<int>(cslibs_math::common::floor(p_m(2) * resolution_inv_))}};
     }
 
     inline index_t toBundleIndex(const point_t &p_w) const
     {
-        const point_t p_m = m_T_w_ * p_w;
-        return {{static_cast<int>(p_m(0) * bundle_resolution_inv_),
-                        static_cast<int>(p_m(1) * bundle_resolution_inv_),
-                        static_cast<int>(p_m(2) * bundle_resolution_inv_)}};
+        const point_t p_m = m_T_w_ * p_w;        
+        return {{static_cast<int>(cslibs_math::common::floor(p_m(0) * bundle_resolution_inv_)),
+                 static_cast<int>(cslibs_math::common::floor(p_m(1) * bundle_resolution_inv_)),
+                 static_cast<int>(cslibs_math::common::floor(p_m(2) * bundle_resolution_inv_))}};
     }
 };
 }

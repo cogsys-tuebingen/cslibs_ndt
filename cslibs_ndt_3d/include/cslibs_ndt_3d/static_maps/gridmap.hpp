@@ -34,7 +34,7 @@ public:
     using size_t                            = std::array<double, 3>;
     using mutex_t                           = std::mutex;
     using lock_t                            = std::unique_lock<mutex_t>;
-    using distribution_t                    = cslibs_ndt::Distribution<2>;
+    using distribution_t                    = cslibs_ndt::Distribution<3>;
     using distribution_storage_t            = cis::Storage<distribution_t, index_t, cis::backend::array::Array>;
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;
     using distribution_storage_array_t      = std::array<distribution_storage_ptr_t, 8>;

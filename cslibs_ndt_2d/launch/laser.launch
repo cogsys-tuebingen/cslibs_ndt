@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<launch>
+    <param name="/use_sim_time" value="true" />
+
+    <!-- base_footprint and base_link was missing -->
+    <node pkg="tf" type="static_transform_publisher" name="odom_T" args="0.0 0.0 0.0102 0.0 0.0 0.0 1.0 /base_footprint /base_link 100"/>
+
+     <group ns="cslibs_ndt_2d_matching_node">
+     <param name="topic_scan"  value="/scan" />
+     <param name="topic_src"   value="/ndt_matcher_2d/src" />
+     <param name="topic_match" value="/ndt_matcher_2d/matched" />
+     <param name="topic_dst"   value="/ndt_matcher_2d/dst" />
+     <param name="odom_frame"  value="/odom" />
+     <param name="resolution"  value="0.2" />
+     <param name="eps_rot"     value="0.0" />
+     <param name="eps_trans"   value="0.0" />
+     <param name="alpha"       value="0.5" />
+     <param name="lambda"      value="0.01" />
+    </group>
+
+    <node name="cslibs_ndt_2d_matching_node" pkg="cslibs_ndt_2d" type="cslibs_ndt_2d_matching_node" output="screen" />
+
+</launch>

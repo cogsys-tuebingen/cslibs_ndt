@@ -12,6 +12,9 @@
   <buildtool_depend>catkin</buildtool_depend>
   <depend>cslibs_ndt</depend>
   <depend>cslibs_math_2d</depend>
+  <depend>cslibs_time</depend>
+  <depend>roscpp</depend>
+  <depend>tf</depend>
 
   <export>
   </export>

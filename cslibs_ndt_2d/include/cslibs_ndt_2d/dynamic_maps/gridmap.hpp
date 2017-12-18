@@ -93,7 +93,7 @@ public:
     {
         lock_t l(bundle_storage_mutex_);
         return point_t((max_index_[0] + 1) * bundle_resolution_,
-                (max_index_[1] + 1) * bundle_resolution_);
+                       (max_index_[1] + 1) * bundle_resolution_);
     }
 
     inline pose_t getOrigin() const
@@ -107,8 +107,6 @@ public:
     {
         return w_T_m_;
     }
-
-
 
     inline void add(const point_t &p)
     {
@@ -182,14 +180,48 @@ public:
 
     inline const distribution_bundle_t* getDistributionBundle(const index_t &bi) const
     {
-        lock_t(bundle_storage_mutex_);
-        return bundle_storage_->get(bi);
+        distribution_bundle_t *bundle;
+        {
+            lock_t(bundle_storage_mutex_);
+            bundle = bundle_storage_->get(bi);
+        }
+        auto from_bundle_index = [this, &bi]() {
+            return point_t(bi[0] * bundle_resolution_, bi[1] * bundle_resolution_);
+        };
+        auto allocate_bundle = [this, &bi, &from_bundle_index]() {
+            distribution_bundle_t b;
+            const point_t &p = from_bundle_index();
+            b[0] = getAllocate(storage_[0], toIndex(p));
+            b[1] = getAllocate(storage_[1], toIndex(p, offsets_[0]));
+            b[2] = getAllocate(storage_[2], toIndex(p, offsets_[1]));
+            b[3] = getAllocate(storage_[3], toIndex(p, offsets_[2]));
+            lock_t(bundle_storage_mutex_);
+            return &(bundle_storage_->insert(bi, b));
+        };
+        return bundle ? bundle : allocate_bundle();
     }
 
     inline distribution_bundle_t* getDistributionBundle(const index_t &bi)
     {
-        lock_t(bundle_storage_mutex_);
-        return bundle_storage_->get(bi);
+        distribution_bundle_t *bundle;
+        {
+            lock_t(bundle_storage_mutex_);
+            bundle = bundle_storage_->get(bi);
+        }
+        auto from_bundle_index = [this, &bi]() {
+            return point_t(bi[0] * bundle_resolution_, bi[1] * bundle_resolution_);
+        };
+        auto allocate_bundle = [this, &bi, &from_bundle_index]() {
+            distribution_bundle_t b;
+            const point_t &p = from_bundle_index();
+            b[0] = getAllocate(storage_[0], toIndex(p));
+            b[1] = getAllocate(storage_[1], toIndex(p, offsets_[0]));
+            b[2] = getAllocate(storage_[2], toIndex(p, offsets_[1]));
+            b[3] = getAllocate(storage_[3], toIndex(p, offsets_[2]));
+            lock_t(bundle_storage_mutex_);
+            return &(bundle_storage_->insert(bi, b));
+        };
+        return bundle ? bundle : allocate_bundle();
     }
 
     inline double getBundleResolution() const
@@ -229,7 +261,7 @@ protected:
     mutable distribution_bundle_storage_ptr_t       bundle_storage_;
 
     inline distribution_t* getAllocate(const distribution_storage_ptr_t &s,
-                                       const index_t &i)
+                                       const index_t &i) const
     {
         lock_t l(storage_mutex_);
         distribution_t *d = s->get(i);

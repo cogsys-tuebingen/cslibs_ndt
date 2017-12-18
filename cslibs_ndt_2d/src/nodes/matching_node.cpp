@@ -7,7 +7,7 @@
 
 #include <cslibs_ndt_2d/dynamic_maps/algorithms/matcher.hpp>
 #include <cslibs_time/time.hpp>
-#include <cslibs_math_2d/conversion/ros.hpp>
+#include <cslibs_math_ros/sensor_msgs/conversion_2d.hpp>
 #include <cslibs_math_2d/linear/transform.hpp>
 
 namespace cslibs_ndt_2d {
@@ -39,8 +39,8 @@ private:
         cslibs_time::Time start = cslibs_time::Time::now();
 
         // match old point to the current ones -> current laserscan is dst
-        cslibs_math_2d::Pointcloud2d dst;
-        cslibs_math_2d::conversion::from(*msg, dst);
+        cslibs_math_2d::Pointcloud2d::Ptr dst;
+        cslibs_math_ros::sensor_msgs::conversion_2d::from(msg, dst);
 
         // estimate current pose with odom
         tf::StampedTransform dst_transform;
@@ -78,7 +78,7 @@ private:
             matcher_t matcher(params);
 
             // match the scans
-            const double score = matcher.match(dst, *src_, transform);
+            const double score = matcher.match(*dst, *src_, transform);
             std::cout << "matching took " << (cslibs_time::Time::now() - start).milliseconds() << "ms \n";
             std::cout << "score is " << score << "\n";
             std::cout << "transformation is " << transform << "\n";
@@ -94,7 +94,7 @@ private:
 
                 toPointCloud(*src_, output, transform);
                 toPointCloud(*src_, output_src);
-                toPointCloud(dst,   output_dst);
+                toPointCloud(*dst,   output_dst);
 
                 // publish transformed laserscan, src and dst
                 pub_src_.publish(output_src);
@@ -105,7 +105,7 @@ private:
 
         // save the current laserscan as reference scan
         src_transform_ = dst_transform;
-        src_.reset(new cslibs_math_2d::Pointcloud2d(dst));
+        src_ = dst;
     }
 
     void toPointCloud(

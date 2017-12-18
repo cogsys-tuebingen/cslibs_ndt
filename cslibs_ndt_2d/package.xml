@@ -15,6 +15,7 @@
   <depend>cslibs_time</depend>
   <depend>roscpp</depend>
   <depend>tf</depend>
+  <depend>cslibs_math_ros</depend>
 
   <export>
   </export>

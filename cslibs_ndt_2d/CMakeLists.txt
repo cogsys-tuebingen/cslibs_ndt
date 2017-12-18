@@ -6,6 +6,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(catkin REQUIRED COMPONENTS
     cslibs_ndt
     cslibs_math_2d
+    cslibs_math_ros
     cslibs_time
     roscpp
     tf

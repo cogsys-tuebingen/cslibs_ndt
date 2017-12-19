@@ -412,7 +412,7 @@ protected:
                                               sampling_resolution_,
                                               height,
                                               width));
-
+std::cout << origin << std::endl;
         const double bundle_resolution = dst->getBundleResolution();
         const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution_);
         typename map_t::index_t min_distribution_index = dst->getMinDistributionIndex();

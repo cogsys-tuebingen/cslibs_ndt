@@ -39,7 +39,7 @@ public:
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;
     using distribution_storage_array_t      = std::array<distribution_storage_ptr_t, 4>;
     using offest_array_t                    = std::array<point_t, 3>;
-    using index_array_t                     = std::array<index_t, 4>;
+    using index_array_t                     = std::array<index_t, 3>;
     using distribution_bundle_t             = cslibs_ndt::Bundle<distribution_t*, 4>;
     using distribution_const_bundle_t       = cslibs_ndt::Bundle<const distribution_t*, 4>;
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::kdtree::KDTree>;
@@ -53,8 +53,6 @@ public:
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
-        offsets_{{point_t(-bundle_resolution_, 0.0), point_t(0.0, -bundle_resolution_), point_t(-bundle_resolution_)}},
-        index_offsets_{{index_t({0, 0}), index_t({-1, 0}), index_t({0, -1}), index_t({-1, -1})}},
         min_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
         max_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
         storage_{{distribution_storage_ptr_t(new distribution_storage_t),
@@ -75,8 +73,6 @@ public:
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin_x, origin_y, origin_phi),
         m_T_w_(w_T_m_.inverse()),
-        offsets_{{point_t(-bundle_resolution_, 0.0), point_t(0.0, -bundle_resolution_), point_t(-bundle_resolution_)}},
-        index_offsets_{{index_t({0, 0}), index_t({-1, 0}), index_t({0, -1}), index_t({-1, -1})}},
         min_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
         max_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
         storage_{{distribution_storage_ptr_t(new distribution_storage_t),
@@ -119,17 +115,7 @@ public:
         {
             lock_t l(bundle_storage_mutex_);
             const index_t bi = toBundleIndex(p);
-            bundle = bundle_storage_->get(bi);
-            if(!bundle) {
-                distribution_bundle_t b;
-                const index_array_t indices = toIndices(bi);
-                b[0] = getAllocate(storage_[0], indices[0]);
-                b[1] = getAllocate(storage_[1], indices[1]);
-                b[2] = getAllocate(storage_[2], indices[2]);
-                b[3] = getAllocate(storage_[3], indices[3]);
-                bundle = &(bundle_storage_->insert(bi, b));
-            }
-            updateIndices(bi);
+            bundle = getAllocate(bi);
         }
         bundle->at(0)->getHandle()->data().add(p);
         bundle->at(1)->getHandle()->data().add(p);
@@ -143,7 +129,7 @@ public:
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);
-            bundle = bundle_storage_->get(bi);
+            bundle = getAllocate(bi);
         }
         auto evaluate = [&p, &bundle]() {
             return 0.25 * (bundle->at(0)->data().sample(p) +
@@ -151,7 +137,7 @@ public:
                            bundle->at(2)->data().sample(p) +
                            bundle->at(3)->data().sample(p));
         };
-        return bundle ? evaluate() : 0.0;
+        return evaluate();
     }
 
 
@@ -161,7 +147,7 @@ public:
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);
-            bundle = bundle_storage_->get(bi);
+            bundle = getAllocate(bi);
         }
         auto evaluate = [&p, &bundle]() {
             return 0.25 * (bundle->at(0)->data().sampleNonNormalized(p) +
@@ -169,7 +155,7 @@ public:
                            bundle->at(2)->data().sampleNonNormalized(p) +
                            bundle->at(3)->data().sampleNonNormalized(p));
         };
-        return bundle ? evaluate() : 0.0;
+        return evaluate();
     }
 
     inline index_t getMinDistributionIndex() const
@@ -186,44 +172,12 @@ public:
 
     inline const distribution_bundle_t* getDistributionBundle(const index_t &bi) const
     {
-        distribution_bundle_t *bundle;
-        {
-            lock_t(bundle_storage_mutex_);
-            bundle = bundle_storage_->get(bi);
-        }
-        auto allocate_bundle = [this, &bi]() {
-            distribution_bundle_t b;
-            const index_array_t indices = toIndices(bi);
-            b[0] = getAllocate(storage_[0], indices[0]);
-            b[1] = getAllocate(storage_[1], indices[1]);
-            b[2] = getAllocate(storage_[2], indices[2]);
-            b[3] = getAllocate(storage_[3], indices[3]);
-            lock_t(bundle_storage_mutex_);
-            updateIndices(bi);
-            return &(bundle_storage_->insert(bi, b));
-        };
-        return bundle ? bundle : allocate_bundle();
+        return getAllocate(bi);
     }
 
     inline distribution_bundle_t* getDistributionBundle(const index_t &bi)
     {
-        distribution_bundle_t *bundle;
-        {
-            lock_t(bundle_storage_mutex_);
-            bundle = bundle_storage_->get(bi);
-        }
-        auto allocate_bundle = [this, &bi]() {
-            distribution_bundle_t b;
-            const index_array_t indices = toIndices(bi);
-            b[0] = getAllocate(storage_[0], indices[0]);
-            b[1] = getAllocate(storage_[1], indices[1]);
-            b[2] = getAllocate(storage_[2], indices[2]);
-            b[3] = getAllocate(storage_[3], indices[3]);
-            lock_t(bundle_storage_mutex_);
-            updateIndices(bi);
-            return &(bundle_storage_->insert(bi, b));
-        };
-        return bundle ? bundle : allocate_bundle();
+        return getAllocate(bi);
     }
 
     inline double getBundleResolution() const
@@ -253,8 +207,6 @@ protected:
     const double                                    bundle_resolution_inv_;
     const transform_t                               w_T_m_;
     const transform_t                               m_T_w_;
-    const offest_array_t                            offsets_;
-    const index_array_t                             index_offsets_;
 
     mutable index_t                                 min_index_;
     mutable index_t                                 max_index_;
@@ -271,41 +223,50 @@ protected:
         return d ? d : &(s->insert(i, distribution_t()));
     }
 
+    inline distribution_bundle_t *getAllocate(const index_t &bi) const
+    {
+        distribution_bundle_t *bundle;
+        {
+            lock_t(bundle_storage_mutex_);
+            bundle = bundle_storage_->get(bi);
+        }
+
+        auto allocate_bundle = [this, &bi]() {
+            distribution_bundle_t b;
+            const int divx = cslibs_math::common::div(bi[0], 2);
+            const int divy = cslibs_math::common::div(bi[1], 2);
+            const int modx = cslibs_math::common::mod(bi[0], 2);
+            const int mody = cslibs_math::common::mod(bi[1], 2);
+
+            const index_t storage_0_index = {{divx, divy}};
+            const index_t storage_1_index = {{divx + modx, divy}};        /// shifted to the left
+            const index_t storage_2_index = {{divx, divy + mody}};        /// shifted to the bottom
+            const index_t storage_3_index = {{divx + modx, divy + mody}}; /// shifted diagonally
+
+            b[0] = getAllocate(storage_[0], storage_0_index);
+            b[1] = getAllocate(storage_[1], storage_1_index);
+            b[2] = getAllocate(storage_[2], storage_2_index);
+            b[3] = getAllocate(storage_[3], storage_3_index);
+
+            lock_t(bundle_storage_mutex_);
+            updateIndices(bi);
+            return &(bundle_storage_->insert(bi, b));
+        };
+
+        return bundle == nullptr ? allocate_bundle() : bundle;
+    }
+
     inline void updateIndices(const index_t &chunk_index) const
     {
         min_index_ = std::min(min_index_, chunk_index);
         max_index_ = std::max(max_index_, chunk_index);
     }
 
-    inline index_t toIndex(const point_t &p_w,
-                           const point_t &off = point_t()) const
-    {
-        const point_t p_m = (m_T_w_ * p_w) + off;
-        return {{static_cast<int>(cslibs_math::common::floor(p_m(0) * resolution_inv_)),
-                 static_cast<int>(cslibs_math::common::floor(p_m(1) * resolution_inv_))}};
-    }
-
     inline index_t toBundleIndex(const point_t &p_w) const
     {
         const point_t p_m = m_T_w_ * p_w;
         return {{static_cast<int>(cslibs_math::common::floor(p_m(0) * bundle_resolution_inv_)),
-                 static_cast<int>(cslibs_math::common::floor(p_m(1) * bundle_resolution_inv_))}};
-    }
-
-    inline index_array_t toIndices(const index_t &bi) const
-    {
-        const index_t base_index({cslibs_math::common::div(bi[0], 2),
-                                  cslibs_math::common::div(bi[1], 2)});
-        const index_t rel_index({1 - cslibs_math::common::mod(bi[0], 2),
-                                 1 - cslibs_math::common::mod(bi[1], 2)});
-        return index_array_t({base_index + index_t({rel_index[0] * index_offsets_[0][0],
-                                                    rel_index[1] * index_offsets_[0][1]}),
-                              base_index + index_t({rel_index[0] * index_offsets_[1][0],
-                                                    rel_index[1] * index_offsets_[1][1]}),
-                              base_index + index_t({rel_index[0] * index_offsets_[2][0],
-                                                    rel_index[1] * index_offsets_[2][1]}),
-                              base_index + index_t({rel_index[0] * index_offsets_[3][0],
-                                                    rel_index[1] * index_offsets_[3][1]})});
+                        static_cast<int>(cslibs_math::common::floor(p_m(1) * bundle_resolution_inv_))}};
     }
 };
 }

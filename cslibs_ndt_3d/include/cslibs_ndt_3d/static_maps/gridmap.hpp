@@ -13,6 +13,9 @@
 #include <cslibs_ndt/common/bundle.hpp>
 
 #include <cslibs_math/common/array.hpp>
+#include <cslibs_math/common/floor.hpp>
+#include <cslibs_math/common/div.hpp>
+#include <cslibs_math/common/mod.hpp>
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/array/array.hpp>
@@ -141,14 +144,15 @@ public:
         distribution_bundle_t *bundle = bundle_storage_->get(bi);
         if(!bundle) {
             distribution_bundle_t b;
-            b[0] = getAllocate(storage_[0], toIndex(p));
-            b[1] = getAllocate(storage_[1], toIndex(p, offsets_[0]));
-            b[2] = getAllocate(storage_[2], toIndex(p, offsets_[1]));
-            b[3] = getAllocate(storage_[3], toIndex(p, offsets_[2]));
-            b[4] = getAllocate(storage_[4], toIndex(p, offsets_[3]));
-            b[5] = getAllocate(storage_[5], toIndex(p, offsets_[4]));
-            b[6] = getAllocate(storage_[6], toIndex(p, offsets_[5]));
-            b[7] = getAllocate(storage_[7], toIndex(p, offsets_[6]));
+            const index_array_t indices = toIndices(bi);
+            b[0] = getAllocate(storage_[0], indices[0]);
+            b[1] = getAllocate(storage_[1], indices[1]);
+            b[2] = getAllocate(storage_[2], indices[2]);
+            b[3] = getAllocate(storage_[3], indices[3]);
+            b[4] = getAllocate(storage_[4], indices[4]);
+            b[5] = getAllocate(storage_[5], indices[5]);
+            b[6] = getAllocate(storage_[6], indices[6]);
+            b[7] = getAllocate(storage_[7], indices[7]);
             bundle = &(bundle_storage_->insert(bi, b));
         }
         bundle->at(0)->getHandle()->data().add(p);
@@ -223,45 +227,17 @@ public:
             lock_t(bundle_storage_mutex_);
             bundle = bundle_storage_->get(bi);
         }
-        auto offsets = [this, &bi]() {
-            const index_t rel_index({1 - bi[0] % 2, 1 - bi[1] % 2, 1 - bi[2] % 2});
-            return index_array_t({index_t({rel_index[0] * index_offsets_[0][0],
-                                           rel_index[1] * index_offsets_[0][1],
-                                           rel_index[2] * index_offsets_[0][2]}),
-                                  index_t({rel_index[0] * index_offsets_[1][0],
-                                           rel_index[1] * index_offsets_[1][1],
-                                           rel_index[2] * index_offsets_[1][2]}),
-                                  index_t({rel_index[0] * index_offsets_[2][0],
-                                           rel_index[1] * index_offsets_[2][1],
-                                           rel_index[2] * index_offsets_[2][2]}),
-                                  index_t({rel_index[0] * index_offsets_[3][0],
-                                           rel_index[1] * index_offsets_[3][1],
-                                           rel_index[2] * index_offsets_[3][2]}),
-                                  index_t({rel_index[0] * index_offsets_[4][0],
-                                           rel_index[1] * index_offsets_[4][1],
-                                           rel_index[2] * index_offsets_[4][2]}),
-                                  index_t({rel_index[0] * index_offsets_[5][0],
-                                           rel_index[1] * index_offsets_[5][1],
-                                           rel_index[2] * index_offsets_[5][2]}),
-                                  index_t({rel_index[0] * index_offsets_[6][0],
-                                           rel_index[1] * index_offsets_[6][1],
-                                           rel_index[2] * index_offsets_[6][2]}),
-                                  index_t({rel_index[0] * index_offsets_[7][0],
-                                           rel_index[1] * index_offsets_[7][1],
-                                           rel_index[2] * index_offsets_[7][2]})});
-        };
-        auto allocate_bundle = [this, &bi, &offsets]() {
+        auto allocate_bundle = [this, &bi]() {
             distribution_bundle_t b;
-            const index_t base_index = bi / 2;
-            const index_array_t off  = offsets();
-            b[0] = getAllocate(storage_[0], base_index + off[0]);
-            b[1] = getAllocate(storage_[1], base_index + off[1]);
-            b[2] = getAllocate(storage_[2], base_index + off[2]);
-            b[3] = getAllocate(storage_[3], base_index + off[3]);
-            b[4] = getAllocate(storage_[4], base_index + off[4]);
-            b[5] = getAllocate(storage_[5], base_index + off[5]);
-            b[6] = getAllocate(storage_[6], base_index + off[6]);
-            b[7] = getAllocate(storage_[7], base_index + off[7]);
+            const index_array_t indices = toIndices(bi);
+            b[0] = getAllocate(storage_[0], indices[0]);
+            b[1] = getAllocate(storage_[1], indices[1]);
+            b[2] = getAllocate(storage_[2], indices[2]);
+            b[3] = getAllocate(storage_[3], indices[3]);
+            b[4] = getAllocate(storage_[4], indices[4]);
+            b[5] = getAllocate(storage_[5], indices[5]);
+            b[6] = getAllocate(storage_[6], indices[6]);
+            b[7] = getAllocate(storage_[7], indices[7]);
             lock_t(bundle_storage_mutex_);
             return &(bundle_storage_->insert(bi, b));
         };
@@ -275,45 +251,17 @@ public:
             lock_t(bundle_storage_mutex_);
             bundle = bundle_storage_->get(bi);
         }
-        auto offsets = [this, &bi]() {
-            const index_t rel_index({1 - bi[0] % 2, 1 - bi[1] % 2, 1 - bi[2] % 2});
-            return index_array_t({index_t({rel_index[0] * index_offsets_[0][0],
-                                           rel_index[1] * index_offsets_[0][1],
-                                           rel_index[2] * index_offsets_[0][2]}),
-                                  index_t({rel_index[0] * index_offsets_[1][0],
-                                           rel_index[1] * index_offsets_[1][1],
-                                           rel_index[2] * index_offsets_[1][2]}),
-                                  index_t({rel_index[0] * index_offsets_[2][0],
-                                           rel_index[1] * index_offsets_[2][1],
-                                           rel_index[2] * index_offsets_[2][2]}),
-                                  index_t({rel_index[0] * index_offsets_[3][0],
-                                           rel_index[1] * index_offsets_[3][1],
-                                           rel_index[2] * index_offsets_[3][2]}),
-                                  index_t({rel_index[0] * index_offsets_[4][0],
-                                           rel_index[1] * index_offsets_[4][1],
-                                           rel_index[2] * index_offsets_[4][2]}),
-                                  index_t({rel_index[0] * index_offsets_[5][0],
-                                           rel_index[1] * index_offsets_[5][1],
-                                           rel_index[2] * index_offsets_[5][2]}),
-                                  index_t({rel_index[0] * index_offsets_[6][0],
-                                           rel_index[1] * index_offsets_[6][1],
-                                           rel_index[2] * index_offsets_[6][2]}),
-                                  index_t({rel_index[0] * index_offsets_[7][0],
-                                           rel_index[1] * index_offsets_[7][1],
-                                           rel_index[2] * index_offsets_[7][2]})});
-        };
-        auto allocate_bundle = [this, &bi, &offsets]() {
+        auto allocate_bundle = [this, &bi]() {
             distribution_bundle_t b;
-            const index_t base_index = bi / 2;
-            const index_array_t off  = offsets();
-            b[0] = getAllocate(storage_[0], base_index + off[0]);
-            b[1] = getAllocate(storage_[1], base_index + off[1]);
-            b[2] = getAllocate(storage_[2], base_index + off[2]);
-            b[3] = getAllocate(storage_[3], base_index + off[3]);
-            b[4] = getAllocate(storage_[4], base_index + off[4]);
-            b[5] = getAllocate(storage_[5], base_index + off[5]);
-            b[6] = getAllocate(storage_[6], base_index + off[6]);
-            b[7] = getAllocate(storage_[7], base_index + off[7]);
+            const index_array_t indices = toIndices(bi);
+            b[0] = getAllocate(storage_[0], indices[0]);
+            b[1] = getAllocate(storage_[1], indices[1]);
+            b[2] = getAllocate(storage_[2], indices[2]);
+            b[3] = getAllocate(storage_[3], indices[3]);
+            b[4] = getAllocate(storage_[4], indices[4]);
+            b[5] = getAllocate(storage_[5], indices[5]);
+            b[6] = getAllocate(storage_[6], indices[6]);
+            b[7] = getAllocate(storage_[7], indices[7]);
             lock_t(bundle_storage_mutex_);
             return &(bundle_storage_->insert(bi, b));
         };
@@ -382,6 +330,40 @@ protected:
                  static_cast<int>(cslibs_math::common::floor(p_m(1) * bundle_resolution_inv_)),
                  static_cast<int>(cslibs_math::common::floor(p_m(2) * bundle_resolution_inv_))}};
 
+    }
+
+    inline index_array_t toIndices(const index_t &bi) const
+    {
+        const index_t base_index({cslibs_math::common::div(bi[0], 2),
+                                  cslibs_math::common::div(bi[1], 2),
+                                  cslibs_math::common::div(bi[2], 2)});
+        const index_t rel_index({1 - cslibs_math::common::mod(bi[0], 2),
+                                 1 - cslibs_math::common::mod(bi[1], 2),
+                                 1 - cslibs_math::common::mod(bi[2], 2)});
+        return index_array_t({base_index + index_t({rel_index[0] * index_offsets_[0][0],
+                                                    rel_index[1] * index_offsets_[0][1],
+                                                    rel_index[2] * index_offsets_[0][2]}),
+                              base_index + index_t({rel_index[0] * index_offsets_[1][0],
+                                                    rel_index[1] * index_offsets_[1][1],
+                                                    rel_index[2] * index_offsets_[1][2]}),
+                              base_index + index_t({rel_index[0] * index_offsets_[2][0],
+                                                    rel_index[1] * index_offsets_[2][1],
+                                                    rel_index[2] * index_offsets_[2][2]}),
+                              base_index + index_t({rel_index[0] * index_offsets_[3][0],
+                                                    rel_index[1] * index_offsets_[3][1],
+                                                    rel_index[2] * index_offsets_[3][2]}),
+                              base_index + index_t({rel_index[0] * index_offsets_[4][0],
+                                                    rel_index[1] * index_offsets_[4][1],
+                                                    rel_index[2] * index_offsets_[4][2]}),
+                              base_index + index_t({rel_index[0] * index_offsets_[5][0],
+                                                    rel_index[1] * index_offsets_[5][1],
+                                                    rel_index[2] * index_offsets_[5][2]}),
+                              base_index + index_t({rel_index[0] * index_offsets_[6][0],
+                                                    rel_index[1] * index_offsets_[6][1],
+                                                    rel_index[2] * index_offsets_[6][2]}),
+                              base_index + index_t({rel_index[0] * index_offsets_[7][0],
+                                                    rel_index[1] * index_offsets_[7][1],
+                                                    rel_index[2] * index_offsets_[7][2]})});
     }
 };
 }

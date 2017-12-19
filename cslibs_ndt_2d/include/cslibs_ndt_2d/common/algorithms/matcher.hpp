@@ -420,7 +420,7 @@ protected:
 
         auto sample = [](const typename map_t::distribution_t *d,
                          const cslibs_math_2d::Point2d &p) {
-            return d ? (d->data().sampleNonNormalized(p) / double(d->data().getN())) : 0.0;
+            return d ? /*d->data().sampleNonNormalized(p)*/(d->data().getN() != 0.0 ? 1.0 : 0.0) : 0.0;
         };
         auto sample_bundle = [&sample] (const typename map_t::distribution_bundle_t* b,
                                         const cslibs_math_2d::Point2d &p)

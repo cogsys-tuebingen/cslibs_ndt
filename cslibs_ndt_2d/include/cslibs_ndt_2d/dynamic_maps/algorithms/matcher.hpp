@@ -19,14 +19,15 @@ public:
 
 private:
     inline virtual Gridmap::Ptr toMap(
-            const cslibs_math_2d::Pointcloud2d & cloud,
-            const pose_t                       & origin,
-            const double                       & resolution)
+            const cslibs_math_2d::Pointcloud2d::Ptr & cloud,
+            const pose_t                            & origin,
+            const double                            & resolution)
     const
     {
         Gridmap::Ptr map(new Gridmap(origin, resolution));
-        for (const point_t & p : cloud)
-            map->add(p);
+        for (const point_t & p : *cloud)
+            if (p.isNormal())
+                map->add(p);
         return map;
     }
 };

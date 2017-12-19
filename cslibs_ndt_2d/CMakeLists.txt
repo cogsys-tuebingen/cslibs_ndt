@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
     cslibs_math_2d
     cslibs_math_ros
     cslibs_time
+    cslibs_gridmaps
     roscpp
     tf
 )
@@ -15,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES
-  CATKIN_DEPENDS cslibs_ndt cslibs_math_2d cslibs_time
+  CATKIN_DEPENDS cslibs_ndt cslibs_math_2d cslibs_time cslibs_gridmaps
 )
 
 include_directories(

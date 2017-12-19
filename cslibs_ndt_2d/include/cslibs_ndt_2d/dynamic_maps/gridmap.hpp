@@ -38,8 +38,6 @@ public:
     using distribution_storage_t            = cis::Storage<distribution_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;
     using distribution_storage_array_t      = std::array<distribution_storage_ptr_t, 4>;
-    using offest_array_t                    = std::array<point_t, 3>;
-    using index_array_t                     = std::array<index_t, 3>;
     using distribution_bundle_t             = cslibs_ndt::Bundle<distribution_t*, 4>;
     using distribution_const_bundle_t       = cslibs_ndt::Bundle<const distribution_t*, 4>;
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::kdtree::KDTree>;

@@ -231,10 +231,10 @@ protected:
 
         auto allocate_bundle = [this, &bi]() {
             distribution_bundle_t b;
-            const int divx = cslibs_math::common::div(bi[0], 2);
-            const int divy = cslibs_math::common::div(bi[1], 2);
-            const int modx = cslibs_math::common::mod(bi[0], 2);
-            const int mody = cslibs_math::common::mod(bi[1], 2);
+            const int divx = cslibs_math::common::div<int>(bi[0], 2);
+            const int divy = cslibs_math::common::div<int>(bi[1], 2);
+            const int modx = cslibs_math::common::mod<int>(bi[0], 2);
+            const int mody = cslibs_math::common::mod<int>(bi[1], 2);
 
             const index_t storage_0_index = {{divx, divy}};
             const index_t storage_1_index = {{divx + modx, divy}};        /// shifted to the left
@@ -263,8 +263,11 @@ protected:
     inline index_t toBundleIndex(const point_t &p_w) const
     {
         const point_t p_m = m_T_w_ * p_w;
-        return {{static_cast<int>(cslibs_math::common::floor(p_m(0) * bundle_resolution_inv_)),
-                        static_cast<int>(cslibs_math::common::floor(p_m(1) * bundle_resolution_inv_))}};
+        return {{static_cast<int>(p_m(0) * bundle_resolution_inv_),
+                 static_cast<int>(p_m(1) * bundle_resolution_inv_)}};
+
+//        return {{static_cast<int>(cslibs_math::common::floor(p_m(0) * bundle_resolution_inv_)),
+//                 static_cast<int>(cslibs_math::common::floor(p_m(1) * bundle_resolution_inv_))}};
     }
 };
 }

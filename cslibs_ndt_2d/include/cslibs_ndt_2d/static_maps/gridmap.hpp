@@ -218,11 +218,6 @@ protected:
 
     inline distribution_bundle_t *getAllocate(const index_t &bi) const
     {
-<<<<<<< HEAD
-        const point_t p_m = (m_T_w_ * p_w) + off;        
-        return {{static_cast<int>(cslibs_math::common::floor(p_m(0) * resolution_inv_ + 0.5)),
-                 static_cast<int>(cslibs_math::common::floor(p_m(1) * resolution_inv_ + 0.5))}};
-=======
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);
@@ -252,36 +247,13 @@ protected:
         };
 
         return bundle == nullptr ? allocate_bundle() : bundle;
->>>>>>> tmp
     }
 
 
     inline index_t toBundleIndex(const point_t &p_w) const
     {
-        const point_t p_m = m_T_w_ * p_w;
-<<<<<<< HEAD
-        return {{static_cast<int>(cslibs_math::common::floor(p_m(0) * bundle_resolution_inv_ + 0.5)),
-                 static_cast<int>(cslibs_math::common::floor(p_m(1) * bundle_resolution_inv_ + 0.5))}};
-    }
-
-    inline index_array_t toIndices(const index_t &bi) const
-    {
-        const index_t base_index({cslibs_math::common::div(bi[0], 2),
-                                  cslibs_math::common::div(bi[1], 2)});
-        const index_t rel_index({1 - cslibs_math::common::mod(bi[0], 2),
-                                 1 - cslibs_math::common::mod(bi[1], 2)});
-        return index_array_t({base_index + index_t({rel_index[0] * index_offsets_[0][0],
-                                                    rel_index[1] * index_offsets_[0][1]}),
-                              base_index + index_t({rel_index[0] * index_offsets_[1][0],
-                                                    rel_index[1] * index_offsets_[1][1]}),
-                              base_index + index_t({rel_index[0] * index_offsets_[2][0],
-                                                    rel_index[1] * index_offsets_[2][1]}),
-                              base_index + index_t({rel_index[0] * index_offsets_[3][0],
-                                                    rel_index[1] * index_offsets_[3][1]})});
-=======
         return {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
                  static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
->>>>>>> tmp
     }
 };
 }

@@ -228,10 +228,10 @@ protected:
             gradient_t                              & gradient)
     const
     {
-        const double bundle_resolution = dst->getBundleResolution();
-        auto to_bundle_index = [&bundle_resolution] (const point_t & p) -> typename map_t::index_t {
-            return {{static_cast<int>(std::floor(p(0) * bundle_resolution)),
-                            static_cast<int>(std::floor(p(1) * bundle_resolution))}};
+        const double bundle_resolution_inv = 1.0 / dst->getBundleResolution();
+        auto to_bundle_index = [&bundle_resolution_inv] (const point_t & p) -> typename map_t::index_t {
+            return {{static_cast<int>(std::floor(p(0) * bundle_resolution_inv)),
+                     static_cast<int>(std::floor(p(1) * bundle_resolution_inv))}};
         };
 
         auto sample = [](const distribution_t * d,
@@ -268,7 +268,7 @@ protected:
             }
             if (idx < 0 || score == 0.0)
                 continue;
-           // std::cout << score << ", " << b->at(idx)->data().sample(point) << std::endl;
+            std::cout << score << ", " << b->at(idx)->data().sample(point) << ", " << b->at(idx)->data().sampleNonNormalized(point) << std::endl;
 /*/
             for (int idx = 0 ; idx < 4 ; ++ idx) {
                 point_t point_mean;

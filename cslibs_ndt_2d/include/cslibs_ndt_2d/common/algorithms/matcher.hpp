@@ -2,7 +2,6 @@
 #define CSLIBS_NDT_2D_MATCHER_HPP
 
 #include <cslibs_math_2d/linear/pointcloud.hpp>
-#include <cslibs_math/common/floor.hpp>
 
 #include <cslibs_time/stamped.hpp>
 #include <cslibs_gridmaps/static_maps/algorithms/normalize.hpp>
@@ -231,8 +230,8 @@ protected:
     {
         const double bundle_resolution = dst->getBundleResolution();
         auto to_bundle_index = [&bundle_resolution] (const point_t & p) -> typename map_t::index_t {
-            return {{static_cast<int>(cslibs_math::common::floor(p(0) * bundle_resolution)),
-                            static_cast<int>(cslibs_math::common::floor(p(1) * bundle_resolution))}};
+            return {{static_cast<int>(std::floor(p(0) * bundle_resolution)),
+                            static_cast<int>(std::floor(p(1) * bundle_resolution))}};
         };
 
         auto sample = [](const distribution_t * d,
@@ -347,8 +346,8 @@ protected:
     {
         const double bundle_resolution = dst->getBundleResolution();
         auto to_bundle_index = [&bundle_resolution] (const point_t & p) -> typename map_t::index_t {
-            return {{static_cast<int>(cslibs_math::common::floor(p(0) * bundle_resolution)),
-                            static_cast<int>(cslibs_math::common::floor(p(1) * bundle_resolution))}};
+            return {{static_cast<int>(std::floor(p(0) * bundle_resolution)),
+                            static_cast<int>(std::floor(p(1) * bundle_resolution))}};
         };
 
         auto sample = [](const distribution_t * d,
@@ -420,7 +419,7 @@ protected:
 
         auto sample = [](const typename map_t::distribution_t *d,
                          const cslibs_math_2d::Point2d &p) {
-            return d ? /*d->data().sampleNonNormalized(p)*/(d->data().getN() != 0.0 ? 1.0 : 0.0) : 0.0;
+            return d ? d->data().sampleNonNormalized(p)/*/(d->data().getN() > 0 ? 1.0 : 0.0)*/ : 0.0;
         };
         auto sample_bundle = [&sample] (const typename map_t::distribution_bundle_t* b,
                                         const cslibs_math_2d::Point2d &p)
@@ -433,7 +432,7 @@ protected:
 
         for(int i = min_distribution_index[1] ; i <= max_distribution_index[1] ; ++i)
             for(int j = min_distribution_index[0] ; j <= max_distribution_index[0] ; ++j)
-                const typename map_t::distribution_bundle_t* bundle = dst->getDistributionBundle({{j,i}});
+                dst->getDistributionBundle({{j,i}});
 
         min_distribution_index = dst->getMinDistributionIndex();
         max_distribution_index = dst->getMaxDistributionIndex();

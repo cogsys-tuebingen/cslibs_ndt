@@ -13,7 +13,6 @@
 #include <cslibs_ndt/common/bundle.hpp>
 
 #include <cslibs_math/common/array.hpp>
-#include <cslibs_math/common/floor.hpp>
 #include <cslibs_math/common/div.hpp>
 #include <cslibs_math/common/mod.hpp>
 
@@ -336,17 +335,17 @@ protected:
                            const point_t &off = point_t()) const
     {
         const point_t p_m = (m_T_w_ * p_w) + off;        
-        return {{static_cast<int>(cslibs_math::common::floor(p_m(0) * resolution_inv_ + 0.5)),
-                 static_cast<int>(cslibs_math::common::floor(p_m(1) * resolution_inv_ + 0.5)),
-                 static_cast<int>(cslibs_math::common::floor(p_m(2) * resolution_inv_ + 0.5))}};
+        return {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
+                 static_cast<int>(std::floor(p_m(1) * resolution_inv_)),
+                 static_cast<int>(std::floor(p_m(2) * resolution_inv_))}};
     }
 
     inline index_t toBundleIndex(const point_t &p_w) const
     {
         const point_t p_m = m_T_w_ * p_w;        
-        return {{static_cast<int>(cslibs_math::common::floor(p_m(0) * bundle_resolution_inv_ + 0.5)),
-                 static_cast<int>(cslibs_math::common::floor(p_m(1) * bundle_resolution_inv_ + 0.5)),
-                 static_cast<int>(cslibs_math::common::floor(p_m(2) * bundle_resolution_inv_ + 0.5))}};
+        return {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
+                 static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_)),
+                 static_cast<int>(std::floor(p_m(2) * bundle_resolution_inv_))}};
     }
 
     inline index_array_t toIndices(const index_t &bi) const

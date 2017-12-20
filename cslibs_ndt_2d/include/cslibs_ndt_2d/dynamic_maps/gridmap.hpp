@@ -235,9 +235,9 @@ protected:
             const int modx = cslibs_math::common::mod<int>(bi[0], 2);
             const int mody = cslibs_math::common::mod<int>(bi[1], 2);
 
-            const index_t storage_0_index = {{divx, divy}};
+            const index_t storage_0_index = {{divx,        divy}};
             const index_t storage_1_index = {{divx + modx, divy}};        /// shifted to the left
-            const index_t storage_2_index = {{divx, divy + mody}};        /// shifted to the bottom
+            const index_t storage_2_index = {{divx,        divy + mody}}; /// shifted to the bottom
             const index_t storage_3_index = {{divx + modx, divy + mody}}; /// shifted diagonally
 
             b[0] = getAllocate(storage_[0], storage_0_index);

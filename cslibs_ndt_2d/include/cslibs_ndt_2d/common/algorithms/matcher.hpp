@@ -95,8 +95,6 @@ public:
             const transform_t                       & prior_transformation = transform_t::identity())
     const
     {
-        publish(dst);
-
         auto wrap_angle = [](double x) {
             x = fmod(x + M_PI, 2.0 * M_PI);
             if (x < 0)
@@ -128,7 +126,7 @@ public:
             if (score > 0.0 && score < max_score) {
                 correction     = best_correction;
                 lambda        *= params_.alpha_;
-                transformation = correction * prior_transformation;
+                transformation = prior_transformation * correction;//correction * prior_transformation;
                 ++ step_corrections;
             } else {
                 if (iterations > 0 && eps(prev_delta))
@@ -141,9 +139,8 @@ public:
             }
 //*/
             Eigen::Vector3d delta = hessian.ldlt().solve(-gradient);
-            //for (int i = 0 ; i < 3 ; ++ i)
-            //    delta(i) *= lambda(i);
-            delta = -delta;
+            for (int i = 0 ; i < 3 ; ++ i)
+                delta(i) *= lambda(i);
             prev_delta = delta;
 
             // update correction
@@ -155,7 +152,7 @@ public:
             transformation = prior_transformation * correction;//correction * prior_transformation;
 
             // estimate score
-            score = scoreCloud(dst, src, transformation);//*
+            score = scoreCloud(dst, src, transformation);
             if (true) {//(score > max_score) {
                 best_correction = correction;
                 max_score       = score;
@@ -165,6 +162,8 @@ public:
             if (eps(delta))
                 break;//*/
         }
+
+        publish(dst);
 
         transformation = prior_transformation * best_correction;//best_correction * prior_transformation;
         return max_score;
@@ -235,9 +234,14 @@ protected:
         };
 
         auto sample = [](const distribution_t * d,
-                const point_t        & p,
-                point_t              & q) {
+                         const point_t        & p,
+                         point_t              & q) {
             return d ? d->data().sampleNonNormalized(p, q) : 0.0;
+        };
+        auto sample_bundle = [&sample](const distribution_bundle_t * b,
+                                       const point_t               & p) {
+            point_t q;
+            return 0.25 * (sample(b->at(0), p, q) + sample(b->at(1), p, q) + sample(b->at(2), p, q) + sample(b->at(3), p, q));
         };
 
         for (const point_t & p : *src) {
@@ -268,14 +272,14 @@ protected:
             }
             if (idx < 0 || score == 0.0)
                 continue;
-            std::cout << score << ", " << b->at(idx)->data().sample(point) << ", " << b->at(idx)->data().sampleNonNormalized(point) << std::endl;
 /*/
             for (int idx = 0 ; idx < 4 ; ++ idx) {
                 point_t point_mean;
-                const double score = sample(b->at(idx), point, point_mean);
+                /*const*/ double score = sample(b->at(idx), point, point_mean);
+                score = sample_bundle(b, point);
                 if (score == 0.0)
                     continue;//*/
-
+//std::cout << score << ", " << b->at(idx)->data().sample(point) << ", " << b->at(idx)->data().sampleNonNormalized(point) << std::endl;
                 // first and second order derivatives
                 Eigen::Matrix<double, 2, 3> jac(Eigen::Matrix<double, 2, 3>::Identity());
                 jac(0, 2) = -point(0) * transformation.sin() - point(1) * transformation.cos();
@@ -291,13 +295,13 @@ protected:
 
                 // use score of q as weighting factor
                 Eigen::Vector2d q; q << point_mean(0), point_mean(1);
-                const double factor = score / static_cast<double>(src->size());
+                const double factor = 0.25 / static_cast<double>(src->size());
 
                 // gradient
                 gradient_t gradient_tmp(gradient_t::Zero());
                 for (int i = 0 ; i < 3 ; ++ i) {
                     gradient_tmp(i) = q.dot(information_matrix * jac.col(i));
-                    gradient(i)    -= gradient_tmp(i) * factor;
+                    gradient(i)    += gradient_tmp(i) * factor;
                 }
 
                 // hessian

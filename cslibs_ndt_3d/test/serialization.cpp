@@ -103,27 +103,30 @@ TEST(Test_cslibs_ndt_3d, testDynamicGridmapSerialization)
 }
 
 TEST(Test_cslibs_ndt_3d, testStaticGridmapSerialization)
-{/*
+{
     using map_t = cslibs_ndt_3d::static_maps::Gridmap;
     rng_t<1> rng_coord(-10.0, 10.0);
     rng_t<1> rng_angle(-M_PI, M_PI);
-    rng_t<1> rng_size(100.0, 200.0);
-/*
+    rng_t<1> rng_size(10.0, 20.0);
+
     // fill map
-    cslibs_math_3d::Transform3d origin(rng_coord.get(), rng_coord.get(), rng_coord.get(),
-                                       rng_angle.get(), rng_angle.get(), rng_angle.get());
+    cslibs_math_3d::Transform3d origin(cslibs_math_3d::Vector3d(rng_coord.get(), rng_coord.get(), rng_coord.get()),
+                                       cslibs_math_3d::Quaternion(rng_angle.get(), rng_angle.get(), rng_angle.get()));
     const double resolution = rng_t<1>(1.0, 5.0).get();
     const std::size_t size_x = rng_size.get();
     const std::size_t size_y = rng_size.get();
-    typename map_t::Ptr map(new map_t(origin, resolution, {{size_x, size_y}}));
+    const std::size_t size_z = rng_size.get();
+    typename map_t::Ptr map(new map_t(origin, resolution, {{size_x, size_y, size_z}}));
     const int num_samples = static_cast<int>(rng_t<1>(MIN_NUM_SAMPLES, MAX_NUM_SAMPLES).get());
 
     const double max_coord_x = static_cast<double>(size_x) * resolution;
     const double max_coord_y = static_cast<double>(size_y) * resolution;
+    const double max_coord_z = static_cast<double>(size_z) * resolution;
     rng_t<1> rng_coord_x(0.0, max_coord_x);
     rng_t<1> rng_coord_y(0.0, max_coord_y);
+    rng_t<1> rng_coord_z(0.0, max_coord_z);
     for (int i = 0 ; i < num_samples ; ++ i) {
-        const cslibs_math_2d::Point2d p(rng_coord_x.get(), rng_coord_y.get());
+        const cslibs_math_3d::Point3d p(rng_coord_x.get(), rng_coord_y.get(), rng_coord_z.get());
         map->add(origin * p);
     }
 
@@ -142,43 +145,50 @@ TEST(Test_cslibs_ndt_3d, testStaticGridmapSerialization)
 
     EXPECT_EQ(map->getSize()[0],       map_converted->getSize()[0]);
     EXPECT_EQ(map->getSize()[1],       map_converted->getSize()[1]);
+    EXPECT_EQ(map->getSize()[2],       map_converted->getSize()[2]);
     EXPECT_EQ(map->getBundleSize()[0], map_converted->getBundleSize()[0]);
     EXPECT_EQ(map->getBundleSize()[1], map_converted->getBundleSize()[1]);
+    EXPECT_EQ(map->getBundleSize()[2], map_converted->getBundleSize()[2]);
 
-    EXPECT_NEAR(map->getOrigin().tx(),  map_converted->getOrigin().tx(),  1e-9);
-    EXPECT_NEAR(map->getOrigin().ty(),  map_converted->getOrigin().ty(),  1e-9);
-    EXPECT_NEAR(map->getOrigin().yaw(), map_converted->getOrigin().yaw(), 1e-9);
+    EXPECT_NEAR(map->getOrigin().tx(),    map_converted->getOrigin().tx(),    1e-9);
+    EXPECT_NEAR(map->getOrigin().ty(),    map_converted->getOrigin().ty(),    1e-9);
+    EXPECT_NEAR(map->getOrigin().tz(),    map_converted->getOrigin().tz(),    1e-9);
+    EXPECT_NEAR(map->getOrigin().roll(),  map_converted->getOrigin().roll(),  1e-9);
+    EXPECT_NEAR(map->getOrigin().pitch(), map_converted->getOrigin().pitch(), 1e-9);
+    EXPECT_NEAR(map->getOrigin().yaw(),   map_converted->getOrigin().yaw(),   1e-9);
 
     for (int idx = 0 ; idx < static_cast<int>(map->getBundleSize()[0]) ; ++ idx) {
         for (int idy = 0 ; idy < static_cast<int>(map->getBundleSize()[1]) ; ++ idy) {
-            std::array<int, 2> bi({idx, idy});
-            if (typename cslibs_ndt_2d::static_maps::Gridmap::distribution_bundle_t* b =
-                    map->getDistributionBundle(bi)) {
-                typename cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_bundle_t* bb =
-                        map_converted->getDistributionBundle(bi);
-                EXPECT_NE(bb, nullptr);
+            for (int idz = 0 ; idz < static_cast<int>(map->getBundleSize()[2]) ; ++ idz) {
+                std::array<int, 3> bi({idx, idy, idz});
+                if (typename cslibs_ndt_3d::static_maps::Gridmap::distribution_bundle_t* b =
+                        map->getDistributionBundle(bi)) {
+                    typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t* bb =
+                            map_converted->getDistributionBundle(bi);
+                    EXPECT_NE(bb, nullptr);
 
-                for (std::size_t i = 0 ; i < 4 ; ++ i) {
-                    EXPECT_NE(b->at(i),  nullptr);
-                    EXPECT_NE(bb->at(i), nullptr);
+                    for (std::size_t i = 0 ; i < 8 ; ++ i) {
+                        EXPECT_NE(b->at(i),  nullptr);
+                        EXPECT_NE(bb->at(i), nullptr);
 
-                    const cslibs_math::statistics::Distribution<2, 3> & d  = b->at(i)->getHandle()->data();
-                    const cslibs_math::statistics::Distribution<2, 3> & dd = bb->at(i)->getHandle()->data();
-                    EXPECT_EQ(d.getN(), dd.getN());
+                        const cslibs_math::statistics::Distribution<3, 3> & d  = b->at(i)->getHandle()->data();
+                        const cslibs_math::statistics::Distribution<3, 3> & dd = bb->at(i)->getHandle()->data();
+                        EXPECT_EQ(d.getN(), dd.getN());
 
-                    for (std::size_t j = 0 ; j < 2 ; ++ j) {
-                        EXPECT_NEAR(d.getMean()(j), dd.getMean()(j), 1e-3);
-                        for (std::size_t k = 0 ; k < 2 ; ++ k) {
-                            EXPECT_NEAR(d.getCorrelated()(j, k), dd.getCorrelated()(j, k), 1e-3);
-                            EXPECT_NEAR(d.getCovariance()(j, k), dd.getCovariance()(j, k), 1e-3);
-                            EXPECT_NEAR(d.getInformationMatrix()(j, k), dd.getInformationMatrix()(j, k), 1e-3);
+                        for (std::size_t j = 0 ; j < 3 ; ++ j) {
+                            EXPECT_NEAR(d.getMean()(j), dd.getMean()(j), 1e-3);
+                            for (std::size_t k = 0 ; k < 3 ; ++ k) {
+                                EXPECT_NEAR(d.getCorrelated()(j, k), dd.getCorrelated()(j, k), 1e-3);
+                                EXPECT_NEAR(d.getCovariance()(j, k), dd.getCovariance()(j, k), 1e-3);
+                                EXPECT_NEAR(d.getInformationMatrix()(j, k), dd.getInformationMatrix()(j, k), 1e-3);
+                            }
                         }
                     }
-                }
-            } else
-                EXPECT_EQ(map_converted->getDistributionBundle(bi), nullptr);
+                } else
+                    EXPECT_EQ(map_converted->getDistributionBundle(bi), nullptr);
+            }
         }
-    }*/
+    }
 }
 
 int main(int argc, char *argv[])

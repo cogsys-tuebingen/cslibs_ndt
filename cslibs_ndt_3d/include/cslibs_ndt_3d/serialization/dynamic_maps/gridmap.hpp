@@ -29,47 +29,37 @@ struct convert<cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr>
         typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_storage_t;
         using distribution_storage_ptr_t =
         typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_storage_ptr_t;
-        using distribution_storage_array_t =
-        typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_storage_array_t;
-        distribution_storage_array_t storage({{distribution_storage_ptr_t(new distribution_storage_t),
-                                               distribution_storage_ptr_t(new distribution_storage_t),
-                                               distribution_storage_ptr_t(new distribution_storage_t),
-                                               distribution_storage_ptr_t(new distribution_storage_t),
-                                               distribution_storage_ptr_t(new distribution_storage_t),
-                                               distribution_storage_ptr_t(new distribution_storage_t),
-                                               distribution_storage_ptr_t(new distribution_storage_t),
-                                               distribution_storage_ptr_t(new distribution_storage_t)}});
 
-        for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx) {
-            for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy) {
-                for (int idz = min_distribution_index[2] ; idz <= max_distribution_index[2] ; ++ idz) {
-                    index_t bi({idx, idy, idz});
-                    if (const typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t* b =
-                            rhs->getDistributionBundle(bi)) {
+        auto divx = [](const index_t & bi) { return cslibs_math::common::div<int>(bi[0], 2); };
+        auto divy = [](const index_t & bi) { return cslibs_math::common::div<int>(bi[1], 2); };
+        auto divz = [](const index_t & bi) { return cslibs_math::common::div<int>(bi[2], 2); };
+        auto modx = [](const index_t & bi) { return cslibs_math::common::mod<int>(bi[0], 2); };
+        auto mody = [](const index_t & bi) { return cslibs_math::common::mod<int>(bi[1], 2); };
+        auto modz = [](const index_t & bi) { return cslibs_math::common::mod<int>(bi[2], 2); };
 
-                        const int divx = cslibs_math::common::div<int>(bi[0], 2);
-                        const int divy = cslibs_math::common::div<int>(bi[1], 2);
-                        const int divz = cslibs_math::common::div<int>(bi[2], 2);
-                        const int modx = cslibs_math::common::mod<int>(bi[0], 2);
-                        const int mody = cslibs_math::common::mod<int>(bi[1], 2);
-                        const int modz = cslibs_math::common::mod<int>(bi[2], 2);
+        auto get_storage_index = [&divx, &divy, &divz, &modx, &mody, &modz](const index_t & bi, const std::size_t i) {
+            return index_t({{(i % 2 == 0) ? divx(bi) : (divx(bi) + modx(bi)),
+                             ((i / 2) % 2 == 0) ? divy(bi) : (divy(bi) + mody(bi)),
+                             (i < 4) ? divz(bi) : (divz(bi) + modz(bi))}});
+        };
 
-                        const std::array<index_t, 8> storage_indices =
-                        {{{divx, divy, divz}, {divx + modx, divy, divz},
-                          {divx, divy + mody, divz}, {divx + modx, divy + mody, divz},
-                          {divx, divy, divz + modz}, {divx + modx, divy, divz + modz},
-                          {divx, divy + mody, divz + modz}, {divx + modx, divy + mody, divz + modz}}};
+        for (std::size_t i = 0 ; i < 8 ; ++ i) {
+            distribution_storage_ptr_t storage(new distribution_storage_t());
 
-                        for (std::size_t i = 0 ; i < 8 ; ++ i)
-                            if (!storage[i]->get(storage_indices[i]) && b->at(i))
-                                storage[i]->insert(storage_indices[i], *(b->at(i)));
+            for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx) {
+                for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy) {
+                    for (int idz = min_distribution_index[2] ; idz <= max_distribution_index[2] ; ++ idz) {
+                        index_t bi({idx, idy, idz});
+
+                        if (const typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t* b =
+                                rhs->getDistributionBundle(bi))
+                            storage->insert(get_storage_index(bi, i), *(b->at(i)));
                     }
                 }
             }
-        }
 
-        for (std::size_t i = 0 ; i < 8 ; ++ i)
-            n.push_back(storage[i]);
+            n.push_back(storage);
+        }
 
         return n;
     }
@@ -86,42 +76,33 @@ struct convert<cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr>
         index_t min_distribution_index = n[2].as<index_t>();
         index_t max_distribution_index = n[3].as<index_t>();
 
-        using distribution_storage_array_t =
-        typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_storage_array_t;
         using distribution_storage_ptr_t =
         typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_storage_ptr_t;
-        distribution_storage_array_t storage({n[4].as<distribution_storage_ptr_t>(),
-                                              n[5].as<distribution_storage_ptr_t>(),
-                                              n[6].as<distribution_storage_ptr_t>(),
-                                              n[7].as<distribution_storage_ptr_t>(),
-                                              n[8].as<distribution_storage_ptr_t>(),
-                                              n[9].as<distribution_storage_ptr_t>(),
-                                              n[10].as<distribution_storage_ptr_t>(),
-                                              n[11].as<distribution_storage_ptr_t>()});
 
-        for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx) {
-            for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy) {
-                for (int idz = min_distribution_index[2] ; idz <= max_distribution_index[2] ; ++ idz) {
-                    index_t bi({idx, idy, idz});
-                    if (const typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t* b =
-                            rhs->getDistributionBundle(bi)) {
+        auto divx = [](const index_t & bi) { return cslibs_math::common::div<int>(bi[0], 2); };
+        auto divy = [](const index_t & bi) { return cslibs_math::common::div<int>(bi[1], 2); };
+        auto divz = [](const index_t & bi) { return cslibs_math::common::div<int>(bi[2], 2); };
+        auto modx = [](const index_t & bi) { return cslibs_math::common::mod<int>(bi[0], 2); };
+        auto mody = [](const index_t & bi) { return cslibs_math::common::mod<int>(bi[1], 2); };
+        auto modz = [](const index_t & bi) { return cslibs_math::common::mod<int>(bi[2], 2); };
 
-                        const int divx = cslibs_math::common::div<int>(bi[0], 2);
-                        const int divy = cslibs_math::common::div<int>(bi[1], 2);
-                        const int divz = cslibs_math::common::div<int>(bi[2], 2);
-                        const int modx = cslibs_math::common::mod<int>(bi[0], 2);
-                        const int mody = cslibs_math::common::mod<int>(bi[1], 2);
-                        const int modz = cslibs_math::common::mod<int>(bi[2], 2);
+        auto get_storage_index = [&divx, &divy, &divz, &modx, &mody, &modz](const index_t & bi, const std::size_t i) {
+            return index_t({{(i % 2 == 0) ? divx(bi) : (divx(bi) + modx(bi)),
+                             ((i / 2) % 2 == 0) ? divy(bi) : (divy(bi) + mody(bi)),
+                             (i < 4) ? divz(bi) : (divz(bi) + modz(bi))}});
+        };
 
-                        const std::array<index_t, 8> storage_indices =
-                        {{{divx, divy, divz}, {divx + modx, divy, divz},
-                          {divx, divy + mody, divz}, {divx + modx, divy + mody, divz},
-                          {divx, divy, divz + modz}, {divx + modx, divy, divz + modz},
-                          {divx, divy + mody, divz + modz}, {divx + modx, divy + mody, divz + modz}}};
+        for (std::size_t i = 0 ; i < 8 ; ++ i) {
+            distribution_storage_ptr_t storage = n[4 + i].as<distribution_storage_ptr_t>();
 
-                        for (std::size_t i = 0 ; i < 8 ; ++ i)
-                            if (storage[i]->get(storage_indices[i]) && b->at(i))
-                                b->at(i)->data() = storage[i]->get(storage_indices[i])->data();
+            for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx) {
+                for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy) {
+                    for (int idz = min_distribution_index[2] ; idz <= max_distribution_index[2] ; ++ idz) {
+                        index_t bi({idx, idy, idz});
+
+                        if (const typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t* b =
+                                rhs->getDistributionBundle(bi))
+                            b->at(i)->data() = storage->get(get_storage_index(bi, i))->data();
                     }
                 }
             }

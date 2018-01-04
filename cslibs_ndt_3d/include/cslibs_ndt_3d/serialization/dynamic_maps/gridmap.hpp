@@ -20,8 +20,8 @@ struct convert<cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr>
         n.push_back(rhs->getResolution());
 
         using index_t = std::array<int, 3>;
-        index_t min_distribution_index = rhs->getMinDistributionIndex();
-        index_t max_distribution_index = rhs->getMaxDistributionIndex();
+        const index_t min_distribution_index = rhs->getMinDistributionIndex();
+        const index_t max_distribution_index = rhs->getMaxDistributionIndex();
         n.push_back(min_distribution_index);
         n.push_back(max_distribution_index);
 
@@ -44,12 +44,12 @@ struct convert<cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr>
         };
 
         for (std::size_t i = 0 ; i < 8 ; ++ i) {
-            distribution_storage_ptr_t storage(new distribution_storage_t());
+            const distribution_storage_ptr_t storage(new distribution_storage_t());
 
             for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx) {
                 for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy) {
                     for (int idz = min_distribution_index[2] ; idz <= max_distribution_index[2] ; ++ idz) {
-                        index_t bi({idx, idy, idz});
+                        const index_t bi({idx, idy, idz});
 
                         if (const typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t* b =
                                 rhs->getDistributionBundle(bi))
@@ -73,8 +73,8 @@ struct convert<cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr>
                       n[0].as<cslibs_math_3d::Transform3d>(), n[1].as<double>()));
 
         using index_t = std::array<int, 3>;
-        index_t min_distribution_index = n[2].as<index_t>();
-        index_t max_distribution_index = n[3].as<index_t>();
+        const index_t min_distribution_index = n[2].as<index_t>();
+        const index_t max_distribution_index = n[3].as<index_t>();
 
         using distribution_storage_ptr_t =
         typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_storage_ptr_t;
@@ -93,12 +93,12 @@ struct convert<cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr>
         };
 
         for (std::size_t i = 0 ; i < 8 ; ++ i) {
-            distribution_storage_ptr_t storage = n[4 + i].as<distribution_storage_ptr_t>();
+            const distribution_storage_ptr_t & storage = n[4 + i].as<distribution_storage_ptr_t>();
 
             for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx) {
                 for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy) {
                     for (int idz = min_distribution_index[2] ; idz <= max_distribution_index[2] ; ++ idz) {
-                        index_t bi({idx, idy, idz});
+                        const index_t bi({idx, idy, idz});
 
                         if (const typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t* b =
                                 rhs->getDistributionBundle(bi))

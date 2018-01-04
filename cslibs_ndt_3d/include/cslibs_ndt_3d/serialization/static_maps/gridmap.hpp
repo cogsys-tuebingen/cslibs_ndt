@@ -55,7 +55,7 @@ struct convert<cslibs_ndt_3d::static_maps::Gridmap::Ptr>
             for (int idx = 0 ; idx < static_cast<int>(rhs->getBundleSize()[0]) ; ++ idx) {
                 for (int idy = 0 ; idy < static_cast<int>(rhs->getBundleSize()[1]) ; ++ idy) {
                     for (int idz = 0 ; idz < static_cast<int>(rhs->getBundleSize()[2]) ; ++ idz) {
-                        index_t bi({idx, idy, idz});
+                        const index_t bi({idx, idy, idz});
 
                         if (const typename cslibs_ndt_3d::static_maps::Gridmap::distribution_bundle_t* b =
                                 rhs->getDistributionBundle(bi))
@@ -104,12 +104,12 @@ struct convert<cslibs_ndt_3d::static_maps::Gridmap::Ptr>
         };
 
         for (std::size_t i = 0 ; i < 8 ; ++ i) {
-            vector_t storage = n[3 + i].as<vector_t>();
+            const vector_t & storage = n[3 + i].as<vector_t>();
 
             for (int idx = 0 ; idx < static_cast<int>(rhs->getBundleSize()[0]) ; ++ idx) {
                 for (int idy = 0 ; idy < static_cast<int>(rhs->getBundleSize()[1]) ; ++ idy) {
                     for (int idz = 0 ; idz < static_cast<int>(rhs->getBundleSize()[2]) ; ++ idz) {
-                        index_t bi({idx, idy, idz});
+                        const index_t bi({idx, idy, idz});
 
                         if (const typename cslibs_ndt_3d::static_maps::Gridmap::distribution_bundle_t* b =
                                 rhs->getDistributionBundle(bi))

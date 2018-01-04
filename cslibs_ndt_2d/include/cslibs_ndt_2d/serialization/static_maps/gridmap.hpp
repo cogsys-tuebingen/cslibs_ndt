@@ -51,7 +51,7 @@ struct convert<cslibs_ndt_2d::static_maps::Gridmap::Ptr>
 
             for (int idx = 0 ; idx < static_cast<int>(rhs->getBundleSize()[0]) ; ++ idx) {
                 for (int idy = 0 ; idy < static_cast<int>(rhs->getBundleSize()[1]) ; ++ idy) {
-                    index_t bi({idx, idy});
+                    const index_t bi({idx, idy});
 
                     if (const typename cslibs_ndt_2d::static_maps::Gridmap::distribution_bundle_t* b =
                             rhs->getDistributionBundle(bi))
@@ -97,11 +97,11 @@ struct convert<cslibs_ndt_2d::static_maps::Gridmap::Ptr>
         };
 
         for (std::size_t i = 0 ; i < 4 ; ++ i) {
-            vector_t storage = n[3 + i].as<vector_t>();
+            const vector_t & storage = n[3 + i].as<vector_t>();
 
             for (int idx = 0 ; idx < static_cast<int>(rhs->getBundleSize()[0]) ; ++ idx) {
                 for (int idy = 0 ; idy < static_cast<int>(rhs->getBundleSize()[1]) ; ++ idy) {
-                    index_t bi({idx, idy});
+                    const index_t bi({idx, idy});
 
                     if (const typename cslibs_ndt_2d::static_maps::Gridmap::distribution_bundle_t* b =
                             rhs->getDistributionBundle(bi))

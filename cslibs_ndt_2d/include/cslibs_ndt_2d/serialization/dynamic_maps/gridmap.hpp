@@ -35,10 +35,11 @@ struct convert<cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr>
                                                distribution_storage_ptr_t(new distribution_storage_t),
                                                distribution_storage_ptr_t(new distribution_storage_t),
                                                distribution_storage_ptr_t(new distribution_storage_t)}});
+
         for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx) {
             for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy) {
                 index_t bi({idx, idy});
-                if (const typename cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_bundle_t* d =
+                if (const typename cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_bundle_t* b =
                         rhs->getDistributionBundle(bi)) {
                     const int divx = cslibs_math::common::div<int>(bi[0], 2);
                     const int divy = cslibs_math::common::div<int>(bi[1], 2);
@@ -49,8 +50,8 @@ struct convert<cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr>
                     {{{divx, divy}, {divx + modx, divy}, {divx, divy + mody}, {divx + modx, divy + mody}}};
 
                     for (std::size_t i = 0 ; i < 4 ; ++ i)
-                        if (!storage[i]->get(storage_indices[i]) && d->at(i))
-                            storage[i]->insert(storage_indices[i], *(d->at(i)));
+                        if (!storage[i]->get(storage_indices[i]) && b->at(i))
+                            storage[i]->insert(storage_indices[i], *(b->at(i)));
                 }
             }
         }
@@ -85,7 +86,7 @@ struct convert<cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr>
         for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx) {
             for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy) {
                 index_t bi({idx, idy});
-                if (typename cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_bundle_t* d =
+                if (typename cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_bundle_t* b =
                         rhs->getDistributionBundle(bi)) {
                     const int divx = cslibs_math::common::div<int>(bi[0], 2);
                     const int divy = cslibs_math::common::div<int>(bi[1], 2);
@@ -96,7 +97,8 @@ struct convert<cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr>
                     {{{divx, divy}, {divx + modx, divy}, {divx, divy + mody}, {divx + modx, divy + mody}}};
 
                     for (std::size_t i = 0 ; i < 4 ; ++ i)
-                        d->at(i) = storage[i]->get(storage_indices[i]);
+                        if (storage[i]->get(storage_indices[i]))
+                            b->at(i)->data() = storage[i]->get(storage_indices[i])->data();
                 }
             }
         }

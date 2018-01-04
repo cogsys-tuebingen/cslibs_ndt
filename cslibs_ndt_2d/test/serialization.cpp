@@ -33,6 +33,47 @@ TEST(Test_cslibs_ndt_2d, testDynamicGridmapSerialization)
     const typename map_t::Ptr & map_converted = n.as<typename map_t::Ptr>();
     EXPECT_NE(map_converted, nullptr);
 
+    // tests
+    EXPECT_NEAR(map->getResolution(),       map_converted->getResolution(),       1e-9);
+    EXPECT_NEAR(map->getBundleResolution(), map_converted->getBundleResolution(), 1e-9);
+    EXPECT_NEAR(map->getHeight(),           map_converted->getHeight(),           1e-9);
+    EXPECT_NEAR(map->getWidth(),            map_converted->getWidth(),            1e-9);
+
+    EXPECT_EQ(map->getMinDistributionIndex()[0], map_converted->getMinDistributionIndex()[0]);
+    EXPECT_EQ(map->getMinDistributionIndex()[1], map_converted->getMinDistributionIndex()[1]);
+    EXPECT_EQ(map->getMaxDistributionIndex()[0], map_converted->getMaxDistributionIndex()[0]);
+    EXPECT_EQ(map->getMaxDistributionIndex()[1], map_converted->getMaxDistributionIndex()[1]);
+
+    for (int idx = map->getMinDistributionIndex()[0] ; idx <= map->getMaxDistributionIndex()[0] ; ++ idx) {
+        for (int idy = map->getMinDistributionIndex()[1] ; idy <= map->getMaxDistributionIndex()[1] ; ++ idy) {
+            std::array<int, 2> bi({idx, idy});
+            if (typename cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_bundle_t* b =
+                    map->getDistributionBundle(bi)) {
+                typename cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_bundle_t* bb =
+                        map_converted->getDistributionBundle(bi);
+                EXPECT_NE(bb, nullptr);
+
+                for (std::size_t i = 0 ; i < 4 ; ++ i) {
+                    EXPECT_NE(b->at(i),  nullptr);
+                    EXPECT_NE(bb->at(i), nullptr);
+
+                    const cslibs_math::statistics::Distribution<2, 3> & d  = b->at(i)->getHandle()->data();
+                    const cslibs_math::statistics::Distribution<2, 3> & dd = bb->at(i)->getHandle()->data();
+                    EXPECT_EQ(d.getN(), dd.getN());
+
+                    for (std::size_t j = 0 ; j < 2 ; ++ j) {
+                        EXPECT_NEAR(d.getMean()(j), dd.getMean()(j), 1e-3);
+                        for (std::size_t k = 0 ; k < 2 ; ++ k) {
+                            EXPECT_NEAR(d.getCorrelated()(j, k), dd.getCorrelated()(j, k), 1e-3);
+                            EXPECT_NEAR(d.getCovariance()(j, k), dd.getCovariance()(j, k), 1e-3);
+                            EXPECT_NEAR(d.getInformationMatrix()(j, k), dd.getInformationMatrix()(j, k), 1e-3);
+                        }
+                    }
+                }
+            } else
+                EXPECT_EQ(map_converted->getDistributionBundle(bi), nullptr);
+        }
+    }
 }
 
 TEST(Test_cslibs_ndt_2d, testStaticGridmapSerialization)

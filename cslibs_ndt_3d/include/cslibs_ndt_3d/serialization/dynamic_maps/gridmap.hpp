@@ -53,7 +53,8 @@ struct convert<cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr>
 
                         if (const typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t* b =
                                 rhs->getDistributionBundle(bi))
-                            storage->insert(get_storage_index(bi, i), *(b->at(i)));
+                            if (b->at(i)->data().getN() > 0)
+                                storage->insert(get_storage_index(bi, i), *(b->at(i)));
                     }
                 }
             }
@@ -101,8 +102,12 @@ struct convert<cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr>
                         const index_t bi({idx, idy, idz});
 
                         if (const typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t* b =
-                                rhs->getDistributionBundle(bi))
-                            b->at(i)->data() = storage->get(get_storage_index(bi, i))->data();
+                                rhs->getDistributionBundle(bi)) {
+                            const index_t index = get_storage_index(bi, i);
+                            if (auto d = storage->get(index))
+                                if (d->data().getN() > 0)
+                                    b->at(i)->data() = d->data();
+                        }
                     }
                 }
             }

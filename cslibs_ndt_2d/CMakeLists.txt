@@ -34,5 +34,12 @@ target_link_libraries(${PROJECT_NAME}_matching_node
     ${catkin_LIBRARIES}
 )
 
+cslibs_ndt_add_unit_test_gtest(${PROJECT_NAME}_test_serialization
+    SRCS test/serialization.cpp
+)
+target_link_libraries(${PROJECT_NAME}_test_serialization
+    yaml-cpp
+)
+
 install(DIRECTORY include/${PROJECT_NAME}/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})

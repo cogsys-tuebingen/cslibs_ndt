@@ -11,7 +11,7 @@
 #include <yaml-cpp/yaml.h>
 
 namespace cslibs_ndt {
-template <typename std::size_t Size, std::size_t Dim>
+template <std::size_t Size, std::size_t Dim>
 struct IndexedDistribution {
     std::array<int, Dim> index_;
     Distribution<Size>   distribution_;
@@ -58,10 +58,10 @@ struct convert<cslibs_ndt::IndexedDistribution<Size, Dim>>
 namespace cis = cslibs_indexed_storage;
 
 namespace YAML {
-template <std::size_t Size, std::size_t Dim, template<typename, typename, typename...> class backend_t>
-struct convert<std::shared_ptr<cis::Storage<cslibs_ndt::Distribution<Size>, std::array<int, Dim>, backend_t>>>
+template <std::size_t Size, std::size_t Dim>
+struct convert<std::shared_ptr<cis::Storage<cslibs_ndt::Distribution<Size>, std::array<int, Dim>, cis::backend::kdtree::KDTree>>>
 {
-    static Node encode(const std::shared_ptr<cis::Storage<cslibs_ndt::Distribution<Size>, std::array<int, Dim>, backend_t>> &rhs)
+    static Node encode(const std::shared_ptr<cis::Storage<cslibs_ndt::Distribution<Size>, std::array<int, Dim>, cis::backend::kdtree::KDTree>> &rhs)
     {
         Node n;
         if (!rhs)
@@ -77,12 +77,12 @@ struct convert<std::shared_ptr<cis::Storage<cslibs_ndt::Distribution<Size>, std:
         return n;
     }
 
-    static bool decode(const Node& n, std::shared_ptr<cis::Storage<cslibs_ndt::Distribution<Size>, std::array<int, Dim>, backend_t>> &rhs)
+    static bool decode(const Node& n, std::shared_ptr<cis::Storage<cslibs_ndt::Distribution<Size>, std::array<int, Dim>, cis::backend::kdtree::KDTree>> &rhs)
     {
         if (!n.IsSequence())
             return false;
 
-        rhs.reset(new cis::Storage<cslibs_ndt::Distribution<Size>, std::array<int, Dim>, backend_t>());
+        rhs.reset(new cis::Storage<cslibs_ndt::Distribution<Size>, std::array<int, Dim>, cis::backend::kdtree::KDTree>());
         for (std::size_t p = 0 ; p < n.size() ; ++ p) {
             cslibs_ndt::IndexedDistribution<Size, Dim> d = n[p].as<cslibs_ndt::IndexedDistribution<Size, Dim>>();
             rhs->insert(d.index_, d.distribution_);

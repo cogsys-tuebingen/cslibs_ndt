@@ -4,6 +4,10 @@
 #include <cslibs_ndt/common/serialization/indexed_distribution.hpp>
 #include <cslibs_ndt_2d/static_maps/gridmap.hpp>
 #include <cslibs_math_2d/serialization/transform.hpp>
+
+#include <eigen3/Eigen/StdVector>
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(cslibs_math::statistics::Distribution<2, 3>)
+
 #include <yaml-cpp/yaml.h>
 
 namespace YAML {
@@ -18,25 +22,23 @@ struct convert<cslibs_ndt_2d::static_maps::Gridmap::Ptr>
 
         n.push_back(rhs->getOrigin());
         n.push_back(rhs->getResolution());
-        n.push_back(rhs->getSize());
 
-        using distribution_storage_t =
-        typename cslibs_ndt_2d::static_maps::Gridmap::distribution_storage_t;
-        using distribution_storage_ptr_t =
-        typename cslibs_ndt_2d::static_maps::Gridmap::distribution_storage_ptr_t;
-        using distribution_storage_array_t =
-        typename cslibs_ndt_2d::static_maps::Gridmap::distribution_storage_array_t;
-        distribution_storage_array_t storage({{distribution_storage_ptr_t(new distribution_storage_t),
-                                               distribution_storage_ptr_t(new distribution_storage_t),
-                                               distribution_storage_ptr_t(new distribution_storage_t),
-                                               distribution_storage_ptr_t(new distribution_storage_t)}});
+        const std::array<std::size_t, 2> & size = rhs->getSize();
+        n.push_back(size);
+
+        using vector_t = std::vector<cslibs_math::statistics::Distribution<2, 3>>;
+        std::array<vector_t, 4> storage = {vector_t(size[0] * size[1]),
+                                           vector_t((size[0] + 1) * (size[1] + 1)),
+                                           vector_t((size[0] + 1) * (size[1] + 1)),
+                                           vector_t((size[0] + 1) * (size[1] + 1))};
 
         using index_t = std::array<int, 2>;
-        for (int idx = 0 ; idx <= rhs->getBundleSize()[0] ; ++ idx) {
-            for (int idy = 0 ; idy <= rhs->getBundleSize()[1] ; ++ idy) {
+        for (int idx = 0 ; idx < static_cast<int>(rhs->getBundleSize()[0]) ; ++ idx) {
+            for (int idy = 0 ; idy < static_cast<int>(rhs->getBundleSize()[1]) ; ++ idy) {
                 index_t bi({idx, idy});
-                if (const typename cslibs_ndt_2d::static_maps::Gridmap::distribution_bundle_t* d =
+                if (const typename cslibs_ndt_2d::static_maps::Gridmap::distribution_bundle_t* b =
                         rhs->getDistributionBundle(bi)) {
+
                     const int divx = cslibs_math::common::div<int>(bi[0], 2);
                     const int divy = cslibs_math::common::div<int>(bi[1], 2);
                     const int modx = cslibs_math::common::mod<int>(bi[0], 2);
@@ -45,9 +47,10 @@ struct convert<cslibs_ndt_2d::static_maps::Gridmap::Ptr>
                     const std::array<index_t, 4> storage_indices =
                     {{{divx, divy}, {divx + modx, divy}, {divx, divy + mody}, {divx + modx, divy + mody}}};
 
-                    for (std::size_t i = 0 ; i < 4 ; ++ i)
-                        if (!storage[i]->get(storage_indices[i]) && d->at(i))
-                            storage[i]->insert(storage_indices[i], *(d->at(i)));
+
+                    storage[0][storage_indices[0][1] * size[0] + storage_indices[0][0]] = *(b->at(0));
+                    for (std::size_t i = 1 ; i < 4 ; ++ i)
+                        storage[i][storage_indices[i][1] * (size[0] + 1) + storage_indices[i][0]] = *(b->at(i));
                 }
             }
         }
@@ -64,23 +67,19 @@ struct convert<cslibs_ndt_2d::static_maps::Gridmap::Ptr>
             return false;
 
         rhs.reset(new cslibs_ndt_2d::static_maps::Gridmap(
-                      n[0].as<cslibs_math_2d::Transform2d>(), n[1].as<double>(), n[2].as<std::size_t>()));
+                      n[0].as<cslibs_math_2d::Transform2d>(), n[1].as<double>(), n[2].as<std::array<std::size_t, 2>>()));
 
-        using distribution_storage_array_t =
-        typename cslibs_ndt_2d::static_maps::Gridmap::distribution_storage_array_t;
-        using distribution_storage_ptr_t =
-        typename cslibs_ndt_2d::static_maps::Gridmap::distribution_storage_ptr_t;
-        distribution_storage_array_t storage({n[3].as<distribution_storage_ptr_t>(),
-                                              n[4].as<distribution_storage_ptr_t>(),
-                                              n[5].as<distribution_storage_ptr_t>(),
-                                              n[6].as<distribution_storage_ptr_t>()});
+        const std::array<std::size_t, 2> & size = rhs->getSize();
+        using vector_t = std::vector<cslibs_math::statistics::Distribution<2, 3>>;
+        std::array<vector_t, 4> storage = {n[3].as<vector_t>(), n[4].as<vector_t>(), n[5].as<vector_t>(), n[6].as<vector_t>()};
 
         using index_t = std::array<int, 2>;
-        for (int idx = 0 ; idx <= rhs->getBundleSize()[0] ; ++ idx) {
-            for (int idy = 0 ; idy <= rhs->getBundleSize()[1] ; ++ idy) {
+        for (int idx = 0 ; idx < static_cast<int>(rhs->getBundleSize()[0]) ; ++ idx) {
+            for (int idy = 0 ; idy < static_cast<int>(rhs->getBundleSize()[1]) ; ++ idy) {
                 index_t bi({idx, idy});
                 if (typename cslibs_ndt_2d::static_maps::Gridmap::distribution_bundle_t* b =
                         rhs->getDistributionBundle(bi)) {
+
                     const int divx = cslibs_math::common::div<int>(bi[0], 2);
                     const int divy = cslibs_math::common::div<int>(bi[1], 2);
                     const int modx = cslibs_math::common::mod<int>(bi[0], 2);
@@ -89,9 +88,10 @@ struct convert<cslibs_ndt_2d::static_maps::Gridmap::Ptr>
                     const std::array<index_t, 4> storage_indices =
                     {{{divx, divy}, {divx + modx, divy}, {divx, divy + mody}, {divx + modx, divy + mody}}};
 
-                    for (std::size_t i = 0 ; i < 4 ; ++ i)
-                        b->at(i) = storage[i]->get(storage_indices[i]);
-                }
+                    b->at(0)->data() = storage[0][storage_indices[0][1] * size[0] + storage_indices[0][0]];
+                    for (std::size_t i = 1 ; i < 4 ; ++ i)
+                        b->at(i)->data() = storage[i][storage_indices[i][1] * (size[0] + 1) + storage_indices[i][0]];
+               }
             }
         }
 

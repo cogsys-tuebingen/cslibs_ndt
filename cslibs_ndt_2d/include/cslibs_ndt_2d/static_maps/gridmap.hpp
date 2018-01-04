@@ -176,12 +176,12 @@ public:
 
     inline double getHeight() const
     {
-        return size_[1];
+        return size_[1] * resolution_;
     }
 
     inline double getWidth() const
     {
-        return size_[0];
+        return size_[0] * resolution_;
     }
 
     inline size_t getSize() const

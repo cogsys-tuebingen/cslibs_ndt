@@ -39,22 +39,23 @@ struct convert<cslibs_ndt_2d::static_maps::Gridmap::Ptr>
                              (i < 2) ? divy(bi) : (divy(bi) + mody(bi))}});
         };
 
+        auto get_index = [&size, &get_storage_index] (const index_t & bi, const std::size_t i) {
+            const index_t & storage_index = get_storage_index(bi, i);
+            return (i == 0) ?
+                        (storage_index[1] * size[0] + storage_index[0]) :
+                        (storage_index[1] * (size[0] + 1) + storage_index[0]);
+        };
+
         for (std::size_t i = 0 ; i < 4 ; ++ i) {
             vector_t storage(i == 0 ? (size[0] * size[1]) : ((size[0] + 1) * (size[1] + 1)));
 
             for (int idx = 0 ; idx < static_cast<int>(rhs->getBundleSize()[0]) ; ++ idx) {
                 for (int idy = 0 ; idy < static_cast<int>(rhs->getBundleSize()[1]) ; ++ idy) {
                     index_t bi({idx, idy});
+
                     if (const typename cslibs_ndt_2d::static_maps::Gridmap::distribution_bundle_t* b =
-                            rhs->getDistributionBundle(bi)) {
-
-                        const index_t storage_index = get_storage_index(bi, i);
-                        const std::size_t index = (i == 0) ?
-                             (storage_index[1] * size[0] + storage_index[0]) :
-                             (storage_index[1] * (size[0] + 1) + storage_index[0]);
-
-                        storage[index] = b->at(i)->data();
-                    }
+                            rhs->getDistributionBundle(bi))
+                        storage[get_index(bi, i)] = b->at(i)->data();
                 }
             }
 
@@ -88,22 +89,23 @@ struct convert<cslibs_ndt_2d::static_maps::Gridmap::Ptr>
                              (i < 2) ? divy(bi) : (divy(bi) + mody(bi))}});
         };
 
+        auto get_index = [&size, &get_storage_index] (const index_t & bi, const std::size_t i) {
+            const index_t & storage_index = get_storage_index(bi, i);
+            return (i == 0) ?
+                        (storage_index[1] * size[0] + storage_index[0]) :
+                        (storage_index[1] * (size[0] + 1) + storage_index[0]);
+        };
+
         for (std::size_t i = 0 ; i < 4 ; ++ i) {
             vector_t storage = n[3 + i].as<vector_t>();
 
             for (int idx = 0 ; idx < static_cast<int>(rhs->getBundleSize()[0]) ; ++ idx) {
                 for (int idy = 0 ; idy < static_cast<int>(rhs->getBundleSize()[1]) ; ++ idy) {
                     index_t bi({idx, idy});
+
                     if (const typename cslibs_ndt_2d::static_maps::Gridmap::distribution_bundle_t* b =
-                            rhs->getDistributionBundle(bi)) {
-
-                        const index_t storage_index = get_storage_index(bi, i);
-                        const std::size_t index = (i == 0) ?
-                             (storage_index[1] * size[0] + storage_index[0]) :
-                             (storage_index[1] * (size[0] + 1) + storage_index[0]);
-
-                        b->at(i)->data() = storage[index];
-                    }
+                            rhs->getDistributionBundle(bi))
+                        b->at(i)->data() = storage[get_index(bi, i)];
                 }
             }
         }

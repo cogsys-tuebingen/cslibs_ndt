@@ -47,7 +47,6 @@ struct convert<cslibs_ndt_2d::static_maps::Gridmap::Ptr>
                     const std::array<index_t, 4> storage_indices =
                     {{{divx, divy}, {divx + modx, divy}, {divx, divy + mody}, {divx + modx, divy + mody}}};
 
-
                     storage[0][storage_indices[0][1] * size[0] + storage_indices[0][0]] = *(b->at(0));
                     for (std::size_t i = 1 ; i < 4 ; ++ i)
                         storage[i][storage_indices[i][1] * (size[0] + 1) + storage_indices[i][0]] = *(b->at(i));

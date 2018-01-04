@@ -61,14 +61,14 @@ public:
                   distribution_storage_ptr_t(new distribution_storage_t)}},
         bundle_storage_(new distribution_bundle_storage_t)
     {
-        storage_[0]->template set<cis::option::tags::array_size>(static_cast<std::size_t>(size[0]),
-                                                                 static_cast<std::size_t>(size[1]));
+        storage_[0]->template set<cis::option::tags::array_size>(size[0],
+                                                                 size[1]);
         for(std::size_t i = 1 ; i < 4 ; ++i) {
-            storage_[i]->template set<cis::option::tags::array_size>(static_cast<std::size_t>(size[0] + 1),
-                                                                     static_cast<std::size_t>(size[1] + 1));
+            storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1,
+                                                                     size[1] + 1);
         }
-        bundle_storage_->template set<cis::option::tags::array_size>(static_cast<std::size_t>(size[0] * 2),
-                                                                     static_cast<std::size_t>(size[1] * 2));
+        bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2,
+                                                                     size[1] * 2);
     }
 
     Gridmap(const double  origin_x,
@@ -89,14 +89,14 @@ public:
                   distribution_storage_ptr_t(new distribution_storage_t)}},
         bundle_storage_(new distribution_bundle_storage_t)
     {
-        storage_[0]->template set<cis::option::tags::array_size>(static_cast<std::size_t>(size[0]),
-                                                                 static_cast<std::size_t>(size[1]));
+        storage_[0]->template set<cis::option::tags::array_size>(size[0],
+                                                                 size[1]);
         for(std::size_t i = 1 ; i < 4 ; ++i) {
-            storage_[i]->template set<cis::option::tags::array_size>(static_cast<std::size_t>(size[0] + 1),
-                                                                     static_cast<std::size_t>(size[1] + 1));
+            storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1,
+                                                                     size[1] + 1);
         }
-        bundle_storage_->template set<cis::option::tags::array_size>(static_cast<std::size_t>(size[0] * 2),
-                                                                     static_cast<std::size_t>(size[1] * 2));
+        bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2,
+                                                                     size[1] * 2);
         /// fill the bundle storage
     }
 

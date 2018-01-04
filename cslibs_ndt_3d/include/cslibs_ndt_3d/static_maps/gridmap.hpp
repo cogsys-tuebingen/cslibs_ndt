@@ -68,7 +68,7 @@ public:
         storage_[0]->template set<cis::option::tags::array_size>(size[0],
                                                                  size[1],
                                                                  size[2]);
-        for(std::size_t i = 1 ; i < 4 ; ++i) {
+        for(std::size_t i = 1 ; i < 8 ; ++i) {
             storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1,
                                                                      size[1] + 1,
                                                                      size[2] + 1);
@@ -103,7 +103,7 @@ public:
         storage_[0]->template set<cis::option::tags::array_size>(size[0],
                                                                  size[1],
                                                                  size[2]);
-        for(std::size_t i = 1 ; i < 4 ; ++i) {
+        for(std::size_t i = 1 ; i < 8 ; ++i) {
             storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1,
                                                                      size[1] + 1,
                                                                      size[2] + 1);
@@ -127,6 +127,7 @@ public:
             const index_t bi = toBundleIndex(p);
             bundle = getAllocate(bi);
         }
+
         bundle->at(0)->getHandle()->data().add(p);
         bundle->at(1)->getHandle()->data().add(p);
         bundle->at(2)->getHandle()->data().add(p);
@@ -135,7 +136,6 @@ public:
         bundle->at(5)->getHandle()->data().add(p);
         bundle->at(6)->getHandle()->data().add(p);
         bundle->at(7)->getHandle()->data().add(p);
-
     }
 
     inline double sample(const point_t &p) const
@@ -148,13 +148,13 @@ public:
         }
         auto evaluate = [&p, &bundle]() {
             return 0.125 * (bundle->at(0)->data().sample(p) +
-                           bundle->at(1)->data().sample(p) +
-                           bundle->at(2)->data().sample(p) +
-                           bundle->at(3)->data().sample(p) +
-                           bundle->at(4)->data().sample(p) +
-                           bundle->at(5)->data().sample(p) +
-                           bundle->at(6)->data().sample(p) +
-                           bundle->at(7)->data().sample(p));
+                            bundle->at(1)->data().sample(p) +
+                            bundle->at(2)->data().sample(p) +
+                            bundle->at(3)->data().sample(p) +
+                            bundle->at(4)->data().sample(p) +
+                            bundle->at(5)->data().sample(p) +
+                            bundle->at(6)->data().sample(p) +
+                            bundle->at(7)->data().sample(p));
         };
         return evaluate();
     }
@@ -218,7 +218,7 @@ public:
 
     inline size_t getBundleSize() const
     {
-        return {{size_[0] * 2, size_[1] * 2}};
+        return {{size_[0] * 2, size_[1] * 2, size_[2] * 2}};
     }
 
 protected:

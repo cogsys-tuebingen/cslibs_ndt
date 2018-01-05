@@ -82,5 +82,4 @@ inline cslibs_ndt_2d::static_maps::Gridmap::Ptr from(
 }
 }
 
-
 #endif // CSLIBS_NDT_2D_CONVERSION_GRIDMAP_HPP

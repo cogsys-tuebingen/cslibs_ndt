@@ -75,32 +75,20 @@ struct convert<cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr>
         using distribution_storage_ptr_t =
         typename cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_storage_ptr_t;
 
-        auto divx = [](const index_t & bi) { return cslibs_math::common::div<int>(bi[0], 2); };
-        auto divy = [](const index_t & bi) { return cslibs_math::common::div<int>(bi[1], 2); };
-        auto modx = [](const index_t & bi) { return cslibs_math::common::mod<int>(bi[0], 2); };
-        auto mody = [](const index_t & bi) { return cslibs_math::common::mod<int>(bi[1], 2); };
-
-        auto get_storage_index = [&divx, &divy, &modx, &mody](const index_t & bi, const std::size_t i) {
-            return index_t({{(i % 2 == 0) ? divx(bi) : (divx(bi) + modx(bi)),
-                             (i < 2) ? divy(bi) : (divy(bi) + mody(bi))}});
+        auto get_bundle_index = [&min_distribution_index, &max_distribution_index] (const index_t & si, const std::size_t & i) {
+            return index_t({{std::max(min_distribution_index[0], std::min(2 * si[0], max_distribution_index[0])),
+                             std::max(min_distribution_index[1], std::min(2 * si[1], max_distribution_index[1]))}});
         };
 
         for (std::size_t i = 0 ; i < 4 ; ++ i) {
             const distribution_storage_ptr_t & storage = n[4 + i].as<distribution_storage_ptr_t>();
 
-            for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx) {
-                for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy) {
-                    const index_t bi({idx, idy});
-
-                    if (const typename cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_bundle_t* b =
-                            rhs->getDistributionBundle(bi)) {
-                        const index_t index = get_storage_index(bi, i);
-                        if (auto d = storage->get(index))
-                            if (d->data().getN() > 0)
-                                b->at(i)->data() = d->data();
-                    }
-                }
-            }
+            storage->traverse([&rhs, &i, &get_bundle_index] (const index_t & si, const cslibs_ndt::Distribution<2> & d) {
+                const index_t & bi = get_bundle_index(si, i);
+                if (const typename cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_bundle_t* b =
+                        rhs->getDistributionBundle(bi))
+                    b->at(i)->data() = d.data();
+            });
         }
 
         return true;

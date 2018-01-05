@@ -36,10 +36,10 @@ TEST(Test_cslibs_ndt_3d, testDynamicGridmapSerialization)
     EXPECT_NE(map_converted, nullptr);
 
     // tests
-    EXPECT_NEAR(map->getResolution(),       map_converted->getResolution(),       1e-9);
-    EXPECT_NEAR(map->getBundleResolution(), map_converted->getBundleResolution(), 1e-9);
-    EXPECT_NEAR(map->getHeight(),           map_converted->getHeight(),           1e-9);
-    EXPECT_NEAR(map->getWidth(),            map_converted->getWidth(),            1e-9);
+    EXPECT_NEAR(map->getResolution(),       map_converted->getResolution(),       1e-3);
+    EXPECT_NEAR(map->getBundleResolution(), map_converted->getBundleResolution(), 1e-3);
+    EXPECT_NEAR(map->getHeight(),           map_converted->getHeight(),           1e-3);
+    EXPECT_NEAR(map->getWidth(),            map_converted->getWidth(),            1e-3);
 
     EXPECT_EQ(map->getMinDistributionIndex()[0], map_converted->getMinDistributionIndex()[0]);
     EXPECT_EQ(map->getMinDistributionIndex()[1], map_converted->getMinDistributionIndex()[1]);
@@ -48,25 +48,25 @@ TEST(Test_cslibs_ndt_3d, testDynamicGridmapSerialization)
     EXPECT_EQ(map->getMaxDistributionIndex()[1], map_converted->getMaxDistributionIndex()[1]);
     EXPECT_EQ(map->getMaxDistributionIndex()[2], map_converted->getMaxDistributionIndex()[2]);
 
-    EXPECT_NEAR(map->getMin()(0), map_converted->getMin()(0), 1e-9);
-    EXPECT_NEAR(map->getMin()(1), map_converted->getMin()(1), 1e-9);
-    EXPECT_NEAR(map->getMin()(2), map_converted->getMin()(2), 1e-9);
-    EXPECT_NEAR(map->getMax()(0), map_converted->getMax()(0), 1e-9);
-    EXPECT_NEAR(map->getMax()(1), map_converted->getMax()(1), 1e-9);
-    EXPECT_NEAR(map->getMax()(2), map_converted->getMax()(2), 1e-9);
+    EXPECT_NEAR(map->getMin()(0), map_converted->getMin()(0), 1e-3);
+    EXPECT_NEAR(map->getMin()(1), map_converted->getMin()(1), 1e-3);
+    EXPECT_NEAR(map->getMin()(2), map_converted->getMin()(2), 1e-3);
+    EXPECT_NEAR(map->getMax()(0), map_converted->getMax()(0), 1e-3);
+    EXPECT_NEAR(map->getMax()(1), map_converted->getMax()(1), 1e-3);
+    EXPECT_NEAR(map->getMax()(2), map_converted->getMax()(2), 1e-3);
 
-    EXPECT_NEAR(map->getOrigin().tx(),           map_converted->getOrigin().tx(),           1e-9);
-    EXPECT_NEAR(map->getOrigin().ty(),           map_converted->getOrigin().ty(),           1e-9);
-    EXPECT_NEAR(map->getOrigin().tz(),           map_converted->getOrigin().tz(),           1e-9);
-    EXPECT_NEAR(map->getOrigin().roll(),         map_converted->getOrigin().roll(),         1e-9);
-    EXPECT_NEAR(map->getOrigin().pitch(),        map_converted->getOrigin().pitch(),        1e-9);
-    EXPECT_NEAR(map->getOrigin().yaw(),          map_converted->getOrigin().yaw(),          1e-9);
-    EXPECT_NEAR(map->getInitialOrigin().tx(),    map_converted->getInitialOrigin().tx(),    1e-9);
-    EXPECT_NEAR(map->getInitialOrigin().ty(),    map_converted->getInitialOrigin().ty(),    1e-9);
-    EXPECT_NEAR(map->getInitialOrigin().tz(),    map_converted->getInitialOrigin().tz(),    1e-9);
-    EXPECT_NEAR(map->getInitialOrigin().roll(),  map_converted->getInitialOrigin().roll(),  1e-9);
-    EXPECT_NEAR(map->getInitialOrigin().pitch(), map_converted->getInitialOrigin().pitch(), 1e-9);
-    EXPECT_NEAR(map->getInitialOrigin().yaw(),   map_converted->getInitialOrigin().yaw(),   1e-9);
+    EXPECT_NEAR(map->getOrigin().tx(),           map_converted->getOrigin().tx(),           1e-3);
+    EXPECT_NEAR(map->getOrigin().ty(),           map_converted->getOrigin().ty(),           1e-3);
+    EXPECT_NEAR(map->getOrigin().tz(),           map_converted->getOrigin().tz(),           1e-3);
+    EXPECT_NEAR(map->getOrigin().roll(),         map_converted->getOrigin().roll(),         1e-3);
+    EXPECT_NEAR(map->getOrigin().pitch(),        map_converted->getOrigin().pitch(),        1e-3);
+    EXPECT_NEAR(map->getOrigin().yaw(),          map_converted->getOrigin().yaw(),          1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().tx(),    map_converted->getInitialOrigin().tx(),    1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().ty(),    map_converted->getInitialOrigin().ty(),    1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().tz(),    map_converted->getInitialOrigin().tz(),    1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().roll(),  map_converted->getInitialOrigin().roll(),  1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().pitch(), map_converted->getInitialOrigin().pitch(), 1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().yaw(),   map_converted->getInitialOrigin().yaw(),   1e-3);
 
     for (int idx = map->getMinDistributionIndex()[0] ; idx <= map->getMaxDistributionIndex()[0] ; ++ idx) {
         for (int idy = map->getMinDistributionIndex()[1] ; idy <= map->getMaxDistributionIndex()[1] ; ++ idy) {
@@ -138,10 +138,10 @@ TEST(Test_cslibs_ndt_3d, testStaticGridmapSerialization)
     EXPECT_NE(map_converted, nullptr);
 
     // tests
-    EXPECT_NEAR(map->getResolution(),       map_converted->getResolution(),       1e-9);
-    EXPECT_NEAR(map->getBundleResolution(), map_converted->getBundleResolution(), 1e-9);
-    EXPECT_NEAR(map->getHeight(),           map_converted->getHeight(),           1e-9);
-    EXPECT_NEAR(map->getWidth(),            map_converted->getWidth(),            1e-9);
+    EXPECT_NEAR(map->getResolution(),       map_converted->getResolution(),       1e-3);
+    EXPECT_NEAR(map->getBundleResolution(), map_converted->getBundleResolution(), 1e-3);
+    EXPECT_NEAR(map->getHeight(),           map_converted->getHeight(),           1e-3);
+    EXPECT_NEAR(map->getWidth(),            map_converted->getWidth(),            1e-3);
 
     EXPECT_EQ(map->getSize()[0],       map_converted->getSize()[0]);
     EXPECT_EQ(map->getSize()[1],       map_converted->getSize()[1]);
@@ -150,12 +150,12 @@ TEST(Test_cslibs_ndt_3d, testStaticGridmapSerialization)
     EXPECT_EQ(map->getBundleSize()[1], map_converted->getBundleSize()[1]);
     EXPECT_EQ(map->getBundleSize()[2], map_converted->getBundleSize()[2]);
 
-    EXPECT_NEAR(map->getOrigin().tx(),    map_converted->getOrigin().tx(),    1e-9);
-    EXPECT_NEAR(map->getOrigin().ty(),    map_converted->getOrigin().ty(),    1e-9);
-    EXPECT_NEAR(map->getOrigin().tz(),    map_converted->getOrigin().tz(),    1e-9);
-    EXPECT_NEAR(map->getOrigin().roll(),  map_converted->getOrigin().roll(),  1e-9);
-    EXPECT_NEAR(map->getOrigin().pitch(), map_converted->getOrigin().pitch(), 1e-9);
-    EXPECT_NEAR(map->getOrigin().yaw(),   map_converted->getOrigin().yaw(),   1e-9);
+    EXPECT_NEAR(map->getOrigin().tx(),    map_converted->getOrigin().tx(),    1e-3);
+    EXPECT_NEAR(map->getOrigin().ty(),    map_converted->getOrigin().ty(),    1e-3);
+    EXPECT_NEAR(map->getOrigin().tz(),    map_converted->getOrigin().tz(),    1e-3);
+    EXPECT_NEAR(map->getOrigin().roll(),  map_converted->getOrigin().roll(),  1e-3);
+    EXPECT_NEAR(map->getOrigin().pitch(), map_converted->getOrigin().pitch(), 1e-3);
+    EXPECT_NEAR(map->getOrigin().yaw(),   map_converted->getOrigin().yaw(),   1e-3);
 
     for (int idx = 0 ; idx < static_cast<int>(map->getBundleSize()[0]) ; ++ idx) {
         for (int idy = 0 ; idy < static_cast<int>(map->getBundleSize()[1]) ; ++ idy) {

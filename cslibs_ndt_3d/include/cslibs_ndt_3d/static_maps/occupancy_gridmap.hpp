@@ -130,7 +130,7 @@ public:
 
         while (!it.done()) {
             const index_t bi = {{it.x(), it.y(), it.z()}};
-            (it.distance2() > bundle_resolution_2_) ?
+            (it.length2() > bundle_resolution_2_) ?
                         updateFree(bi) :
                         updateOccupied(bi, end_p);
             ++ it;

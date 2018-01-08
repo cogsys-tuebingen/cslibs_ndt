@@ -86,7 +86,7 @@ public:
 
     inline pose_t getOrigin() const
     {
-        cslibs_math_2d::Transform2d origin = w_T_m_;
+        cslibs_math_3d::Transform3d origin = w_T_m_;
         origin.translation() = getMin();
         return origin;
     }
@@ -105,7 +105,7 @@ public:
 
         while (!it.done()) {
             const index_t bi = {{it.x(), it.y(), it.z()}};
-            (it.distance2() > bundle_resolution_2_) ?
+            (it.length2() > bundle_resolution_2_) ?
                         updateFree(bi) :
                         updateOccupied(bi, end_p);
             ++ it;

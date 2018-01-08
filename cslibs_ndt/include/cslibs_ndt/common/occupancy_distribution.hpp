@@ -138,7 +138,7 @@ private:
 
     std::size_t     num_free_;
     std::size_t     num_occupied_;
-};
+} __attribute__ ((aligned (64)));
 }
 
 #endif // CSLIBS_NDT_OCCUPANCY_DISTRIBUTION_HPP

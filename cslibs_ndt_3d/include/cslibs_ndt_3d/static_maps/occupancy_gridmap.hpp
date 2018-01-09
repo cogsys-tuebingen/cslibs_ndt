@@ -175,7 +175,7 @@ public:
 
     inline size_t getBundleSize() const
     {
-        return {{size_[0] * 2, size_[1] * 2}};
+        return {{size_[0] * 2, size_[1] * 2, size_[2] * 2}};
     }
 
 protected:

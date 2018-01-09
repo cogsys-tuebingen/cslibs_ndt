@@ -4,7 +4,6 @@
 #include <cslibs_ndt/common/serialization/indexed_occupancy_distribution.hpp>
 #include <cslibs_ndt/common/serialization/storage.hpp>
 
-#include <cslibs_ndt_2d/static_maps/occupancy_gridmap.hpp>
 #include <cslibs_ndt_2d/dynamic_maps/occupancy_gridmap.hpp>
 #include <cslibs_math_2d/serialization/transform.hpp>
 
@@ -12,26 +11,26 @@
 
 namespace YAML {
 template <>
-struct convert<cslibs_ndt_2d::static_maps::OccupancyGridmap::Ptr>
+struct convert<cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr>
 {
-    using map_t = cslibs_ndt_2d::static_maps::OccupancyGridmap;
+    using map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap;
     static Node encode(const typename map_t::Ptr &rhs)
     {
         Node n;
         if (!rhs)
             return n;
 
-        n.push_back(rhs->getOrigin());
+        n.push_back(rhs->getInitialOrigin());
         n.push_back(rhs->getResolution());
 
-        const std::array<std::size_t, 2> & size = rhs->getSize();
-        n.push_back(size);
-
         using index_t = std::array<int, 2>;
-        using distribution_storage_t =
-        typename cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::distribution_storage_t;
-        using distribution_storage_ptr_t =
-        typename cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::distribution_storage_ptr_t;
+        const index_t min_distribution_index = rhs->getMinDistributionIndex();
+        const index_t max_distribution_index = rhs->getMaxDistributionIndex();
+        n.push_back(min_distribution_index);
+        n.push_back(max_distribution_index);
+
+        using distribution_storage_t = typename map_t::distribution_storage_t;
+        using distribution_storage_ptr_t = typename map_t::distribution_storage_ptr_t;
 
         auto divx = [](const index_t & bi) { return cslibs_math::common::div<int>(bi[0], 2); };
         auto divy = [](const index_t & bi) { return cslibs_math::common::div<int>(bi[1], 2); };
@@ -46,8 +45,8 @@ struct convert<cslibs_ndt_2d::static_maps::OccupancyGridmap::Ptr>
         for (std::size_t i = 0 ; i < 4 ; ++ i) {
             const distribution_storage_ptr_t storage(new distribution_storage_t());
 
-            for (int idx = 0 ; idx < static_cast<int>(rhs->getBundleSize()[0]) ; ++ idx) {
-                for (int idy = 0 ; idy < static_cast<int>(rhs->getBundleSize()[1]) ; ++ idy) {
+            for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx) {
+                for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy) {
                     const index_t bi({idx, idy});
 
                     if (const typename map_t::distribution_bundle_t* b = rhs->getDistributionBundle(bi)) {
@@ -64,31 +63,32 @@ struct convert<cslibs_ndt_2d::static_maps::OccupancyGridmap::Ptr>
         return n;
     }
 
-    static bool decode(const Node& n, map_t::Ptr &rhs)
+    static bool decode(const Node& n, typename map_t::Ptr &rhs)
     {
-        if (!n.IsSequence() || n.size() != 7)
+        if (!n.IsSequence() || n.size() != 8)
             return false;
 
-        rhs.reset(new map_t(n[0].as<cslibs_math_2d::Transform2d>(), n[1].as<double>(), n[2].as<std::array<std::size_t, 2>>()));
-
+        rhs.reset(new map_t(n[0].as<cslibs_math_2d::Transform2d>(), n[1].as<double>()));
 
         using index_t = std::array<int, 2>;
-        using distribution_storage_ptr_t =
-        typename cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::distribution_storage_ptr_t;
+        const index_t min_distribution_index = n[2].as<index_t>();
+        const index_t max_distribution_index = n[3].as<index_t>();
 
-        const std::array<std::size_t, 2> & bundle_size = rhs->getBundleSize();
-        auto get_bundle_index = [&bundle_size] (const index_t & si, const std::size_t & i) {
-            return index_t({{std::max(0, std::min(2 * si[0], static_cast<int>(bundle_size[0] - 1))),
-                             std::max(0, std::min(2 * si[1], static_cast<int>(bundle_size[1] - 1)))}});
+        using distribution_storage_ptr_t = typename map_t::distribution_storage_ptr_t;
+
+        auto get_bundle_index = [&min_distribution_index, &max_distribution_index] (const index_t & si) {
+            return index_t({{std::max(min_distribution_index[0], std::min(2 * si[0], max_distribution_index[0])),
+                             std::max(min_distribution_index[1], std::min(2 * si[1], max_distribution_index[1]))}});
         };
 
         for (std::size_t i = 0 ; i < 4 ; ++ i) {
-            const distribution_storage_ptr_t & storage = n[3 + i].as<distribution_storage_ptr_t>();
+            const distribution_storage_ptr_t & storage = n[4 + i].as<distribution_storage_ptr_t>();
 
             storage->traverse([&rhs, &i, &get_bundle_index] (const index_t & si, const cslibs_ndt::OccupancyDistribution<2> & d) {
-                const index_t & bi = get_bundle_index(si, i);
+                const index_t & bi = get_bundle_index(si);
                 if (typename map_t::distribution_bundle_t* b = rhs->getDistributionBundle(bi))
-                    *(b->at(i)) = d;
+                    if (b->at(i))
+                        *(b->at(i)) = d;
             });
         }
 

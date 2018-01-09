@@ -51,9 +51,9 @@ struct convert<cslibs_ndt_2d::static_maps::Gridmap::Ptr>
                     const index_t bi({idx, idy});
 
                     if (const typename map_t::distribution_bundle_t* b = rhs->getDistributionBundle(bi)) {
-                        const index_t index = get_storage_index(bi, i);
-                        if (!storage->get(index) && b->at(i)->data().getN() > 0)
-                            storage->insert(index, *(b->at(i)));
+                        const index_t si = get_storage_index(bi, i);
+                        if (!storage->get(si) && b->at(i)->data().getN() > 0)
+                            storage->insert(si, *(b->at(i)));
                     }
                 }
             }
@@ -76,7 +76,7 @@ struct convert<cslibs_ndt_2d::static_maps::Gridmap::Ptr>
         typename cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_storage_ptr_t;
 
         const std::array<std::size_t, 2> & bundle_size = rhs->getBundleSize();
-        auto get_bundle_index = [&bundle_size] (const index_t & si, const std::size_t & i) {
+        auto get_bundle_index = [&bundle_size] (const index_t & si) {
             return index_t({{std::max(0, std::min(2 * si[0], static_cast<int>(bundle_size[0] - 1))),
                              std::max(0, std::min(2 * si[1], static_cast<int>(bundle_size[1] - 1)))}});
         };
@@ -85,7 +85,7 @@ struct convert<cslibs_ndt_2d::static_maps::Gridmap::Ptr>
             const distribution_storage_ptr_t & storage = n[3 + i].as<distribution_storage_ptr_t>();
 
             storage->traverse([&rhs, &i, &get_bundle_index] (const index_t & si, const cslibs_ndt::Distribution<2> & d) {
-                const index_t & bi = get_bundle_index(si, i);
+                const index_t & bi = get_bundle_index(si);
                 if (const typename map_t::distribution_bundle_t* b = rhs->getDistributionBundle(bi))
                     b->at(i)->data() = d.data();
             });

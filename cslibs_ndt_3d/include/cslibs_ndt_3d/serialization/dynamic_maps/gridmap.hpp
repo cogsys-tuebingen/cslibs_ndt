@@ -6,13 +6,15 @@
 
 #include <cslibs_ndt_3d/dynamic_maps/gridmap.hpp>
 #include <cslibs_math_3d/serialization/transform.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 namespace YAML {
 template <>
 struct convert<cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr>
 {
-    static Node encode(const cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr &rhs)
+    using map_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
+    static Node encode(const typename map_t::Ptr &rhs)
     {
         Node n;
         if (!rhs)
@@ -27,10 +29,8 @@ struct convert<cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr>
         n.push_back(min_distribution_index);
         n.push_back(max_distribution_index);
 
-        using distribution_storage_t =
-        typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_storage_t;
-        using distribution_storage_ptr_t =
-        typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_storage_ptr_t;
+        using distribution_storage_t = typename map_t::distribution_storage_t;
+        using distribution_storage_ptr_t = typename map_t::distribution_storage_ptr_t;
 
         auto divx = [](const index_t & bi) { return cslibs_math::common::div<int>(bi[0], 2); };
         auto divy = [](const index_t & bi) { return cslibs_math::common::div<int>(bi[1], 2); };
@@ -53,10 +53,11 @@ struct convert<cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr>
                     for (int idz = min_distribution_index[2] ; idz <= max_distribution_index[2] ; ++ idz) {
                         const index_t bi({idx, idy, idz});
 
-                        if (const typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t* b =
-                                rhs->getDistributionBundle(bi))
-                            if (b->at(i)->data().getN() > 0)
-                                storage->insert(get_storage_index(bi, i), *(b->at(i)));
+                        if (const typename map_t::distribution_bundle_t* b = rhs->getDistributionBundle(bi)) {
+                            const index_t si = get_storage_index(bi, i);
+                            if (!storage->get(si) && b->at(i)->data().getN() > 0)
+                                storage->insert(si, *(b->at(i)));
+                        }
                     }
                 }
             }
@@ -67,22 +68,20 @@ struct convert<cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr>
         return n;
     }
 
-    static bool decode(const Node& n, cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr &rhs)
+    static bool decode(const Node& n, typename map_t::Ptr &rhs)
     {
         if (!n.IsSequence() || n.size() != 12)
             return false;
 
-        rhs.reset(new cslibs_ndt_3d::dynamic_maps::Gridmap(
-                      n[0].as<cslibs_math_3d::Transform3d>(), n[1].as<double>()));
+        rhs.reset(new map_t(n[0].as<cslibs_math_3d::Transform3d>(), n[1].as<double>()));
 
         using index_t = std::array<int, 3>;
         const index_t min_distribution_index = n[2].as<index_t>();
         const index_t max_distribution_index = n[3].as<index_t>();
 
-        using distribution_storage_ptr_t =
-        typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_storage_ptr_t;
+        using distribution_storage_ptr_t = typename map_t::distribution_storage_ptr_t;
 
-        auto get_bundle_index = [&min_distribution_index, &max_distribution_index] (const index_t & si, const std::size_t & i) {
+        auto get_bundle_index = [&min_distribution_index, &max_distribution_index] (const index_t & si) {
             return index_t({{std::max(min_distribution_index[0], std::min(2 * si[0], max_distribution_index[0])),
                              std::max(min_distribution_index[1], std::min(2 * si[1], max_distribution_index[1])),
                              std::max(min_distribution_index[2], std::min(2 * si[2], max_distribution_index[2]))}});
@@ -92,9 +91,8 @@ struct convert<cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr>
             const distribution_storage_ptr_t & storage = n[4 + i].as<distribution_storage_ptr_t>();
 
             storage->traverse([&rhs, &i, &get_bundle_index] (const index_t & si, const cslibs_ndt::Distribution<3> & d) {
-                const index_t & bi = get_bundle_index(si, i);
-                if (const typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t* b =
-                        rhs->getDistributionBundle(bi))
+                const index_t & bi = get_bundle_index(si);
+                if (const typename map_t::distribution_bundle_t* b = rhs->getDistributionBundle(bi))
                     b->at(i)->data() = d.data();
             });
         }

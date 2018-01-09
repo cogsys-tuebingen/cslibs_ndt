@@ -113,6 +113,24 @@ public:
         updateOccupied(end_index, end_p);
     }
 
+    inline void add(const point_t &start_p,
+                    const point_t &end_p,
+                    index_t       &end_index)
+    {
+        const index_t start_index = toBundleIndex(start_p);
+        end_index                 = toBundleIndex(end_p);
+        line_iterator_t it(start_index, end_index);
+
+        while (!it.done()) {
+            const index_t bi = {{it.x(), it.y(), it.z()}};
+            (it.length2() > bundle_resolution_2_) ?
+                        updateFree(bi) :
+                        updateOccupied(bi, end_p);
+            ++ it;
+        }
+        updateOccupied(end_index, end_p);
+    }
+
     inline index_t getMinDistributionIndex() const
     {
         lock_t l(storage_mutex_);

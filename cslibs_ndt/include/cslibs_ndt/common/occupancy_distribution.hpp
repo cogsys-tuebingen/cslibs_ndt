@@ -28,39 +28,34 @@ public:
     {
     }
 
+    inline OccupancyDistribution(const std::size_t num_free,
+                                 const std::size_t num_occ) :
+        num_free_(num_free),
+        num_occupied_(num_occ)
+    {
+    }
+
+    inline OccupancyDistribution(const std::size_t    num_free,
+                                 const std::size_t    num_occ,
+                                 const distribution_t data) :
+        num_free_(num_free),
+        num_occupied_(num_occ),
+        distribution_(new distribution_t(data))
+    {
+    }
+
     inline OccupancyDistribution(const OccupancyDistribution &other) :
-        data_(other.data_),
         num_free_(other.num_free_),
-        num_occupied_(other.num_occupied_)
+        num_occupied_(other.num_occupied_),
+      distribution_(other.distribution_)
     {
-    }
-
-   inline OccupancyDistribution(OccupancyDistribution &&other) :
-        data_(std::move(other.data_)),
-        num_free_(std::move(other.num_free_)),
-        num_occupied_(std::move(other.num_occupied_))
-    {
-    }
-
-    inline ~OccupancyDistribution()
-    {
-        if (data_)
-            delete data_;
     }
 
     inline OccupancyDistribution& operator = (const OccupancyDistribution &other)
     {
-        data_ = other.data_;
         num_free_ = other.num_free_;
         num_occupied_ = other.num_occupied_;
-        return *this;
-    }
-
-    inline OccupancyDistribution& operator = (OccupancyDistribution &&other)
-    {
-        data_ = std::move(other.data_);
-        num_free_ = std::move(other.num_free_);
-        num_occupied_ = std::move(other.num_occupied_);
+        distribution_ = other.distribution_;
         return *this;
     }
 
@@ -72,10 +67,10 @@ public:
     inline void updateOccupied(const point_t & p)
     {
         ++ num_occupied_;
-        if (!data_)
-            data_ = new distribution_t();
+        if (!distribution_)
+            distribution_.reset(new distribution_t());
 
-        getHandle()->data()->add(p);
+        distribution_->add(p);
     }
 
     inline std::size_t numFree() const
@@ -87,57 +82,25 @@ public:
     {
         return num_occupied_;
     }
-/*
-    inline operator const distribution_t& () const
+
+    inline const std::shared_ptr<distribution_t> getDistribution() const
     {
-        return data_;
+        return distribution_;
     }
 
-    inline operator distribution_t& ()
+    inline std::shared_ptr<distribution_t> getDistribution()
     {
-        return data_;
-    }
-
-    inline operator distribution_t () const
-    {
-        return data_;
-    }
-
-    inline operator distribution_t* ()
-    {
-        return &data_;
-    }*/
-
-    inline const distribution_t* data() const
-    {
-        return data_;
-    }
-
-    inline distribution_t* data()
-    {
-        return data_;
+        return distribution_;
     }
 
     inline void merge(const OccupancyDistribution&)
     {
     }
 
-    inline handle_t getHandle()
-    {
-        return handle_t(this, &data_mutex_);
-    }
-
-    inline const_handle_t getHandle() const
-    {
-        return const_handle_t(this, &data_mutex_);
-    }
-
 private:
-    mutable mutex_t data_mutex_;
-    distribution_t* data_;
-
-    std::size_t     num_free_;
-    std::size_t     num_occupied_;
+    std::size_t                     num_free_;
+    std::size_t                     num_occupied_;
+    std::shared_ptr<distribution_t> distribution_;
 } __attribute__ ((aligned (64)));
 }
 

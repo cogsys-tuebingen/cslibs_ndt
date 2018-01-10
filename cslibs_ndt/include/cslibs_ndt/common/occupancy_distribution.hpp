@@ -47,7 +47,7 @@ public:
     inline OccupancyDistribution(const OccupancyDistribution &other) :
         num_free_(other.num_free_),
         num_occupied_(other.num_occupied_),
-      distribution_(other.distribution_)
+        distribution_(other.distribution_)
     {
     }
 
@@ -101,7 +101,7 @@ private:
     std::size_t                     num_free_;
     std::size_t                     num_occupied_;
     std::shared_ptr<distribution_t> distribution_;
-} __attribute__ ((aligned (64)));
+} __attribute__ ((aligned (32)));
 }
 
 #endif // CSLIBS_NDT_OCCUPANCY_DISTRIBUTION_HPP

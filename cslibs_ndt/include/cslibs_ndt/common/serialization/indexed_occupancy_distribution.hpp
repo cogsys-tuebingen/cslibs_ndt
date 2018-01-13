@@ -36,7 +36,7 @@ struct convert<cslibs_ndt::Indexed<cslibs_ndt::OccupancyDistribution, Size, Dim>
             rhs.data_ = cslibs_ndt::OccupancyDistribution<Size>(n[1].as<std::size_t>(), n[2].as<std::size_t>());
         else
             rhs.data_ = cslibs_ndt::OccupancyDistribution<Size>(n[1].as<std::size_t>(), n[2].as<std::size_t>(),
-                    n[3].as<cslibs_math::statistics::Distribution<Size, 3>>());
+                    n[3].as<typename cslibs_ndt::OccupancyDistribution<Size>::distribution_t>());
 
         return true;
     }

@@ -85,7 +85,7 @@ struct convert<cslibs_ndt_2d::static_maps::OccupancyGridmap::Ptr>
         for (std::size_t i = 0 ; i < 4 ; ++ i) {
             const distribution_storage_ptr_t & storage = n[3 + i].as<distribution_storage_ptr_t>();
 
-            storage->traverse([&rhs, &i, &get_bundle_index] (const index_t & si, const cslibs_ndt::OccupancyDistribution<2> & d) {
+            storage->traverse([&rhs, &i, &get_bundle_index] (const index_t & si, const typename map_t::distribution_t & d) {
                 const index_t & bi = get_bundle_index(si);
                 if (typename map_t::distribution_bundle_t* b = rhs->getDistributionBundle(bi))
                     if (b->at(i))

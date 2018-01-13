@@ -19,6 +19,8 @@
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
 
+#include <cslibs_gridmaps/utility/inverse_model.hpp>
+
 #include <cslibs_math_2d/algorithms/bresenham.hpp>
 
 namespace cis = cslibs_indexed_storage;
@@ -126,6 +128,98 @@ public:
             ++ it;
         }
         updateOccupied(end_index, end_p);
+    }
+
+    inline double getRange(const point_t &start_p,
+                           const point_t &end_p,
+                           const cslibs_gridmaps::utility::InverseModel &inverse_model,
+                           const double  &occupied_threshold) const
+    {
+        const index_t start_index = toBundleIndex(start_p);
+        const index_t end_index   = toBundleIndex(end_p);
+        line_iterator_t it(start_index, end_index);
+
+        auto occupancy = [&inverse_model](const distribution_t *d) {
+            return (d && d->getDistribution()) ? cslibs_math::common::LogOdds::from(
+                                                 d->numFree() * inverse_model.getLogOddsFree() +
+                                                 d->numOccupied() * inverse_model.getLogOddsOccupied())
+                                                 - inverse_model.getLogOddsPrior() : 0.0;
+        };
+        auto occupied = [this, &inverse_model, &occupancy, &occupied_threshold](const index_t &bi) {
+            distribution_bundle_t *bundle;
+            {
+                lock_t(bundle_storage_mutex_);
+                bundle = getAllocate(bi);
+            }
+            return bundle && (0.25 * (occupancy(bundle->at(0)) +
+                                      occupancy(bundle->at(1)) +
+                                      occupancy(bundle->at(2)) +
+                                      occupancy(bundle->at(3))) >= occupied_threshold);
+        };
+
+        while (!it.done()) {
+            const index_t bi = {{it.x(), it.y()}};
+            if (occupied(bi))
+                break;
+        }
+
+        return std::sqrt(it.traversed2());
+    }
+
+    inline double sample(const point_t &p,
+                         const cslibs_gridmaps::utility::InverseModel & inverse_model) const
+    {
+        const index_t bi = toBundleIndex(p);
+        distribution_bundle_t *bundle;
+        {
+            lock_t(bundle_storage_mutex_);
+            bundle = getAllocate(bi);
+        }
+        auto occupancy = [&inverse_model](const distribution_t *d) {
+            return (d && d->getDistribution()) ? cslibs_math::common::LogOdds::from(
+                                                 d->numFree() * inverse_model.getLogOddsFree() +
+                                                 d->numOccupied() * inverse_model.getLogOddsOccupied())
+                                                 - inverse_model.getLogOddsPrior() : 0.0;
+        };
+        auto sample = [&p, &occupancy](const distribution_t *d) {
+            return (d && d->getDistribution()) ? d->getDistribution()->sample(p) *
+                                                 occupancy(d) : 0.0;
+        };
+        auto evaluate = [&p, &bundle, &sample]() {
+            return 0.25 * (sample(bundle->at(0)) +
+                           sample(bundle->at(1)) +
+                           sample(bundle->at(2)) +
+                           sample(bundle->at(3)));
+        };
+        return evaluate();
+    }
+
+    inline double sampleNonNormalized(const point_t &p,
+                                      const cslibs_gridmaps::utility::InverseModel & inverse_model) const
+    {
+        const index_t bi = toBundleIndex(p);
+        distribution_bundle_t *bundle;
+        {
+            lock_t(bundle_storage_mutex_);
+            bundle = getAllocate(bi);
+        }
+        auto occupancy = [&inverse_model](const distribution_t *d) {
+            return (d && d->getDistribution()) ? cslibs_math::common::LogOdds::from(
+                                                 d->numFree() * inverse_model.getLogOddsFree() +
+                                                 d->numOccupied() * inverse_model.getLogOddsOccupied())
+                                                 - inverse_model.getLogOddsPrior() : 0.0;
+        };
+        auto sampleNonNormalized = [&p, &occupancy](const distribution_t *d) {
+            return (d && d->getDistribution()) ? d->getDistribution()->sampleNonNormalized(p) *
+                                                 occupancy(d) : 0.0;
+        };
+        auto evaluate = [&p, &bundle, &sampleNonNormalized]() {
+          return 0.25 * (sampleNonNormalized(bundle->at(0)) +
+                         sampleNonNormalized(bundle->at(1)) +
+                         sampleNonNormalized(bundle->at(2)) +
+                         sampleNonNormalized(bundle->at(3)));
+        };
+        return evaluate();
     }
 
     inline index_t getMinDistributionIndex() const

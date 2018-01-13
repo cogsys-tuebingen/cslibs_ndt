@@ -29,7 +29,7 @@ struct convert<cslibs_ndt::Indexed<cslibs_ndt::Distribution, Size, Dim>>
             return false;
 
         rhs.index_       = n[0].as<std::array<int, Dim>>();
-        rhs.data_.data() = n[1].as<cslibs_math::statistics::Distribution<Size, 3>>();
+        rhs.data_.data() = n[1].as<typename cslibs_ndt::Distribution<Size>::distribution_t>();
 
         return true;
     }

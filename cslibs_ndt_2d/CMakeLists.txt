@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
     tf
 )
 
+find_package(Boost COMPONENTS filesystem)
+
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES
@@ -22,6 +24,7 @@ catkin_package(
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS}
 )
 
 cslibs_ndt_2d_show_headers()
@@ -39,6 +42,7 @@ cslibs_ndt_add_unit_test_gtest(${PROJECT_NAME}_test_serialization
 )
 target_link_libraries(${PROJECT_NAME}_test_serialization
     yaml-cpp
+    ${Boost_LIBRARIES}
 )
 
 install(DIRECTORY include/${PROJECT_NAME}/

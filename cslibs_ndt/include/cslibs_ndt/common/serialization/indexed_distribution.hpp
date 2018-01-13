@@ -9,6 +9,16 @@
 
 #include <yaml-cpp/yaml.h>
 
+template<typename std::size_t Size, std::size_t Dim>
+YAML::Emitter& operator << (YAML::Emitter& out, const cslibs_ndt::Indexed<cslibs_ndt::Distribution, Size, Dim> &rhs) {
+    YAML::Node n;
+    n.push_back(rhs.index_);
+    n.push_back(rhs.data_.getHandle()->data());
+    out << n;
+    return out;
+}
+
+
 namespace YAML {
 template <typename std::size_t Size, std::size_t Dim>
 struct convert<cslibs_ndt::Indexed<cslibs_ndt::Distribution, Size, Dim>>

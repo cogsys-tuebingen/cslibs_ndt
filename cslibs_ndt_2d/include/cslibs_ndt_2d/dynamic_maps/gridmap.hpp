@@ -196,6 +196,11 @@ public:
         return (max_index_[0] - min_index_[0] + 1) * bundle_resolution_;
     }
 
+    inline distribution_storage_array_t const & getStorages() const
+    {
+        return storage_;
+    }
+
 protected:
     const double                                    resolution_;
     const double                                    resolution_inv_;

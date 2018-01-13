@@ -265,7 +265,7 @@ void testStaticOccMap(const typename cslibs_ndt_2d::static_maps::OccupancyGridma
 cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr generateDynamicMap()
 {
     using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
-    rng_t<1> rng_coord(-10.0, 10.0);
+    rng_t<1> rng_coord(-100.0, 100.0);
 
     // fill map
     cslibs_math_2d::Transform2d origin(rng_coord.get(), rng_coord.get(), rng_t<1>(-M_PI, M_PI).get());
@@ -563,6 +563,11 @@ TEST(Test_cslibs_ndt_2d, testStaticOccGridmapConversion)
 
 int main(int argc, char *argv[])
 {
-    testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
+    const typename map_t::Ptr map = generateDynamicMap();
+    cslibs_ndt_2d::dynamic_maps::save(map, "/tmp");
+    return 0;
+
+//    testing::InitGoogleTest(&argc, argv);
+//    return RUN_ALL_TESTS();
 }

@@ -163,6 +163,8 @@ public:
             const index_t bi = {{it.x(), it.y()}};
             if (occupied(bi))
                 break;
+
+            ++ it;
         }
 
         return std::sqrt(it.traversed2());

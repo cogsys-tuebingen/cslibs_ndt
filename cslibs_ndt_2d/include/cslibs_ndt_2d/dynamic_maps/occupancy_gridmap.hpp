@@ -133,7 +133,7 @@ public:
     inline double getRange(const point_t &start_p,
                            const point_t &end_p,
                            const cslibs_gridmaps::utility::InverseModel &inverse_model,
-                           const double  &occupied_threshold) const
+                           const double &occupied_threshold) const
     {
         const index_t start_index = {{static_cast<int>(std::floor(start_p(0) * bundle_resolution_inv_)),
                                       static_cast<int>(std::floor(start_p(1) * bundle_resolution_inv_))}};
@@ -160,14 +160,13 @@ public:
         };
 
         while (!it.done()) {
-            const index_t bi = {{it.x(), it.y()}};
-            if (occupied(bi))
-                break;
+            if (occupied({{it.x(), it.y()}}))
+                return (start_p - point_t(it.x() * bundle_resolution_, it.y() * bundle_resolution_)).length();
 
             ++ it;
         }
 
-        return std::sqrt(it.traversed2());
+        return (start_p - end_p).length();
     }
 
     inline double sample(const point_t &p,

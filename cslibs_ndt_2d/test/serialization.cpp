@@ -351,7 +351,7 @@ cslibs_ndt_2d::static_maps::OccupancyGridmap::Ptr generateStaticOccMap()
 
     return map;
 }
-
+/*
 TEST(Test_cslibs_ndt_2d, testDynamicGridmapSerialization)
 {
     using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
@@ -395,7 +395,7 @@ TEST(Test_cslibs_ndt_2d, testDynamicOccGridmapSerialization)
 
     // tests
     testDynamicOccMap(map, map_converted);
-}
+}*/
 
 TEST(Test_cslibs_ndt_2d, testStaticOccGridmapSerialization)
 {
@@ -419,16 +419,14 @@ TEST(Test_cslibs_ndt_2d, testDynamicGridmapFileSerialization)
     const typename map_t::Ptr map = generateDynamicMap();
 
     // to file
-    std::string filename = "/tmp/map.yaml";
-    std::ofstream file_out(filename);
-    EXPECT_TRUE(file_out.is_open());
-    file_out << YAML::Node(map);
-    file_out.close();
+    cslibs_ndt_2d::dynamic_maps::save(map, "/tmp/map");
 
     // from file
-    const typename map_t::Ptr & map_from_file = YAML::LoadFile(filename).as<typename map_t::Ptr>();
+    typename map_t::Ptr map_from_file;
+    const bool success = cslibs_ndt_2d::dynamic_maps::load(map_from_file, "/tmp/map");
 
     // tests
+    EXPECT_TRUE(success);
     testDynamicMap(map, map_from_file);
 }
 
@@ -438,16 +436,14 @@ TEST(Test_cslibs_ndt_2d, testStaticGridmapFileSerialization)
     const typename map_t::Ptr map = generateStaticMap();
 
     // to file
-    std::string filename = "/tmp/map.yaml";
-    std::ofstream file_out(filename);
-    EXPECT_TRUE(file_out.is_open());
-    file_out << YAML::Node(map);
-    file_out.close();
+    cslibs_ndt_2d::static_maps::save(map, "/tmp/map");
 
     // from file
-    const typename map_t::Ptr & map_from_file = YAML::LoadFile(filename).as<typename map_t::Ptr>();
+    typename map_t::Ptr map_from_file;
+    const bool success = cslibs_ndt_2d::static_maps::load(map_from_file, "/tmp/map");
 
     // tests
+    EXPECT_TRUE(success);
     testStaticMap(map, map_from_file);
 }
 
@@ -457,16 +453,14 @@ TEST(Test_cslibs_ndt_2d, testDynamicOccGridmapFileSerialization)
     const typename map_t::Ptr map = generateDynamicOccMap();
 
     // to file
-    std::string filename = "/tmp/map.yaml";
-    std::ofstream file_out(filename);
-    EXPECT_TRUE(file_out.is_open());
-    file_out << YAML::Node(map);
-    file_out.close();
+    cslibs_ndt_2d::dynamic_maps::save(map, "/tmp/map");
 
     // from file
-    const typename map_t::Ptr & map_from_file = YAML::LoadFile(filename).as<typename map_t::Ptr>();
+    typename map_t::Ptr map_from_file;
+    const bool success = cslibs_ndt_2d::dynamic_maps::load(map_from_file, "/tmp/map");
 
     // tests
+    EXPECT_TRUE(success);
     testDynamicOccMap(map, map_from_file);
 }
 
@@ -476,16 +470,14 @@ TEST(Test_cslibs_ndt_2d, testStaticOccGridmapFileSerialization)
     const typename map_t::Ptr map = generateStaticOccMap();
 
     // to file
-    std::string filename = "/tmp/map.yaml";
-    std::ofstream file_out(filename);
-    EXPECT_TRUE(file_out.is_open());
-    file_out << YAML::Node(map);
-    file_out.close();
+    cslibs_ndt_2d::static_maps::save(map, "/tmp/map");
 
     // from file
-    const typename map_t::Ptr & map_from_file = YAML::LoadFile(filename).as<typename map_t::Ptr>();
+    typename map_t::Ptr map_from_file;
+    const bool success = cslibs_ndt_2d::static_maps::load(map_from_file, "/tmp/map");
 
     // tests
+    EXPECT_TRUE(success);
     testStaticOccMap(map, map_from_file);
 }
 
@@ -562,12 +554,12 @@ TEST(Test_cslibs_ndt_2d, testStaticOccGridmapConversion)
 }
 
 int main(int argc, char *argv[])
-{
+{/*
     using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
     const typename map_t::Ptr map = generateDynamicMap();
     cslibs_ndt_2d::dynamic_maps::save(map, "/tmp");
     return 0;
-
-//    testing::InitGoogleTest(&argc, argv);
-//    return RUN_ALL_TESTS();
+*/
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

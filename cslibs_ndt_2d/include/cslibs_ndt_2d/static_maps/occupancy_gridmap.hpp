@@ -165,6 +165,20 @@ public:
         return {{size_[0] * 2, size_[1] * 2}};
     }
 
+    inline distribution_storage_array_t const & getStorages() const
+    {
+        return storage_;
+    }
+
+    inline void getBundleIndices(std::vector<index_t> &indices) const
+    {
+        lock_t(bundle_storage_mutex_);
+        auto add_index = [&indices](const index_t &i, const distribution_bundle_t &d) {
+            indices.emplace_back(i);
+        };
+        bundle_storage_->traverse(add_index);
+    }
+
 protected:
     const double                                    resolution_;
     const double                                    resolution_inv_;

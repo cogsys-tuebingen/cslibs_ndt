@@ -15,35 +15,17 @@
 
 namespace cslibs_ndt_2d {
 namespace dynamic_maps {
-inline void save(const cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_storage_ptr_t &storage,
-                 const boost::filesystem::path &directory)
-{
-    using distribution_t = cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_t;
-    using index_t = std::array<int, 2>;
-
-    auto write = [&directory] (const index_t &i, const distribution_t &d) {
-        boost::filesystem::path file =  directory /
-                boost::filesystem::path("d" + std::to_string(i[0]) + "_" + std::to_string(i[1]));
-        std::ofstream out(file.string());
-        YAML::Node n;
-        n["index"] = i;
-        n["data"] = d.getHandle()->data();
-        out << n;
-    };
-    storage->traverse(write);
-}
-
 inline bool save(const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &map,
                  const std::string &path)
 {
     using path_t  = boost::filesystem::path;
     using paths_t = std::array<path_t, 4>;
     using index_t = std::array<int, 2>;
-    using distribution_storage_ptr_t   = cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_storage_ptr_t;
+    using distribution_storage_ptr_t = cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_storage_ptr_t;
 
     /// step one: check if the root diretory exists
     path_t path_root(path);
-    if(!cslibs_ndt::common::serialization::check_directory(path_root)) {
+    if(!cslibs_ndt::common::serialization::create_directory(path_root)) {
         return false;
     }
 
@@ -78,19 +60,22 @@ inline bool save(const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &map,
     const distribution_storage_ptr_t storage_2 = map->getStorages()[2];
     const distribution_storage_ptr_t storage_3 = map->getStorages()[3];
 
-    save(storage_0, paths[0]);
-    save(storage_1, paths[1]);
-    save(storage_2, paths[2]);
-    save(storage_3, paths[3]);
+    cslibs_ndt::save(storage_0, paths[0]);
+    cslibs_ndt::save(storage_1, paths[1]);
+    cslibs_ndt::save(storage_2, paths[2]);
+    cslibs_ndt::save(storage_3, paths[3]);
 
     return true;
-
 }
 
-inline bool load(const std::string &path)
+inline bool load(cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &map,
+                 const std::string &path)
 {
     using path_t  = boost::filesystem::path;
     using paths_t = std::array<path_t, 4>;
+    using index_t = std::array<int, 2>;
+    using map_t   = cslibs_ndt_2d::dynamic_maps::Gridmap;
+    using distribution_storage_ptr_t   = typename map_t::distribution_storage_ptr_t;
 
     /// step one: check if the root diretory exists
     path_t path_root(path);
@@ -99,7 +84,7 @@ inline bool load(const std::string &path)
     }
 
     /// step two: check if the sub folders can be created
-    paths_t paths = {{path_t("0"), path_t("1"), path_t("2"), path_t("3")}};
+    paths_t paths = {{path_root / path_t("0"), path_root /  path_t("1"), path_root /  path_t("2"), path_root / path_t("3")}};
 
     /// step three: we have our filesystem, now we can load distributions file by file
     for(std::size_t i = 0 ; i < 4 ; ++i) {
@@ -108,13 +93,41 @@ inline bool load(const std::string &path)
         }
     }
 
+    /// load meta data
+    path_t path_file = path_t("map.yaml");
+    index_t min_index, max_index;
+    {
+        YAML::Node n = YAML::LoadFile((path_root / path_file).string());
+        const cslibs_math_2d::Transform2d origin = n["origin"].as<cslibs_math_2d::Transform2d>();
+        const double resolution = n["resolution"].as<double>();
+        min_index = n["min_index"].as<index_t>();
+        max_index = n["max_index"].as<index_t>();
+        //const std::vector<index_t> indices = n["bundles"].as<std::vector<index_t>>();
+
+        map.reset(new map_t(origin, resolution));
+    }
+
+    auto get_bundle_index = [&min_index, &max_index] (const index_t & si) {
+        return index_t({{std::max(min_index[0], std::min(2 * si[0], max_index[0])),
+                         std::max(min_index[1], std::min(2 * si[1], max_index[1]))}});
+    };
+
+    for (std::size_t i = 0 ; i < 4 ; ++ i) {
+        distribution_storage_ptr_t storage;
+        if (!cslibs_ndt::load(storage, paths[i]))
+            return false;
+
+        storage->traverse([&map, &i, &get_bundle_index] (const index_t & si, const typename map_t::distribution_t & d) {
+            const index_t & bi = get_bundle_index(si);
+            if (const typename map_t::distribution_bundle_t* b = map->getDistributionBundle(bi))
+                b->at(i)->data() = d.data();
+        });
+    }
+
     return true;
 }
 }
 }
-
-
-
 
 namespace YAML {
 template <>

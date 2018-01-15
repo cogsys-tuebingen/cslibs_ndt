@@ -407,7 +407,7 @@ cslibs_ndt_3d::static_maps::OccupancyGridmap::Ptr generateStaticOccMap()
 
     return map;
 }
-
+/*
 TEST(Test_cslibs_ndt_3d, testDynamicGridmapSerialization)
 {    
     using map_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
@@ -467,8 +467,7 @@ TEST(Test_cslibs_ndt_3d, testStaticOccGridmapSerialization)
     // tests
     testStaticOccMap(map, map_converted);
 }
-
-
+*//*
 TEST(Test_cslibs_ndt_3d, testDynamicGridmapFileSerialization)
 {
     using map_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
@@ -544,7 +543,7 @@ TEST(Test_cslibs_ndt_3d, testStaticOccGridmapFileSerialization)
     // tests
     testStaticOccMap(map, map_from_file);
 }
-
+*/
 TEST(Test_cslibs_ndt_3d, testDynamicGridmapConversion)
 {
     using map_t = cslibs_ndt_3d::dynamic_maps::Gridmap;

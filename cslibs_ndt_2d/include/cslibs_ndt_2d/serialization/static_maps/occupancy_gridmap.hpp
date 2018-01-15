@@ -100,9 +100,13 @@ inline bool load(cslibs_ndt_2d::static_maps::OccupancyGridmap::Ptr &map,
         const cslibs_math_2d::Transform2d origin = n["origin"].as<cslibs_math_2d::Transform2d>();
         const double resolution = n["resolution"].as<double>();
         const std::array<std::size_t, 2> size = n["size"].as<std::array<std::size_t, 2>>();
-        //const std::vector<index_t> indices = n["bundles"].as<std::vector<index_t>>();
+        const std::vector<index_t> indices = n["bundles"].as<std::vector<index_t>>();
 
         map.reset(new map_t(origin, resolution, size));
+
+        // allocation stuff, just 4 fun
+        for (const index_t& bi : indices)
+            map->getDistributionBundle(bi);
     }
 
     const std::array<std::size_t, 2> & bundle_size = map->getBundleSize();

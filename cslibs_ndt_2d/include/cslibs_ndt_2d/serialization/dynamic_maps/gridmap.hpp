@@ -102,9 +102,13 @@ inline bool load(cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &map,
         const double resolution = n["resolution"].as<double>();
         min_index = n["min_index"].as<index_t>();
         max_index = n["max_index"].as<index_t>();
-        //const std::vector<index_t> indices = n["bundles"].as<std::vector<index_t>>();
+        const std::vector<index_t> indices = n["bundles"].as<std::vector<index_t>>();
 
         map.reset(new map_t(origin, resolution));
+
+        // allocation stuff, just 4 fun
+        for (const index_t& bi : indices)
+            map->getDistributionBundle(bi);
     }
 
     auto get_bundle_index = [&min_index, &max_index] (const index_t & si) {

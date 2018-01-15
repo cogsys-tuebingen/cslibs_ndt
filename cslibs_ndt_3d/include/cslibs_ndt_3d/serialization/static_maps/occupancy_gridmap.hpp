@@ -102,9 +102,13 @@ inline bool load(cslibs_ndt_3d::static_maps::OccupancyGridmap::Ptr &map,
         const cslibs_math_3d::Transform3d origin = n["origin"].as<cslibs_math_3d::Transform3d>();
         const double resolution = n["resolution"].as<double>();
         const std::array<std::size_t, 3> size = n["size"].as<std::array<std::size_t, 3>>();
-        //const std::vector<index_t> indices = n["bundles"].as<std::vector<index_t>>();
+        const std::vector<index_t> indices = n["bundles"].as<std::vector<index_t>>();
 
         map.reset(new map_t(origin, resolution, size));
+
+        // allocation stuff, just 4 fun
+        for (const index_t& bi : indices)
+            map->getDistributionBundle(bi);
     }
 
     const std::array<std::size_t, 3> & bundle_size = map->getBundleSize();

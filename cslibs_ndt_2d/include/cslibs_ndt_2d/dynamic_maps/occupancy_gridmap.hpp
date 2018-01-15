@@ -135,8 +135,10 @@ public:
                            const cslibs_gridmaps::utility::InverseModel &inverse_model,
                            const double  &occupied_threshold) const
     {
-        const index_t start_index = toBundleIndex(start_p);
-        const index_t end_index   = toBundleIndex(end_p);
+        const index_t start_index = {{static_cast<int>(std::floor(start_p(0) * bundle_resolution_inv_)),
+                                      static_cast<int>(std::floor(start_p(1) * bundle_resolution_inv_))}};
+        const index_t end_index   = {{static_cast<int>(std::floor(end_p(0) * bundle_resolution_inv_)),
+                                      static_cast<int>(std::floor(end_p(1) * bundle_resolution_inv_))}};
         line_iterator_t it(start_index, end_index);
 
         auto occupancy = [&inverse_model](const distribution_t *d) {
@@ -170,6 +172,13 @@ public:
                          const cslibs_gridmaps::utility::InverseModel & inverse_model) const
     {
         const index_t bi = toBundleIndex(p);
+        return sample(p, bi, inverse_model);
+    }
+
+    inline double sample(const point_t &p,
+                         const index_t &bi,
+                         const cslibs_gridmaps::utility::InverseModel & inverse_model) const
+    {
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);
@@ -198,6 +207,13 @@ public:
                                       const cslibs_gridmaps::utility::InverseModel & inverse_model) const
     {
         const index_t bi = toBundleIndex(p);
+        return sampleNonNormalized(p, bi, inverse_model);
+    }
+
+    inline double sampleNonNormalized(const point_t &p,
+                                      const index_t &bi,
+                                      const cslibs_gridmaps::utility::InverseModel & inverse_model) const
+    {
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);

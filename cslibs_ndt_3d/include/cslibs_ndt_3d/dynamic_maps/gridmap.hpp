@@ -229,6 +229,7 @@ public:
         };
         bundle_storage_->traverse(add_index);
     }
+
 protected:
     const double                                    resolution_;
     const double                                    resolution_inv_;

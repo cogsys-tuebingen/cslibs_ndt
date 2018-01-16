@@ -122,6 +122,12 @@ public:
     inline double sample(const point_t &p) const
     {
         const index_t bi = toBundleIndex(p);
+        return sample(p, bi);
+    }
+
+    inline double sample(const point_t &p,
+                         const index_t &bi) const
+    {
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);
@@ -136,10 +142,15 @@ public:
         return evaluate();
     }
 
-
     inline double sampleNonNormalized(const point_t &p) const
     {
         const index_t bi = toBundleIndex(p);
+        return sampleNonNormalized(p, bi);
+    }
+
+    inline double sampleNonNormalized(const point_t &p,
+                                      const index_t &bi) const
+    {
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);

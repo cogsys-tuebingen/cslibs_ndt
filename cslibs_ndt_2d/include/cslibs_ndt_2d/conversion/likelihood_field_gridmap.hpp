@@ -21,14 +21,13 @@ inline cslibs_gridmaps::static_maps::LikelihoodFieldGridmap::Ptr from(
     const typename src_map_t::Ptr static_src = cslibs_ndt_2d::conversion::from(src);
     typename dst_map_t::Ptr dst(new dst_map_t(static_src->getOrigin(),
                                               sampling_resolution,
-                                              static_src->getHeight(),
-                                              static_src->getWidth(),
-                                              0.0,   // ignored!
-                                              0.0)); // ignored!
+                                              static_src->getHeight() / sampling_resolution,
+                                              static_src->getWidth()  / sampling_resolution,
+                                              0.0,   // ignored
+                                              0.0)); // ignored
 
     const double bundle_resolution = static_src->getBundleResolution();
-    const int chunk_step           = static_cast<int>(bundle_resolution / sampling_resolution);
-
+    const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
     for (std::size_t i = 0 ; i < static_src->getBundleSize()[0] ; ++ i) {
         for (std::size_t j = 0 ; j < static_src->getBundleSize()[1] ; ++ j) {
             const int ci = i * chunk_step;
@@ -38,8 +37,11 @@ inline cslibs_gridmaps::static_maps::LikelihoodFieldGridmap::Ptr from(
                 for (int l = 0 ; l < chunk_step ; ++l) {
                     const cslibs_math_2d::Point2d p(i * bundle_resolution + k * sampling_resolution,
                                                     j * bundle_resolution + l * sampling_resolution);
+
                     dst->at(static_cast<std::size_t>(ci + k),
-                            static_cast<std::size_t>(cj + l)) = static_src->sampleNonNormalized(p);
+                            static_cast<std::size_t>(cj + l)) =
+                            static_src->sampleNonNormalized(
+                                dst->getOrigin() * p, {{static_cast<int>(i), static_cast<int>(j)}});
                 }
             }
         }
@@ -59,14 +61,13 @@ inline cslibs_gridmaps::static_maps::LikelihoodFieldGridmap::Ptr from(
     const typename src_map_t::Ptr static_src = cslibs_ndt_2d::conversion::from(src);
     typename dst_map_t::Ptr dst(new dst_map_t(static_src->getOrigin(),
                                               sampling_resolution,
-                                              static_src->getHeight(),
-                                              static_src->getWidth(),
+                                              static_src->getHeight() / sampling_resolution,
+                                              static_src->getWidth()  / sampling_resolution,
                                               0.0,   // ignored
                                               0.0)); // ignored
 
     const double bundle_resolution = static_src->getBundleResolution();
-    const int chunk_step           = static_cast<int>(bundle_resolution / sampling_resolution);
-
+    const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
     for (std::size_t i = 0 ; i < static_src->getBundleSize()[0] ; ++ i) {
         for (std::size_t j = 0 ; j < static_src->getBundleSize()[1] ; ++ j) {
             const int ci = i * chunk_step;
@@ -76,8 +77,11 @@ inline cslibs_gridmaps::static_maps::LikelihoodFieldGridmap::Ptr from(
                 for (int l = 0 ; l < chunk_step ; ++l) {
                     const cslibs_math_2d::Point2d p(i * bundle_resolution + k * sampling_resolution,
                                                     j * bundle_resolution + l * sampling_resolution);
+
                     dst->at(static_cast<std::size_t>(ci + k),
-                            static_cast<std::size_t>(cj + l)) = static_src->sampleNonNormalized(p, inverse_model);
+                            static_cast<std::size_t>(cj + l)) =
+                            static_src->sampleNonNormalized(
+                                dst->getOrigin() * p, {{static_cast<int>(i), static_cast<int>(j)}}, inverse_model);
                 }
             }
         }

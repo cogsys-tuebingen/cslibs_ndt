@@ -12,8 +12,9 @@
 
 namespace cslibs_ndt_2d {
 namespace conversion {
-inline cslibs_gridmaps::static_maps::LikelihoodFieldGridmap::Ptr from(
+inline void from(
         const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &src,
+        cslibs_gridmaps::static_maps::LikelihoodFieldGridmap::Ptr &dst,
         const double &sampling_resolution,
         const double &maximum_distance = 2.0,
         const double &sigma_hit        = 0.5,
@@ -24,12 +25,12 @@ inline cslibs_gridmaps::static_maps::LikelihoodFieldGridmap::Ptr from(
     const double exp_factor_hit = (0.5 * 1.0 / (sigma_hit * sigma_hit));
 
     using dst_map_t = cslibs_gridmaps::static_maps::LikelihoodFieldGridmap;
-    typename dst_map_t::Ptr dst(new dst_map_t(src->getOrigin(),
-                                              sampling_resolution,
-                                              src->getHeight() / sampling_resolution,
-                                              src->getWidth()  / sampling_resolution,
-                                              maximum_distance,
-                                              sigma_hit));
+    dst.reset(new dst_map_t(src->getOrigin(),
+                            sampling_resolution,
+                            src->getHeight() / sampling_resolution,
+                            src->getWidth()  / sampling_resolution,
+                            maximum_distance,
+                            sigma_hit));
 
     const double bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
@@ -75,12 +76,11 @@ inline cslibs_gridmaps::static_maps::LikelihoodFieldGridmap::Ptr from(
     std::for_each(dst->getData().begin(),
                   dst->getData().end(),
                   [exp_factor_hit] (double &z) {z = std::exp(-z * z * exp_factor_hit);});
-
-    return dst;
 }
 
-inline cslibs_gridmaps::static_maps::LikelihoodFieldGridmap::Ptr from(
+inline void from(
         const cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr &src,
+        cslibs_gridmaps::static_maps::LikelihoodFieldGridmap::Ptr &dst,
         const double &sampling_resolution,
         const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model,
         const double &maximum_distance = 2.0,
@@ -92,12 +92,12 @@ inline cslibs_gridmaps::static_maps::LikelihoodFieldGridmap::Ptr from(
     const double exp_factor_hit = (0.5 * 1.0 / (sigma_hit * sigma_hit));
 
     using dst_map_t = cslibs_gridmaps::static_maps::LikelihoodFieldGridmap;
-    typename dst_map_t::Ptr dst(new dst_map_t(src->getOrigin(),
-                                              sampling_resolution,
-                                              src->getHeight() / sampling_resolution,
-                                              src->getWidth()  / sampling_resolution,
-                                              maximum_distance,
-                                              sigma_hit));
+    dst.reset(new dst_map_t(src->getOrigin(),
+                            sampling_resolution,
+                            src->getHeight() / sampling_resolution,
+                            src->getWidth()  / sampling_resolution,
+                            maximum_distance,
+                            sigma_hit));
 
     const double bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
@@ -143,8 +143,6 @@ inline cslibs_gridmaps::static_maps::LikelihoodFieldGridmap::Ptr from(
     std::for_each(dst->getData().begin(),
                   dst->getData().end(),
                   [exp_factor_hit] (double &z) {z = std::exp(-z * z * exp_factor_hit);});
-
-    return dst;
 }
 }
 }

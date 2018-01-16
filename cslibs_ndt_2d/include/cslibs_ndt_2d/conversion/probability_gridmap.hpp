@@ -11,15 +11,16 @@
 
 namespace cslibs_ndt_2d {
 namespace conversion {
-inline cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr from(
+inline void from(
         const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &src,
+        cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr &dst,
         const double &sampling_resolution)
 {
     using dst_map_t = cslibs_gridmaps::static_maps::ProbabilityGridmap;
-    typename dst_map_t::Ptr dst(new dst_map_t(src->getOrigin(),
-                                              sampling_resolution,
-                                              src->getHeight() / sampling_resolution,
-                                              src->getWidth()  / sampling_resolution));
+    dst.reset(new dst_map_t(src->getOrigin(),
+                            sampling_resolution,
+                            src->getHeight() / sampling_resolution,
+                            src->getWidth()  / sampling_resolution));
 
     const double bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
@@ -46,20 +47,19 @@ inline cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr from(
             }
         }
     }
-
-    return dst;
 }
 
-inline cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr from(
+inline void from(
         const cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr &src,
+        cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr &dst,
         const double &sampling_resolution,
         const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model)
 {
     using dst_map_t = cslibs_gridmaps::static_maps::ProbabilityGridmap;
-    typename dst_map_t::Ptr dst(new dst_map_t(src->getOrigin(),
-                                              sampling_resolution,
-                                              src->getHeight() / sampling_resolution,
-                                              src->getWidth()  / sampling_resolution));
+    dst.reset(new dst_map_t(src->getOrigin(),
+                            sampling_resolution,
+                            src->getHeight() / sampling_resolution,
+                            src->getWidth()  / sampling_resolution));
 
     const double bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
@@ -86,8 +86,6 @@ inline cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr from(
             }
         }
     }
-
-    return dst;
 }
 }
 }

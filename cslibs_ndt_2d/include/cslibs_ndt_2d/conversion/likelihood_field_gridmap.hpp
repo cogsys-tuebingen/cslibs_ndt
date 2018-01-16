@@ -17,8 +17,13 @@ inline void from(
         cslibs_gridmaps::static_maps::LikelihoodFieldGridmap::Ptr &dst,
         const double &sampling_resolution,
         const double &maximum_distance = 2.0,
-        const double &sigma_hit        = 0.5)
+        const double &sigma_hit        = 0.5,
+        const double &threshold        = 0.5)
 {
+    assert(threshold <= 1.0);
+    assert(threshold >= 0.0);
+    const double exp_factor_hit = (0.5 * 1.0 / (sigma_hit * sigma_hit));
+
     using dst_map_t = cslibs_gridmaps::static_maps::LikelihoodFieldGridmap;
     dst.reset(new dst_map_t(src->getOrigin(),
                             sampling_resolution,
@@ -46,12 +51,22 @@ inline void from(
 
                     dst->at(static_cast<std::size_t>(ci + k),
                             static_cast<std::size_t>(cj + l)) =
-                            src->sampleNonNormalized(
+                            1.0 - src->sampleNonNormalized(
                                 src->getInitialOrigin() * p, {{static_cast<int>(i), static_cast<int>(j)}});
                 }
             }
         }
     }
+
+    std::vector<double> occ = dst->getData();
+
+    cslibs_gridmaps::static_maps::algorithms::DistanceTransform<double> distance_transform(
+                sampling_resolution, maximum_distance, threshold);
+    distance_transform.apply(occ, dst->getWidth(), dst->getData());
+
+    std::for_each(dst->getData().begin(),
+                  dst->getData().end(),
+                  [&exp_factor_hit] (double &z) {z = std::exp(-z * z * exp_factor_hit);});
 }
 
 inline void from(
@@ -60,8 +75,13 @@ inline void from(
         const double &sampling_resolution,
         const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model,
         const double &maximum_distance = 2.0,
-        const double &sigma_hit        = 0.5)
+        const double &sigma_hit        = 0.5,
+        const double &threshold        = 0.5)
 {
+    assert(threshold <= 1.0);
+    assert(threshold >= 0.0);
+    const double exp_factor_hit = (0.5 * 1.0 / (sigma_hit * sigma_hit));
+
     using dst_map_t = cslibs_gridmaps::static_maps::LikelihoodFieldGridmap;
     dst.reset(new dst_map_t(src->getOrigin(),
                             sampling_resolution,
@@ -89,12 +109,22 @@ inline void from(
 
                     dst->at(static_cast<std::size_t>(ci + k),
                             static_cast<std::size_t>(cj + l)) =
-                            src->sampleNonNormalized(
+                            1.0 - src->sampleNonNormalized(
                                 src->getInitialOrigin() * p, {{static_cast<int>(i), static_cast<int>(j)}}, inverse_model);
                 }
             }
         }
     }
+
+    std::vector<double> occ = dst->getData();
+
+    cslibs_gridmaps::static_maps::algorithms::DistanceTransform<double> distance_transform(
+                sampling_resolution, maximum_distance, threshold);
+    distance_transform.apply(occ, dst->getWidth(), dst->getData());
+
+    std::for_each(dst->getData().begin(),
+                  dst->getData().end(),
+                  [&exp_factor_hit] (double &z) {z = std::exp(-z * z * exp_factor_hit);});
 }
 }
 }

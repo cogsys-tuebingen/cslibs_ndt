@@ -22,8 +22,10 @@ inline void from(
     using dst_map_t = cslibs_gridmaps::static_maps::DistanceGridmap;
     dst.reset(new dst_map_t(src->getOrigin(),
                             sampling_resolution,
+                            maximum_distance,
                             src->getHeight() / sampling_resolution,
-                            src->getWidth()  / sampling_resolution));
+                            src->getWidth()  / sampling_resolution,
+                            maximum_distance));
 
     const double bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
@@ -69,8 +71,10 @@ inline void from(
     using dst_map_t = cslibs_gridmaps::static_maps::DistanceGridmap;
     dst.reset(new dst_map_t(src->getOrigin(),
                             sampling_resolution,
+                            maximum_distance,
                             src->getHeight() / sampling_resolution,
-                            src->getWidth()  / sampling_resolution));
+                            src->getWidth()  / sampling_resolution,
+                            maximum_distance));
 
     const double bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);

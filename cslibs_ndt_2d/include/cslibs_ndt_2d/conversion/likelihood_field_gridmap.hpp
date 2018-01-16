@@ -51,7 +51,7 @@ inline void from(
 
                     dst->at(static_cast<std::size_t>(ci + k),
                             static_cast<std::size_t>(cj + l)) =
-                            1.0 - src->sampleNonNormalized(
+                            src->sampleNonNormalized(
                                 src->getInitialOrigin() * p, {{static_cast<int>(i), static_cast<int>(j)}});
                 }
             }
@@ -62,7 +62,9 @@ inline void from(
 
     cslibs_gridmaps::static_maps::algorithms::DistanceTransform<double> distance_transform(
                 sampling_resolution, maximum_distance, threshold);
-    distance_transform.apply(occ, dst->getWidth(), dst->getData());
+    std::vector<double> tmp;
+    distance_transform.apply(occ, dst->getWidth(), tmp);
+    dst->getData() = tmp;
 
     std::for_each(dst->getData().begin(),
                   dst->getData().end(),
@@ -109,7 +111,7 @@ inline void from(
 
                     dst->at(static_cast<std::size_t>(ci + k),
                             static_cast<std::size_t>(cj + l)) =
-                            1.0 - src->sampleNonNormalized(
+                            src->sampleNonNormalized(
                                 src->getInitialOrigin() * p, {{static_cast<int>(i), static_cast<int>(j)}}, inverse_model);
                 }
             }
@@ -120,7 +122,9 @@ inline void from(
 
     cslibs_gridmaps::static_maps::algorithms::DistanceTransform<double> distance_transform(
                 sampling_resolution, maximum_distance, threshold);
-    distance_transform.apply(occ, dst->getWidth(), dst->getData());
+    std::vector<double> tmp;
+    distance_transform.apply(occ, dst->getWidth(), tmp);
+    dst->getData() = tmp;
 
     std::for_each(dst->getData().begin(),
                   dst->getData().end(),

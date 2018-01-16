@@ -18,7 +18,7 @@ inline void from(
         const double &sampling_resolution,
         const double &maximum_distance = 2.0,
         const double &sigma_hit        = 0.5,
-        const double &threshold        = 1.0)
+        const double &threshold        = 0.5)
 {
     assert(threshold <= 1.0);
     assert(threshold >= 0.0);
@@ -58,12 +58,7 @@ inline void from(
         }
     }
 
-    // convert probabilities to likelihood field
-    std::vector<double> occ(dst->getData().size());
-    std::transform(dst->getData().begin(),
-                   dst->getData().end(),
-                   occ.begin(),
-                   [](const double &p){ return (p != -1) ? p : 0.5; });
+    std::vector<double> occ = dst->getData();
 
     // calculate the distances
     cslibs_gridmaps::static_maps::algorithms::DistanceTransform<double> distance_transform(
@@ -85,7 +80,7 @@ inline void from(
         const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model,
         const double &maximum_distance = 2.0,
         const double &sigma_hit        = 0.5,
-        const double &threshold        = 1.0)
+        const double &threshold        = 0.5)
 {
     assert(threshold <= 1.0);
     assert(threshold >= 0.0);
@@ -125,12 +120,7 @@ inline void from(
         }
     }
 
-    // convert probabilities to likelihood field
-    std::vector<double> occ(dst->getData().size());
-    std::transform(dst->getData().begin(),
-                   dst->getData().end(),
-                   occ.begin(),
-                   [&inverse_model](const double &p){ return (p != -1) ? p : inverse_model->getProbPrior(); });
+    std::vector<double> occ = dst->getData();
 
     // calculate the distances
     cslibs_gridmaps::static_maps::algorithms::DistanceTransform<double> distance_transform(

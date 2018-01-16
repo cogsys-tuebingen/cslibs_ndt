@@ -45,8 +45,8 @@ inline void from(
                             static_cast<std::size_t>(cj + l)) =
                             src->sampleNonNormalized(
                                 src->getInitialOrigin() * p, {{static_cast<int>(i), static_cast<int>(j)}})
-                            > threshold ? cslibs_gridmaps::static_maps::BinaryGridmap::OCCUPIED :
-                                          cslibs_gridmaps::static_maps::BinaryGridmap::FREE;
+                            >= threshold ? cslibs_gridmaps::static_maps::BinaryGridmap::OCCUPIED :
+                                           cslibs_gridmaps::static_maps::BinaryGridmap::FREE;
                 }
             }
         }
@@ -87,8 +87,8 @@ inline void from(
                             static_cast<std::size_t>(cj + l)) =
                             src->sampleNonNormalized(
                                 src->getInitialOrigin() * p, {{static_cast<int>(i), static_cast<int>(j)}}, inverse_model)
-                            > threshold ? cslibs_gridmaps::static_maps::BinaryGridmap::OCCUPIED :
-                                          cslibs_gridmaps::static_maps::BinaryGridmap::FREE;
+                            >= threshold ? cslibs_gridmaps::static_maps::BinaryGridmap::OCCUPIED :
+                                           cslibs_gridmaps::static_maps::BinaryGridmap::FREE;
                 }
             }
         }

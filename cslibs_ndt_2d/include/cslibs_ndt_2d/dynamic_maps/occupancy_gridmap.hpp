@@ -170,7 +170,7 @@ public:
     }
 
     inline double sample(const point_t &p,
-                         const cslibs_gridmaps::utility::InverseModel & inverse_model) const
+                         const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model) const
     {
         const index_t bi = toBundleIndex(p);
         return sample(p, bi, inverse_model);
@@ -178,8 +178,11 @@ public:
 
     inline double sample(const point_t &p,
                          const index_t &bi,
-                         const cslibs_gridmaps::utility::InverseModel & inverse_model) const
+                         const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model) const
     {
+        if (!inverse_model)
+            throw std::runtime_error("[OccupancyGridMap]: inverse model not set");
+
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);
@@ -187,9 +190,9 @@ public:
         }
         auto occupancy = [&inverse_model](const distribution_t *d) {
             return (d && d->getDistribution()) ? cslibs_math::common::LogOdds::from(
-                                                 d->numFree() * inverse_model.getLogOddsFree() +
-                                                 d->numOccupied() * inverse_model.getLogOddsOccupied())
-                                                 - inverse_model.getLogOddsPrior() : 0.0;
+                                                 d->numFree() * inverse_model->getLogOddsFree() +
+                                                 d->numOccupied() * inverse_model->getLogOddsOccupied())
+                                                 - inverse_model->getLogOddsPrior() : 0.0;
         };
         auto sample = [&p, &occupancy](const distribution_t *d) {
             return (d && d->getDistribution()) ? d->getDistribution()->sample(p) *
@@ -205,7 +208,7 @@ public:
     }
 
     inline double sampleNonNormalized(const point_t &p,
-                                      const cslibs_gridmaps::utility::InverseModel & inverse_model) const
+                                      const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model) const
     {
         const index_t bi = toBundleIndex(p);
         return sampleNonNormalized(p, bi, inverse_model);
@@ -213,8 +216,11 @@ public:
 
     inline double sampleNonNormalized(const point_t &p,
                                       const index_t &bi,
-                                      const cslibs_gridmaps::utility::InverseModel & inverse_model) const
+                                      const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model) const
     {
+        if (!inverse_model)
+            throw std::runtime_error("[OccupancyGridMap]: inverse model not set");
+
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);
@@ -222,9 +228,9 @@ public:
         }
         auto occupancy = [&inverse_model](const distribution_t *d) {
             return (d && d->getDistribution()) ? cslibs_math::common::LogOdds::from(
-                                                 d->numFree() * inverse_model.getLogOddsFree() +
-                                                 d->numOccupied() * inverse_model.getLogOddsOccupied())
-                                                 - inverse_model.getLogOddsPrior() : 0.0;
+                                                 d->numFree() * inverse_model->getLogOddsFree() +
+                                                 d->numOccupied() * inverse_model->getLogOddsOccupied())
+                                                 - inverse_model->getLogOddsPrior() : 0.0;
         };
         auto sampleNonNormalized = [&p, &occupancy](const distribution_t *d) {
             return (d && d->getDistribution()) ? d->getDistribution()->sampleNonNormalized(p) *

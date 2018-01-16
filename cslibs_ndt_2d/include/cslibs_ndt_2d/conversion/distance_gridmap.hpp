@@ -57,7 +57,9 @@ inline void from(
 
     cslibs_gridmaps::static_maps::algorithms::DistanceTransform<double> distance_transform(
                 sampling_resolution, maximum_distance, threshold);
-    distance_transform.apply(occ, dst->getWidth(), dst->getData());
+    std::vector<double> tmp;
+    distance_transform.apply(occ, dst->getWidth(), tmp);
+    dst->getData() = tmp;
 }
 
 inline void from(
@@ -106,7 +108,9 @@ inline void from(
 
     cslibs_gridmaps::static_maps::algorithms::DistanceTransform<double> distance_transform(
                 sampling_resolution, maximum_distance, threshold);
-    distance_transform.apply(occ, dst->getWidth(), dst->getData());
+    std::vector<double> tmp;
+    distance_transform.apply(occ, dst->getWidth(), tmp);
+    dst->getData() = tmp;
 }
 }
 }

@@ -17,7 +17,7 @@ inline void from(
         cslibs_gridmaps::static_maps::DistanceGridmap::Ptr &dst,
         const double &sampling_resolution,
         const double &maximum_distance = 2.0,
-        const double &threshold        = 0.5)
+        const double &threshold        = 0.169)
 {
     using dst_map_t = cslibs_gridmaps::static_maps::DistanceGridmap;
     dst.reset(new dst_map_t(src->getOrigin(),
@@ -54,12 +54,9 @@ inline void from(
     }
 
     std::vector<double> occ = dst->getData();
-
     cslibs_gridmaps::static_maps::algorithms::DistanceTransform<double> distance_transform(
                 sampling_resolution, maximum_distance, threshold);
-    std::vector<double> tmp;
-    distance_transform.apply(occ, dst->getWidth(), tmp);
-    dst->getData() = tmp;
+    distance_transform.apply(occ, dst->getWidth(), dst->getData());
 }
 
 inline void from(
@@ -68,7 +65,7 @@ inline void from(
         const double &sampling_resolution,
         const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model,
         const double &maximum_distance = 2.0,
-        const double &threshold        = 0.5)
+        const double &threshold        = 0.169)
 {
     using dst_map_t = cslibs_gridmaps::static_maps::DistanceGridmap;
     dst.reset(new dst_map_t(src->getOrigin(),
@@ -105,12 +102,9 @@ inline void from(
     }
 
     std::vector<double> occ = dst->getData();
-
     cslibs_gridmaps::static_maps::algorithms::DistanceTransform<double> distance_transform(
                 sampling_resolution, maximum_distance, threshold);
-    std::vector<double> tmp;
-    distance_transform.apply(occ, dst->getWidth(), tmp);
-    dst->getData() = tmp;
+    distance_transform.apply(occ, dst->getWidth(), dst->getData());
 }
 }
 }

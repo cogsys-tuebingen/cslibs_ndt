@@ -135,22 +135,22 @@ public:
     inline void insert(const pose_t &origin,
                        const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points)
     {
-        //distribution_storage_t storage;
-        std::unordered_map<index_t, int> map;
+        distribution_storage_t storage;
+        //std::unordered_map<index_t, int> map;
         for (const auto &p : *points) {
             const point_t pm = origin * p;
             if (pm.isNormal()) {
-                const index_t bi = toBundleIndex(pm);
-                updateOccupied(bi, pm);
-                ++map[bi];
+                //const index_t bi = toBundleIndex(pm);
+                //updateOccupied(bi, pm);
+                //++map[bi];
 
-                //const index_t &bi = toBundleIndex(pm);
-                //distribution_t *d = storage.get(bi);
-                //(d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
+                const index_t &bi = toBundleIndex(pm);
+                distribution_t *d = storage.get(bi);
+                (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
 
             }
         }
-
+/*
         const index_t start_index = toBundleIndex(origin.translation());
         for (const auto& entry : map) {
             line_iterator_t it(start_index, entry.first);
@@ -172,7 +172,7 @@ public:
                             updateFree(bj, d.numOccupied()) :
                             updateOccupied(bj, d.getDistribution());
                 ++ it;
-            }* /
+            }*/
 
             updateOccupied(bi, d.getDistribution());
 

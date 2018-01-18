@@ -21,7 +21,9 @@
 #include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
 
 #include <cslibs_math_3d/algorithms/bresenham.hpp>
+#include <cslibs_math_3d/algorithms/simple_iterator.hpp>
 
+#include <unordered_map>
 namespace cis = cslibs_indexed_storage;
 
 namespace cslibs_ndt_3d {
@@ -44,7 +46,7 @@ public:
     using distribution_const_bundle_t       = cslibs_ndt::Bundle<const distribution_t*, 8>;
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
-    using line_iterator_t                   = cslibs_math_3d::algorithms::Bresenham;
+    using line_iterator_t                   = cslibs_math_3d::algorithms::SimpleIterator;//Bresenham;
 
     OccupancyGridmap(const pose_t &origin,
                      const double  resolution) :
@@ -133,20 +135,35 @@ public:
     inline void insert(const pose_t &origin,
                        const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points)
     {
-        distribution_storage_t storage;
+        //distribution_storage_t storage;
+        std::unordered_map<index_t, int> map;
         for (const auto &p : *points) {
             const point_t pm = origin * p;
             if (pm.isNormal()) {
-                const index_t &bi = toBundleIndex(pm);
-                distribution_t *d = storage.get(bi);
-                (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
+                const index_t bi = toBundleIndex(pm);
+                updateOccupied(bi, pm);
+                ++map[bi];
+
+                //const index_t &bi = toBundleIndex(pm);
+                //distribution_t *d = storage.get(bi);
+                //(d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
+
             }
         }
 
+        const index_t start_index = toBundleIndex(origin.translation());
+        for (const auto& entry : map) {
+            line_iterator_t it(start_index, entry.first);
+            while (!it.done()) {
+                updateFree({{it.x(), it.y(), it.z()}}, entry.second);
+                ++ it;
+            }
+        }
+/*/
         const point_t start_p = m_T_w_ * origin.translation();
         storage.traverse([this, &start_p](const index_t& bi, const distribution_t &d) {
             if (!d.getDistribution())
-                return;
+                return;/*
             line_iterator_t it(start_p, m_T_w_ * point_t(d.getDistribution()->getMean()), bundle_resolution_);//start_index, bi, 1.0);
 
             while (!it.done()) {
@@ -155,10 +172,17 @@ public:
                             updateFree(bj, d.numOccupied()) :
                             updateOccupied(bj, d.getDistribution());
                 ++ it;
-            }
+            }* /
 
             updateOccupied(bi, d.getDistribution());
-        });
+
+            line_iterator_t it(start_p, m_T_w_ * point_t(d.getDistribution()->getMean()), bundle_resolution_);//start_index, bi, 1.0);
+            const std::size_t n = d.numOccupied();
+            while (!it.done()) {
+                updateFree({{it.x(), it.y(), it.z()}}, n);
+                ++ it;
+            }//* /
+        });//*/
     }
 
     inline index_t getMinDistributionIndex() const

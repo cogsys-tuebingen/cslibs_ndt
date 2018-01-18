@@ -138,6 +138,38 @@ public:
         updateOccupied(end_index, end_p);
     }
 
+    inline void insert(const pose_t &origin,
+                       const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points)
+    {
+        distribution_storage_ptr_t storage(new distribution_storage_t());
+        for (const auto &p : *points) {
+            const point_t pm = origin * p;
+            if (pm.isNormal()) {
+                const index_t bi = toBundleIndex(pm);
+                distribution_t *d = storage->get(bi);
+                d ? d->updateOccupied(pm) :
+                    storage->insert(bi, distribution_t()).updateOccupied(pm);
+            }
+        }
+
+        const index_t start_index = toBundleIndex(origin.translation());
+        storage->traverse([this, &start_index](const index_t& bi, const distribution_t &d) {
+            if (!d.getDistribution())
+                return;
+            line_iterator_t it(start_index, bi);
+
+            while(!it.done()) {
+                const index_t bj = {{it.x(), it.y(), it.z()}};
+                (it.length2() > bundle_resolution_2_) ?
+                            updateFree(bj, d.numOccupied()) :
+                            updateOccupied(bj, d.getDistribution());
+                ++ it;
+            }
+
+            updateOccupied(bi, d.getDistribution());
+        });
+    }
+
     inline const distribution_bundle_t* getDistributionBundle(const index_t &bi) const
     {
         return getAllocate(bi);
@@ -274,6 +306,24 @@ protected:
         bundle->at(7)->updateFree();
     }
 
+    inline void updateFree(const index_t &bi,
+                           const std::size_t &n) const
+    {
+        distribution_bundle_t *bundle;
+        {
+            lock_t(bundle_storage_mutex_);
+            bundle = getAllocate(bi);
+        }
+        bundle->at(0)->updateFree(n);
+        bundle->at(1)->updateFree(n);
+        bundle->at(2)->updateFree(n);
+        bundle->at(3)->updateFree(n);
+        bundle->at(4)->updateFree(n);
+        bundle->at(5)->updateFree(n);
+        bundle->at(6)->updateFree(n);
+        bundle->at(7)->updateFree(n);
+    }
+
     inline void updateOccupied(const index_t &bi,
                                const point_t &p) const
     {
@@ -290,6 +340,24 @@ protected:
         bundle->at(5)->updateOccupied(p);
         bundle->at(6)->updateOccupied(p);
         bundle->at(7)->updateOccupied(p);
+    }
+
+    inline void updateOccupied(const index_t &bi,
+                               const distribution_t::distribution_ptr_t &d) const
+    {
+        distribution_bundle_t *bundle;
+        {
+            lock_t(bundle_storage_mutex_);
+            bundle = getAllocate(bi);
+        }
+        bundle->at(0)->updateOccupied(d);
+        bundle->at(1)->updateOccupied(d);
+        bundle->at(2)->updateOccupied(d);
+        bundle->at(3)->updateOccupied(d);
+        bundle->at(4)->updateOccupied(d);
+        bundle->at(5)->updateOccupied(d);
+        bundle->at(6)->updateOccupied(d);
+        bundle->at(7)->updateOccupied(d);
     }
 
     inline index_t toBundleIndex(const point_t &p_w) const

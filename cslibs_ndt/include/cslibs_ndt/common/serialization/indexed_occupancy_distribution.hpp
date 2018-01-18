@@ -33,9 +33,9 @@ struct convert<cslibs_ndt::Indexed<cslibs_ndt::OccupancyDistribution, Size, Dim>
 
         rhs.index_ = n[0].as<std::array<int, Dim>>();
         if (n.size() == 3)
-            rhs.data_ = cslibs_ndt::OccupancyDistribution<Size>(n[1].as<std::size_t>(), n[2].as<std::size_t>());
+            rhs.data_ = cslibs_ndt::OccupancyDistribution<Size>(n[1].as<std::size_t>());
         else
-            rhs.data_ = cslibs_ndt::OccupancyDistribution<Size>(n[1].as<std::size_t>(), n[2].as<std::size_t>(),
+            rhs.data_ = cslibs_ndt::OccupancyDistribution<Size>(n[1].as<std::size_t>(),
                     n[3].as<typename cslibs_ndt::OccupancyDistribution<Size>::distribution_t>());
 
         return true;

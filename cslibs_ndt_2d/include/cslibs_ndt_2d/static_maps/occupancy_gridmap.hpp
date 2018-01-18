@@ -145,15 +145,9 @@ public:
             lock_t(bundle_storage_mutex_);
             bundle = getAllocate(bi);
         }
-        auto occupancy = [&inverse_model](const distribution_t *d) {
-            return (d && d->getDistribution()) ? cslibs_math::common::LogOdds::from(
-                                                 d->numFree() * inverse_model->getLogOddsFree() +
-                                                 d->numOccupied() * inverse_model->getLogOddsOccupied())
-                                                 - inverse_model->getLogOddsPrior() : 0.0;
-        };
-        auto sample = [&p, &occupancy](const distribution_t *d) {
+        auto sample = [&p, &inverse_model](const distribution_t *d) {
             return (d && d->getDistribution()) ? d->getDistribution()->sample(p) *
-                                                 occupancy(d) : 0.0;
+                                                 d->getOccupancy(inverse_model) : 0.0;
         };
         auto evaluate = [&p, &bundle, &sample]() {
             return 0.25 * (sample(bundle->at(0)) +
@@ -183,15 +177,9 @@ public:
             lock_t(bundle_storage_mutex_);
             bundle = getAllocate(bi);
         }
-        auto occupancy = [&inverse_model](const distribution_t *d) {
-            return (d && d->getDistribution()) ? cslibs_math::common::LogOdds::from(
-                                                 d->numFree() * inverse_model->getLogOddsFree() +
-                                                 d->numOccupied() * inverse_model->getLogOddsOccupied())
-                                                 - inverse_model->getLogOddsPrior() : 0.0;
-        };
-        auto sampleNonNormalized = [&p, &occupancy](const distribution_t *d) {
+        auto sampleNonNormalized = [&p, &inverse_model](const distribution_t *d) {
             return (d && d->getDistribution()) ? d->getDistribution()->sampleNonNormalized(p) *
-                                                 occupancy(d) : 0.0;
+                                                 d->getOccupancy(inverse_model) : 0.0;
         };
         auto evaluate = [&p, &bundle, &sampleNonNormalized]() {
           return 0.25 * (sampleNonNormalized(bundle->at(0)) +

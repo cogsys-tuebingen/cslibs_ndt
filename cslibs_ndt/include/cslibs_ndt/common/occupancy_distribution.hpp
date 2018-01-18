@@ -9,6 +9,8 @@
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
 
+#include <cslibs_gridmaps/utility/inverse_model.hpp>
+
 namespace cslibs_ndt {
 template<std::size_t Dim>
 class OccupancyDistribution {
@@ -23,54 +25,52 @@ public:
     using const_handle_t            = cslibs_utility::synchronized::WrapAround<const distribution_container_t>;
 
     inline OccupancyDistribution() :
-        num_free_(0),
-        num_occupied_(0)
+        num_free_(0)
     {
     }
 
-    inline OccupancyDistribution(const std::size_t num_free,
-                                 const std::size_t num_occ) :
-        num_free_(num_free),
-        num_occupied_(num_occ)
+    inline OccupancyDistribution(const std::size_t num_free) :
+        num_free_(num_free)
     {
     }
 
     inline OccupancyDistribution(const std::size_t    num_free,
-                                 const std::size_t    num_occ,
                                  const distribution_t data) :
         num_free_(num_free),
-        num_occupied_(num_occ),
         distribution_(new distribution_t(data))
     {
     }
 
     inline OccupancyDistribution(const OccupancyDistribution &other) :
         num_free_(other.num_free_),
-        num_occupied_(other.num_occupied_),
-        distribution_(other.distribution_)
+        distribution_(other.distribution_),
+        occupancy_(other.occupancy_),
+        inverse_model_(other.inverse_model_)
     {
     }
 
     inline OccupancyDistribution& operator = (const OccupancyDistribution &other)
     {
-        num_free_ = other.num_free_;
-        num_occupied_ = other.num_occupied_;
-        distribution_ = other.distribution_;
+        num_free_      = other.num_free_;
+        distribution_  = other.distribution_;
+        occupancy_     = other.occupancy_;
+        inverse_model_ = other.inverse_model_;
         return *this;
     }
 
     inline void updateFree()
     {
         ++ num_free_;
+        inverse_model_ = nullptr;
     }
 
     inline void updateOccupied(const point_t & p)
     {
-        ++ num_occupied_;
         if (!distribution_)
             distribution_.reset(new distribution_t());
 
         distribution_->add(p);
+        inverse_model_ = nullptr;
     }
 
     inline std::size_t numFree() const
@@ -80,7 +80,27 @@ public:
 
     inline std::size_t numOccupied() const
     {
-        return num_occupied_;
+        return distribution_ ? distribution_->getN() : 0ul;
+    }
+
+    inline double getOccupancy(const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model) const
+    {
+        if (!inverse_model)
+            throw std::runtime_error("inverse model not set!");
+
+        if (inverse_model == inverse_model_)
+            return occupancy_;
+
+        inverse_model_ = inverse_model;
+        occupancy_ = distribution_ ?
+                    cslibs_math::common::LogOdds::from(
+                        num_free_ * inverse_model_->getLogOddsFree() +
+                        distribution_->getN() * inverse_model_->getLogOddsOccupied() -
+                        inverse_model_->getLogOddsPrior()) :
+                    cslibs_math::common::LogOdds::from(
+                        num_free_ * inverse_model_->getLogOddsFree() -
+                        inverse_model_->getLogOddsPrior());
+        return occupancy_;
     }
 
     inline const std::shared_ptr<distribution_t> getDistribution() const
@@ -99,8 +119,10 @@ public:
 
 private:
     std::size_t                     num_free_;
-    std::size_t                     num_occupied_;
     std::shared_ptr<distribution_t> distribution_;
+
+    mutable double                                      occupancy_;
+    mutable cslibs_gridmaps::utility::InverseModel::Ptr inverse_model_;
 } __attribute__ ((aligned (32)));
 }
 

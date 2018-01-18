@@ -132,31 +132,28 @@ public:
 
     inline double getRange(const point_t &start_p,
                            const point_t &end_p,
-                           const cslibs_gridmaps::utility::InverseModel &inverse_model,
+                           const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model,
                            const double &occupied_threshold) const
     {
+        if (!inverse_model)
+            throw std::runtime_error("[OccupancyGridMap]: inverse model not set");
+
         const index_t start_index = {{static_cast<int>(std::floor(start_p(0) * bundle_resolution_inv_)),
                                       static_cast<int>(std::floor(start_p(1) * bundle_resolution_inv_))}};
         const index_t end_index   = {{static_cast<int>(std::floor(end_p(0) * bundle_resolution_inv_)),
                                       static_cast<int>(std::floor(end_p(1) * bundle_resolution_inv_))}};
         line_iterator_t it(start_index, end_index);
 
-        auto occupancy = [&inverse_model](const distribution_t *d) {
-            return (d && d->getDistribution()) ? cslibs_math::common::LogOdds::from(
-                                                 d->numFree() * inverse_model.getLogOddsFree() +
-                                                 d->numOccupied() * inverse_model.getLogOddsOccupied())
-                                                 - inverse_model.getLogOddsPrior() : 0.0;
-        };
-        auto occupied = [this, &inverse_model, &occupancy, &occupied_threshold](const index_t &bi) {
+        auto occupied = [this, &inverse_model, &occupied_threshold](const index_t &bi) {
             distribution_bundle_t *bundle;
             {
                 lock_t(bundle_storage_mutex_);
                 bundle = getAllocate(bi);
             }
-            return bundle && (0.25 * (occupancy(bundle->at(0)) +
-                                      occupancy(bundle->at(1)) +
-                                      occupancy(bundle->at(2)) +
-                                      occupancy(bundle->at(3))) >= occupied_threshold);
+            return bundle && (0.25 * ((bundle->at(0)->getOccupancy(inverse_model)) +
+                                      (bundle->at(1)->getOccupancy(inverse_model)) +
+                                      (bundle->at(2)->getOccupancy(inverse_model)) +
+                                      (bundle->at(3)->getOccupancy(inverse_model))) >= occupied_threshold);
         };
 
         while (!it.done()) {
@@ -188,15 +185,9 @@ public:
             lock_t(bundle_storage_mutex_);
             bundle = getAllocate(bi);
         }
-        auto occupancy = [&inverse_model](const distribution_t *d) {
-            return (d && d->getDistribution()) ? cslibs_math::common::LogOdds::from(
-                                                 d->numFree() * inverse_model->getLogOddsFree() +
-                                                 d->numOccupied() * inverse_model->getLogOddsOccupied())
-                                                 - inverse_model->getLogOddsPrior() : 0.0;
-        };
-        auto sample = [&p, &occupancy](const distribution_t *d) {
+        auto sample = [&p, &inverse_model](const distribution_t *d) {
             return (d && d->getDistribution()) ? d->getDistribution()->sample(p) *
-                                                 occupancy(d) : 0.0;
+                                                 d->getOccupancy(inverse_model) : 0.0;
         };
         auto evaluate = [&p, &bundle, &sample]() {
             return 0.25 * (sample(bundle->at(0)) +
@@ -226,15 +217,9 @@ public:
             lock_t(bundle_storage_mutex_);
             bundle = getAllocate(bi);
         }
-        auto occupancy = [&inverse_model](const distribution_t *d) {
-            return (d && d->getDistribution()) ? cslibs_math::common::LogOdds::from(
-                                                 d->numFree() * inverse_model->getLogOddsFree() +
-                                                 d->numOccupied() * inverse_model->getLogOddsOccupied())
-                                                 - inverse_model->getLogOddsPrior() : 0.0;
-        };
-        auto sampleNonNormalized = [&p, &occupancy](const distribution_t *d) {
+        auto sampleNonNormalized = [&p, &inverse_model](const distribution_t *d) {
             return (d && d->getDistribution()) ? d->getDistribution()->sampleNonNormalized(p) *
-                                                 occupancy(d) : 0.0;
+                                                 d->getOccupancy(inverse_model) : 0.0;
         };
         auto evaluate = [&p, &bundle, &sampleNonNormalized]() {
           return 0.25 * (sampleNonNormalized(bundle->at(0)) +

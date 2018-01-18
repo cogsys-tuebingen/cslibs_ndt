@@ -12,6 +12,7 @@
 #include <cslibs_ndt/common/distribution.hpp>
 #include <cslibs_ndt/common/bundle.hpp>
 
+#include <cslibs_math/linear/pointcloud.hpp>
 #include <cslibs_math/common/array.hpp>
 #include <cslibs_math/common/div.hpp>
 #include <cslibs_math/common/mod.hpp>
@@ -118,6 +119,32 @@ public:
         bundle->at(1)->getHandle()->data().add(p);
         bundle->at(2)->getHandle()->data().add(p);
         bundle->at(3)->getHandle()->data().add(p);
+    }
+
+    inline void insert(const pose_t &origin,
+                       const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points)
+    {
+        distribution_storage_t storage;
+        for (const auto &p : *points) {
+            const point_t pm = origin * p;
+            if (pm.isNormal()) {
+                const index_t &bi = toBundleIndex(pm);
+                distribution_t *d = storage.get(bi);
+                (d ? d : &storage.insert(bi, distribution_t()))->data().add(pm);
+            }
+        }
+
+        storage.traverse([this](const index_t& bi, const distribution_t &d) {
+            distribution_bundle_t *bundle;
+            {
+                lock_t(bundle_storage_mutex_);
+                bundle = getAllocate(bi);
+            }
+            bundle->at(0)->data() += d.data();
+            bundle->at(1)->data() += d.data();
+            bundle->at(2)->data() += d.data();
+            bundle->at(3)->data() += d.data();
+        });
     }
 
     inline double sample(const point_t &p) const

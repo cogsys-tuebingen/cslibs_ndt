@@ -134,10 +134,9 @@ public:
         for (const auto &p : *points) {
             const point_t pm = origin * p;
             if (pm.isNormal()) {
-                const index_t bi = toBundleIndex(pm);
+                const index_t &bi = toBundleIndex(pm);
                 distribution_t *d = storage->get(bi);
-                d ? d->updateOccupied(pm) :
-                    storage->insert(bi, distribution_t()).updateOccupied(pm);
+                (d ? d : &storage->insert(bi, distribution_t()))->updateOccupied(pm);
             }
         }
 

@@ -145,10 +145,9 @@ public:
         for (const auto &p : *points) {
             const point_t pm = origin * p;
             if (pm.isNormal()) {
-                const index_t bi = toBundleIndex(pm);
+                const index_t &bi = toBundleIndex(pm);
                 distribution_t *d = storage->get(bi);
-                d ? d->updateOccupied(pm) :
-                    storage->insert(bi, distribution_t()).updateOccupied(pm);
+                (d ? d : &storage->insert(bi, distribution_t()))->updateOccupied(pm);
             }
         }
 
@@ -158,7 +157,7 @@ public:
                 return;
             line_iterator_t it(start_index, bi);
 
-            while(!it.done()) {
+            while (!it.done()) {
                 const index_t bj = {{it.x(), it.y(), it.z()}};
                 (it.length2() > bundle_resolution_2_) ?
                             updateFree(bj, d.numOccupied()) :

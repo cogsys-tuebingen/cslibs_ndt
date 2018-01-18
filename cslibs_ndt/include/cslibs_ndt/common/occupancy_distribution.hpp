@@ -123,12 +123,12 @@ public:
         return occupancy_;
     }
 
-    inline const distribution_ptr_t getDistribution() const
+    inline const distribution_ptr_t &getDistribution() const
     {
         return distribution_;
     }
 
-    inline distribution_ptr_t getDistribution()
+    inline distribution_ptr_t &getDistribution()
     {
         return distribution_;
     }
@@ -143,7 +143,7 @@ private:
 
     mutable double                                      occupancy_;
     mutable cslibs_gridmaps::utility::InverseModel::Ptr inverse_model_;
-} __attribute__ ((aligned (32)));
+} __attribute__ ((aligned (64)));
 }
 
 #endif // CSLIBS_NDT_OCCUPANCY_DISTRIBUTION_HPP

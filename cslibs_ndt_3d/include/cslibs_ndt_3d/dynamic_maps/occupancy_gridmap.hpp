@@ -100,9 +100,8 @@ public:
     inline void add(const point_t &start_p,
                     const point_t &end_p)
     {
-        const index_t start_index = toBundleIndex(start_p);
-        const index_t end_index   = toBundleIndex(end_p);
-        line_iterator_t it(start_index, end_index);
+        const index_t &end_index = toBundleIndex(end_p);
+        line_iterator_t it(m_T_w_ * start_p, m_T_w_ * end_p, bundle_resolution_);
 
         while (!it.done()) {
             const index_t bi = {{it.x(), it.y(), it.z()}};
@@ -118,9 +117,8 @@ public:
                     const point_t &end_p,
                     index_t       &end_index)
     {
-        const index_t start_index = toBundleIndex(start_p);
-        end_index                 = toBundleIndex(end_p);
-        line_iterator_t it(start_index, end_index);
+        end_index = toBundleIndex(end_p);
+        line_iterator_t it(m_T_w_ * start_p, m_T_w_ * end_p, bundle_resolution_);
 
         while (!it.done()) {
             const index_t bi = {{it.x(), it.y(), it.z()}};
@@ -145,11 +143,11 @@ public:
             }
         }
 
-        const index_t start_index = toBundleIndex(origin.translation());
-        storage.traverse([this, &start_index](const index_t& bi, const distribution_t &d) {
+        const point_t start_p = m_T_w_ * origin.translation();
+        storage.traverse([this, &start_p](const index_t& bi, const distribution_t &d) {
             if (!d.getDistribution())
                 return;
-            line_iterator_t it(start_index, bi);
+            line_iterator_t it(start_p, m_T_w_ * point_t(d.getDistribution()->getMean()), bundle_resolution_);//start_index, bi, 1.0);
 
             while (!it.done()) {
                 const index_t bj = {{it.x(), it.y(), it.z()}};

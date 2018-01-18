@@ -12,6 +12,7 @@
 #include <cslibs_ndt/common/occupancy_distribution.hpp>
 #include <cslibs_ndt/common/bundle.hpp>
 
+#include <cslibs_math/linear/pointcloud.hpp>
 #include <cslibs_math/common/array.hpp>
 #include <cslibs_math/common/div.hpp>
 #include <cslibs_math/common/mod.hpp>
@@ -131,6 +132,38 @@ public:
         updateOccupied(end_index, end_p);
     }
 
+    inline void insert(const pose_t &origin,
+                       const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points)
+    {
+        distribution_storage_ptr_t storage(new distribution_storage_t());
+        for (const auto &p : *points) {
+            const point_t pm = origin * p;
+            if (pm.isNormal()) {
+                const index_t bi = toBundleIndex(pm);
+                distribution_t *d = storage->get(bi);
+                d ? d->updateOccupied(pm) :
+                    storage->insert(bi, distribution_t()).updateOccupied(pm);
+            }
+        }
+
+        const index_t start_index = toBundleIndex(origin.translation());
+        storage->traverse([this, &start_index](const index_t& bi, const distribution_t &d) {
+            if (!d.getDistribution())
+                return;
+            line_iterator_t it(start_index, bi);
+
+            while(!it.done()) {
+                const index_t bj = {{it.x(), it.y(), it.z()}};
+                (it.length2() > bundle_resolution_2_) ?
+                            updateFree(bj, d.numOccupied()) :
+                            updateOccupied(bj, d.getDistribution());
+                ++ it;
+            }
+
+            updateOccupied(bi, d.getDistribution());
+        });
+    }
+
     inline index_t getMinDistributionIndex() const
     {
         lock_t l(storage_mutex_);
@@ -221,6 +254,7 @@ private:
 
         auto allocate_bundle = [this, &bi]() {
             distribution_bundle_t b;
+
             const int divx = cslibs_math::common::div<int>(bi[0], 2);
             const int divy = cslibs_math::common::div<int>(bi[1], 2);
             const int divz = cslibs_math::common::div<int>(bi[2], 2);
@@ -228,23 +262,23 @@ private:
             const int mody = cslibs_math::common::mod<int>(bi[1], 2);
             const int modz = cslibs_math::common::mod<int>(bi[2], 2);
 
-            const index_t storage_0_index = {{divx,        divy,        divz}};
-            const index_t storage_1_index = {{divx + modx, divy,        divz}};
-            const index_t storage_2_index = {{divx,        divy + mody, divz}};
-            const index_t storage_3_index = {{divx + modx, divy + mody, divz}};
-            const index_t storage_4_index = {{divx,        divy,        divz + modz}};
-            const index_t storage_5_index = {{divx + modx, divy,        divz + modz}};
-            const index_t storage_6_index = {{divx,        divy + mody, divz + modz}};
-            const index_t storage_7_index = {{divx + modx, divy + mody, divz + modz}};
+            const index_t storage_index_0 = {{divx,        divy,        divz}};
+            const index_t storage_index_1 = {{divx + modx, divy,        divz}};
+            const index_t storage_index_2 = {{divx,        divy + mody, divz}};
+            const index_t storage_index_3 = {{divx + modx, divy + mody, divz}};
+            const index_t storage_index_4 = {{divx,        divy,        divz + modz}};
+            const index_t storage_index_5 = {{divx + modx, divy,        divz + modz}};
+            const index_t storage_index_6 = {{divx,        divy + mody, divz + modz}};
+            const index_t storage_index_7 = {{divx + modx, divy + mody, divz + modz}};
 
-            b[0] = getAllocate(storage_[0], storage_0_index);
-            b[1] = getAllocate(storage_[1], storage_1_index);
-            b[2] = getAllocate(storage_[2], storage_2_index);
-            b[3] = getAllocate(storage_[3], storage_3_index);
-            b[4] = getAllocate(storage_[4], storage_4_index);
-            b[5] = getAllocate(storage_[5], storage_5_index);
-            b[6] = getAllocate(storage_[6], storage_6_index);
-            b[7] = getAllocate(storage_[7], storage_7_index);
+            b[0] = getAllocate(storage_[0], storage_index_0);
+            b[1] = getAllocate(storage_[1], storage_index_1);
+            b[2] = getAllocate(storage_[2], storage_index_2);
+            b[3] = getAllocate(storage_[3], storage_index_3);
+            b[4] = getAllocate(storage_[4], storage_index_4);
+            b[5] = getAllocate(storage_[5], storage_index_5);
+            b[6] = getAllocate(storage_[6], storage_index_6);
+            b[7] = getAllocate(storage_[7], storage_index_7);
 
             lock_t(bundle_storage_mutex_);
             updateIndices(bi);
@@ -271,6 +305,24 @@ private:
         bundle->at(7)->updateFree();
     }
 
+    inline void updateFree(const index_t &bi,
+                           const std::size_t &n) const
+    {
+        distribution_bundle_t *bundle;
+        {
+            lock_t(bundle_storage_mutex_);
+            bundle = getAllocate(bi);
+        }
+        bundle->at(0)->updateFree(n);
+        bundle->at(1)->updateFree(n);
+        bundle->at(2)->updateFree(n);
+        bundle->at(3)->updateFree(n);
+        bundle->at(4)->updateFree(n);
+        bundle->at(5)->updateFree(n);
+        bundle->at(6)->updateFree(n);
+        bundle->at(7)->updateFree(n);
+    }
+
     inline void updateOccupied(const index_t &bi,
                                const point_t &p) const
     {
@@ -287,6 +339,24 @@ private:
         bundle->at(5)->updateOccupied(p);
         bundle->at(6)->updateOccupied(p);
         bundle->at(7)->updateOccupied(p);
+    }
+
+    inline void updateOccupied(const index_t &bi,
+                               const distribution_t::distribution_ptr_t &d) const
+    {
+        distribution_bundle_t *bundle;
+        {
+            lock_t(bundle_storage_mutex_);
+            bundle = getAllocate(bi);
+        }
+        bundle->at(0)->updateOccupied(d);
+        bundle->at(1)->updateOccupied(d);
+        bundle->at(2)->updateOccupied(d);
+        bundle->at(3)->updateOccupied(d);
+        bundle->at(4)->updateOccupied(d);
+        bundle->at(5)->updateOccupied(d);
+        bundle->at(6)->updateOccupied(d);
+        bundle->at(7)->updateOccupied(d);
     }
 
     inline void updateIndices(const index_t &bi) const

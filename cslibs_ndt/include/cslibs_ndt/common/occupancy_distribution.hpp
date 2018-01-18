@@ -15,8 +15,10 @@ namespace cslibs_ndt {
 template<std::size_t Dim>
 class OccupancyDistribution {
 public:
+    using Ptr                       = std::shared_ptr<OccupancyDistribution<Dim>>;
     using distribution_container_t  = OccupancyDistribution<Dim>;
     using distribution_t            = cslibs_math::statistics::Distribution<Dim, 3>;
+    using distribution_ptr_t        = typename distribution_t::Ptr;
     using point_t                   = typename distribution_t::sample_t;
     using mutex_t                   = std::mutex;
     using lock_t                    = std::unique_lock<mutex_t>;
@@ -64,12 +66,30 @@ public:
         inverse_model_ = nullptr;
     }
 
+    inline void updateFree(const std::size_t &num_free)
+    {
+        num_free_ += num_free;
+        inverse_model_ = nullptr;
+    }
+
     inline void updateOccupied(const point_t & p)
     {
         if (!distribution_)
             distribution_.reset(new distribution_t());
 
         distribution_->add(p);
+        inverse_model_ = nullptr;
+    }
+
+    inline void updateOccupied(const distribution_ptr_t &d)
+    {
+        if (!d)
+            return;
+
+        if (!distribution_)
+            distribution_.reset(new distribution_t());
+
+        *distribution_ += *d;
         inverse_model_ = nullptr;
     }
 
@@ -103,12 +123,12 @@ public:
         return occupancy_;
     }
 
-    inline const std::shared_ptr<distribution_t> getDistribution() const
+    inline const distribution_ptr_t getDistribution() const
     {
         return distribution_;
     }
 
-    inline std::shared_ptr<distribution_t> getDistribution()
+    inline distribution_ptr_t getDistribution()
     {
         return distribution_;
     }
@@ -118,8 +138,8 @@ public:
     }
 
 private:
-    std::size_t                     num_free_;
-    std::shared_ptr<distribution_t> distribution_;
+    std::size_t        num_free_;
+    distribution_ptr_t distribution_;
 
     mutable double                                      occupancy_;
     mutable cslibs_gridmaps::utility::InverseModel::Ptr inverse_model_;

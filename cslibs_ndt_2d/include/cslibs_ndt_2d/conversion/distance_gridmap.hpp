@@ -26,6 +26,7 @@ inline void from(
                             src->getHeight() / sampling_resolution,
                             src->getWidth()  / sampling_resolution,
                             maximum_distance));
+    std::fill(dst->getData().begin(), dst->getData().end(), maximum_distance);
 
     const double bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
@@ -74,6 +75,7 @@ inline void from(
                             src->getHeight() / sampling_resolution,
                             src->getWidth()  / sampling_resolution,
                             maximum_distance));
+    std::fill(dst->getData().begin(), dst->getData().end(), maximum_distance);
 
     const double bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);

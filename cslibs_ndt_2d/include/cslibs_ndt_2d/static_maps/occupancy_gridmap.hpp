@@ -21,6 +21,7 @@
 #include <cslibs_indexed_storage/backend/array/array.hpp>
 
 #include <cslibs_math_2d/algorithms/bresenham.hpp>
+#include <cslibs_math_2d/algorithms/simple_iterator.hpp>
 #include <cslibs_gridmaps/utility/inverse_model.hpp>
 
 namespace cis = cslibs_indexed_storage;
@@ -46,7 +47,7 @@ public:
     using distribution_const_bundle_t       = cslibs_ndt::Bundle<const distribution_t*, 4>;
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::array::Array>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
-    using line_iterator_t                   = cslibs_math_2d::algorithms::Bresenham;
+    using simple_iterator_t                 = cslibs_math_2d::algorithms::SimpleIterator;
 
     OccupancyGridmap(const pose_t &origin,
             const double           resolution,
@@ -55,7 +56,6 @@ public:
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
-        bundle_resolution_2_(0.25 * bundle_resolution_ * bundle_resolution_),
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
         size_(size),
@@ -84,7 +84,6 @@ public:
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
-        bundle_resolution_2_(0.25 * bundle_resolution_ * bundle_resolution_),
         w_T_m_(origin_x, origin_y, origin_phi),
         m_T_w_(w_T_m_.inverse()),
         size_(size),
@@ -110,51 +109,46 @@ public:
         return w_T_m_;
     }
 
+    template <typename line_iterator_t = simple_iterator_t>
     inline void add(const point_t &start_p,
                     const point_t &end_p)
     {
-        const index_t start_index = toBundleIndex(start_p);
-        const index_t end_index   = toBundleIndex(end_p);
-        line_iterator_t it(start_index, end_index);
+        const index_t &end_index = toBundleIndex(end_p);
+        updateOccupied(end_index, end_p);
 
+        line_iterator_t it(m_T_w_ * start_p, m_T_w_ * end_p, bundle_resolution_);
         while (!it.done()) {
-            const index_t bi = {{it.x(), it.y()}};
-            (it.distance2() > bundle_resolution_2_) ?
-                        updateFree(bi) :
-                        updateOccupied(bi, end_p);
+            updateFree({{it.x(), it.y()}});
             ++ it;
         }
-        updateOccupied(end_index, end_p);
     }
 
+    template <typename line_iterator_t = simple_iterator_t>
     inline void insert(const pose_t &origin,
                        const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points)
     {
-        distribution_storage_ptr_t storage(new distribution_storage_t());
+        distribution_storage_t storage;
         for (const auto &p : *points) {
             const point_t pm = origin * p;
             if (pm.isNormal()) {
                 const index_t &bi = toBundleIndex(pm);
-                distribution_t *d = storage->get(bi);
-                (d ? d : &storage->insert(bi, distribution_t()))->updateOccupied(pm);
+                distribution_t *d = storage.get(bi);
+                (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
             }
         }
 
-        const index_t start_index = toBundleIndex(origin.translation());
-        storage->traverse([this, &start_index](const index_t& bi, const distribution_t &d) {
+        const point_t start_p = m_T_w_ * origin.translation();
+        storage.traverse([this, &start_p](const index_t& bi, const distribution_t &d) {
             if (!d.getDistribution())
                 return;
-            line_iterator_t it(start_index, bi);
+            updateOccupied(bi, d.getDistribution());
 
+            line_iterator_t it(start_p, m_T_w_ * point_t(d.getDistribution()->getMean()), bundle_resolution_);//start_index, bi, 1.0);
+            const std::size_t n = d.numOccupied();
             while (!it.done()) {
-                const index_t bj = {{it.x(), it.y()}};
-                (it.distance2() > bundle_resolution_2_) ?
-                            updateFree(bj, d.numOccupied()) :
-                            updateOccupied(bj, d.getDistribution());
+                updateFree({{it.x(), it.y()}}, n);
                 ++ it;
             }
-
-            updateOccupied(bi, d.getDistribution());
         });
     }
 
@@ -281,7 +275,6 @@ protected:
     const double                                    resolution_inv_;
     const double                                    bundle_resolution_;
     const double                                    bundle_resolution_inv_;
-    const double                                    bundle_resolution_2_;
     const transform_t                               w_T_m_;
     const transform_t                               m_T_w_;
     const size_t                                    size_;

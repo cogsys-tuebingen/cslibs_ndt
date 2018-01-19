@@ -190,7 +190,6 @@ public:
         return evaluate();
     }
 
-
     inline double sampleNonNormalized(const point_t &p) const
     {
         const index_t bi = toBundleIndex(p);

@@ -6,6 +6,11 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(catkin REQUIRED COMPONENTS
     cslibs_ndt
     cslibs_math_3d
+    cslibs_math_ros
+    cslibs_time
+    cslibs_gridmaps
+    roscpp
+    tf
 )
 
 find_package(Boost COMPONENTS filesystem)
@@ -13,7 +18,7 @@ find_package(Boost COMPONENTS filesystem)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES
-  CATKIN_DEPENDS cslibs_ndt cslibs_math_3d
+  CATKIN_DEPENDS cslibs_ndt cslibs_math_3d cslibs_time cslibs_gridmaps
 )
 
 include_directories(

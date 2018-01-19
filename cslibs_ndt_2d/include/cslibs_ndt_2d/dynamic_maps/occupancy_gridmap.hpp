@@ -24,6 +24,7 @@
 
 #include <cslibs_math_2d/algorithms/bresenham.hpp>
 #include <cslibs_math_2d/algorithms/simple_iterator.hpp>
+#include <cslibs_math_2d/algorithms/efla_iterator.hpp>
 
 namespace cis = cslibs_indexed_storage;
 

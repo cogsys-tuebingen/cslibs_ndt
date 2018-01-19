@@ -22,6 +22,7 @@
 
 #include <cslibs_math_3d/algorithms/bresenham.hpp>
 #include <cslibs_math_3d/algorithms/simple_iterator.hpp>
+#include <cslibs_math_3d/algorithms/efla_iterator.hpp>
 
 #include <unordered_map>
 namespace cis = cslibs_indexed_storage;

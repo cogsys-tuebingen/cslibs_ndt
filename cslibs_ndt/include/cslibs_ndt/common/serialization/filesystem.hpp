@@ -20,6 +20,20 @@ inline bool check_directory(const boost::filesystem::path &p)
     return true;
 }
 
+inline bool check_file(const boost::filesystem::path &p)
+{
+    if(!boost::filesystem::exists(p)) {
+        std::cerr << "Path '" << p.string() << "' does not exist.\n";
+        return false;
+    }
+    if(!boost::filesystem::is_regular_file(p)) {
+        std::cerr << "Path '" << p.string() << "' is not a directory.\n";
+        return false;
+    }
+
+    return true;
+}
+
 inline bool create_directory(const boost::filesystem::path &p)
 {
     if(boost::filesystem::exists(p)) {

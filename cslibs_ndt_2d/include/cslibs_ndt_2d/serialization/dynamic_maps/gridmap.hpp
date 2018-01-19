@@ -10,11 +10,139 @@
 #include <yaml-cpp/yaml.h>
 
 #include <cslibs_math/serialization/array.hpp>
+
 #include <cslibs_ndt/common/serialization/filesystem.hpp>
 #include <fstream>
 
+
 namespace cslibs_ndt_2d {
 namespace dynamic_maps {
+inline bool saveBinary(const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &map,
+                       const std::string &path)
+{
+    using path_t                     = boost::filesystem::path;
+    using paths_t                    = std::array<path_t, 4>;
+    using index_t                    = cslibs_ndt_2d::dynamic_maps::Gridmap::index_t;
+    using distribution_storage_ptr_t = cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_storage_ptr_t;
+    using binary_t                   = cslibs_ndt::binary<cslibs_ndt::Distribution, 2, 2>;
+
+    /// step one: check if the root diretory exists
+    path_t path_root(path);
+    if(!cslibs_ndt::common::serialization::create_directory(path_root)) {
+        return false;
+    }
+
+    /// step two: check if the sub folders can be created
+    paths_t paths = {{path_root / path_t("store_0.bin"),
+                      path_root / path_t("store_1.bin"),
+                      path_root / path_t("store_2.bin"),
+                      path_root / path_t("store_3.bin")}};
+
+    /// step three: we have our filesystem, now we write out the distributions file by file
+    /// meta file
+    path_t path_file = path_t("map.yaml");
+    {
+        std::ofstream out = std::ofstream((path_root / path_file).string());
+        YAML::Emitter yaml(out);
+        YAML::Node n;
+        std::vector<index_t> indices;
+        map->getBundleIndices(indices);
+        n["origin"] = map->getInitialOrigin();
+        n["resolution"] = map->getResolution();
+        n["min_index"] = map->getMinDistributionIndex();
+        n["max_index"] = map->getMaxDistributionIndex();
+        n["bundles"] = indices;
+        yaml << n;
+    }
+    /// step four: write out the storages
+
+    const distribution_storage_ptr_t storage_0 = map->getStorages()[0];
+    const distribution_storage_ptr_t storage_1 = map->getStorages()[1];
+    const distribution_storage_ptr_t storage_2 = map->getStorages()[2];
+    const distribution_storage_ptr_t storage_3 = map->getStorages()[3];
+
+    if(!binary_t::save(storage_0, paths[0]))
+        return false;
+    if(!binary_t::save(storage_1, paths[1]))
+        return false;
+    if(!binary_t::save(storage_2, paths[2]))
+        return false;
+    if(!binary_t::save(storage_3, paths[3]))
+        return false;
+
+    return true;
+}
+
+inline bool loadBinary(const std::string &path,
+                       cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &map)
+{
+    using path_t                    = boost::filesystem::path;
+    using paths_t                   = std::array<path_t, 4>;
+    using index_t                   = std::array<int, 2>;
+    using map_t                     = cslibs_ndt_2d::dynamic_maps::Gridmap;
+    using distribution_storage_ptr_t= typename map_t::distribution_storage_ptr_t;
+    using binary_t                  = cslibs_ndt::binary<cslibs_ndt::Distribution, 2, 2>;
+
+    /// step one: check if the root diretory exists
+    path_t path_root(path);
+    if(!cslibs_ndt::common::serialization::check_directory(path_root)) {
+        return false;
+    }
+
+    /// step two: check if the sub folders can be created
+    /// step two: check if the sub folders can be created
+    paths_t paths = {{path_root / path_t("store_0.bin"),
+                      path_root / path_t("store_1.bin"),
+                      path_root / path_t("store_2.bin"),
+                      path_root / path_t("store_3.bin")}};
+
+    /// step three: we have our filesystem, now we can load distributions file by file
+    for(std::size_t i = 0 ; i < 4 ; ++i) {
+        if(!cslibs_ndt::common::serialization::check_file(paths[i])) {
+            return false;
+        }
+    }
+
+    /// load meta data
+    path_t  path_file = path_t("map.yaml");
+    index_t min_index, max_index;
+    {
+        YAML::Node n = YAML::LoadFile((path_root / path_file).string());
+        const cslibs_math_2d::Transform2d origin = n["origin"].as<cslibs_math_2d::Transform2d>();
+        const double resolution = n["resolution"].as<double>();
+        min_index = n["min_index"].as<index_t>();
+        max_index = n["max_index"].as<index_t>();
+        const std::vector<index_t> indices = n["bundles"].as<std::vector<index_t>>();
+
+        map.reset(new map_t(origin, resolution));
+
+        // allocation stuff, just 4 fun
+        for (const index_t& bi : indices)
+            map->getDistributionBundle(bi);
+    }
+
+    auto get_bundle_index = [&min_index, &max_index] (const index_t & si) {
+        return index_t({{std::max(min_index[0], std::min(2 * si[0], max_index[0])),
+                         std::max(min_index[1], std::min(2 * si[1], max_index[1]))}});
+    };
+
+    for (std::size_t i = 0 ; i < 4 ; ++ i) {
+        distribution_storage_ptr_t storage;
+        if (!binary_t::load(paths[i], storage))
+            return false;
+
+        storage->traverse([&map, &i, &get_bundle_index] (const index_t & si, const typename map_t::distribution_t & d) {
+            const index_t & bi = get_bundle_index(si);
+            if (const typename map_t::distribution_bundle_t* b = map->getDistributionBundle(bi))
+                b->at(i)->data() = d.data();
+        });
+    }
+
+    return true;
+}
+
+
+
 inline bool save(const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &map,
                  const std::string &path)
 {
@@ -67,6 +195,7 @@ inline bool save(const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &map,
 
     return true;
 }
+
 
 inline bool load(cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &map,
                  const std::string &path)

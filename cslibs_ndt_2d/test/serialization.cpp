@@ -11,8 +11,8 @@
 #include <cslibs_math/random/random.hpp>
 #include <fstream>
 
-const std::size_t MIN_NUM_SAMPLES = 100;
-const std::size_t MAX_NUM_SAMPLES = 1000;
+const std::size_t MIN_NUM_SAMPLES = 1;
+const std::size_t MAX_NUM_SAMPLES = 10000;
 
 template <std::size_t Dim>
 using rng_t = typename cslibs_math::random::Uniform<Dim>;
@@ -351,7 +351,7 @@ cslibs_ndt_2d::static_maps::OccupancyGridmap::Ptr generateStaticOccMap()
 
     return map;
 }
-/*
+
 TEST(Test_cslibs_ndt_2d, testDynamicGridmapSerialization)
 {
     using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
@@ -395,7 +395,7 @@ TEST(Test_cslibs_ndt_2d, testDynamicOccGridmapSerialization)
 
     // tests
     testDynamicOccMap(map, map_converted);
-}*/
+}
 
 TEST(Test_cslibs_ndt_2d, testStaticOccGridmapSerialization)
 {
@@ -429,6 +429,23 @@ TEST(Test_cslibs_ndt_2d, testDynamicGridmapFileSerialization)
     EXPECT_TRUE(success);
     testDynamicMap(map, map_from_file);
 }
+
+TEST(Test_cslibs_ndt_2d, testDynamicGridmapFileBinarySerialization)
+{
+    using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
+    const typename map_t::Ptr map = generateDynamicMap();
+
+    // to file
+    cslibs_ndt_2d::dynamic_maps::saveBinary(map, "/tmp/map_binary");
+
+    // from file
+    typename map_t::Ptr map_from_file;
+    const bool success = cslibs_ndt_2d::dynamic_maps::loadBinary("/tmp/map_binary", map_from_file);
+    // tests
+    EXPECT_TRUE(success);
+    testDynamicMap(map, map_from_file);
+}
+
 
 TEST(Test_cslibs_ndt_2d, testStaticGridmapFileSerialization)
 {
@@ -554,12 +571,7 @@ TEST(Test_cslibs_ndt_2d, testStaticOccGridmapConversion)
 }
 
 int main(int argc, char *argv[])
-{/*
-    using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
-    const typename map_t::Ptr map = generateDynamicMap();
-    cslibs_ndt_2d::dynamic_maps::save(map, "/tmp");
-    return 0;
-*/
+{
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

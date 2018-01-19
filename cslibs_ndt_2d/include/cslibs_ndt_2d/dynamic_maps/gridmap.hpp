@@ -61,8 +61,8 @@ public:
     {
     }
 
-    Gridmap(const pose_t        &origin,
-            const double         resolution,
+    Gridmap(const pose_t &origin,
+            const double  resolution,
             const std::shared_ptr<distribution_bundle_storage_t> &bundles,
             const distribution_storage_array_t                   &storage,
             const index_t                                        &min_index,

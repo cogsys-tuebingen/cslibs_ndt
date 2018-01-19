@@ -17,6 +17,45 @@
 namespace cis = cslibs_indexed_storage;
 
 namespace cslibs_ndt {
+
+template <template <std::size_t> class T, std::size_t Size>
+void write(const T<Size> &d, std::ofstream &out)
+{
+    cslibs_math::serialization::distribution::binary<Size, 3>::write(d.data(), out);
+}
+
+template <template <std::size_t> class T, std::size_t Size>
+std::size_t read(std::ifstream &in, T<Size> &d)
+{
+    return cslibs_math::serialization::distribution::binary<Size, 3>::read(in, d.data());
+}
+
+template<std::size_t Size>
+void write(const OccupancyDistribution<Size> &d, std::ofstream &out)
+{
+    cslibs_math::serialization::io<std::size_t>::write(d.numFree(), out);
+    if(!d.getDistribution()) {
+        cslibs_math::serialization::distribution::binary<Size, 3>::write(out);
+    } else{
+        cslibs_math::serialization::distribution::binary<Size, 3>::write(*(d.getDistribution()), out);
+    }
+
+}
+
+template<std::size_t Size>
+std::size_t read(std::ifstream &in, OccupancyDistribution<Size> &d)
+{
+    std::size_t f = cslibs_math::serialization::io<std::size_t>::read(in);
+    d = OccupancyDistribution<Size>(f);
+    typename OccupancyDistribution<Size>::distribution_t tmp;
+    std::size_t r = cslibs_math::serialization::distribution::binary<Size, 3>::read(in,tmp);
+    if(tmp.getN() != 0) {
+        d.getDistribution().reset(new typename OccupancyDistribution<Size>::distribution_t(tmp));
+    }
+    return  sizeof(std::size_t) + r;
+}
+
+
 template <template <std::size_t> class T, std::size_t Size, std::size_t Dim>
 struct binary {
     using index_t   = std::array<int, Dim>;
@@ -34,15 +73,15 @@ struct binary {
 
         auto write = [&out] (const index_t &index, const data_t &data) {
             cslibs_math::serialization::array::binary<int, Dim>::write(index, out);
-            cslibs_math::serialization::distribution::binary<Size, 3>::write(data.data(), out);
+            cslibs_ndt::write(data, out);
         };
         storage->traverse(write);
         out.close();
         return true;
     }
 
-      inline static bool load(const boost::filesystem::path &path,
-                              std::shared_ptr<storage_t> &storage)
+    inline static bool load(const boost::filesystem::path &path,
+                            std::shared_ptr<storage_t> &storage)
     {
         storage.reset(new storage_t);
         std::ifstream in(path.string(), std::ios::binary);
@@ -60,7 +99,7 @@ struct binary {
                 index_t index;
                 data_t  data;
                 read += cslibs_math::serialization::array::binary<int, Dim>::read(in, index);
-                read += cslibs_math::serialization::distribution::binary<Size, 3>::read(in, data.data());
+                read += cslibs_ndt::read(in, data);
                 storage->insert(index, data);
             }
         } catch (const std::exception &e) {

@@ -481,6 +481,25 @@ TEST(Test_cslibs_ndt_2d, testDynamicOccGridmapFileSerialization)
     testDynamicOccMap(map, map_from_file);
 }
 
+
+TEST(Test_cslibs_ndt_2d, testDynamicOccGridmapFileBinarySerialization)
+{
+    using map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap;
+    const typename map_t::Ptr map = generateDynamicOccMap();
+
+    // to file
+    cslibs_ndt_2d::dynamic_maps::saveBinary(map, "/tmp/occ_map_binary");
+
+    // from file
+    typename map_t::Ptr map_from_file;
+    const bool success = cslibs_ndt_2d::dynamic_maps::loadBinary("/tmp/occ_map_binary", map_from_file);
+
+
+    // tests
+    EXPECT_TRUE(success);
+    testDynamicOccMap(map, map_from_file);
+}
+
 TEST(Test_cslibs_ndt_2d, testStaticOccGridmapFileSerialization)
 {
     using map_t = cslibs_ndt_2d::static_maps::OccupancyGridmap;

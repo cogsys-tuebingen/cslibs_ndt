@@ -10,7 +10,6 @@
 #include <yaml-cpp/yaml.h>
 
 #include <cslibs_math/serialization/array.hpp>
-
 #include <cslibs_ndt/common/serialization/filesystem.hpp>
 #include <fstream>
 

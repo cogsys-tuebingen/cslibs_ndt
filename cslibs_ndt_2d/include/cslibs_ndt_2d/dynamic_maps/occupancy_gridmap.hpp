@@ -67,6 +67,26 @@ public:
     {
     }
 
+    OccupancyGridmap(const pose_t &origin,
+                     const double  resolution,
+                     const std::shared_ptr<distribution_bundle_storage_t> &bundles,
+                     const distribution_storage_array_t                   &storage,
+                     const index_t                                        &min_index,
+                     const index_t                                        &max_index) :
+        resolution_(resolution),
+        resolution_inv_(1.0 / resolution_),
+        bundle_resolution_(0.5 * resolution_),
+        bundle_resolution_inv_(1.0 / bundle_resolution_),
+        bundle_resolution_2_(0.25 * bundle_resolution_ * bundle_resolution_),
+        w_T_m_(origin),
+        m_T_w_(w_T_m_.inverse()),
+        min_index_(min_index),
+        max_index_(max_index),
+        storage_(storage),
+        bundle_storage_(bundles)
+    {
+    }
+
     OccupancyGridmap(const double origin_x,
                      const double origin_y,
                      const double origin_phi,

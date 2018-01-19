@@ -79,8 +79,6 @@ inline bool loadBinary(const std::string &path,
     using path_t                    = boost::filesystem::path;
     using paths_t                   = std::array<path_t, 4>;
     using index_t                   = std::array<int, 2>;
-    using map_t                     = cslibs_ndt_2d::dynamic_maps::Gridmap;
-    using distribution_storage_ptr_t= typename map_t::distribution_storage_ptr_t;
     using binary_t                  = cslibs_ndt::binary<cslibs_ndt::Distribution, 2, 2>;
 
     /// step one: check if the root diretory exists
@@ -105,38 +103,53 @@ inline bool loadBinary(const std::string &path,
 
     /// load meta data
     path_t  path_file = path_t("map.yaml");
-    index_t min_index, max_index;
-    {
-        YAML::Node n = YAML::LoadFile((path_root / path_file).string());
-        const cslibs_math_2d::Transform2d origin = n["origin"].as<cslibs_math_2d::Transform2d>();
-        const double resolution = n["resolution"].as<double>();
-        min_index = n["min_index"].as<index_t>();
-        max_index = n["max_index"].as<index_t>();
-        const std::vector<index_t> indices = n["bundles"].as<std::vector<index_t>>();
 
-        map.reset(new map_t(origin, resolution));
+    using bundle_storage_t = cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_bundle_storage_t;
+    using distribution_storage_array_t = cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_storage_array_t;
 
-        // allocation stuff, just 4 fun
-        for (const index_t& bi : indices)
-            map->getDistributionBundle(bi);
+    std::shared_ptr<bundle_storage_t> bundles(new bundle_storage_t);
+    distribution_storage_array_t storages;
+
+    YAML::Node n = YAML::LoadFile((path_root / path_file).string());
+    const cslibs_math_2d::Transform2d origin = n["origin"].as<cslibs_math_2d::Transform2d>();
+    const double               resolution = n["resolution"].as<double>();
+    const index_t              min_index  = n["min_index"].as<index_t>();
+    const index_t              max_index  = n["max_index"].as<index_t>();
+    const std::vector<index_t> indices    = n["bundles"].as<std::vector<index_t>>();
+
+    for(int i = 0 ; i < 4 ; ++i) {
+        if (!binary_t::load(paths[i], storages[i]))
+            return false;
     }
 
-    auto get_bundle_index = [&min_index, &max_index] (const index_t & si) {
-        return index_t({{std::max(min_index[0], std::min(2 * si[0], max_index[0])),
-                         std::max(min_index[1], std::min(2 * si[1], max_index[1]))}});
+    auto allocate_bundle = [&storages, &bundles](const index_t &bi) {
+        cslibs_ndt_2d::dynamic_maps::Gridmap::distribution_bundle_t b;
+        const int divx = cslibs_math::common::div<int>(bi[0], 2);
+        const int divy = cslibs_math::common::div<int>(bi[1], 2);
+        const int modx = cslibs_math::common::mod<int>(bi[0], 2);
+        const int mody = cslibs_math::common::mod<int>(bi[1], 2);
+
+        const index_t storage_0_index = {{divx,        divy}};
+        const index_t storage_1_index = {{divx + modx, divy}};        /// shifted to the left
+        const index_t storage_2_index = {{divx,        divy + mody}}; /// shifted to the bottom
+        const index_t storage_3_index = {{divx + modx, divy + mody}}; /// shifted diagonally
+
+        b[0] = storages[0]->get(storage_0_index);
+        b[1] = storages[1]->get(storage_1_index);
+        b[2] = storages[2]->get(storage_2_index);
+        b[3] = storages[3]->get(storage_3_index);
+        bundles->insert(bi, b);
     };
 
-    for (std::size_t i = 0 ; i < 4 ; ++ i) {
-        distribution_storage_ptr_t storage;
-        if (!binary_t::load(paths[i], storage))
-            return false;
 
-        storage->traverse([&map, &i, &get_bundle_index] (const index_t & si, const typename map_t::distribution_t & d) {
-            const index_t & bi = get_bundle_index(si);
-            if (const typename map_t::distribution_bundle_t* b = map->getDistributionBundle(bi))
-                b->at(i)->data() = d.data();
-        });
+    for(const index_t &index : indices) {
+        allocate_bundle(index);
     }
+    map.reset(new cslibs_ndt_2d::dynamic_maps::Gridmap(origin, resolution,
+                                                       bundles,
+                                                       storages,
+                                                       min_index,
+                                                       max_index));
 
     return true;
 }

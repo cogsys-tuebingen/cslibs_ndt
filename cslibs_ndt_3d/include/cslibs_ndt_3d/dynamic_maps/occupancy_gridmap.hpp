@@ -46,7 +46,7 @@ public:
     using distribution_const_bundle_t       = cslibs_ndt::Bundle<const distribution_t*, 8>;
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
-    using line_iterator_t                   = cslibs_math_3d::algorithms::SimpleIterator;//Bresenham;
+    using simple_iterator_t                 = cslibs_math_3d::algorithms::SimpleIterator;
 
     OccupancyGridmap(const pose_t &origin,
                      const double  resolution) :
@@ -54,7 +54,6 @@ public:
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
-        bundle_resolution_2_(0.25 * bundle_resolution_ * bundle_resolution_),
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
         min_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
@@ -99,81 +98,53 @@ public:
         return w_T_m_;
     }
 
+    template <typename line_iterator_t = simple_iterator_t>
     inline void add(const point_t &start_p,
                     const point_t &end_p)
     {
         const index_t &end_index = toBundleIndex(end_p);
-        line_iterator_t it(m_T_w_ * start_p, m_T_w_ * end_p, bundle_resolution_);
+        updateOccupied(end_index, end_p);
 
+        line_iterator_t it(m_T_w_ * start_p, m_T_w_ * end_p, bundle_resolution_);
         while (!it.done()) {
-            const index_t bi = {{it.x(), it.y(), it.z()}};
-            (it.length2() > bundle_resolution_2_) ?
-                        updateFree(bi) :
-                        updateOccupied(bi, end_p);
+            updateFree({{it.x(), it.y(), it.z()}});
             ++ it;
         }
-        updateOccupied(end_index, end_p);
     }
 
+    template <typename line_iterator_t = simple_iterator_t>
     inline void add(const point_t &start_p,
                     const point_t &end_p,
                     index_t       &end_index)
     {
         end_index = toBundleIndex(end_p);
-        line_iterator_t it(m_T_w_ * start_p, m_T_w_ * end_p, bundle_resolution_);
+        updateOccupied(end_index, end_p);
 
+        line_iterator_t it(m_T_w_ * start_p, m_T_w_ * end_p, bundle_resolution_);
         while (!it.done()) {
-            const index_t bi = {{it.x(), it.y(), it.z()}};
-            (it.length2() > bundle_resolution_2_) ?
-                        updateFree(bi) :
-                        updateOccupied(bi, end_p);
+            updateFree({{it.x(), it.y(), it.z()}});
             ++ it;
         }
-        updateOccupied(end_index, end_p);
     }
 
+    template <typename line_iterator_t = simple_iterator_t>
     inline void insert(const pose_t &origin,
                        const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points)
     {
         distribution_storage_t storage;
-        //std::unordered_map<index_t, int> map;
         for (const auto &p : *points) {
             const point_t pm = origin * p;
             if (pm.isNormal()) {
-                //const index_t bi = toBundleIndex(pm);
-                //updateOccupied(bi, pm);
-                //++map[bi];
-
                 const index_t &bi = toBundleIndex(pm);
                 distribution_t *d = storage.get(bi);
                 (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
+            }
+        }
 
-            }
-        }
-/*
-        const index_t start_index = toBundleIndex(origin.translation());
-        for (const auto& entry : map) {
-            line_iterator_t it(start_index, entry.first);
-            while (!it.done()) {
-                updateFree({{it.x(), it.y(), it.z()}}, entry.second);
-                ++ it;
-            }
-        }
-/*/
         const point_t start_p = m_T_w_ * origin.translation();
         storage.traverse([this, &start_p](const index_t& bi, const distribution_t &d) {
             if (!d.getDistribution())
-                return;/*
-            line_iterator_t it(start_p, m_T_w_ * point_t(d.getDistribution()->getMean()), bundle_resolution_);//start_index, bi, 1.0);
-
-            while (!it.done()) {
-                const index_t bj = {{it.x(), it.y(), it.z()}};
-                (it.length2() > bundle_resolution_2_) ?
-                            updateFree(bj, d.numOccupied()) :
-                            updateOccupied(bj, d.getDistribution());
-                ++ it;
-            }*/
-
+                return;
             updateOccupied(bi, d.getDistribution());
 
             line_iterator_t it(start_p, m_T_w_ * point_t(d.getDistribution()->getMean()), bundle_resolution_);//start_index, bi, 1.0);
@@ -181,8 +152,8 @@ public:
             while (!it.done()) {
                 updateFree({{it.x(), it.y(), it.z()}}, n);
                 ++ it;
-            }//* /
-        });//*/
+            }
+        });
     }
 
     inline index_t getMinDistributionIndex() const
@@ -246,7 +217,6 @@ private:
     const double                                    resolution_inv_;
     const double                                    bundle_resolution_;
     const double                                    bundle_resolution_inv_;
-    const double                                    bundle_resolution_2_;
     const transform_t                               w_T_m_;
     const transform_t                               m_T_w_;
 

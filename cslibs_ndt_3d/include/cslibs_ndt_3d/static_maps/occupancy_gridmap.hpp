@@ -54,7 +54,6 @@ public:
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
-        bundle_resolution_2_(0.25 * bundle_resolution_ * bundle_resolution_),
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
         size_(size),
@@ -155,7 +154,7 @@ public:
                 return;
             updateOccupied(bi, d.getDistribution());
 
-            line_iterator_t it(start_p, m_T_w_ * point_t(d.getDistribution()->getMean(), bundle_resolution_);
+            line_iterator_t it(start_p, m_T_w_ * point_t(d.getDistribution()->getMean()), bundle_resolution_);
             const std::size_t n = d.numOccupied();
             while (!it.done()) {
                 updateFree({{it.x(), it.y(), it.z()}}, n);

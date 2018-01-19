@@ -13,6 +13,11 @@
   <depend>cslibs_ndt</depend>
   <depend>cslibs_math_3d</depend>
   <depend>yaml-cpp</depend>
+  <depend>cslibs_math_ros</depend>
+  <depend>cslibs_time</depend>
+  <depend>cslibs_gridmaps</depend>
+  <depend>roscpp</depend>
+  <depend>tf</depend>
 
   <export>
   </export>

@@ -78,7 +78,6 @@ public:
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
-        bundle_resolution_2_(0.25 * bundle_resolution_ * bundle_resolution_),
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
         min_index_(min_index),

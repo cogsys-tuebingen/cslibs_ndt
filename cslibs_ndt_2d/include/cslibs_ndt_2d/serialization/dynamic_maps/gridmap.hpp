@@ -153,8 +153,6 @@ inline bool loadBinary(const std::string &path,
     return true;
 }
 
-
-
 inline bool save(const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &map,
                  const std::string &path)
 {

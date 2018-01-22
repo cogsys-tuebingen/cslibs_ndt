@@ -474,11 +474,11 @@ TEST(Test_cslibs_ndt_3d, testDynamicGridmapFileSerialization)
     const typename map_t::Ptr map = generateDynamicMap();
 
     // to file
-    cslibs_ndt_3d::dynamic_maps::save(map, "/tmp/map3d");
+    cslibs_ndt_3d::dynamic_maps::saveBinary(map, "/tmp/map3d");
 
     // from file
     typename map_t::Ptr map_from_file;
-    const bool success = cslibs_ndt_3d::dynamic_maps::load(map_from_file, "/tmp/map3d");
+    const bool success = cslibs_ndt_3d::dynamic_maps::loadBinary("/tmp/map3d", map_from_file);
 
     // tests
     EXPECT_TRUE(success);
@@ -508,11 +508,11 @@ TEST(Test_cslibs_ndt_3d, testDynamicOccGridmapFileSerialization)
     const typename map_t::Ptr map = generateDynamicOccMap();
 
     // to file
-    cslibs_ndt_3d::dynamic_maps::save(map, "/tmp/map3d");
+    cslibs_ndt_3d::dynamic_maps::saveBinary(map, "/tmp/map3d");
 
     // from file
     typename map_t::Ptr map_from_file;
-    const bool success = cslibs_ndt_3d::dynamic_maps::load(map_from_file, "/tmp/map3d");
+    const bool success = cslibs_ndt_3d::dynamic_maps::loadBinary("/tmp/map3d", map_from_file);
 
     // tests
     EXPECT_TRUE(success);
@@ -619,6 +619,7 @@ TEST(Test_cslibs_ndt_3d, testDynamicGridmapFileBinarySerialization)
     // from file
     typename map_t::Ptr map_from_file;
     const bool success = cslibs_ndt_3d::dynamic_maps::loadBinary("/tmp/map_binary", map_from_file);
+
     // tests
     EXPECT_TRUE(success);
     testDynamicMap(map, map_from_file);
@@ -635,6 +636,7 @@ TEST(Test_cslibs_ndt_3d, testDynamicOccupancyGridmapFileBinarySerialization)
     // from file
     typename map_t::Ptr map_from_file;
     const bool success = cslibs_ndt_3d::dynamic_maps::loadBinary("/tmp/occ_map_binary", map_from_file);
+
     // tests
     EXPECT_TRUE(success);
     testDynamicOccMap(map, map_from_file);

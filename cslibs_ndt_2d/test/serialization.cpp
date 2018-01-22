@@ -430,21 +430,6 @@ TEST(Test_cslibs_ndt_2d, testDynamicGridmapFileSerialization)
     testDynamicMap(map, map_from_file);
 }
 
-TEST(Test_cslibs_ndt_2d, testDynamicGridmapFileBinarySerialization)
-{
-    using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
-    const typename map_t::Ptr map = generateDynamicMap();
-
-    // to file
-    cslibs_ndt_2d::dynamic_maps::saveBinary(map, "/tmp/map_binary");
-
-    // from file
-    typename map_t::Ptr map_from_file;
-    const bool success = cslibs_ndt_2d::dynamic_maps::loadBinary("/tmp/map_binary", map_from_file);
-    // tests
-    EXPECT_TRUE(success);
-    testDynamicMap(map, map_from_file);
-}
 
 
 TEST(Test_cslibs_ndt_2d, testStaticGridmapFileSerialization)
@@ -475,25 +460,6 @@ TEST(Test_cslibs_ndt_2d, testDynamicOccGridmapFileSerialization)
     // from file
     typename map_t::Ptr map_from_file;
     const bool success = cslibs_ndt_2d::dynamic_maps::load(map_from_file, "/tmp/map");
-
-    // tests
-    EXPECT_TRUE(success);
-    testDynamicOccMap(map, map_from_file);
-}
-
-
-TEST(Test_cslibs_ndt_2d, testDynamicOccGridmapFileBinarySerialization)
-{
-    using map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap;
-    const typename map_t::Ptr map = generateDynamicOccMap();
-
-    // to file
-    cslibs_ndt_2d::dynamic_maps::saveBinary(map, "/tmp/occ_map_binary");
-
-    // from file
-    typename map_t::Ptr map_from_file;
-    const bool success = cslibs_ndt_2d::dynamic_maps::loadBinary("/tmp/occ_map_binary", map_from_file);
-
 
     // tests
     EXPECT_TRUE(success);
@@ -587,6 +553,40 @@ TEST(Test_cslibs_ndt_2d, testStaticOccGridmapConversion)
     //testDynamicOccMap(cslibs_ndt_2d::conversion::from(map),
     //                  cslibs_ndt_2d::conversion::from(map_double_converted),
     //                  false);
+}
+
+TEST(Test_cslibs_ndt_2d, testDynamicGridmapFileBinarySerialization)
+{
+    using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
+    const typename map_t::Ptr map = generateDynamicMap();
+
+    // to file
+    cslibs_ndt_2d::dynamic_maps::saveBinary(map, "/tmp/map_binary");
+
+    // from file
+    typename map_t::Ptr map_from_file;
+    const bool success = cslibs_ndt_2d::dynamic_maps::loadBinary("/tmp/map_binary", map_from_file);
+    // tests
+    EXPECT_TRUE(success);
+    testDynamicMap(map, map_from_file);
+}
+
+TEST(Test_cslibs_ndt_2d, testDynamicOccGridmapFileBinarySerialization)
+{
+    using map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap;
+    const typename map_t::Ptr map = generateDynamicOccMap();
+
+    // to file
+    cslibs_ndt_2d::dynamic_maps::saveBinary(map, "/tmp/occ_map_binary");
+
+    // from file
+    typename map_t::Ptr map_from_file;
+    const bool success = cslibs_ndt_2d::dynamic_maps::loadBinary("/tmp/occ_map_binary", map_from_file);
+
+
+    // tests
+    EXPECT_TRUE(success);
+    testDynamicOccMap(map, map_from_file);
 }
 
 int main(int argc, char *argv[])

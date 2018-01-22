@@ -12,6 +12,8 @@
 #include <cslibs_math/serialization/array.hpp>
 #include <cslibs_ndt/common/serialization/filesystem.hpp>
 #include <fstream>
+#include <thread>
+#include <atomic>
 
 namespace cslibs_ndt_3d {
 namespace dynamic_maps {
@@ -67,11 +69,16 @@ inline bool saveBinary(const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr 
                                                     map->getStorages()[6],
                                                     map->getStorages()[7]}};
 
-    for(std::size_t i = 0 ; i < 8 ; ++i) {
-        if(!binary_t::save(storages[i], paths[i]))
-            return false;
-    }
-    return true;
+    std::array<std::thread, 8> threads;
+    std::atomic_bool success(true);
+    for(std::size_t i = 0 ; i < 8 ; ++i)
+        threads[i] = std::thread([&storages, &paths, i, &success](){
+            success = success && binary_t::save(storages[i], paths[i]);
+        });
+    for(std::size_t i = 0 ; i < 8 ; ++i)
+        threads[i].join();
+
+    return success;
 }
 
 inline bool loadBinary(const std::string &path,
@@ -121,10 +128,17 @@ inline bool loadBinary(const std::string &path,
     const index_t                     max_index  = n["max_index"].as<index_t>();
     const std::vector<index_t>        indices    = n["bundles"].as<std::vector<index_t>>();
 
-    for(int i = 0 ; i < 8 ; ++i) {
-        if (!binary_t::load(paths[i], storages[i]))
-            return false;
-    }
+    std::array<std::thread, 8> threads;
+    std::atomic_bool success(true);
+    for(std::size_t i = 0 ; i < 8 ; ++i)
+        threads[i] = std::thread([&storages, &paths, i, &success](){
+            success = success && binary_t::load(paths[i], storages[i]);
+        });
+    for(std::size_t i = 0 ; i < 8 ; ++i)
+        threads[i].join();
+
+    if(!success)
+        return false;
 
     auto allocate_bundle = [&storages, &bundles](const index_t &bi) {
         cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_bundle_t b;

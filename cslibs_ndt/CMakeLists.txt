@@ -23,6 +23,7 @@ catkin_package(
                  cslibs_ndt_extras.cmake
                  cslibs_ndt_show_headers.cmake
                  cslibs_ndt_add_unit_test_gtest.cmake
+                 cslibs_ndt_openmp.cmake
 )
 
 include_directories(

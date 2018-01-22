@@ -419,11 +419,11 @@ TEST(Test_cslibs_ndt_2d, testDynamicGridmapFileSerialization)
     const typename map_t::Ptr map = generateDynamicMap();
 
     // to file
-    cslibs_ndt_2d::dynamic_maps::save(map, "/tmp/map");
+    cslibs_ndt_2d::dynamic_maps::saveBinary(map, "/tmp/map");
 
     // from file
     typename map_t::Ptr map_from_file;
-    const bool success = cslibs_ndt_2d::dynamic_maps::load(map_from_file, "/tmp/map");
+    const bool success = cslibs_ndt_2d::dynamic_maps::loadBinary("/tmp/map", map_from_file);
 
     // tests
     EXPECT_TRUE(success);
@@ -455,11 +455,11 @@ TEST(Test_cslibs_ndt_2d, testDynamicOccGridmapFileSerialization)
     const typename map_t::Ptr map = generateDynamicOccMap();
 
     // to file
-    cslibs_ndt_2d::dynamic_maps::save(map, "/tmp/map");
+    cslibs_ndt_2d::dynamic_maps::saveBinary(map, "/tmp/map");
 
     // from file
     typename map_t::Ptr map_from_file;
-    const bool success = cslibs_ndt_2d::dynamic_maps::load(map_from_file, "/tmp/map");
+    const bool success = cslibs_ndt_2d::dynamic_maps::loadBinary("/tmp/map", map_from_file);
 
     // tests
     EXPECT_TRUE(success);
@@ -566,6 +566,7 @@ TEST(Test_cslibs_ndt_2d, testDynamicGridmapFileBinarySerialization)
     // from file
     typename map_t::Ptr map_from_file;
     const bool success = cslibs_ndt_2d::dynamic_maps::loadBinary("/tmp/map_binary", map_from_file);
+
     // tests
     EXPECT_TRUE(success);
     testDynamicMap(map, map_from_file);
@@ -582,7 +583,6 @@ TEST(Test_cslibs_ndt_2d, testDynamicOccGridmapFileBinarySerialization)
     // from file
     typename map_t::Ptr map_from_file;
     const bool success = cslibs_ndt_2d::dynamic_maps::loadBinary("/tmp/occ_map_binary", map_from_file);
-
 
     // tests
     EXPECT_TRUE(success);

@@ -12,17 +12,20 @@
 #include <cslibs_math/serialization/array.hpp>
 #include <cslibs_ndt/common/serialization/filesystem.hpp>
 #include <fstream>
+#include <thread>
+#include <atomic>
 
 namespace cslibs_ndt_2d {
 namespace dynamic_maps {
 inline bool saveBinary(const cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr &map,
                        const std::string &path)
 {
+
     using path_t                     = boost::filesystem::path;
     using paths_t                    = std::array<path_t, 4>;
     using index_t                    = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::index_t;
-    using distribution_storage_ptr_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::distribution_storage_ptr_t;
     using binary_t                   = cslibs_ndt::binary<cslibs_ndt::OccupancyDistribution, 2, 2>;
+    using storages_t                 = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::distribution_storage_array_t;
 
     /// step one: check if the root diretory exists
     path_t path_root(path);
@@ -54,21 +57,20 @@ inline bool saveBinary(const cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr 
     }
     /// step four: write out the storages
 
-    const distribution_storage_ptr_t storage_0 = map->getStorages()[0];
-    const distribution_storage_ptr_t storage_1 = map->getStorages()[1];
-    const distribution_storage_ptr_t storage_2 = map->getStorages()[2];
-    const distribution_storage_ptr_t storage_3 = map->getStorages()[3];
+    const storages_t storages = {{map->getStorages()[0],
+                                  map->getStorages()[1],
+                                  map->getStorages()[2],
+                                  map->getStorages()[3]}};
+    std::array<std::thread, 4> threads;
+    std::atomic_bool success(true);
+    for(std::size_t i = 0 ; i < 4 ; ++i)
+        threads[i] = std::thread([&storages, &paths, i, &success](){
+            success = success && binary_t::save(storages[i], paths[i]);
+        });
+    for(std::size_t i = 0 ; i < 4 ; ++i)
+        threads[i].join();
 
-    if(!binary_t::save(storage_0, paths[0]))
-        return false;
-    if(!binary_t::save(storage_1, paths[1]))
-        return false;
-    if(!binary_t::save(storage_2, paths[2]))
-        return false;
-    if(!binary_t::save(storage_3, paths[3]))
-        return false;
-
-    return true;
+    return success;
 }
 
 inline bool loadBinary(const std::string &path,
@@ -93,12 +95,6 @@ inline bool loadBinary(const std::string &path,
                       path_root / path_t("store_3.bin")}};
 
     /// step three: we have our filesystem, now we can load distributions file by file
-    for(std::size_t i = 0 ; i < 4 ; ++i) {
-        if(!cslibs_ndt::common::serialization::check_file(paths[i])) {
-            return false;
-        }
-    }
-
     /// load meta data
     path_t  path_file = path_t("map.yaml");
 
@@ -115,10 +111,17 @@ inline bool loadBinary(const std::string &path,
     const index_t              max_index  = n["max_index"].as<index_t>();
     const std::vector<index_t> indices    = n["bundles"].as<std::vector<index_t>>();
 
-    for(int i = 0 ; i < 4 ; ++i) {
-        if (!binary_t::load(paths[i], storages[i]))
-            return false;
-    }
+    std::array<std::thread, 4> threads;
+    std::atomic_bool success(true);
+    for(std::size_t i = 0 ; i < 4 ; ++i)
+        threads[i] = std::thread([&storages, &paths, i, &success](){
+            success = success && binary_t::load(paths[i], storages[i]);
+        });
+    for(std::size_t i = 0 ; i < 4 ; ++i)
+        threads[i].join();
+
+    if(!success)
+        return false;
 
     auto allocate_bundle = [&storages, &bundles](const index_t &bi) {
         cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::distribution_bundle_t b;

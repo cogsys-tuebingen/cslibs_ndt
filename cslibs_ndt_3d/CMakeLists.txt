@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(cslibs_ndt_3d)
 
+set(CSLIBS_NDT_USE_OMP False)
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 find_package(catkin REQUIRED COMPONENTS

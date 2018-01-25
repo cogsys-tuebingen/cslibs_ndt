@@ -11,6 +11,7 @@
 #include <cslibs_math/random/random.hpp>
 #include <fstream>
 
+
 const std::size_t MIN_NUM_SAMPLES = 1;
 const std::size_t MAX_NUM_SAMPLES = 10000;
 

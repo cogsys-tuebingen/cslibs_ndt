@@ -1,6 +1,8 @@
 #ifndef CSLIBS_NDT_INDEXED_HPP
 #define CSLIBS_NDT_INDEXED_HPP
 
+#include <array>
+
 namespace cslibs_ndt {
 template <template <std::size_t> class T, std::size_t Size, std::size_t Dim>
 struct Indexed {

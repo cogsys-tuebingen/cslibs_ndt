@@ -33,7 +33,7 @@ inline void from(
             p.x = static_cast<float>(mean(0));
             p.y = static_cast<float>(mean(1));
             p.z = static_cast<float>(mean(2));
-            p.intensity = static_cast<float>(d.sampleMean());
+            p.intensity = static_cast<float>(src->sampleNonNormalized(mean));//d.sampleMean());
 
             dst->push_back(p);
         }
@@ -71,7 +71,7 @@ inline void from(
             p.x = static_cast<float>(mean(0));
             p.y = static_cast<float>(mean(1));
             p.z = static_cast<float>(mean(2));
-            p.intensity = static_cast<float>(d.sampleMean() * occupancy);
+            p.intensity = static_cast<float>(src->sampleNonNormalized(mean, inverse_model));
 
             dst->push_back(p);
         }

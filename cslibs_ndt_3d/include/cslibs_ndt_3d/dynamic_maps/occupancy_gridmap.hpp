@@ -48,6 +48,7 @@ public:
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
     using simple_iterator_t                 = cslibs_math_3d::algorithms::SimpleIterator;
+    using inverse_sensor_model_t            = cslibs_gridmaps::utility::InverseModel;
 
     OccupancyGridmap(const pose_t &origin,
                      const double  resolution) :
@@ -174,6 +175,67 @@ public:
                 ++ it;
             }
         });
+    }
+
+    inline double sample(const point_t &p,
+                         const inverse_sensor_model_t::Ptr &ivm) const
+    {
+        const index_t bi = toBundleIndex(p);
+        distribution_bundle_t *bundle;
+        {
+            lock_t(bundle_storage_mutex_);
+            bundle = bundle_storage_->get(bi);
+        }
+
+        auto sample = [this, &ivm] (const distribution_t *d,
+                              const point_t &p) {
+            return (d && d->getDistribution()) ?
+                        (d->getDistribution()->sample(p) * d->getOccupancy(ivm)) : 0.0;
+        };
+        auto evaluate = [&sample] (const distribution_bundle_t * b,
+                                   const point_t &p) {
+            return 0.125 * (sample(b->at(0), p) +
+                            sample(b->at(1), p) +
+                            sample(b->at(2), p) +
+                            sample(b->at(3), p) +
+                            sample(b->at(4), p) +
+                            sample(b->at(5), p) +
+                            sample(b->at(6), p) +
+                            sample(b->at(7), p));
+        };
+
+        return bundle ? evaluate(bundle, p) : 0.0;
+    }
+
+
+    inline double sampleNonNormalized(const point_t &p,
+                                      const inverse_sensor_model_t::Ptr &ivm) const
+    {
+        const index_t bi = toBundleIndex(p);
+        distribution_bundle_t *bundle;
+        {
+            lock_t(bundle_storage_mutex_);
+            bundle = bundle_storage_->get(bi);
+        }
+
+        auto sample = [this, &ivm] (const distribution_t *d,
+                              const point_t &p) {
+            return (d && d->getDistribution()) ?
+                        (d->getDistribution()->sampleNonNormalized(p) * d->getOccupancy(ivm)) : 0.0;
+        };
+        auto evaluate = [&sample] (const distribution_bundle_t * b,
+                                   const point_t &p) {
+            return 0.125 * (sample(b->at(0), p) +
+                            sample(b->at(1), p) +
+                            sample(b->at(2), p) +
+                            sample(b->at(3), p) +
+                            sample(b->at(4), p) +
+                            sample(b->at(5), p) +
+                            sample(b->at(6), p) +
+                            sample(b->at(7), p));
+        };
+
+        return bundle ? evaluate(bundle, p) : 0.0;
     }
 
     inline index_t getMinDistributionIndex() const

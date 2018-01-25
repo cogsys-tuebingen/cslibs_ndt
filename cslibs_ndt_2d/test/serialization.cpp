@@ -7,9 +7,11 @@
 
 #include <cslibs_ndt_2d/conversion/gridmap.hpp>
 #include <cslibs_ndt_2d/conversion/occupancy_gridmap.hpp>
+#include <cslibs_ndt_2d/dynamic_maps/occupancy_single_gridmap.hpp>
 
 #include <cslibs_math/random/random.hpp>
 #include <fstream>
+
 
 const std::size_t MIN_NUM_SAMPLES = 1;
 const std::size_t MAX_NUM_SAMPLES = 10000;

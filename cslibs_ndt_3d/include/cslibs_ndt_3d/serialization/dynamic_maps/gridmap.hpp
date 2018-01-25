@@ -23,7 +23,7 @@ inline bool saveBinary(const cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr &map,
     using path_t                        = boost::filesystem::path;
     using paths_t                       = std::array<path_t, 8>;
     using index_t                       = cslibs_ndt_3d::dynamic_maps::Gridmap::index_t;
-    using distirubiont_storage_array_t  = cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_storage_array_t;
+    using distribution_storage_array_t  = cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_storage_array_t;
     using binary_t                      = cslibs_ndt::binary<cslibs_ndt::Distribution, 3, 3>;
 
     /// step one: check if the root diretory exists
@@ -60,7 +60,7 @@ inline bool saveBinary(const cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr &map,
     }
     /// step four: write out the storages
 
-    const distirubiont_storage_array_t storages = {{map->getStorages()[0],
+    const distribution_storage_array_t storages = {{map->getStorages()[0],
                                                     map->getStorages()[1],
                                                     map->getStorages()[2],
                                                     map->getStorages()[3],

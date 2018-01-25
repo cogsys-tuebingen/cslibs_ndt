@@ -20,10 +20,10 @@ namespace dynamic_maps {
 inline bool saveBinary(const cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr &map,
                        const std::string &path)
 {
+
     using path_t                     = boost::filesystem::path;
     using paths_t                    = std::array<path_t, 4>;
     using index_t                    = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::index_t;
-    using distribution_storage_ptr_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::distribution_storage_ptr_t;
     using binary_t                   = cslibs_ndt::binary<cslibs_ndt::OccupancyDistribution, 2, 2>;
     using storages_t                 = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::distribution_storage_array_t;
 
@@ -56,7 +56,6 @@ inline bool saveBinary(const cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr 
         yaml << n;
     }
     /// step four: write out the storages
-
 
     const storages_t storages = {{map->getStorages()[0],
                                   map->getStorages()[1],

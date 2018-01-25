@@ -21,7 +21,7 @@ inline bool saveBinary(const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr 
     using path_t                        = boost::filesystem::path;
     using paths_t                       = std::array<path_t, 8>;
     using index_t                       = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::index_t;
-    using distirubiont_storage_array_t  = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_storage_array_t;
+    using distribution_storage_array_t  = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_storage_array_t;
     using binary_t                      = cslibs_ndt::binary<cslibs_ndt::OccupancyDistribution, 3, 3>;
 
     /// step one: check if the root diretory exists
@@ -58,7 +58,7 @@ inline bool saveBinary(const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr 
     }
     /// step four: write out the storages
 
-    const distirubiont_storage_array_t storages = {{map->getStorages()[0],
+    const distribution_storage_array_t storages = {{map->getStorages()[0],
                                                     map->getStorages()[1],
                                                     map->getStorages()[2],
                                                     map->getStorages()[3],

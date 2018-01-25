@@ -18,11 +18,12 @@ namespace dynamic_maps {
 inline bool saveBinary(const cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr &map,
                        const std::string &path)
 {
-    using path_t                     = boost::filesystem::path;
-    using paths_t                    = std::array<path_t, 4>;
-    using index_t                    = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::index_t;
-    using distribution_storage_ptr_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::distribution_storage_ptr_t;
-    using binary_t                   = cslibs_ndt::binary<cslibs_ndt::OccupancyDistribution, 2, 2>;
+    using path_t                        = boost::filesystem::path;
+    using paths_t                       = std::array<path_t, 4>;
+    using index_t                       = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::index_t;
+    using distribution_storage_ptr_t    = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::distribution_storage_ptr_t;
+    using distribution_storage_array_t  = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::distribution_storage_array_t;
+    using binary_t                      = cslibs_ndt::binary<cslibs_ndt::OccupancyDistribution, 2, 2>;
 
     /// step one: check if the root diretory exists
     path_t path_root(path);
@@ -54,20 +55,15 @@ inline bool saveBinary(const cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr 
     }
     /// step four: write out the storages
 
-    const distribution_storage_ptr_t storage_0 = map->getStorages()[0];
-    const distribution_storage_ptr_t storage_1 = map->getStorages()[1];
-    const distribution_storage_ptr_t storage_2 = map->getStorages()[2];
-    const distribution_storage_ptr_t storage_3 = map->getStorages()[3];
+    const distribution_storage_array_t storages = {{map->getStorages()[0],
+                                                    map->getStorages()[1],
+                                                    map->getStorages()[2],
+                                                    map->getStorages()[3]}};
 
-    if(!binary_t::save(storage_0, paths[0]))
-        return false;
-    if(!binary_t::save(storage_1, paths[1]))
-        return false;
-    if(!binary_t::save(storage_2, paths[2]))
-        return false;
-    if(!binary_t::save(storage_3, paths[3]))
-        return false;
-
+    for(std::size_t i = 0 ; i < 4 ; ++i) {
+        if(!binary_t::save(storages[i], paths[i]))
+            return false;
+    }
     return true;
 }
 

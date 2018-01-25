@@ -109,7 +109,7 @@ inline bool loadBinary(const std::string &path,
                             path_root / path_t("store_7.bin")}};
 
     /// step three: we have our filesystem, now we can load distributions file by file
-    for(std::size_t i = 0 ; i < 4 ; ++i) {
+    for(std::size_t i = 0 ; i < 8 ; ++i) {
         if(!cslibs_ndt::common::serialization::check_file(paths[i])) {
             return false;
         }

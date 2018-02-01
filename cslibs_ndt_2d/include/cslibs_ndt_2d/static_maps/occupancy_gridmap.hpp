@@ -48,6 +48,7 @@ public:
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::array::Array>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
     using simple_iterator_t                 = cslibs_math_2d::algorithms::SimpleIterator;
+    using inverse_sensor_model_t            = cslibs_gridmaps::utility::InverseModel;
 
     OccupancyGridmap(const pose_t &origin,
             const double           resolution,
@@ -152,18 +153,75 @@ public:
         });
     }
 
+    template <typename line_iterator_t = simple_iterator_t>
+    inline void insertVolumetric(const pose_t &origin,
+                                 const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points,
+                                 const inverse_sensor_model_t::Ptr &ivm,
+                                 const inverse_sensor_model_t::Ptr &ivm_visibility)
+    {
+        const index_t start_bi = toBundleIndex(origin.translation());
+        auto occupancy = [this, &ivm](const index_t &bi) {
+            const distribution_bundle_t *bundle = getDistributionBundle(bi);
+            return 0.25 * (bundle->at(0)->getOccupancy(ivm) +
+                           bundle->at(1)->getOccupancy(ivm) +
+                           bundle->at(2)->getOccupancy(ivm) +
+                           bundle->at(3)->getOccupancy(ivm));
+        };
+        auto current_visibility = [this, &start_bi, &ivm_visibility, &occupancy](const index_t &bi) {
+            const double occlusion_prob =
+                    std::min(occupancy({{bi[0] + ((bi[0] > start_bi[0]) ? 1 : -1), bi[1]}}),
+                             occupancy({{bi[0], bi[1] + ((bi[1] > start_bi[1]) ? 1 : -1)}}));
+            return ivm_visibility->getProbFree() * occlusion_prob +
+                   ivm_visibility->getProbOccupied() * (1.0 - occlusion_prob);
+        };
+
+        distribution_storage_t storage;
+        for (const auto &p : *points) {
+            const point_t pm = origin * p;
+            if (pm.isNormal()) {
+                const index_t &bi = toBundleIndex(pm);
+                distribution_t *d = storage.get(bi);
+                (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
+            }
+        }
+
+        const point_t start_p = m_T_w_ * origin.translation();
+        storage.traverse([this, &ivm_visibility, &start_p, &current_visibility](const index_t& bi, const distribution_t &d) {
+            if (!d.getDistribution())
+                return;
+
+            const point_t end_p = m_T_w_ * point_t(d.getDistribution()->getMean());
+            line_iterator_t it(start_p, end_p, bundle_resolution_);
+
+            const std::size_t n = d.numOccupied();
+            double visibility = 1.0;
+            while (!it.done()) {
+                const index_t bit = {{it.x(), it.y()}};
+                std::cout << visibility << std::endl;
+                if ((visibility *= current_visibility(bit)) < ivm_visibility->getProbPrior())
+                    return;
+
+                updateFree(bit, n);
+                ++ it;
+            }
+
+            if ((visibility *= current_visibility(bi)) >= ivm_visibility->getProbPrior())
+                updateOccupied(bi, d.getDistribution());
+        });
+    }
+
     inline double sample(const point_t &p,
-                         const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model) const
+                         const inverse_sensor_model_t::Ptr &ivm) const
     {
         const index_t bi = toBundleIndex(p);
-        return sample(p, bi, inverse_model);
+        return sample(p, bi, ivm);
     }
 
     inline double sample(const point_t &p,
                          const index_t &bi,
-                         const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model) const
+                         const inverse_sensor_model_t::Ptr &ivm) const
     {
-        if (!inverse_model)
+        if (!ivm)
             throw std::runtime_error("[OccupancyGridMap]: inverse model not set");
 
         distribution_bundle_t *bundle;
@@ -171,9 +229,9 @@ public:
             lock_t(bundle_storage_mutex_);
             bundle = getAllocate(bi);
         }
-        auto sample = [&p, &inverse_model](const distribution_t *d) {
+        auto sample = [&p, &ivm](const distribution_t *d) {
             return (d && d->getDistribution()) ? d->getDistribution()->sample(p) *
-                                                 d->getOccupancy(inverse_model) : 0.0;
+                                                 d->getOccupancy(ivm) : 0.0;
         };
         auto evaluate = [&p, &bundle, &sample]() {
             return 0.25 * (sample(bundle->at(0)) +
@@ -185,17 +243,17 @@ public:
     }
 
     inline double sampleNonNormalized(const point_t &p,
-                                      const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model) const
+                                      const inverse_sensor_model_t::Ptr &ivm) const
     {
         const index_t bi = toBundleIndex(p);
-        return sampleNonNormalized(p, bi, inverse_model);
+        return sampleNonNormalized(p, bi, ivm);
     }
 
     inline double sampleNonNormalized(const point_t &p,
                                       const index_t &bi,
-                                      const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model) const
+                                      const inverse_sensor_model_t::Ptr &ivm) const
     {
-        if (!inverse_model)
+        if (!ivm)
             throw std::runtime_error("[OccupancyGridMap]: inverse model not set");
 
         distribution_bundle_t *bundle;
@@ -203,9 +261,9 @@ public:
             lock_t(bundle_storage_mutex_);
             bundle = getAllocate(bi);
         }
-        auto sampleNonNormalized = [&p, &inverse_model](const distribution_t *d) {
+        auto sampleNonNormalized = [&p, &ivm](const distribution_t *d) {
             return (d && d->getDistribution()) ? d->getDistribution()->sampleNonNormalized(p) *
-                                                 d->getOccupancy(inverse_model) : 0.0;
+                                                 d->getOccupancy(ivm) : 0.0;
         };
         auto evaluate = [&p, &bundle, &sampleNonNormalized]() {
           return 0.25 * (sampleNonNormalized(bundle->at(0)) +

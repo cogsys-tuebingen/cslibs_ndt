@@ -46,6 +46,7 @@ public:
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::array::Array>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
     using simple_iterator_t                 = cslibs_math_3d::algorithms::SimpleIterator;
+    using inverse_sensor_model_t            = cslibs_gridmaps::utility::InverseModel;
 
     OccupancyGridmap(const pose_t &origin,
             const double           resolution,
@@ -160,6 +161,68 @@ public:
                 updateFree({{it.x(), it.y(), it.z()}}, n);
                 ++ it;
             }
+        });
+    }
+
+    template <typename line_iterator_t = simple_iterator_t>
+    inline void insertVolumetric(const pose_t &origin,
+                                 const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points,
+                                 const inverse_sensor_model_t::Ptr &ivm,
+                                 const inverse_sensor_model_t::Ptr &ivm_visibility)
+    {
+        const index_t start_bi = toBundleIndex(origin.translation());
+        auto occupancy = [this, &ivm](const index_t &bi) {
+            const distribution_bundle_t *bundle = getDistributionBundle(bi);
+            return 0.125 * (bundle->at(0)->getOccupancy(ivm) +
+                            bundle->at(1)->getOccupancy(ivm) +
+                            bundle->at(2)->getOccupancy(ivm) +
+                            bundle->at(3)->getOccupancy(ivm) +
+                            bundle->at(4)->getOccupancy(ivm) +
+                            bundle->at(5)->getOccupancy(ivm) +
+                            bundle->at(6)->getOccupancy(ivm) +
+                            bundle->at(7)->getOccupancy(ivm));
+        };
+        auto current_visibility = [this, &start_bi, &ivm_visibility, &occupancy](const index_t &bi) {
+            const double occlusion_prob =
+                    std::min(occupancy({{bi[0] + ((bi[0] > start_bi[0]) ? 1 : -1), bi[1], bi[2]}}),
+                             std::min(occupancy({{bi[0], bi[1] + ((bi[1] > start_bi[1]) ? 1 : -1), bi[2]}}),
+                                      occupancy({{bi[0], bi[1], bi[2] + ((bi[2] > start_bi[2]) ? 1 : -1)}})));
+            return ivm_visibility->getProbFree() * occlusion_prob +
+                   ivm_visibility->getProbOccupied() * (1.0 - occlusion_prob);
+        };
+
+        distribution_storage_t storage;
+        for (const auto &p : *points) {
+            const point_t pm = origin * p;
+            if (pm.isNormal()) {
+                const index_t &bi = toBundleIndex(pm);
+                distribution_t *d = storage.get(bi);
+                (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
+            }
+        }
+
+        const point_t start_p = m_T_w_ * origin.translation();
+        storage.traverse([this, &ivm_visibility, &start_p, &current_visibility](const index_t& bi, const distribution_t &d) {
+            if (!d.getDistribution())
+                return;
+
+            const point_t end_p = m_T_w_ * point_t(d.getDistribution()->getMean());
+            line_iterator_t it(start_p, end_p, bundle_resolution_);
+
+            const std::size_t n = d.numOccupied();
+            double visibility = 1.0;
+            while (!it.done()) {
+                const index_t bit = {{it.x(), it.y(), it.z()}};
+                std::cout << visibility << std::endl;
+                if ((visibility *= current_visibility(bit)) < ivm_visibility->getProbPrior())
+                    return;
+
+                updateFree(bit, n);
+                ++ it;
+            }
+
+            if ((visibility *= current_visibility(bi)) >= ivm_visibility->getProbPrior())
+                updateOccupied(bi, d.getDistribution());
         });
     }
 

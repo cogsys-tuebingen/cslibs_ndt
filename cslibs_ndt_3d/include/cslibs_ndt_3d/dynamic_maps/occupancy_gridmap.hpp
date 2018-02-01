@@ -197,9 +197,9 @@ public:
         };
         auto current_visibility = [this, &start_bi, &ivm_visibility, &occupancy](const index_t &bi) {
             const double occlusion_prob =
-                    std::min(occupancy({{bi[0] + ((bi[0] > start_bi[0]) ? 1 : -1), bi[1], bi[2]}}),
-                             std::min(occupancy({{bi[0], bi[1] + ((bi[1] > start_bi[1]) ? 1 : -1), bi[2]}}),
-                                      occupancy({{bi[0], bi[1], bi[2] + ((bi[2] > start_bi[2]) ? 1 : -1)}})));
+                    std::min(occupancy({{bi[0] + ((bi[0] > start_bi[0]) ? -1 : 1), bi[1], bi[2]}}),
+                             std::min(occupancy({{bi[0], bi[1] + ((bi[1] > start_bi[1]) ? -1 : 1), bi[2]}}),
+                                      occupancy({{bi[0], bi[1], bi[2] + ((bi[2] > start_bi[2]) ? -1 : 1)}})));
             return ivm_visibility->getProbFree() * occlusion_prob +
                    ivm_visibility->getProbOccupied() * (1.0 - occlusion_prob);
         };
@@ -226,7 +226,6 @@ public:
             double visibility = 1.0;
             while (!it.done()) {
                 const index_t bit = {{it.x(), it.y(), it.z()}};
-                std::cout << visibility << std::endl;
                 if ((visibility *= current_visibility(bit)) < ivm_visibility->getProbPrior())
                     return;
 

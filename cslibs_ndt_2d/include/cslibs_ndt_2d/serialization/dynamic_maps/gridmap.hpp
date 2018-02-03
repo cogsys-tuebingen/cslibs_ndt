@@ -43,7 +43,7 @@ inline bool saveBinary(const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &map,
     /// meta file
     path_t path_file = path_t("map.yaml");
     {
-        std::ofstream out = std::ofstream((path_root / path_file).string().c_str());
+        std::ofstream out = std::ofstream((path_root / path_file).string(), std::fstream::trunc);
         YAML::Emitter yaml(out);
         YAML::Node n;
         std::vector<index_t> indices;

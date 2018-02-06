@@ -137,6 +137,11 @@ public:
     {
     }
 
+    inline std::size_t byte_size() const
+    {
+        return distribution_ ? (sizeof(*this) + sizeof(distribution_t)) : sizeof(*this);
+    }
+
 private:
     std::size_t        num_free_;
     distribution_ptr_t distribution_;

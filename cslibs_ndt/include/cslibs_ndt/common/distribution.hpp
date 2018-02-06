@@ -97,6 +97,11 @@ public:
         return const_handle_t(this, &data_mutex_);
     }
 
+    inline std::size_t byte_size() const
+    {
+        return sizeof(*this);
+    }
+
 private:
     mutable mutex_t data_mutex_;
     distribution_t  data_;

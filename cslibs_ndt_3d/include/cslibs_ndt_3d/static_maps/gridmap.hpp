@@ -265,6 +265,20 @@ public:
         bundle_storage_->traverse(add_index);
     }
 
+    inline std::size_t getByteSize() const
+    {
+        return sizeof(*this) +
+                bundle_storage_->byte_size() +
+                storage_[0]->byte_size() +
+                storage_[1]->byte_size() +
+                storage_[2]->byte_size() +
+                storage_[3]->byte_size() +
+                storage_[4]->byte_size() +
+                storage_[5]->byte_size() +
+                storage_[6]->byte_size() +
+                storage_[7]->byte_size();
+    }
+
 protected:
     const double                                    resolution_;
     const double                                    resolution_inv_;

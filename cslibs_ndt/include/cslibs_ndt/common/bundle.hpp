@@ -76,6 +76,11 @@ public:
     {
     }
 
+    inline std::size_t byte_size() const
+    {
+        return sizeof(*this);
+    }
+
     inline const int& id() const
     {
         return id_;

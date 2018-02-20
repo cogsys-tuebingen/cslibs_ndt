@@ -400,7 +400,7 @@ protected:
     {
         if (!dst)
             return;
-
+/*
         using static_map_t         = cslibs_gridmaps::static_maps::ProbabilityGridmap;
         using static_map_stamped_t = cslibs_time::Stamped<typename static_map_t::Ptr>;
 
@@ -410,7 +410,7 @@ protected:
         std::cout << dst->getResolution() << ", " << height << ", " << width << std::endl;
 
         cslibs_math_2d::Transform2d origin = dst->getOrigin();
-        static_map_stamped_t map_tmp;
+        static_map_stamped_t map_tmp(cslibs_time::Time());
         map_tmp.data().reset(new static_map_t(origin,
                                               sampling_resolution_,
                                               height,
@@ -423,11 +423,10 @@ std::cout << origin << std::endl;
 
         auto sample = [](const typename map_t::distribution_t *d,
                          const cslibs_math_2d::Point2d &p) {
-            return d ? d->data().sampleNonNormalized(p)/*/(d->data().getN() > 0 ? 1.0 : 0.0)*/ : 0.0;
+            return d ? d->data().sampleNonNormalized(p) : 0.0;
         };
         auto sample_bundle = [&sample] (const typename map_t::distribution_bundle_t* b,
-                                        const cslibs_math_2d::Point2d &p)
-        {
+                                        const cslibs_math_2d::Point2d &p) {
             return 0.25 * (sample(b->at(0), p) +
                            sample(b->at(1), p) +
                            sample(b->at(2), p) +
@@ -464,7 +463,7 @@ std::cout << origin << std::endl;
         cslibs_gridmaps::static_maps::conversion::from(map_tmp, map);
         map->header.stamp    = ros::Time::now();
         map->header.frame_id = "laser";
-        callback_(map);
+        callback_(map);*/
     }
 
 private:

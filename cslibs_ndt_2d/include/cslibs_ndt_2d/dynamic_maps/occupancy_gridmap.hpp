@@ -178,10 +178,10 @@ public:
     }
 
     template <typename line_iterator_t = simple_iterator_t>
-    inline void insertVolumetric(const pose_t &origin,
-                                 const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points,
-                                 const inverse_sensor_model_t::Ptr &ivm,
-                                 const inverse_sensor_model_t::Ptr &ivm_visibility)
+    inline void insertVisible(const pose_t &origin,
+                              const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points,
+                              const inverse_sensor_model_t::Ptr &ivm,
+                              const inverse_sensor_model_t::Ptr &ivm_visibility)
     {
         const index_t start_bi = toBundleIndex(origin.translation());
         auto occupancy = [this, &ivm](const index_t &bi) {

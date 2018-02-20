@@ -116,10 +116,10 @@ public:
                     cslibs_math::common::LogOdds::from(
                         num_free_ * inverse_model_->getLogOddsFree() +
                         distribution_->getN() * inverse_model_->getLogOddsOccupied() -
-                        inverse_model_->getLogOddsPrior()) :
+                        (num_free_ + distribution_->getN()) * inverse_model_->getLogOddsPrior()) :
                     cslibs_math::common::LogOdds::from(
                         num_free_ * inverse_model_->getLogOddsFree() -
-                        inverse_model_->getLogOddsPrior());
+                        num_free_ * inverse_model_->getLogOddsPrior());
         return occupancy_;
     }
 

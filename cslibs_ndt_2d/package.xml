@@ -12,11 +12,11 @@
   <buildtool_depend>catkin</buildtool_depend>
   <depend>cslibs_ndt</depend>
   <depend>cslibs_math_2d</depend>
+  <depend>cslibs_math_ros</depend>
   <depend>cslibs_time</depend>
   <depend>cslibs_gridmaps</depend>
   <depend>roscpp</depend>
   <depend>tf</depend>
-  <depend>cslibs_math_ros</depend>
   <depend>yaml-cpp</depend>
 
   <export>

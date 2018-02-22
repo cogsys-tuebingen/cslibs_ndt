@@ -7,7 +7,6 @@
 
 #include <cslibs_ndt_3d/conversion/gridmap.hpp>
 #include <cslibs_ndt_3d/conversion/occupancy_gridmap.hpp>
-#include <cslibs_ndt_3d/dynamic_maps/occupancy_single_gridmap.hpp>
 
 #include <cslibs_math/random/random.hpp>
 #include <fstream>

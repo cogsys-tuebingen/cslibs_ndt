@@ -2,7 +2,7 @@
 <package format="2">
   <name>cslibs_ndt</name>
   <version>0.0.2</version>
-  <description>The ndt package contains an implementation of the Normal Distribution Transform.</description>
+  <description>The ndt package contains an implementation of the Normal Distributions Transform.</description>
 
   <author email="richard.hanten@uni-tuebingen.de">Richard Hanten</author>
   <maintainer email="richard.hanten@uni-tuebingen.de">Richard Hanten</maintainer>

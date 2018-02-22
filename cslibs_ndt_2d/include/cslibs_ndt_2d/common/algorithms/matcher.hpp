@@ -410,7 +410,7 @@ protected:
         std::cout << dst->getResolution() << ", " << height << ", " << width << std::endl;
 
         cslibs_math_2d::Transform2d origin = dst->getOrigin();
-        static_map_stamped_t map_tmp;
+        static_map_stamped_t map_tmp(cslibs_time::Time::now());
         map_tmp.data().reset(new static_map_t(origin,
                                               sampling_resolution_,
                                               height,

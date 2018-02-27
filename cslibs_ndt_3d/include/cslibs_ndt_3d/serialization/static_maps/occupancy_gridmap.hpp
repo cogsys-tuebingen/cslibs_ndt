@@ -1,8 +1,8 @@
 #ifndef CSLIBS_NDT_3D_SERIALIZATION_STATIC_MAPS_OCCUPANCY_GRIDMAP_HPP
 #define CSLIBS_NDT_3D_SERIALIZATION_STATIC_MAPS_OCCUPANCY_GRIDMAP_HPP
 
-#include <cslibs_ndt/common/serialization/indexed_occupancy_distribution.hpp>
-#include <cslibs_ndt/common/serialization/storage.hpp>
+#include <cslibs_ndt/serialization/indexed_occupancy_distribution.hpp>
+#include <cslibs_ndt/serialization/storage.hpp>
 
 #include <cslibs_ndt_3d/static_maps/occupancy_gridmap.hpp>
 #include <cslibs_ndt_3d/dynamic_maps/occupancy_gridmap.hpp>
@@ -11,7 +11,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include <cslibs_math/serialization/array.hpp>
-#include <cslibs_ndt/common/serialization/filesystem.hpp>
+#include <cslibs_ndt/serialization/filesystem.hpp>
 #include <fstream>
 
 namespace cslibs_ndt_3d {

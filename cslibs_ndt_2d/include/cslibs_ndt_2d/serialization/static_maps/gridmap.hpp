@@ -1,8 +1,8 @@
 #ifndef CSLIBS_NDT_2D_SERIALIZATION_STATIC_MAPS_GRIDMAP_HPP
 #define CSLIBS_NDT_2D_SERIALIZATION_STATIC_MAPS_GRIDMAP_HPP
 
-#include <cslibs_ndt/common/serialization/indexed_distribution.hpp>
-#include <cslibs_ndt/common/serialization/storage.hpp>
+#include <cslibs_ndt/serialization/indexed_distribution.hpp>
+#include <cslibs_ndt/serialization/storage.hpp>
 
 #include <cslibs_ndt_2d/static_maps/gridmap.hpp>
 #include <cslibs_ndt_2d/dynamic_maps/gridmap.hpp>
@@ -11,7 +11,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include <cslibs_math/serialization/array.hpp>
-#include <cslibs_ndt/common/serialization/filesystem.hpp>
+#include <cslibs_ndt/serialization/filesystem.hpp>
 #include <fstream>
 
 namespace cslibs_ndt_2d {

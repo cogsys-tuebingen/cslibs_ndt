@@ -1,5 +1,5 @@
-#ifndef CSLIBS_NDT_INDEXED_OCCUPANCY_DISTRIBUTION_HPP
-#define CSLIBS_NDT_INDEXED_OCCUPANCY_DISTRIBUTION_HPP
+#ifndef CSLIBS_NDT_SERIALIZATION_INDEXED_OCCUPANCY_DISTRIBUTION_HPP
+#define CSLIBS_NDT_SERIALIZATION_INDEXED_OCCUPANCY_DISTRIBUTION_HPP
 
 #include <cslibs_ndt/common/indexed.hpp>
 #include <cslibs_ndt/common/occupancy_distribution.hpp>
@@ -43,4 +43,4 @@ struct convert<cslibs_ndt::Indexed<cslibs_ndt::OccupancyDistribution, Size, Dim>
 };
 }
 
-#endif // CSLIBS_NDT_INDEXED_OCCUPANCY_DISTRIBUTION_HPP
+#endif // CSLIBS_NDT_SERIALIZATION_INDEXED_OCCUPANCY_DISTRIBUTION_HPP

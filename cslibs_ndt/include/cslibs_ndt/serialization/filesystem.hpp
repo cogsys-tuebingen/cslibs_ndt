@@ -1,5 +1,5 @@
-#ifndef CSLIBS_NDT_FILESYSTEM_HPP
-#define CSLIBS_NDT_FILESYSTEM_HPP
+#ifndef CSLIBS_NDT_SERIALIZATION_FILESYSTEM_HPP
+#define CSLIBS_NDT_SERIALIZATION_FILESYSTEM_HPP
 
 #include <boost/filesystem.hpp>
 
@@ -52,4 +52,4 @@ inline bool create_directory(const boost::filesystem::path &p)
 }
 }
 
-#endif // CSLIBS_NDT_FILESYSTEM_HPP
+#endif // CSLIBS_NDT_SERIALIZATION_FILESYSTEM_HPP

@@ -1,5 +1,5 @@
-#ifndef CSLIBS_NDT_INDEXED_HPP
-#define CSLIBS_NDT_INDEXED_HPP
+#ifndef CSLIBS_NDT_COMMON_INDEXED_HPP
+#define CSLIBS_NDT_COMMON_INDEXED_HPP
 
 #include <array>
 
@@ -20,4 +20,4 @@ struct Indexed {
 };
 }
 
-#endif // CSLIBS_NDT_INDEXED_HPP
+#endif // CSLIBS_NDT_COMMON_INDEXED_HPP

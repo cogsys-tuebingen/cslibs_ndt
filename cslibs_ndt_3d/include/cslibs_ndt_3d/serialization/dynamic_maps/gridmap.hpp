@@ -1,8 +1,8 @@
 #ifndef CSLIBS_NDT_3D_SERIALIZATION_DYNAMIC_MAPS_GRIDMAP_HPP
 #define CSLIBS_NDT_3D_SERIALIZATION_DYNAMIC_MAPS_GRIDMAP_HPP
 
-#include <cslibs_ndt/common/serialization/indexed_distribution.hpp>
-#include <cslibs_ndt/common/serialization/storage.hpp>
+#include <cslibs_ndt/serialization/indexed_distribution.hpp>
+#include <cslibs_ndt/serialization/storage.hpp>
 
 #include <cslibs_ndt_3d/dynamic_maps/gridmap.hpp>
 #include <cslibs_math_3d/serialization/transform.hpp>
@@ -10,7 +10,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include <cslibs_math/serialization/array.hpp>
-#include <cslibs_ndt/common/serialization/filesystem.hpp>
+#include <cslibs_ndt/serialization/filesystem.hpp>
 #include <fstream>
 #include <thread>
 #include <atomic>

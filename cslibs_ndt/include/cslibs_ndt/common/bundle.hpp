@@ -1,5 +1,5 @@
-#ifndef CSLIBS_NDT_BUNDLE_HPP
-#define CSLIBS_NDT_BUNDLE_HPP
+#ifndef CSLIBS_NDT_COMMON_BUNDLE_HPP
+#define CSLIBS_NDT_COMMON_BUNDLE_HPP
 
 #include <array>
 
@@ -96,4 +96,4 @@ template<typename T, std::size_t Size>
 int Bundle<T, Size>::n_ = 0;
 }
 
-#endif // CSLIBS_NDT_BUNDLE_HPP
+#endif // CSLIBS_NDT_COMMON_BUNDLE_HPP

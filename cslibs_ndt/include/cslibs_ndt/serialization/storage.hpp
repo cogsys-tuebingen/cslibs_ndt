@@ -1,12 +1,12 @@
-#ifndef CSLIBS_NDT_STORAGE_HPP
-#define CSLIBS_NDT_STORAGE_HPP
+#ifndef CSLIBS_NDT_SERIALIZATION_STORAGE_HPP
+#define CSLIBS_NDT_SERIALIZATION_STORAGE_HPP
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
 
-#include <cslibs_ndt/common/serialization/filesystem.hpp>
-#include <cslibs_ndt/common/serialization/indexed_occupancy_distribution.hpp>
-#include <cslibs_ndt/common/serialization/indexed_distribution.hpp>
+#include <cslibs_ndt/serialization/filesystem.hpp>
+#include <cslibs_ndt/serialization/indexed_occupancy_distribution.hpp>
+#include <cslibs_ndt/serialization/indexed_distribution.hpp>
 
 #include <cslibs_ndt/common/indexed.hpp>
 #include <cslibs_ndt/common/distribution.hpp>
@@ -190,4 +190,4 @@ struct convert<std::shared_ptr<cis::Storage<T<Size>,
 };
 }
 
-#endif // CSLIBS_NDT_STORAGE_HPP
+#endif // CSLIBS_NDT_SERIALIZATION_STORAGE_HPP

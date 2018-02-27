@@ -127,7 +127,6 @@ void testStaticMap(const typename cslibs_ndt_2d::static_maps::Gridmap::Ptr & map
     }
 }
 
-
 void testDynamicOccMap(const typename cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr & map,
                        const typename cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr & map_converted)
 {
@@ -401,7 +400,6 @@ TEST(Test_cslibs_ndt_2d, testStaticOccGridmapSerialization)
     testStaticOccMap(map, map_converted);
 }
 
-
 TEST(Test_cslibs_ndt_2d, testDynamicGridmapFileSerialization)
 {
     using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
@@ -418,8 +416,6 @@ TEST(Test_cslibs_ndt_2d, testDynamicGridmapFileSerialization)
     EXPECT_TRUE(success);
     testDynamicMap(map, map_from_file);
 }
-
-
 
 TEST(Test_cslibs_ndt_2d, testStaticGridmapFileSerialization)
 {

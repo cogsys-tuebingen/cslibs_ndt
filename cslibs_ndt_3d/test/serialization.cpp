@@ -18,8 +18,7 @@ template <std::size_t Dim>
 using rng_t = typename cslibs_math::random::Uniform<Dim>;
 
 void testDynamicMap(const typename cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr & map,
-                    const typename cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr & map_converted,
-                    const bool                                               & test_origin = true)
+                    const typename cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr & map_converted)
 {
     EXPECT_NE(map_converted, nullptr);
 
@@ -42,20 +41,18 @@ void testDynamicMap(const typename cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr & m
     EXPECT_NEAR(map->getMax()(1), map_converted->getMax()(1), 1e-3);
     EXPECT_NEAR(map->getMax()(2), map_converted->getMax()(2), 1e-3);
 
-    if (test_origin) {
-        EXPECT_NEAR(map->getOrigin().tx(),           map_converted->getOrigin().tx(),           1e-3);
-        EXPECT_NEAR(map->getOrigin().ty(),           map_converted->getOrigin().ty(),           1e-3);
-        EXPECT_NEAR(map->getOrigin().tz(),           map_converted->getOrigin().tz(),           1e-3);
-        EXPECT_NEAR(map->getOrigin().roll(),         map_converted->getOrigin().roll(),         1e-3);
-        EXPECT_NEAR(map->getOrigin().pitch(),        map_converted->getOrigin().pitch(),        1e-3);
-        EXPECT_NEAR(map->getOrigin().yaw(),          map_converted->getOrigin().yaw(),          1e-3);
-        EXPECT_NEAR(map->getInitialOrigin().tx(),    map_converted->getInitialOrigin().tx(),    1e-3);
-        EXPECT_NEAR(map->getInitialOrigin().ty(),    map_converted->getInitialOrigin().ty(),    1e-3);
-        EXPECT_NEAR(map->getInitialOrigin().tz(),    map_converted->getInitialOrigin().tz(),    1e-3);
-        EXPECT_NEAR(map->getInitialOrigin().roll(),  map_converted->getInitialOrigin().roll(),  1e-3);
-        EXPECT_NEAR(map->getInitialOrigin().pitch(), map_converted->getInitialOrigin().pitch(), 1e-3);
-        EXPECT_NEAR(map->getInitialOrigin().yaw(),   map_converted->getInitialOrigin().yaw(),   1e-3);
-    }
+    EXPECT_NEAR(map->getOrigin().tx(),           map_converted->getOrigin().tx(),           1e-3);
+    EXPECT_NEAR(map->getOrigin().ty(),           map_converted->getOrigin().ty(),           1e-3);
+    EXPECT_NEAR(map->getOrigin().tz(),           map_converted->getOrigin().tz(),           1e-3);
+    EXPECT_NEAR(map->getOrigin().roll(),         map_converted->getOrigin().roll(),         1e-3);
+    EXPECT_NEAR(map->getOrigin().pitch(),        map_converted->getOrigin().pitch(),        1e-3);
+    EXPECT_NEAR(map->getOrigin().yaw(),          map_converted->getOrigin().yaw(),          1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().tx(),    map_converted->getInitialOrigin().tx(),    1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().ty(),    map_converted->getInitialOrigin().ty(),    1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().tz(),    map_converted->getInitialOrigin().tz(),    1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().roll(),  map_converted->getInitialOrigin().roll(),  1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().pitch(), map_converted->getInitialOrigin().pitch(), 1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().yaw(),   map_converted->getInitialOrigin().yaw(),   1e-3);
 
     for (int idx = map->getMinDistributionIndex()[0] ; idx <= map->getMaxDistributionIndex()[0] ; ++ idx) {
         for (int idy = map->getMinDistributionIndex()[1] ; idy <= map->getMaxDistributionIndex()[1] ; ++ idy) {
@@ -92,8 +89,7 @@ void testDynamicMap(const typename cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr & m
 }
 
 void testStaticMap(const typename cslibs_ndt_3d::static_maps::Gridmap::Ptr & map,
-                   const typename cslibs_ndt_3d::static_maps::Gridmap::Ptr & map_converted,
-                   const bool                                              & test_origin = true)
+                   const typename cslibs_ndt_3d::static_maps::Gridmap::Ptr & map_converted)
 {
     EXPECT_NE(map_converted, nullptr);
 
@@ -107,17 +103,15 @@ void testStaticMap(const typename cslibs_ndt_3d::static_maps::Gridmap::Ptr & map
     EXPECT_EQ(map->getBundleSize()[1], map_converted->getBundleSize()[1]);
     EXPECT_EQ(map->getBundleSize()[2], map_converted->getBundleSize()[2]);
 
-    if (test_origin) {
-        EXPECT_NEAR(map->getOrigin().tx(),    map_converted->getOrigin().tx(),    1e-3);
-        EXPECT_NEAR(map->getOrigin().ty(),    map_converted->getOrigin().ty(),    1e-3);
-        EXPECT_NEAR(map->getOrigin().tz(),    map_converted->getOrigin().tz(),    1e-3);
-        EXPECT_NEAR(map->getOrigin().roll(),  map_converted->getOrigin().roll(),  1e-3);
-        EXPECT_NEAR(map->getOrigin().pitch(), map_converted->getOrigin().pitch(), 1e-3);
-        EXPECT_NEAR(map->getOrigin().yaw(),   map_converted->getOrigin().yaw(),   1e-3);
+    EXPECT_NEAR(map->getOrigin().tx(),    map_converted->getOrigin().tx(),    1e-3);
+    EXPECT_NEAR(map->getOrigin().ty(),    map_converted->getOrigin().ty(),    1e-3);
+    EXPECT_NEAR(map->getOrigin().tz(),    map_converted->getOrigin().tz(),    1e-3);
+    EXPECT_NEAR(map->getOrigin().roll(),  map_converted->getOrigin().roll(),  1e-3);
+    EXPECT_NEAR(map->getOrigin().pitch(), map_converted->getOrigin().pitch(), 1e-3);
+    EXPECT_NEAR(map->getOrigin().yaw(),   map_converted->getOrigin().yaw(),   1e-3);
 
-        EXPECT_NEAR(map->getHeight(),         map_converted->getHeight(),         1e-3);
-        EXPECT_NEAR(map->getWidth(),          map_converted->getWidth(),          1e-3);
-    }
+    EXPECT_NEAR(map->getHeight(),         map_converted->getHeight(),         1e-3);
+    EXPECT_NEAR(map->getWidth(),          map_converted->getWidth(),          1e-3);
 
     for (int idx = 0 ; idx < static_cast<int>(map->getBundleSize()[0]) ; ++ idx) {
         for (int idy = 0 ; idy < static_cast<int>(map->getBundleSize()[1]) ; ++ idy) {
@@ -155,8 +149,7 @@ void testStaticMap(const typename cslibs_ndt_3d::static_maps::Gridmap::Ptr & map
 
 
 void testDynamicOccMap(const typename cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr & map,
-                       const typename cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr & map_converted,
-                       const bool                                                        & test_origin = true)
+                       const typename cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr & map_converted)
 {
     EXPECT_NE(map_converted, nullptr);
 
@@ -179,20 +172,18 @@ void testDynamicOccMap(const typename cslibs_ndt_3d::dynamic_maps::OccupancyGrid
     EXPECT_NEAR(map->getMax()(1), map_converted->getMax()(1), 1e-3);
     EXPECT_NEAR(map->getMax()(2), map_converted->getMax()(2), 1e-3);
 
-    if (test_origin) {
-        EXPECT_NEAR(map->getOrigin().tx(),           map_converted->getOrigin().tx(),           1e-3);
-        EXPECT_NEAR(map->getOrigin().ty(),           map_converted->getOrigin().ty(),           1e-3);
-        EXPECT_NEAR(map->getOrigin().tz(),           map_converted->getOrigin().tz(),           1e-3);
-        EXPECT_NEAR(map->getOrigin().roll(),         map_converted->getOrigin().roll(),         1e-3);
-        EXPECT_NEAR(map->getOrigin().pitch(),        map_converted->getOrigin().pitch(),        1e-3);
-        EXPECT_NEAR(map->getOrigin().yaw(),          map_converted->getOrigin().yaw(),          1e-3);
-        EXPECT_NEAR(map->getInitialOrigin().tx(),    map_converted->getInitialOrigin().tx(),    1e-3);
-        EXPECT_NEAR(map->getInitialOrigin().ty(),    map_converted->getInitialOrigin().ty(),    1e-3);
-        EXPECT_NEAR(map->getInitialOrigin().tz(),    map_converted->getInitialOrigin().tz(),    1e-3);
-        EXPECT_NEAR(map->getInitialOrigin().roll(),  map_converted->getInitialOrigin().roll(),  1e-3);
-        EXPECT_NEAR(map->getInitialOrigin().pitch(), map_converted->getInitialOrigin().pitch(), 1e-3);
-        EXPECT_NEAR(map->getInitialOrigin().yaw(),   map_converted->getInitialOrigin().yaw(),   1e-3);
-    }
+    EXPECT_NEAR(map->getOrigin().tx(),           map_converted->getOrigin().tx(),           1e-3);
+    EXPECT_NEAR(map->getOrigin().ty(),           map_converted->getOrigin().ty(),           1e-3);
+    EXPECT_NEAR(map->getOrigin().tz(),           map_converted->getOrigin().tz(),           1e-3);
+    EXPECT_NEAR(map->getOrigin().roll(),         map_converted->getOrigin().roll(),         1e-3);
+    EXPECT_NEAR(map->getOrigin().pitch(),        map_converted->getOrigin().pitch(),        1e-3);
+    EXPECT_NEAR(map->getOrigin().yaw(),          map_converted->getOrigin().yaw(),          1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().tx(),    map_converted->getInitialOrigin().tx(),    1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().ty(),    map_converted->getInitialOrigin().ty(),    1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().tz(),    map_converted->getInitialOrigin().tz(),    1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().roll(),  map_converted->getInitialOrigin().roll(),  1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().pitch(), map_converted->getInitialOrigin().pitch(), 1e-3);
+    EXPECT_NEAR(map->getInitialOrigin().yaw(),   map_converted->getInitialOrigin().yaw(),   1e-3);
 
     for (int idx = map->getMinDistributionIndex()[0] ; idx <= map->getMaxDistributionIndex()[0] ; ++ idx) {
         for (int idy = map->getMinDistributionIndex()[1] ; idy <= map->getMaxDistributionIndex()[1] ; ++ idy) {
@@ -236,8 +227,7 @@ void testDynamicOccMap(const typename cslibs_ndt_3d::dynamic_maps::OccupancyGrid
 }
 
 void testStaticOccMap(const typename cslibs_ndt_3d::static_maps::OccupancyGridmap::Ptr & map,
-                      const typename cslibs_ndt_3d::static_maps::OccupancyGridmap::Ptr & map_converted,
-                      const bool                                                       & test_origin = true)
+                      const typename cslibs_ndt_3d::static_maps::OccupancyGridmap::Ptr & map_converted)
 {
     EXPECT_NE(map_converted, nullptr);
 
@@ -251,17 +241,15 @@ void testStaticOccMap(const typename cslibs_ndt_3d::static_maps::OccupancyGridma
     EXPECT_EQ(map->getBundleSize()[1], map_converted->getBundleSize()[1]);
     EXPECT_EQ(map->getBundleSize()[2], map_converted->getBundleSize()[2]);
 
-    if (test_origin) {
-        EXPECT_NEAR(map->getOrigin().tx(),    map_converted->getOrigin().tx(),    1e-3);
-        EXPECT_NEAR(map->getOrigin().ty(),    map_converted->getOrigin().ty(),    1e-3);
-        EXPECT_NEAR(map->getOrigin().tz(),    map_converted->getOrigin().tz(),    1e-3);
-        EXPECT_NEAR(map->getOrigin().roll(),  map_converted->getOrigin().roll(),  1e-3);
-        EXPECT_NEAR(map->getOrigin().pitch(), map_converted->getOrigin().pitch(), 1e-3);
-        EXPECT_NEAR(map->getOrigin().yaw(),   map_converted->getOrigin().yaw(),   1e-3);
+    EXPECT_NEAR(map->getOrigin().tx(),    map_converted->getOrigin().tx(),    1e-3);
+    EXPECT_NEAR(map->getOrigin().ty(),    map_converted->getOrigin().ty(),    1e-3);
+    EXPECT_NEAR(map->getOrigin().tz(),    map_converted->getOrigin().tz(),    1e-3);
+    EXPECT_NEAR(map->getOrigin().roll(),  map_converted->getOrigin().roll(),  1e-3);
+    EXPECT_NEAR(map->getOrigin().pitch(), map_converted->getOrigin().pitch(), 1e-3);
+    EXPECT_NEAR(map->getOrigin().yaw(),   map_converted->getOrigin().yaw(),   1e-3);
 
-        EXPECT_NEAR(map->getHeight(),         map_converted->getHeight(),         1e-3);
-        EXPECT_NEAR(map->getWidth(),          map_converted->getWidth(),          1e-3);
-    }
+    EXPECT_NEAR(map->getHeight(),         map_converted->getHeight(),         1e-3);
+    EXPECT_NEAR(map->getWidth(),          map_converted->getWidth(),          1e-3);
 
     for (int idx = 0 ; idx < static_cast<int>(map->getBundleSize()[0]) ; ++ idx) {
         for (int idy = 0 ; idy < static_cast<int>(map->getBundleSize()[1]) ; ++ idy) {
@@ -407,67 +395,7 @@ cslibs_ndt_3d::static_maps::OccupancyGridmap::Ptr generateStaticOccMap()
 
     return map;
 }
-/*
-TEST(Test_cslibs_ndt_3d, testDynamicGridmapSerialization)
-{    
-    using map_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
-    const typename map_t::Ptr map = generateDynamicMap();
 
-    // serialization
-    YAML::Node n(map);
-
-    // de-serialization
-    const typename map_t::Ptr & map_converted = n.as<typename map_t::Ptr>();
-
-    // tests
-    testDynamicMap(map, map_converted);
-}
-
-TEST(Test_cslibs_ndt_3d, testStaticGridmapSerialization)
-{
-    using map_t = cslibs_ndt_3d::static_maps::Gridmap;
-    const typename map_t::Ptr map = generateStaticMap();
-
-    // serialization
-    YAML::Node n(map);
-
-    // de-serialization
-    const typename map_t::Ptr & map_converted = n.as<typename map_t::Ptr>();
-
-    // tests
-    testStaticMap(map, map_converted);
-}
-
-TEST(Test_cslibs_ndt_3d, testDynamicOccGridmapSerialization)
-{
-    using map_t = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap;
-    const typename map_t::Ptr map = generateDynamicOccMap();
-
-    // serialization
-    YAML::Node n(map);
-
-    // de-serialization
-    const typename map_t::Ptr & map_converted = n.as<typename map_t::Ptr>();
-
-    // tests
-    testDynamicOccMap(map, map_converted);
-}
-
-TEST(Test_cslibs_ndt_3d, testStaticOccGridmapSerialization)
-{
-    using map_t = cslibs_ndt_3d::static_maps::OccupancyGridmap;
-    const typename map_t::Ptr map = generateStaticOccMap();
-
-    // serialization
-    YAML::Node n(map);
-
-    // de-serialization
-    const typename map_t::Ptr & map_converted = n.as<typename map_t::Ptr>();
-
-    // tests
-    testStaticOccMap(map, map_converted);
-}
-*/
 TEST(Test_cslibs_ndt_3d, testDynamicGridmapFileSerialization)
 {
     using map_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
@@ -545,13 +473,8 @@ TEST(Test_cslibs_ndt_3d, testDynamicGridmapConversion)
     const typename map_t::Ptr & map_double_converted =
             cslibs_ndt_3d::conversion::from(cslibs_ndt_3d::conversion::from(map));
 
-    // tests
-    //testDynamicMap(map,
-    //               map_double_converted,
-    //               false);
-    //testStaticMap(cslibs_ndt_3d::conversion::from(map),
-    //              cslibs_ndt_3d::conversion::from(map_double_converted),
-    //              false);
+    EXPECT_NE(map_double_converted, nullptr);
+    // TODO: test
 }
 
 TEST(Test_cslibs_ndt_3d, testStaticGridmapConversion)
@@ -563,13 +486,8 @@ TEST(Test_cslibs_ndt_3d, testStaticGridmapConversion)
     const typename map_t::Ptr & map_double_converted =
             cslibs_ndt_3d::conversion::from(cslibs_ndt_3d::conversion::from(map));
 
-    // tests
-    //testStaticMap(map,
-    //              map_double_converted,
-    //              false);
-    //testDynamicMap(cslibs_ndt_3d::conversion::from(map),
-    //               cslibs_ndt_3d::conversion::from(map_double_converted),
-    //               false);
+    EXPECT_NE(map_double_converted, nullptr);
+    // TODO: test
 }
 
 TEST(Test_cslibs_ndt_3d, testDynamicOccGridmapConversion)
@@ -581,13 +499,8 @@ TEST(Test_cslibs_ndt_3d, testDynamicOccGridmapConversion)
     const typename map_t::Ptr & map_double_converted =
             cslibs_ndt_3d::conversion::from(cslibs_ndt_3d::conversion::from(map));
 
-    // tests
-    //testDynamicOccMap(map,
-    //                  map_double_converted,
-    //                  false);
-    //testStaticOccMap(cslibs_ndt_2d::conversion::from(map),
-    //                 cslibs_ndt_2d::conversion::from(map_double_converted),
-    //                 false);
+    EXPECT_NE(map_double_converted, nullptr);
+    // TODO: test
 }
 
 TEST(Test_cslibs_ndt_3d, testStaticOccGridmapConversion)
@@ -599,13 +512,8 @@ TEST(Test_cslibs_ndt_3d, testStaticOccGridmapConversion)
     const typename map_t::Ptr & map_double_converted =
             cslibs_ndt_3d::conversion::from(cslibs_ndt_3d::conversion::from(map));
 
-    // tests
-    //testStaticOccMap(map,
-    //                 map_double_converted,
-    //                 false);
-    //testDynamicOccMap(cslibs_ndt_3d::conversion::from(map),
-    //                  cslibs_ndt_3d::conversion::from(map_double_converted),
-    //                  false);
+    EXPECT_NE(map_double_converted, nullptr);
+    // TODO: test
 }
 
 TEST(Test_cslibs_ndt_3d, testDynamicGridmapFileBinarySerialization)

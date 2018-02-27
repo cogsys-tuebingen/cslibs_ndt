@@ -1,5 +1,5 @@
 add_definitions(-W -Wall -Wno-unused-parameter -fno-strict-aliasing -Wno-unused-function -Wno-deprecated-register)
 if(NOT ${CMAKE_BUILD_TYPE} STREQUAL Debug)
     add_definitions("-Ofast -g -rdynamic -march=native -ffast-math -msse -msse2 -msse3 -mfpmath=sse")
-    message("[${PROJECT_NAME}]: Compilining with optimization!")
+    message("[${PROJECT_NAME}]: Compiling with optimization!")
 endif()

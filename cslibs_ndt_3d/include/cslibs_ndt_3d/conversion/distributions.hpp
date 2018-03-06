@@ -8,6 +8,24 @@
 
 namespace cslibs_ndt_3d {
 namespace conversion {
+inline Distribution from(const cslibs_math::statistics::Distribution<3, 3> &d,
+                         const int &id,
+                         const double &prob)
+{
+    Distribution distr;
+    distr.id.data = id;
+    for (int i = 0; i < 3; ++ i) {
+        distr.mean[i].data          = d.getMean()(i);
+        distr.eigen_values[i].data  = d.getEigenValues()(i);
+    }
+    for (int i = 0; i < 9; ++ i) {
+        distr.eigen_vectors[i].data = d.getEigenVectors()(i);
+        distr.covariance[i].data    = d.getCovariance()(i);
+    }
+    distr.prob.data = prob;
+    return distr;
+}
+
 inline void from(
         const cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr &src,
         cslibs_ndt_3d::DistributionArray::Ptr           &dst)
@@ -15,13 +33,9 @@ inline void from(
     if (!src)
         return;
 
-    using index_t   = std::array<int, 3>;
     using point_t   = cslibs_math_3d::Point3d;
     using dst_map_t = cslibs_ndt_3d::DistributionArray;
     dst.reset(new dst_map_t());
-
-    std::vector<index_t> indices;
-    src->getBundleIndices(indices);
 
     using distribution_t = cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_t;
     using distribution_bundle_t = cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t;
@@ -41,29 +55,27 @@ inline void from(
                         sample(b->at(7), p));
     };
 
-    for(auto &bi : indices)
-        if (const distribution_bundle_t *b = src->getDistributionBundle(bi)) {
-            distribution_t::distribution_t d;
-            for (std::size_t i = 0; i < 8; ++ i)
-                d += b->at(i)->getHandle()->data();
+    using index_t = std::array<int, 3>;
+    const index_t min_distribution_index = src->getMinDistributionIndex();
+    const index_t max_distribution_index = src->getMaxDistributionIndex();
 
-            if (d.getN() == 0)
-                continue;
-            point_t p(d.getMean());
+    for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx) {
+        for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy) {
+            for (int idz = min_distribution_index[2] ; idz <= max_distribution_index[2] ; ++ idz) {
+                const index_t bi({idx, idy, idz});
+                if (const distribution_bundle_t *b = src->getDistributionBundle(bi)) {
+                    distribution_t::distribution_t d;
+                    for (std::size_t i = 0; i < 8; ++ i)
+                        d += b->at(i)->getHandle()->data();
 
-            Distribution distr;
-            distr.id.data = b->id();
-            for (int i = 0; i < 3; ++ i) {
-                distr.mean[i].data          = p(i);
-                distr.eigen_values[i].data  = d.getEigenValues()(i);
+                    if (d.getN() == 0)
+                        continue;
+                    dst->data.emplace_back(
+                                from(d, b->id(), static_cast<double>(sample_bundle(b, point_t(d.getMean())))));
+                }
             }
-            for (int i = 0; i < 9; ++ i) {
-                distr.eigen_vectors[i].data = d.getEigenVectors()(i);
-                distr.covariance[i].data    = d.getCovariance()(i);
-            }
-            distr.prob.data = static_cast<double>(sample_bundle(b, p));
-            dst->data.emplace_back(distr);
         }
+    }
 
     dst->header.stamp = ros::Time::now();
 }
@@ -76,13 +88,9 @@ inline void from(
     if (!src)
         return;
 
-    using index_t   = std::array<int, 3>;
     using point_t   = cslibs_math_3d::Point3d;
     using dst_map_t = cslibs_ndt_3d::DistributionArray;
     dst.reset(new dst_map_t());
-
-    std::vector<index_t> indices;
-    src->getBundleIndices(indices);
 
     using distribution_t = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_t;
     using distribution_bundle_t = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_bundle_t;
@@ -104,30 +112,28 @@ inline void from(
                         sample(b->at(7), p));
     };
 
-    for(auto &bi : indices)
-        if (const distribution_bundle_t *b = src->getDistributionBundle(bi)) {
-            distribution_t::distribution_t d;
-            for (std::size_t i = 0; i < 8; ++ i)
-                if (b->at(i)->getDistribution())
-                    d += *(b->at(i)->getDistribution());
+    using index_t = std::array<int, 3>;
+    const index_t min_distribution_index = src->getMinDistributionIndex();
+    const index_t max_distribution_index = src->getMaxDistributionIndex();
 
-            if (d.getN() == 0)
-                continue;
-            point_t p(d.getMean());
+    for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx) {
+        for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy) {
+            for (int idz = min_distribution_index[2] ; idz <= max_distribution_index[2] ; ++ idz) {
+                const index_t bi({idx, idy, idz});
+                if (const distribution_bundle_t *b = src->getDistributionBundle(bi)) {
+                    distribution_t::distribution_t d;
+                    for (std::size_t i = 0; i < 8; ++ i)
+                        if (b->at(i)->getDistribution())
+                            d += *(b->at(i)->getDistribution());
 
-            Distribution distr;
-            distr.id.data = b->id();
-            for (int i = 0; i < 3; ++ i) {
-                distr.mean[i].data          = p(i);
-                distr.eigen_values[i].data  = d.getEigenValues()(i);
+                    if (d.getN() == 0)
+                        continue;
+                    dst->data.emplace_back(
+                                from(d, b->id(), static_cast<double>(sample_bundle(b, point_t(d.getMean())))));
+                }
             }
-            for (int i = 0; i < 9; ++ i) {
-                distr.eigen_vectors[i].data = d.getEigenVectors()(i);
-                distr.covariance[i].data    = d.getCovariance()(i);
-            }
-            distr.prob.data = static_cast<double>(sample_bundle(b, p));
-            dst->data.emplace_back(distr);
         }
+    }
 
     dst->header.stamp = ros::Time::now();
 }

@@ -13,6 +13,9 @@ inline void from(
         const cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr &src,
         pcl::PointCloud<pcl::PointXYZI>::Ptr &dst)
 {
+    if (!src)
+        return;
+
     using index_t   = std::array<int, 3>;
     using dst_map_t = pcl::PointCloud<pcl::PointXYZI>;
     dst.reset(new dst_map_t());
@@ -43,9 +46,12 @@ inline void from(
 inline void from(
         const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr &src,
         pcl::PointCloud<pcl::PointXYZI>::Ptr &dst,
-        const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model,
+        const cslibs_gridmaps::utility::InverseModel::Ptr &ivm,
         const double &threshold = 0.169)
 {
+    if (!src)
+        return;
+
     using index_t   = std::array<int, 3>;
     using dst_map_t = pcl::PointCloud<pcl::PointXYZI>;
     dst.reset(new dst_map_t());
@@ -59,7 +65,7 @@ inline void from(
             double occupancy = 0.0;
 
             for (std::size_t i = 0 ; i < 8 ; ++i) {
-                occupancy += 0.125 * b->at(i)->getOccupancy(inverse_model);
+                occupancy += 0.125 * b->at(i)->getOccupancy(ivm);
                 if (b->at(i)->getDistribution())
                     d += *(b->at(i)->getDistribution());
             }
@@ -71,7 +77,7 @@ inline void from(
             p.x = static_cast<float>(mean(0));
             p.y = static_cast<float>(mean(1));
             p.z = static_cast<float>(mean(2));
-            p.intensity = static_cast<float>(src->sampleNonNormalized(mean, inverse_model));
+            p.intensity = static_cast<float>(src->sampleNonNormalized(mean, ivm));
 
             dst->push_back(p);
         }

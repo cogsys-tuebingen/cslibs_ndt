@@ -100,8 +100,6 @@ endif()
 
 if(PCL_FOUND)
     include_directories(
-        include
-        ${catkin_INCLUDE_DIRS}
         ${PCL_INCLUDE_DIRS}
     )
     link_directories(${PCL_LIBRARY_DIRS})

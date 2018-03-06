@@ -53,27 +53,35 @@ bool NDTMapLoader::setup()
 
         pcl::PointCloud<pcl::PointXYZI>::Ptr points;
         cslibs_ndt_3d::conversion::from(map_ndt_, points, traversal);
-        map_ndt_means_.reset(new sensor_msgs::PointCloud2);
-        pcl::toROSMsg(*points, *map_ndt_means_);
-        map_ndt_means_->header.frame_id = "/map";
+        if (points) {
+            map_ndt_means_.reset(new sensor_msgs::PointCloud2);
+            pcl::toROSMsg(*points, *map_ndt_means_);
+            map_ndt_means_->header.frame_id = "/map";
 
-        cslibs_ndt_3d::conversion::from(map_ndt_, map_ndt_distributions_, traversal);
-        map_ndt_distributions_->header.frame_id = "/map";
+            cslibs_ndt_3d::conversion::from(map_ndt_, map_ndt_distributions_, traversal);
+            if (map_ndt_distributions_)
+                map_ndt_distributions_->header.frame_id = "/map";
+        }
     }
     if (path_occ_ndt != "") {
         if (!cslibs_ndt_3d::dynamic_maps::loadBinary(path_occ_ndt, map_occ_ndt_)) {
             std::cerr << "Could not load occupancy ndt 3d map '" << path_occ_ndt << "'." << std::endl;
             return false;
         }
+
         cslibs_gridmaps::utility::InverseModel::Ptr ivm(new cslibs_gridmaps::utility::InverseModel(0.5, 0.45, 0.65));
         pcl::PointCloud<pcl::PointXYZI>::Ptr points;
         cslibs_ndt_3d::conversion::from(map_occ_ndt_, points, ivm, traversal);
-        map_occ_ndt_means_.reset(new sensor_msgs::PointCloud2);
-        pcl::toROSMsg(*points, *map_occ_ndt_means_);
-        map_occ_ndt_means_->header.frame_id = "/map";
 
-        cslibs_ndt_3d::conversion::from(map_occ_ndt_, map_occ_ndt_distributions_, ivm, traversal);
-        map_occ_ndt_distributions_->header.frame_id = "/map";
+        if (points) {
+            map_occ_ndt_means_.reset(new sensor_msgs::PointCloud2);
+            pcl::toROSMsg(*points, *map_occ_ndt_means_);
+            map_occ_ndt_means_->header.frame_id = "/map";
+
+            cslibs_ndt_3d::conversion::from(map_occ_ndt_, map_occ_ndt_distributions_, ivm, traversal);
+            if (map_occ_ndt_distributions_)
+                map_occ_ndt_distributions_->header.frame_id = "/map";
+        }
     }
 
     service_ = nh_.advertiseService(nh_.getNamespace() + "/resend", &NDTMapLoader::resend, this);
@@ -81,7 +89,7 @@ bool NDTMapLoader::setup()
     return true;
 }
 
-bool NDTMapLoader::resend(std_srvs::Empty::Request  &req,
+bool NDTMapLoader::resend(std_srvs::Empty::Request &req,
                           std_srvs::Empty::Response &res)
 {
     if (!map_ndt_means_ && !map_occ_ndt_means_ && !map_ndt_distributions_ && !map_occ_ndt_distributions_) {

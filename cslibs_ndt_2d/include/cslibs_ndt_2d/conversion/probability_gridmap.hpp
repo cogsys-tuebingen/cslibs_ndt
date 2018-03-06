@@ -16,6 +16,9 @@ inline void from(
         cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr &dst,
         const double &sampling_resolution)
 {
+    if (!src)
+        return;
+
     using dst_map_t = cslibs_gridmaps::static_maps::ProbabilityGridmap;
     dst.reset(new dst_map_t(src->getOrigin(),
                             sampling_resolution,
@@ -56,6 +59,9 @@ inline void from(
         const double &sampling_resolution,
         const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model)
 {
+    if (!src)
+        return;
+
     using dst_map_t = cslibs_gridmaps::static_maps::ProbabilityGridmap;
     dst.reset(new dst_map_t(src->getOrigin(),
                             sampling_resolution,

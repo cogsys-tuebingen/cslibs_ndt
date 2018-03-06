@@ -20,6 +20,9 @@ inline void from(
         const double &sigma_hit        = 0.5,
         const double &threshold        = 0.169)
 {
+    if (!src)
+        return;
+
     assert(threshold <= 1.0);
     assert(threshold >= 0.0);
     const double exp_factor_hit = (0.5 * 1.0 / (sigma_hit * sigma_hit));
@@ -78,6 +81,9 @@ inline void from(
         const double &sigma_hit        = 0.5,
         const double &threshold        = 0.169)
 {
+    if (!src)
+        return;
+
     assert(threshold <= 1.0);
     assert(threshold >= 0.0);
     const double exp_factor_hit = (0.5 * 1.0 / (sigma_hit * sigma_hit));

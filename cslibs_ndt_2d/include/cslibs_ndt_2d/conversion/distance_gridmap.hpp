@@ -19,6 +19,9 @@ inline void from(
         const double &maximum_distance = 2.0,
         const double &threshold        = 0.169)
 {
+    if (!src)
+        return;
+
     using dst_map_t = cslibs_gridmaps::static_maps::DistanceGridmap;
     dst.reset(new dst_map_t(src->getOrigin(),
                             sampling_resolution,
@@ -68,6 +71,9 @@ inline void from(
         const double &maximum_distance = 2.0,
         const double &threshold        = 0.169)
 {
+    if (!src)
+        return;
+
     using dst_map_t = cslibs_gridmaps::static_maps::DistanceGridmap;
     dst.reset(new dst_map_t(src->getOrigin(),
                             sampling_resolution,

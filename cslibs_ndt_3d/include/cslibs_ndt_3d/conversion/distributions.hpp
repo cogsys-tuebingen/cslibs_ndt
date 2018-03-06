@@ -83,8 +83,6 @@ inline void from(
                 for (int idz = min_distribution_index[2] ; idz <= max_distribution_index[2] ; ++ idz)
                     process_bundle({{idx, idy, idz}});
     }
-
-    dst->header.stamp = ros::Time::now();
 }
 
 inline void from(
@@ -148,8 +146,6 @@ inline void from(
                 for (int idz = min_distribution_index[2] ; idz <= max_distribution_index[2] ; ++ idz)
                     process_bundle({{idx, idy, idz}});
     }
-
-    dst->header.stamp = ros::Time::now();
 }
 }
 }

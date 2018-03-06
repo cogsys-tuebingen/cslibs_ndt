@@ -127,7 +127,7 @@ void NDTDisplay::processMessage(const DistributionArray::ConstPtr &msg)
             v->setFramePosition(p);
             v->setFrameOrientation(q);
             v->setScale(s);
-            v->setColorScale(static_cast<float>(1.0 - d.prob.data));
+            v->setColorScale(static_cast<float>(0.5 + 0.5 * d.prob.data));
             v->setColor(color_);
         }
     }

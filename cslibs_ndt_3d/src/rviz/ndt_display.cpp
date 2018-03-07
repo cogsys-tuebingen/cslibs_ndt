@@ -107,9 +107,9 @@ void NDTDisplay::processMessage(const DistributionArray::ConstPtr &msg)
     };
 
     auto getScale = [](const Distribution &d) {
-        return Ogre::Vector3(static_cast<float>(d.eigen_values[0].data),
-                             static_cast<float>(d.eigen_values[1].data),
-                             static_cast<float>(d.eigen_values[2].data));
+        return Ogre::Vector3(static_cast<float>(3.0 * d.eigen_values[0].data),
+                             static_cast<float>(3.0 * d.eigen_values[1].data),
+                             static_cast<float>(3.0 * d.eigen_values[2].data));
     };
 
     if (!accumulate_)

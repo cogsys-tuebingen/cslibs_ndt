@@ -170,6 +170,11 @@ public:
                               const inverse_sensor_model_t::Ptr &ivm,
                               const inverse_sensor_model_t::Ptr &ivm_visibility)
     {
+        if (!ivm || !ivm_visibility) {
+            std::cout << "[OccupancyGridmap3D]: Cannot evaluate visibility, using model-free update rule instead!" << std::endl;
+            return insert(origin, points);
+        }
+
         const index_t start_bi = toBundleIndex(origin.translation());
         auto occupancy = [this, &ivm](const index_t &bi) {
             const distribution_bundle_t *bundle = getDistributionBundle(bi);

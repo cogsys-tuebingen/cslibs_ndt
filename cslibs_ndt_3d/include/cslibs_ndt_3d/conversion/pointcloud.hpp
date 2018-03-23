@@ -48,6 +48,16 @@ inline void from(
     } else {
         const index_t min_distribution_index = src->getMinDistributionIndex();
         const index_t max_distribution_index = src->getMaxDistributionIndex();
+        if (min_distribution_index[0] == std::numeric_limits<int>::max() ||
+                min_distribution_index[1] == std::numeric_limits<int>::max() ||
+                min_distribution_index[2] == std::numeric_limits<int>::max() ||
+                max_distribution_index[0] == std::numeric_limits<int>::min() ||
+                min_distribution_index[1] == std::numeric_limits<int>::min() ||
+                min_distribution_index[2] == std::numeric_limits<int>::min()) {
+            dst = nullptr;
+            return;
+        }
+
         for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx)
             for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy)
                 for (int idz = min_distribution_index[2] ; idz <= max_distribution_index[2] ; ++ idz)
@@ -101,6 +111,16 @@ inline void from(
     } else {
         const index_t min_distribution_index = src->getMinDistributionIndex();
         const index_t max_distribution_index = src->getMaxDistributionIndex();
+        if (min_distribution_index[0] == std::numeric_limits<int>::max() ||
+                min_distribution_index[1] == std::numeric_limits<int>::max() ||
+                min_distribution_index[2] == std::numeric_limits<int>::max() ||
+                max_distribution_index[0] == std::numeric_limits<int>::min() ||
+                min_distribution_index[1] == std::numeric_limits<int>::min() ||
+                min_distribution_index[2] == std::numeric_limits<int>::min()) {
+            dst = nullptr;
+            return;
+        }
+
         for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx)
             for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy)
                 for (int idz = min_distribution_index[2] ; idz <= max_distribution_index[2] ; ++ idz)

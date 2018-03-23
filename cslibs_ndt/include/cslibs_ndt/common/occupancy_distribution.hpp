@@ -23,9 +23,6 @@ public:
     using mutex_t                   = std::mutex;
     using lock_t                    = std::unique_lock<mutex_t>;
 
-    using handle_t                  = cslibs_utility::synchronized::WrapAround<distribution_container_t>;
-    using const_handle_t            = cslibs_utility::synchronized::WrapAround<const distribution_container_t>;
-
     inline OccupancyDistribution() :
         num_free_(0)
     {

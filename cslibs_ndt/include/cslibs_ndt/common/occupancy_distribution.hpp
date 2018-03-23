@@ -4,16 +4,15 @@
 #include <mutex>
 
 #include <cslibs_math/statistics/distribution.hpp>
-#include <cslibs_utility/synchronized/wrap_around.hpp>
+#include <cslibs_gridmaps/utility/inverse_model.hpp>
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
 
-#include <cslibs_gridmaps/utility/inverse_model.hpp>
-
 namespace cslibs_ndt {
 template<std::size_t Dim>
-class OccupancyDistribution {
+class OccupancyDistribution
+{
 public:
     using Ptr                       = std::shared_ptr<OccupancyDistribution<Dim>>;
     using distribution_container_t  = OccupancyDistribution<Dim>;

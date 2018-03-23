@@ -5,7 +5,8 @@
 
 namespace cslibs_ndt {
 template<typename T, std::size_t Size>
-class Bundle {
+class Bundle
+{
 public:
     using bundle_t = Bundle<T, Size>;
     using data_t   = std::array<T, Size>;

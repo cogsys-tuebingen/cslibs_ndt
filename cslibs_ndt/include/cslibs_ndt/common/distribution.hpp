@@ -9,10 +9,10 @@
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
 
-
 namespace cslibs_ndt {
 template<std::size_t Dim>
-class Distribution {
+class Distribution
+{
 public:
     /// insert a probabilistic decay function and model map update via bresenham
     /// use the standard occupancy grid map update model

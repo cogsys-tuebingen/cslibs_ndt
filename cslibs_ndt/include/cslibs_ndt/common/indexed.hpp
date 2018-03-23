@@ -5,7 +5,8 @@
 
 namespace cslibs_ndt {
 template <template <std::size_t> class T, std::size_t Size, std::size_t Dim>
-struct Indexed {
+struct Indexed
+{
     std::array<int, Dim> index_;
     T<Size>              data_;
 

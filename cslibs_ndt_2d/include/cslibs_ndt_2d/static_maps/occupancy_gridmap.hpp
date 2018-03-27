@@ -144,7 +144,7 @@ public:
                 return;
             updateOccupied(bi, d.getDistribution());
 
-            line_iterator_t it(start_p, m_T_w_ * point_t(d.getDistribution()->getMean()), bundle_resolution_);//start_index, bi, 1.0);
+            line_iterator_t it(start_p, m_T_w_ * point_t(d.getDistribution()->getMean()), bundle_resolution_);
             const std::size_t n = d.numOccupied();
             while (!it.done()) {
                 updateFree({{it.x(), it.y()}}, n);
@@ -167,10 +167,10 @@ public:
         const index_t start_bi = toBundleIndex(origin.translation());
         auto occupancy = [this, &ivm](const index_t &bi) {
             const distribution_bundle_t *bundle = getDistributionBundle(bi);
-            return 0.25 * (bundle->at(0)->getOccupancy(ivm) +
-                           bundle->at(1)->getOccupancy(ivm) +
-                           bundle->at(2)->getOccupancy(ivm) +
-                           bundle->at(3)->getOccupancy(ivm));
+            return 0.25 * (bundle->at(0)->getHandle()->getOccupancy(ivm) +
+                           bundle->at(1)->getHandle()->getOccupancy(ivm) +
+                           bundle->at(2)->getHandle()->getOccupancy(ivm) +
+                           bundle->at(3)->getHandle()->getOccupancy(ivm));
         };
         auto current_visibility = [this, &start_bi, &ivm_visibility, &occupancy](const index_t &bi) {
             const double occlusion_prob =
@@ -233,15 +233,19 @@ public:
             lock_t(bundle_storage_mutex_);
             bundle = getAllocate(bi);
         }
-        auto sample = [&p, &ivm](const distribution_t *d) {
-            return (d && d->getDistribution()) ? d->getDistribution()->sample(p) *
-                                                 d->getOccupancy(ivm) : 0.0;
+        auto sample = [&p, &ivm] (const distribution_t *d) {
+            auto do_sample = [&p, &ivm, &d]() {
+                const auto &handle = d->getHandle();
+                return handle->getDistribution() ?
+                            handle->getDistribution()->sample(p) * handle->getOccupancy(ivm) : 0.0;
+            };
+            return d ? do_sample() : 0.0;
         };
         auto evaluate = [&p, &bundle, &sample]() {
-            return 0.25 * (sample(bundle->at(0)) +
-                           sample(bundle->at(1)) +
-                           sample(bundle->at(2)) +
-                           sample(bundle->at(3)));
+          return 0.25 * (sample(bundle->at(0)) +
+                         sample(bundle->at(1)) +
+                         sample(bundle->at(2)) +
+                         sample(bundle->at(3)));
         };
         return evaluate();
     }
@@ -265,15 +269,19 @@ public:
             lock_t(bundle_storage_mutex_);
             bundle = getAllocate(bi);
         }
-        auto sampleNonNormalized = [&p, &ivm](const distribution_t *d) {
-            return (d && d->getDistribution()) ? d->getDistribution()->sampleNonNormalized(p) *
-                                                 d->getOccupancy(ivm) : 0.0;
+        auto sample = [&p, &ivm] (const distribution_t *d) {
+            auto do_sample = [&p, &ivm, &d]() {
+                const auto &handle = d->getHandle();
+                return handle->getDistribution() ?
+                            handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(ivm) : 0.0;
+            };
+            return d ? do_sample() : 0.0;
         };
-        auto evaluate = [&p, &bundle, &sampleNonNormalized]() {
-          return 0.25 * (sampleNonNormalized(bundle->at(0)) +
-                         sampleNonNormalized(bundle->at(1)) +
-                         sampleNonNormalized(bundle->at(2)) +
-                         sampleNonNormalized(bundle->at(3)));
+        auto evaluate = [&p, &bundle, &sample]() {
+          return 0.25 * (sample(bundle->at(0)) +
+                         sample(bundle->at(1)) +
+                         sample(bundle->at(2)) +
+                         sample(bundle->at(3)));
         };
         return evaluate();
     }
@@ -403,10 +411,10 @@ protected:
             lock_t(bundle_storage_mutex_);
             bundle = getAllocate(bi);
         }
-        bundle->at(0)->updateFree();
-        bundle->at(1)->updateFree();
-        bundle->at(2)->updateFree();
-        bundle->at(3)->updateFree();
+        bundle->at(0)->getHandle()->updateFree();
+        bundle->at(1)->getHandle()->updateFree();
+        bundle->at(2)->getHandle()->updateFree();
+        bundle->at(3)->getHandle()->updateFree();
     }
 
     inline void updateFree(const index_t &bi,
@@ -417,10 +425,10 @@ protected:
             lock_t(bundle_storage_mutex_);
             bundle = getAllocate(bi);
         }
-        bundle->at(0)->updateFree(n);
-        bundle->at(1)->updateFree(n);
-        bundle->at(2)->updateFree(n);
-        bundle->at(3)->updateFree(n);
+        bundle->at(0)->getHandle()->updateFree(n);
+        bundle->at(1)->getHandle()->updateFree(n);
+        bundle->at(2)->getHandle()->updateFree(n);
+        bundle->at(3)->getHandle()->updateFree(n);
     }
 
     inline void updateOccupied(const index_t &bi,
@@ -431,10 +439,10 @@ protected:
             lock_t(bundle_storage_mutex_);
             bundle = getAllocate(bi);
         }
-        bundle->at(0)->updateOccupied(p);
-        bundle->at(1)->updateOccupied(p);
-        bundle->at(2)->updateOccupied(p);
-        bundle->at(3)->updateOccupied(p);
+        bundle->at(0)->getHandle()->updateOccupied(p);
+        bundle->at(1)->getHandle()->updateOccupied(p);
+        bundle->at(2)->getHandle()->updateOccupied(p);
+        bundle->at(3)->getHandle()->updateOccupied(p);
     }
 
     inline void updateOccupied(const index_t &bi,
@@ -445,10 +453,10 @@ protected:
             lock_t(bundle_storage_mutex_);
             bundle = getAllocate(bi);
         }
-        bundle->at(0)->updateOccupied(d);
-        bundle->at(1)->updateOccupied(d);
-        bundle->at(2)->updateOccupied(d);
-        bundle->at(3)->updateOccupied(d);
+        bundle->at(0)->getHandle()->updateOccupied(d);
+        bundle->at(1)->getHandle()->updateOccupied(d);
+        bundle->at(2)->getHandle()->updateOccupied(d);
+        bundle->at(3)->getHandle()->updateOccupied(d);
     }
 
     inline index_t toBundleIndex(const point_t &p_w) const

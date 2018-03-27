@@ -170,14 +170,14 @@ public:
                 lock_t(bundle_storage_mutex_);
                 bundle = getAllocate(bi);
             }
-            bundle->at(0)->data() += d.data();
-            bundle->at(1)->data() += d.data();
-            bundle->at(2)->data() += d.data();
-            bundle->at(3)->data() += d.data();
-            bundle->at(4)->data() += d.data();
-            bundle->at(5)->data() += d.data();
-            bundle->at(6)->data() += d.data();
-            bundle->at(7)->data() += d.data();
+            bundle->at(0)->getHandle()->data() += d.data();
+            bundle->at(1)->getHandle()->data() += d.data();
+            bundle->at(2)->getHandle()->data() += d.data();
+            bundle->at(3)->getHandle()->data() += d.data();
+            bundle->at(4)->getHandle()->data() += d.data();
+            bundle->at(5)->getHandle()->data() += d.data();
+            bundle->at(6)->getHandle()->data() += d.data();
+            bundle->at(7)->getHandle()->data() += d.data();
         });
     }
 
@@ -190,14 +190,14 @@ public:
             bundle = bundle_storage_->get(bi);
         }
         auto evaluate = [&p, &bundle]() {
-            return 0.125 * (bundle->at(0)->data().sample(p) +
-                            bundle->at(1)->data().sample(p) +
-                            bundle->at(2)->data().sample(p) +
-                            bundle->at(3)->data().sample(p) +
-                            bundle->at(4)->data().sample(p) +
-                            bundle->at(5)->data().sample(p) +
-                            bundle->at(6)->data().sample(p) +
-                            bundle->at(7)->data().sample(p));
+            return 0.125 * (bundle->at(0)->getHandle()->data().sample(p) +
+                            bundle->at(1)->getHandle()->data().sample(p) +
+                            bundle->at(2)->getHandle()->data().sample(p) +
+                            bundle->at(3)->getHandle()->data().sample(p) +
+                            bundle->at(4)->getHandle()->data().sample(p) +
+                            bundle->at(5)->getHandle()->data().sample(p) +
+                            bundle->at(6)->getHandle()->data().sample(p) +
+                            bundle->at(7)->getHandle()->data().sample(p));
         };
         return bundle ? evaluate() : 0.0;
     }
@@ -212,14 +212,14 @@ public:
             bundle = bundle_storage_->get(bi);
         }
         auto evaluate = [&p, &bundle]() {
-            return 0.125 * (bundle->at(0)->data().sampleNonNormalized(p) +
-                            bundle->at(1)->data().sampleNonNormalized(p) +
-                            bundle->at(2)->data().sampleNonNormalized(p) +
-                            bundle->at(3)->data().sampleNonNormalized(p) +
-                            bundle->at(4)->data().sampleNonNormalized(p) +
-                            bundle->at(5)->data().sampleNonNormalized(p) +
-                            bundle->at(6)->data().sampleNonNormalized(p) +
-                            bundle->at(7)->data().sampleNonNormalized(p));
+            return 0.125 * (bundle->at(0)->getHandle()->data().sampleNonNormalized(p) +
+                            bundle->at(1)->getHandle()->data().sampleNonNormalized(p) +
+                            bundle->at(2)->getHandle()->data().sampleNonNormalized(p) +
+                            bundle->at(3)->getHandle()->data().sampleNonNormalized(p) +
+                            bundle->at(4)->getHandle()->data().sampleNonNormalized(p) +
+                            bundle->at(5)->getHandle()->data().sampleNonNormalized(p) +
+                            bundle->at(6)->getHandle()->data().sampleNonNormalized(p) +
+                            bundle->at(7)->getHandle()->data().sampleNonNormalized(p));
         };
         return bundle ? evaluate() : 0.0;
     }
@@ -317,7 +317,7 @@ protected:
         return d ? d : &(s->insert(i, distribution_t()));
     }
 
-    inline distribution_bundle_t *getAllocate(const index_t &bi) const
+    inline distribution_bundle_t* getAllocate(const index_t &bi) const
     {
         distribution_bundle_t *bundle;
         {

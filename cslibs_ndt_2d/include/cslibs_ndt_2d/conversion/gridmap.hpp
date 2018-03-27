@@ -25,9 +25,11 @@ inline cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr from(
             if (const typename src_map_t::distribution_bundle_t* b = src->getDistributionBundle(bi)) {
                 if (const typename dst_map_t::distribution_bundle_t* b_dst = dst->getDistributionBundle(bi)) {
 
-                    for (std::size_t i = 0 ; i < 4 ; ++ i)
-                        if (b->at(i)->data().getN() > 0 && b_dst->at(i)->data().getN() == 0)
-                            b_dst->at(i)->data() = b->at(i)->data();
+                    for (std::size_t i = 0 ; i < 4 ; ++ i) {
+                        const auto &handle = b->at(i)->getHandle()->data();
+                        if (handle.getN() > 0 && b_dst->at(i)->data().getN() == 0)
+                            b_dst->at(i)->data() = handle;
+                    }
                 }
             }
         }
@@ -69,9 +71,11 @@ inline cslibs_ndt_2d::static_maps::Gridmap::Ptr from(
                 const index_t bi_dst = get_bundle_index(bi);
                 if (const typename dst_map_t::distribution_bundle_t* b_dst = dst->getDistributionBundle(bi_dst)) {
 
-                    for (std::size_t i = 0 ; i < 4 ; ++ i)
-                        if (b->at(i)->data().getN() > 0 && b_dst->at(i)->data().getN() == 0)
-                            b_dst->at(i)->data() = b->at(i)->data();
+                    for (std::size_t i = 0 ; i < 4 ; ++ i) {
+                        const auto &handle = b->at(i)->getHandle()->data();
+                        if (handle.getN() > 0 && b_dst->at(i)->data().getN() == 0)
+                            b_dst->at(i)->data() = handle;
+                    }
                 }
             }
         }

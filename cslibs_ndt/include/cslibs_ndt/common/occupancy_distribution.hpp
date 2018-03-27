@@ -5,6 +5,7 @@
 
 #include <cslibs_math/statistics/distribution.hpp>
 #include <cslibs_gridmaps/utility/inverse_model.hpp>
+#include <cslibs_utility/synchronized/wrap_around.hpp>
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
@@ -19,8 +20,11 @@ public:
     using distribution_t            = cslibs_math::statistics::Distribution<Dim, 3>;
     using distribution_ptr_t        = typename distribution_t::Ptr;
     using point_t                   = typename distribution_t::sample_t;
-    using mutex_t                   = std::mutex;
-    using lock_t                    = std::unique_lock<mutex_t>;
+
+    using mutex_t        = std::mutex;
+    using lock_t         = std::unique_lock<mutex_t>;
+    using handle_t       = cslibs_utility::synchronized::WrapAround<OccupancyDistribution<Dim>>;
+    using const_handle_t = cslibs_utility::synchronized::WrapAround<const OccupancyDistribution<Dim>>;
 
     inline OccupancyDistribution() :
         num_free_(0)
@@ -133,18 +137,30 @@ public:
     {
     }
 
+    inline handle_t getHandle()
+    {
+        return handle_t(this, &data_mutex_);
+    }
+
+    inline const_handle_t getHandle() const
+    {
+        return const_handle_t(this, &data_mutex_);
+    }
+
     inline std::size_t byte_size() const
     {
         return distribution_ ? (sizeof(*this) + sizeof(distribution_t)) : sizeof(*this);
     }
 
 private:
+    mutable mutex_t data_mutex_;
+
     std::size_t        num_free_;
     distribution_ptr_t distribution_;
 
     mutable double                                      occupancy_;
     mutable cslibs_gridmaps::utility::InverseModel::Ptr inverse_model_;
-} __attribute__ ((aligned (64)));
+} __attribute__ ((aligned (16)));
 }
 
 #endif // CSLIBS_NDT_COMMON_OCCUPANCY_DISTRIBUTION_HPP

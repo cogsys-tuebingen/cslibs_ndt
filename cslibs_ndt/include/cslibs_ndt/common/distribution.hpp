@@ -105,7 +105,6 @@ public:
 private:
     mutable mutex_t data_mutex_;
     distribution_t  data_;
-
 };
 }
 #endif // CSLIBS_NDT_COMMON_DISTRIBUTION_HPP

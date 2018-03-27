@@ -27,8 +27,11 @@ inline cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr from(
                     if (const typename dst_map_t::distribution_bundle_t* b_dst = dst->getDistributionBundle(bi)) {
 
                         for (std::size_t i = 0 ; i < 8 ; ++ i)
-                            if (b->at(i) && (b->at(i)->numFree() > 0 || b->at(i)->numOccupied() > 0))//(b->at(i)->data().getN() > 0 && b_dst->at(i)->data().getN() == 0)
-                                *(b_dst->at(i)) = *(b->at(i));
+                            if (b->at(i)) {
+                                const auto &handle = b->at(i)->getHandle();
+                                if (handle->numFree() > 0 || handle->numOccupied() > 0)
+                                    *(b_dst->at(i)) = *handle;
+                            }
                     }
                 }
             }
@@ -75,8 +78,11 @@ inline cslibs_ndt_3d::static_maps::OccupancyGridmap::Ptr from(
                     if (const typename dst_map_t::distribution_bundle_t* b_dst = dst->getDistributionBundle(bi_dst)) {
 
                         for (std::size_t i = 0 ; i < 8 ; ++ i)
-                            if (b->at(i) && (b->at(i)->numFree() > 0 || b->at(i)->numOccupied() > 0))
-                                *(b_dst->at(i)) = *(b->at(i));
+                            if (b->at(i)) {
+                                const auto &handle = b->at(i)->getHandle();
+                                if (handle->numFree() > 0 || handle->numOccupied() > 0)
+                                    *(b_dst->at(i)) = *handle;
+                            }
                     }
                 }
             }

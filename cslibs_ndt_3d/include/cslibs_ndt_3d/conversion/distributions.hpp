@@ -41,11 +41,11 @@ inline void from(
     using distribution_t = cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_t;
     using distribution_bundle_t = cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t;
     auto sample = [](const distribution_t *d,
-                     const point_t &p) {
-        return d ? d->data().sampleNonNormalized(p) : 0.0;
+                     const point_t &p) -> double {
+        return d ? d->getHandle()->data().sampleNonNormalized(p) : 0.0;
     };
     auto sample_bundle = [&sample](const distribution_bundle_t *b,
-                                   const point_t &p) {
+                                   const point_t &p) -> double {
         return 0.125 * (sample(b->at(0), p) +
                         sample(b->at(1), p) +
                         sample(b->at(2), p) +
@@ -65,8 +65,7 @@ inline void from(
 
             if (d.getN() == 0)
                 return;
-            dst->data.emplace_back(
-                        from(d, b->id(), static_cast<double>(sample_bundle(b, point_t(d.getMean())))));
+            dst->data.emplace_back(from(d, b->id(), sample_bundle(b, point_t(d.getMean()))));
         }
     };
 
@@ -101,13 +100,16 @@ inline void from(
     using distribution_t = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_t;
     using distribution_bundle_t = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_bundle_t;
     auto sample = [&ivm](const distribution_t *d,
-                         const point_t &p) {
-        return (d && d->getDistribution()) ?
-                    (d->getDistribution()->sampleNonNormalized(p) * d->getOccupancy(ivm)) : 0.0;
-
+                         const point_t &p) -> double {
+        auto evaluate = [&ivm, d, p] {
+            const auto &handle = d->getHandle();
+            return handle->getDistribution() ?
+                        handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(ivm) : 0.0;
+        };
+        return d ? evaluate() : 0.0;
     };
     auto sample_bundle = [&sample](const distribution_bundle_t *b,
-                                   const point_t &p) {
+                                   const point_t &p) -> double {
         return 0.125 * (sample(b->at(0), p) +
                         sample(b->at(1), p) +
                         sample(b->at(2), p) +
@@ -123,13 +125,12 @@ inline void from(
         if (const distribution_bundle_t *b = src->getDistributionBundle(bi)) {
             distribution_t::distribution_t d;
             for (std::size_t i = 0; i < 8; ++ i)
-                if (b->at(i)->getDistribution())
-                    d += *(b->at(i)->getDistribution());
+                if (const auto &d_tmp = b->at(i)->getHandle()->getDistribution())
+                    d += *d_tmp;
 
             if (d.getN() == 0)
                 return;
-            dst->data.emplace_back(
-                        from(d, b->id(), static_cast<double>(sample_bundle(b, point_t(d.getMean())))));
+            dst->data.emplace_back(from(d, b->id(), sample_bundle(b, point_t(d.getMean()))));
         }
     };
 

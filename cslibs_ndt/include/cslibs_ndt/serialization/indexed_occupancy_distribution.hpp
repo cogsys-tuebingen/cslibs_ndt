@@ -18,10 +18,10 @@ struct convert<cslibs_ndt::Indexed<cslibs_ndt::OccupancyDistribution, Size, Dim>
         Node n;
 
         n.push_back(rhs.index_);
-        n.push_back(rhs.data_.numFree());
-        n.push_back(rhs.data_.numOccupied());
-        if (rhs.data_.getDistribution())
-            n.push_back(*(rhs.data_.getDistribution()));
+        n.push_back(rhs.data_.getHandle()->numFree());
+        n.push_back(rhs.data_.getHandle()->numOccupied());
+        if (rhs.data_.getHandle()->getDistribution())
+            n.push_back(*(rhs.data_.getHandle()->getDistribution()));
 
         return n;
     }

@@ -85,9 +85,10 @@ inline void from(
             double occupancy = 0.0;
 
             for (std::size_t i = 0 ; i < 8 ; ++i) {
-                occupancy += 0.125 * b->at(i)->getOccupancy(ivm);
-                if (b->at(i)->getDistribution())
-                    d += *(b->at(i)->getDistribution());
+                const auto &handle = b->at(i)->getHandle();
+                occupancy += 0.125 * handle->getOccupancy(ivm);
+                if (const auto &d_tmp = handle->getDistribution())
+                    d += *d_tmp;
             }
             if (d.getN() == 0 || occupancy < threshold)
                 return;

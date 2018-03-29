@@ -19,6 +19,7 @@
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
+#include <cslibs_indexed_storage/operations/clustering/grid_neighborhood.hpp>
 
 #include <cslibs_math_3d/algorithms/bresenham.hpp>
 #include <cslibs_math_3d/algorithms/simple_iterator.hpp>
@@ -356,6 +357,14 @@ public:
         return storage_;
     }
 
+    template <typename Fn>
+    inline void traverse(const Fn& function) const
+    {
+        lock_t(storage_mutex_);
+        lock_t(bundle_storage_mutex_);
+        return bundle_storage_->traverse(function);
+    }
+
     inline void getBundleIndices(std::vector<index_t> &indices) const
     {
         lock_t(storage_mutex_);
@@ -407,46 +416,52 @@ private:
 
     inline distribution_bundle_t *getAllocate(const index_t &bi) const
     {
-        distribution_bundle_t *bundle;
-        {
-            lock_t(bundle_storage_mutex_);
-            bundle = bundle_storage_->get(bi);
-        }
+        auto get_allocate = [this](const index_t &bi) {
+            distribution_bundle_t *bundle;
+            {
+                lock_t(bundle_storage_mutex_);
+                bundle = bundle_storage_->get(bi);
+            }
 
-        auto allocate_bundle = [this, &bi]() {
-            distribution_bundle_t b;
+            auto allocate_bundle = [this, &bi]() {
+                distribution_bundle_t b;
+                const int divx = cslibs_math::common::div<int>(bi[0], 2);
+                const int divy = cslibs_math::common::div<int>(bi[1], 2);
+                const int divz = cslibs_math::common::div<int>(bi[2], 2);
+                const int modx = cslibs_math::common::mod<int>(bi[0], 2);
+                const int mody = cslibs_math::common::mod<int>(bi[1], 2);
+                const int modz = cslibs_math::common::mod<int>(bi[2], 2);
 
-            const int divx = cslibs_math::common::div<int>(bi[0], 2);
-            const int divy = cslibs_math::common::div<int>(bi[1], 2);
-            const int divz = cslibs_math::common::div<int>(bi[2], 2);
-            const int modx = cslibs_math::common::mod<int>(bi[0], 2);
-            const int mody = cslibs_math::common::mod<int>(bi[1], 2);
-            const int modz = cslibs_math::common::mod<int>(bi[2], 2);
+                const index_t storage_0_index = {{divx,        divy,        divz}};
+                const index_t storage_1_index = {{divx + modx, divy,        divz}};
+                const index_t storage_2_index = {{divx,        divy + mody, divz}};
+                const index_t storage_3_index = {{divx + modx, divy + mody, divz}};
+                const index_t storage_4_index = {{divx,        divy,        divz + modz}};
+                const index_t storage_5_index = {{divx + modx, divy,        divz + modz}};
+                const index_t storage_6_index = {{divx,        divy + mody, divz + modz}};
+                const index_t storage_7_index = {{divx + modx, divy + mody, divz + modz}};
 
-            const index_t storage_index_0 = {{divx,        divy,        divz}};
-            const index_t storage_index_1 = {{divx + modx, divy,        divz}};
-            const index_t storage_index_2 = {{divx,        divy + mody, divz}};
-            const index_t storage_index_3 = {{divx + modx, divy + mody, divz}};
-            const index_t storage_index_4 = {{divx,        divy,        divz + modz}};
-            const index_t storage_index_5 = {{divx + modx, divy,        divz + modz}};
-            const index_t storage_index_6 = {{divx,        divy + mody, divz + modz}};
-            const index_t storage_index_7 = {{divx + modx, divy + mody, divz + modz}};
+                b[0] = getAllocate(storage_[0], storage_0_index);
+                b[1] = getAllocate(storage_[1], storage_1_index);
+                b[2] = getAllocate(storage_[2], storage_2_index);
+                b[3] = getAllocate(storage_[3], storage_3_index);
+                b[4] = getAllocate(storage_[4], storage_4_index);
+                b[5] = getAllocate(storage_[5], storage_5_index);
+                b[6] = getAllocate(storage_[6], storage_6_index);
+                b[7] = getAllocate(storage_[7], storage_7_index);
 
-            b[0] = getAllocate(storage_[0], storage_index_0);
-            b[1] = getAllocate(storage_[1], storage_index_1);
-            b[2] = getAllocate(storage_[2], storage_index_2);
-            b[3] = getAllocate(storage_[3], storage_index_3);
-            b[4] = getAllocate(storage_[4], storage_index_4);
-            b[5] = getAllocate(storage_[5], storage_index_5);
-            b[6] = getAllocate(storage_[6], storage_index_6);
-            b[7] = getAllocate(storage_[7], storage_index_7);
-
-            lock_t(bundle_storage_mutex_);
-            updateIndices(bi);
-            return &(bundle_storage_->insert(bi, b));
+                lock_t(bundle_storage_mutex_);
+                updateIndices(bi);
+                return &(bundle_storage_->insert(bi, b));
+            };
+            return bundle ? bundle : allocate_bundle();
         };
 
-        return bundle ? bundle : allocate_bundle();
+        using neighborhood_t = cis::operations::clustering::GridNeighborhoodStatic<std::tuple_size<index_t>::value, 3>;
+        static constexpr neighborhood_t grid{};
+        grid.visit([&get_allocate, &bi](neighborhood_t::offset_t o) { get_allocate({{bi[0]+o[0], bi[1]+o[1], bi[2]+o[2]}}); });
+
+        return get_allocate(bi);
     }
 
     inline void updateFree(const index_t &bi) const

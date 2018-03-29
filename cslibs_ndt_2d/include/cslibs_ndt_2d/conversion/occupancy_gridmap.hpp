@@ -36,18 +36,24 @@ inline cslibs_ndt_2d::static_maps::OccupancyGridmap::Ptr from(
         const cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr& src)
 {
     if (!src)
-        return nullptr;
+        return nullptr;    
 
     using index_t = std::array<int, 2>;
-    const index_t min_distribution_index = src->getMinDistributionIndex();
+    const index_t min_bi = src->getMinDistributionIndex();
+    const index_t max_bi = src->getMaxDistributionIndex();
+    if (min_bi[0] == std::numeric_limits<int>::max() ||
+            min_bi[1] == std::numeric_limits<int>::max() ||
+            max_bi[0] == std::numeric_limits<int>::min() ||
+            max_bi[1] == std::numeric_limits<int>::min())
+        return nullptr;
 
     const std::array<std::size_t, 2> size =
     {{static_cast<std::size_t>(std::ceil((src->getMax()(0) - src->getMin()(0)) / src->getResolution())),
       static_cast<std::size_t>(std::ceil((src->getMax()(1) - src->getMin()(1)) / src->getResolution()))}};
 
-    auto get_bundle_index = [&size, &min_distribution_index] (const index_t & bi) {
-        return index_t{{bi[0] - min_distribution_index[0],
-                        bi[1] - min_distribution_index[1]}};
+    auto get_bundle_index = [&size, &min_bi] (const index_t & bi) {
+        return index_t{{bi[0] - min_bi[0],
+                        bi[1] - min_bi[1]}};
     };
 
     using src_map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap;

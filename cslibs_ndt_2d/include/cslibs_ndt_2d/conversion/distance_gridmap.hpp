@@ -22,6 +22,15 @@ inline void from(
     if (!src)
         return;
 
+    using index_t = std::array<int, 2>;
+    const index_t min_bi = src->getMinDistributionIndex();
+    const index_t max_bi = src->getMaxDistributionIndex();
+    if (min_bi[0] == std::numeric_limits<int>::max() ||
+            min_bi[1] == std::numeric_limits<int>::max() ||
+            max_bi[0] == std::numeric_limits<int>::min() ||
+            max_bi[1] == std::numeric_limits<int>::min())
+        return;
+
     using src_map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
     using dst_map_t = cslibs_gridmaps::static_maps::DistanceGridmap;
     dst.reset(new dst_map_t(src->getOrigin(),
@@ -41,9 +50,6 @@ inline void from(
                        bundle.at(2)->getHandle()->data().sampleNonNormalized(p) +
                        bundle.at(3)->getHandle()->data().sampleNonNormalized(p));
     };
-
-    using index_t = std::array<int, 2>;
-    const index_t min_bi = src->getMinDistributionIndex();
 
     src->traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
                   (const index_t &bi, const src_map_t::distribution_bundle_t &b){
@@ -73,6 +79,15 @@ inline void from(
     if (!src)
         return;
 
+    using index_t = std::array<int, 2>;
+    const index_t min_bi = src->getMinDistributionIndex();
+    const index_t max_bi = src->getMaxDistributionIndex();
+    if (min_bi[0] == std::numeric_limits<int>::max() ||
+            min_bi[1] == std::numeric_limits<int>::max() ||
+            max_bi[0] == std::numeric_limits<int>::min() ||
+            max_bi[1] == std::numeric_limits<int>::min())
+        return;
+
     using src_map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap;
     using dst_map_t = cslibs_gridmaps::static_maps::DistanceGridmap;
     dst.reset(new dst_map_t(src->getOrigin(),
@@ -100,9 +115,6 @@ inline void from(
                        sample(bundle.at(2)) +
                        sample(bundle.at(3)));
     };
-
-    using index_t = std::array<int, 2>;
-    const index_t min_bi = src->getMinDistributionIndex();
 
     src->traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
                   (const index_t &bi, const src_map_t::distribution_bundle_t &b){

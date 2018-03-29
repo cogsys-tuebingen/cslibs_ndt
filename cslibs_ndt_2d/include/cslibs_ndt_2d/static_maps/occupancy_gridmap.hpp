@@ -333,6 +333,7 @@ public:
 
     inline void getBundleIndices(std::vector<index_t> &indices) const
     {
+        lock_t(storage_mutex_);
         lock_t(bundle_storage_mutex_);
         auto add_index = [&indices](const index_t &i, const distribution_bundle_t &d) {
             indices.emplace_back(i);
@@ -342,6 +343,7 @@ public:
 
     inline std::size_t getByteSize() const
     {
+        lock_t(storage_mutex_);
         lock_t(bundle_storage_mutex_);
         return sizeof(*this) +
                 bundle_storage_->byte_size() +
@@ -402,7 +404,7 @@ protected:
             return &(bundle_storage_->insert(bi, b));
         };
 
-        return bundle == nullptr ? allocate_bundle() : bundle;
+        return bundle ? bundle : allocate_bundle();
     }
 
     inline void updateFree(const index_t &bi) const

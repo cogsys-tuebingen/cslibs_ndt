@@ -35,7 +35,7 @@ inline void from(
                             src->getHeight() / sampling_resolution,
                             src->getWidth()  / sampling_resolution));
     std::fill(dst->getData().begin(), dst->getData().end(), 0);
-return;
+
     const double bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 

@@ -20,7 +20,6 @@ inline void from(
     dst.reset(new dst_map_t());
 
     using index_t = std::array<int, 3>;
-    using distribution_t = cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_t;
     using distribution_bundle_t = cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t;
     auto process_bundle = [&src, &dst](const index_t &bi, const distribution_bundle_t &b) {
         cslibs_math::statistics::Distribution<3, 3> d;
@@ -54,7 +53,6 @@ inline void from(
     dst.reset(new dst_map_t());
 
     using index_t = std::array<int, 3>;
-    using distribution_t = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_t;
     using distribution_bundle_t = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_bundle_t;
     auto process_bundle = [&src, &dst, &ivm, &threshold](const index_t &bi, const distribution_bundle_t &b) {
         cslibs_math::statistics::Distribution<3, 3> d;

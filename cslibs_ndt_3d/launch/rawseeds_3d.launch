@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<launch>
+    <group ns="cslibs_ndt_3d">
+        <param name="path_ndt" 	   value="/data/0/rawseeds/maps/with_stereo/Bicocca_2009-02-25a-dynamic-natural-light-groundtruth-cartographer/map/3d/ndt/map" />
+        <param name="path_occ_ndt" value="/data/0/rawseeds/maps/with_stereo/Bicocca_2009-02-25a-dynamic-natural-light-groundtruth-cartographer/map/3d/occ_ndt/map" />
+    </group>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-f map" required="true"/>
+    <node name="cslibs_ndt_3d" pkg="cslibs_ndt_3d" type="cslibs_ndt_3d_map_loader" output="screen" required="true" clear_params="true"/>
+</launch>

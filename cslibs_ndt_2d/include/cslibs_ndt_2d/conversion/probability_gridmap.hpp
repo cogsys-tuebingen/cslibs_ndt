@@ -46,16 +46,18 @@ inline void from(
                        bundle.at(3)->getHandle()->data().sampleNonNormalized(p));
     };
 
-    auto process_bundle = [&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &max_bi, &sample]
+    auto process_bundle = [&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
                   (const index_t &bi, const src_map_t::distribution_bundle_t &b){
-        if (bi[0] < min_bi[0] || bi[1] < min_bi[1] || bi[0] > max_bi[0] || bi[1] > max_bi[1])
-            return;
-
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
+                const int dst_x = (bi[0] - min_bi[0]) * chunk_step + k;
+                const int dst_y = (bi[1] - min_bi[1]) * chunk_step + l;
+                if (dst_x < 0 || dst_y < 0 || dst_x >= dst->getWidth() || dst_y >= dst->getHeight())
+                    return;
+
                 const cslibs_math_2d::Point2d p(bi[0] * bundle_resolution + k * sampling_resolution,
                                                 bi[1] * bundle_resolution + l * sampling_resolution);
-                dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
+                dst->at(dst_x, dst_y) = sample(p, b);
             }
         }
     };
@@ -106,16 +108,18 @@ inline void from(
                        sample(bundle.at(3)));
     };
 
-    auto process_bundle = [&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &max_bi, &sample]
+    auto process_bundle = [&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
                   (const index_t &bi, const src_map_t::distribution_bundle_t &b){
-        if (bi[0] < min_bi[0] || bi[1] < min_bi[1] || bi[0] > max_bi[0] || bi[1] > max_bi[1])
-            return;
-
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
+                const int dst_x = (bi[0] - min_bi[0]) * chunk_step + k;
+                const int dst_y = (bi[1] - min_bi[1]) * chunk_step + l;
+                if (dst_x < 0 || dst_y < 0 || dst_x >= dst->getWidth() || dst_y >= dst->getHeight())
+                    return;
+
                 const cslibs_math_2d::Point2d p(bi[0] * bundle_resolution + k * sampling_resolution,
                                                 bi[1] * bundle_resolution + l * sampling_resolution);
-                dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
+                dst->at(dst_x, dst_y) = sample(p, b);
             }
         }
     };

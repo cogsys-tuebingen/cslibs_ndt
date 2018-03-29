@@ -98,7 +98,6 @@ public:
         }
         bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2,
                                                                      size[1] * 2);
-        /// fill the bundle storage
     }
 
     inline pose_t getOrigin() const
@@ -110,7 +109,7 @@ public:
     {
         distribution_bundle_t *bundle;
         {
-            lock_t l(bundle_storage_mutex_);
+            lock_t(bundle_storage_mutex_);
             const index_t bi = toBundleIndex(p);
             bundle = getAllocate(bi);
         }
@@ -248,6 +247,7 @@ public:
 
     inline std::size_t getByteSize() const
     {
+        lock_t(bundle_storage_mutex_);
         return sizeof(*this) +
                 bundle_storage_->byte_size() +
                 storage_[0]->byte_size() +
@@ -273,7 +273,7 @@ protected:
     inline distribution_t* getAllocate(const distribution_storage_ptr_t &s,
                                        const index_t &i) const
     {
-        lock_t l(storage_mutex_);
+        lock_t(storage_mutex_);
         distribution_t *d = s->get(i);
         return d ? d : &(s->insert(i, distribution_t()));
     }

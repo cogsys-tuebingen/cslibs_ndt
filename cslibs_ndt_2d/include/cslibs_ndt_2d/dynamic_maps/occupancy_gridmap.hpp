@@ -110,14 +110,14 @@ public:
 
     inline point_t getMin() const
     {
-        lock_t l(bundle_storage_mutex_);
+        lock_t(bundle_storage_mutex_);
         return point_t(min_index_[0] * bundle_resolution_,
                        min_index_[1] * bundle_resolution_);
     }
 
     inline point_t getMax() const
     {
-        lock_t l(bundle_storage_mutex_);
+        lock_t(bundle_storage_mutex_);
         return point_t((max_index_[0] + 1) * bundle_resolution_,
                        (max_index_[1] + 1) * bundle_resolution_);
     }
@@ -308,7 +308,7 @@ public:
                          sample(bundle->at(2)) +
                          sample(bundle->at(3)));
         };
-        return bundle ? evaluate() : 0.0;
+        return evaluate();
     }
 
     inline double sampleNonNormalized(const point_t &p,
@@ -344,18 +344,18 @@ public:
                          sample(bundle->at(2)) +
                          sample(bundle->at(3)));
         };
-        return bundle ? evaluate() : 0.0;
+        return evaluate();
     }
 
     inline index_t getMinDistributionIndex() const
     {
-        lock_t l(storage_mutex_);
+        lock_t(bundle_storage_mutex_);
         return min_index_;
     }
 
     inline index_t getMaxDistributionIndex() const
     {
-        lock_t l(storage_mutex_);
+        lock_t(bundle_storage_mutex_);
         return max_index_;
     }
 
@@ -381,11 +381,13 @@ public:
 
     inline double getHeight() const
     {
+        lock_t(bundle_storage_mutex_);
         return (max_index_[1] - min_index_[1] + 1) * bundle_resolution_;
     }
 
     inline double getWidth() const
     {
+        lock_t(bundle_storage_mutex_);
         return (max_index_[0] - min_index_[0] + 1) * bundle_resolution_;
     }
 
@@ -405,6 +407,7 @@ public:
 
     inline std::size_t getByteSize() const
     {
+        lock_t(bundle_storage_mutex_);
         return sizeof(*this) +
                 bundle_storage_->byte_size() +
                 storage_[0]->byte_size() +
@@ -431,7 +434,7 @@ private:
     inline distribution_t* getAllocate(const distribution_storage_ptr_t &s,
                                        const index_t &i) const
     {
-        lock_t l(storage_mutex_);
+        lock_t(storage_mutex_);
         distribution_t *d = s->get(i);
         return d ? d : &(s->insert(i, distribution_t()));
     }

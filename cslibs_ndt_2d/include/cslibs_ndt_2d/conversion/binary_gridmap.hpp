@@ -48,7 +48,7 @@ inline void from(
                        bundle.at(3)->getHandle()->data().sampleNonNormalized(p));
     };
 
-    src->traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &threshold, &sample]
+    auto process_bundle = [&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &threshold, &sample]
                   (const index_t &bi, const src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -59,7 +59,8 @@ inline void from(
                                                     cslibs_gridmaps::static_maps::BinaryGridmap::FREE;
             }
         }
-    });
+    };
+    src->traverse(process_bundle);
 }
 
 inline void from(
@@ -69,7 +70,7 @@ inline void from(
         const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model,
         const double &threshold = 0.169)
 {
-    if (!src)
+    if (!src || !inverse_model)
         return;
 
     using index_t = std::array<int, 2>;
@@ -107,7 +108,7 @@ inline void from(
                        sample(bundle.at(3)));
     };
 
-    src->traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &threshold, &sample]
+    auto process_bundle = [&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &threshold, &sample]
                   (const index_t &bi, const src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -118,7 +119,8 @@ inline void from(
                                                     cslibs_gridmaps::static_maps::BinaryGridmap::FREE;
             }
         }
-    });
+    };
+    src->traverse(process_bundle);
 }
 }
 }

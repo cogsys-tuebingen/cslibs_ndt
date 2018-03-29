@@ -51,7 +51,7 @@ inline void from(
                        bundle.at(3)->getHandle()->data().sampleNonNormalized(p));
     };
 
-    src->traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
+    auto process_bundle = [&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
                   (const index_t &bi, const src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -60,7 +60,8 @@ inline void from(
                 dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
             }
         }
-    });
+    };
+    src->traverse(process_bundle);
 
     std::vector<double> occ = dst->getData();
     cslibs_gridmaps::static_maps::algorithms::DistanceTransform<double> distance_transform(
@@ -76,7 +77,7 @@ inline void from(
         const double &maximum_distance = 2.0,
         const double &threshold        = 0.169)
 {
-    if (!src)
+    if (!src || !inverse_model)
         return;
 
     using index_t = std::array<int, 2>;
@@ -116,7 +117,7 @@ inline void from(
                        sample(bundle.at(3)));
     };
 
-    src->traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
+    auto process_bundle = [&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
                   (const index_t &bi, const src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -125,7 +126,8 @@ inline void from(
                 dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
             }
         }
-    });
+    };
+    src->traverse(process_bundle);
 
     std::vector<double> occ = dst->getData();
     cslibs_gridmaps::static_maps::algorithms::DistanceTransform<double> distance_transform(

@@ -35,7 +35,7 @@ inline void from(
                             src->getHeight() / sampling_resolution,
                             src->getWidth()  / sampling_resolution));
     std::fill(dst->getData().begin(), dst->getData().end(), 0);
-
+return;
     const double bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
@@ -46,8 +46,11 @@ inline void from(
                        bundle.at(3)->getHandle()->data().sampleNonNormalized(p));
     };
 
-    src->traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
+    auto process_bundle = [&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &max_bi, &sample]
                   (const index_t &bi, const src_map_t::distribution_bundle_t &b){
+        if (bi[0] < min_bi[0] || bi[1] < min_bi[1] || bi[0] > max_bi[0] || bi[1] > max_bi[1])
+            return;
+
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
                 const cslibs_math_2d::Point2d p(bi[0] * bundle_resolution + k * sampling_resolution,
@@ -55,7 +58,8 @@ inline void from(
                 dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
             }
         }
-    });
+    };
+    src->traverse(process_bundle);
 }
 
 inline void from(
@@ -64,7 +68,7 @@ inline void from(
         const double &sampling_resolution,
         const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model)
 {
-    if (!src)
+    if (!src || !inverse_model)
         return;
 
     using index_t = std::array<int, 2>;
@@ -102,8 +106,11 @@ inline void from(
                        sample(bundle.at(3)));
     };
 
-    src->traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
+    auto process_bundle = [&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &max_bi, &sample]
                   (const index_t &bi, const src_map_t::distribution_bundle_t &b){
+        if (bi[0] < min_bi[0] || bi[1] < min_bi[1] || bi[0] > max_bi[0] || bi[1] > max_bi[1])
+            return;
+
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
                 const cslibs_math_2d::Point2d p(bi[0] * bundle_resolution + k * sampling_resolution,
@@ -111,7 +118,8 @@ inline void from(
                 dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
             }
         }
-    });
+    };
+    src->traverse(process_bundle);
 }
 }
 }

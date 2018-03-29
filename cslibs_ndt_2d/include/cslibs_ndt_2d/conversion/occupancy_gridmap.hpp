@@ -18,23 +18,16 @@ inline cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr from(
                                               src->getResolution()));
 
     using index_t = std::array<int, 2>;
-    for (int idx = 0 ; idx < static_cast<int>(src->getBundleSize()[0]) ; ++ idx) {
-        for (int idy = 0 ; idy < static_cast<int>(src->getBundleSize()[1]) ; ++ idy) {
-            const index_t bi({idx, idy});
-
-            if (const typename src_map_t::distribution_bundle_t* b = src->getDistributionBundle(bi)) {
-                if (const typename dst_map_t::distribution_bundle_t* b_dst = dst->getDistributionBundle(bi)) {
-
-                    for (std::size_t i = 0 ; i < 4 ; ++ i)
-                        if (b->at(i)) {
-                            const auto &handle = b->at(i)->getHandle();
-                            if (handle->numFree() > 0 || handle->numOccupied() > 0)
-                                *(b_dst->at(i)) = *handle;
-                        }
+    src->traverse([&dst](const index_t &bi, const src_map_t::distribution_bundle_t &b){
+        if (const typename dst_map_t::distribution_bundle_t* b_dst = dst->getDistributionBundle(bi)) {
+            for (std::size_t i = 0 ; i < 4 ; ++ i)
+                if (b.at(i)) {
+                    const auto &handle = b.at(i)->getHandle();
+                    if (handle->numFree() > 0 || handle->numOccupied() > 0)
+                        *(b_dst->at(i)) = *handle;
                 }
-            }
         }
-    }
+    });
 
     return dst;
 }
@@ -64,24 +57,17 @@ inline cslibs_ndt_2d::static_maps::OccupancyGridmap::Ptr from(
                                               src->getResolution(),
                                               size));
 
-    for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx) {
-        for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy) {
-            const index_t bi({idx, idy});
-
-            if (const typename src_map_t::distribution_bundle_t* b = src->getDistributionBundle(bi)) {
-                const index_t bi_dst = get_bundle_index(bi);
-                if (const typename dst_map_t::distribution_bundle_t* b_dst = dst->getDistributionBundle(bi_dst)) {
-
-                    for (std::size_t i = 0 ; i < 4 ; ++ i)
-                        if (b->at(i)) {
-                            const auto &handle = b->at(i)->getHandle();
-                            if (handle->numFree() > 0 || handle->numOccupied() > 0)
-                                *(b_dst->at(i)) = *handle;
-                        }
+    src->traverse([&dst, &get_bundle_index](const index_t &bi, const src_map_t::distribution_bundle_t &b){
+        const index_t bi_dst = get_bundle_index(bi);
+        if (const typename dst_map_t::distribution_bundle_t* b_dst = dst->getDistributionBundle(bi_dst)) {
+            for (std::size_t i = 0 ; i < 4 ; ++ i)
+                if (b.at(i)) {
+                    const auto &handle = b.at(i)->getHandle();
+                    if (handle->numFree() > 0 || handle->numOccupied() > 0)
+                        *(b_dst->at(i)) = *handle;
                 }
-            }
         }
-    }
+    });
 
     return dst;
 }

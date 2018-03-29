@@ -42,9 +42,6 @@ bool NDTMapLoader::setup()
     pub_ndt_distributions_     = nh_.advertise<cslibs_ndt_3d::DistributionArray>(topic_ndt_distributions,     1);
     pub_occ_ndt_distributions_ = nh_.advertise<cslibs_ndt_3d::DistributionArray>(topic_occ_ndt_distributions, 1);
 
-    const bool traversal = nh_.param<bool>("traversal", "false");
-    std::cout << "Traversal option is " << (traversal ? "enabled." : "disabled.") << std::endl;
-
     if (path_ndt != "") {
         if (!cslibs_ndt_3d::dynamic_maps::loadBinary(path_ndt, map_ndt_)) {
             std::cerr << "Could not load ndt 3d map '" << path_ndt << "'." << std::endl;
@@ -52,13 +49,13 @@ bool NDTMapLoader::setup()
         }
 
         pcl::PointCloud<pcl::PointXYZI>::Ptr points;
-        cslibs_ndt_3d::conversion::from(map_ndt_, points, traversal);
+        cslibs_ndt_3d::conversion::from(map_ndt_, points);
         if (points) {
             map_ndt_means_.reset(new sensor_msgs::PointCloud2);
             pcl::toROSMsg(*points, *map_ndt_means_);
             map_ndt_means_->header.frame_id = "/map";
 
-            cslibs_ndt_3d::conversion::from(map_ndt_, map_ndt_distributions_, traversal);
+            cslibs_ndt_3d::conversion::from(map_ndt_, map_ndt_distributions_);
             if (map_ndt_distributions_)
                 map_ndt_distributions_->header.frame_id = "/map";
         }
@@ -71,14 +68,14 @@ bool NDTMapLoader::setup()
 
         cslibs_gridmaps::utility::InverseModel::Ptr ivm(new cslibs_gridmaps::utility::InverseModel(0.5, 0.45, 0.65));
         pcl::PointCloud<pcl::PointXYZI>::Ptr points;
-        cslibs_ndt_3d::conversion::from(map_occ_ndt_, points, ivm, traversal);
+        cslibs_ndt_3d::conversion::from(map_occ_ndt_, points, ivm);
 
         if (points) {
             map_occ_ndt_means_.reset(new sensor_msgs::PointCloud2);
             pcl::toROSMsg(*points, *map_occ_ndt_means_);
             map_occ_ndt_means_->header.frame_id = "/map";
 
-            cslibs_ndt_3d::conversion::from(map_occ_ndt_, map_occ_ndt_distributions_, ivm, traversal);
+            cslibs_ndt_3d::conversion::from(map_occ_ndt_, map_occ_ndt_distributions_, ivm);
             if (map_occ_ndt_distributions_)
                 map_occ_ndt_distributions_->header.frame_id = "/map";
         }

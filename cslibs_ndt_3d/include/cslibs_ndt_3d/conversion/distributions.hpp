@@ -28,8 +28,7 @@ inline Distribution from(const cslibs_math::statistics::Distribution<3, 3> &d,
 
 inline void from(
         const cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr &src,
-        cslibs_ndt_3d::DistributionArray::Ptr &dst,
-        const bool &traversal = false)
+        cslibs_ndt_3d::DistributionArray::Ptr &dst)
 {
     if (!src)
         return;
@@ -44,51 +43,36 @@ inline void from(
                      const point_t &p) -> double {
         return d ? d->getHandle()->data().sampleNonNormalized(p) : 0.0;
     };
-    auto sample_bundle = [&sample](const distribution_bundle_t *b,
+    auto sample_bundle = [&sample](const distribution_bundle_t &b,
                                    const point_t &p) -> double {
-        return 0.125 * (sample(b->at(0), p) +
-                        sample(b->at(1), p) +
-                        sample(b->at(2), p) +
-                        sample(b->at(3), p) +
-                        sample(b->at(4), p) +
-                        sample(b->at(5), p) +
-                        sample(b->at(6), p) +
-                        sample(b->at(7), p));
+        return 0.125 * (sample(b.at(0), p) +
+                        sample(b.at(1), p) +
+                        sample(b.at(2), p) +
+                        sample(b.at(3), p) +
+                        sample(b.at(4), p) +
+                        sample(b.at(5), p) +
+                        sample(b.at(6), p) +
+                        sample(b.at(7), p));
     };
 
     using index_t = std::array<int, 3>;
-    auto process_bundle = [&src, &dst, &sample_bundle](const index_t &bi) {
-        if (const distribution_bundle_t *b = src->getDistributionBundle(bi)) {
-            distribution_t::distribution_t d;
-            for (std::size_t i = 0; i < 8; ++ i)
-                d += b->at(i)->getHandle()->data();
+    auto process_bundle = [&dst, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
+        distribution_t::distribution_t d;
+        for (std::size_t i = 0; i < 8; ++ i)
+            d += b.at(i)->getHandle()->data();
 
-            if (d.getN() == 0)
-                return;
-            dst->data.emplace_back(from(d, b->id(), sample_bundle(b, point_t(d.getMean()))));
-        }
+        if (d.getN() == 0)
+            return;
+        dst->data.emplace_back(from(d, b.id(), sample_bundle(b, point_t(d.getMean()))));
     };
 
-    if (traversal) {
-        std::vector<index_t> indices;
-        src->getBundleIndices(indices);
-        for (auto &bi : indices)
-            process_bundle(bi);
-    } else {
-        const index_t min_distribution_index = src->getMinDistributionIndex();
-        const index_t max_distribution_index = src->getMaxDistributionIndex();
-        for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx)
-            for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy)
-                for (int idz = min_distribution_index[2] ; idz <= max_distribution_index[2] ; ++ idz)
-                    process_bundle({{idx, idy, idz}});
-    }
+    src->traverse(process_bundle);
 }
 
 inline void from(
         const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr &src,
         cslibs_ndt_3d::DistributionArray::Ptr &dst,
-        const cslibs_gridmaps::utility::InverseModel::Ptr &ivm,
-        const bool &traversal = false)
+        const cslibs_gridmaps::utility::InverseModel::Ptr &ivm)
 {
     if (!src)
         return;
@@ -108,45 +92,30 @@ inline void from(
         };
         return d ? evaluate() : 0.0;
     };
-    auto sample_bundle = [&sample](const distribution_bundle_t *b,
+    auto sample_bundle = [&sample](const distribution_bundle_t &b,
                                    const point_t &p) -> double {
-        return 0.125 * (sample(b->at(0), p) +
-                        sample(b->at(1), p) +
-                        sample(b->at(2), p) +
-                        sample(b->at(3), p) +
-                        sample(b->at(4), p) +
-                        sample(b->at(5), p) +
-                        sample(b->at(6), p) +
-                        sample(b->at(7), p));
+        return 0.125 * (sample(b.at(0), p) +
+                        sample(b.at(1), p) +
+                        sample(b.at(2), p) +
+                        sample(b.at(3), p) +
+                        sample(b.at(4), p) +
+                        sample(b.at(5), p) +
+                        sample(b.at(6), p) +
+                        sample(b.at(7), p));
     };    
 
     using index_t = std::array<int, 3>;
-    auto process_bundle = [&src, &dst, &ivm, &sample_bundle](const index_t &bi) {
-        if (const distribution_bundle_t *b = src->getDistributionBundle(bi)) {
-            distribution_t::distribution_t d;
-            for (std::size_t i = 0; i < 8; ++ i)
-                if (const auto &d_tmp = b->at(i)->getHandle()->getDistribution())
-                    d += *d_tmp;
+    auto process_bundle = [&dst, &ivm, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
+        distribution_t::distribution_t d;
+        for (std::size_t i = 0; i < 8; ++ i)
+            if (const auto &d_tmp = b.at(i)->getHandle()->getDistribution())
+                d += *d_tmp;
 
-            if (d.getN() == 0)
-                return;
-            dst->data.emplace_back(from(d, b->id(), sample_bundle(b, point_t(d.getMean()))));
-        }
+        if (d.getN() == 0)
+            return;
+        dst->data.emplace_back(from(d, b.id(), sample_bundle(b, point_t(d.getMean()))));
     };
-
-    if (traversal) {
-        std::vector<index_t> indices;
-        src->getBundleIndices(indices);
-        for (auto &bi : indices)
-            process_bundle(bi);
-    } else {
-        const index_t min_distribution_index = src->getMinDistributionIndex();
-        const index_t max_distribution_index = src->getMaxDistributionIndex();
-        for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx)
-            for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy)
-                for (int idz = min_distribution_index[2] ; idz <= max_distribution_index[2] ; ++ idz)
-                    process_bundle({{idx, idy, idz}});
-    }
+    src->traverse(process_bundle);
 }
 }
 }

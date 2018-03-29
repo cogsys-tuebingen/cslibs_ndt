@@ -18,24 +18,15 @@ inline cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr from(
                                               src->getResolution()));
 
     using index_t = std::array<int, 3>;
-    for (int idx = 0 ; idx < static_cast<int>(src->getBundleSize()[0]) ; ++ idx) {
-        for (int idy = 0 ; idy < static_cast<int>(src->getBundleSize()[1]) ; ++ idy) {
-            for (int idz = 0 ; idz < static_cast<int>(src->getBundleSize()[2]) ; ++ idz) {
-                const index_t bi({idx, idy, idz});
-
-                if (const typename src_map_t::distribution_bundle_t* b = src->getDistributionBundle(bi)) {
-                    if (const typename dst_map_t::distribution_bundle_t* b_dst = dst->getDistributionBundle(bi)) {
-
-                        for (std::size_t i = 0 ; i < 8 ; ++ i) {
-                            const auto &handle = b->at(i)->getHandle()->data();
-                            if (handle.getN() > 0 && b_dst->at(i)->data().getN() == 0)
-                                b_dst->at(i)->data() = handle;
-                        }
-                    }
-                }
+    src->traverse([&dst](const index_t &bi, const src_map_t::distribution_bundle_t &b){
+        if (const typename dst_map_t::distribution_bundle_t* b_dst = dst->getDistributionBundle(bi)) {
+            for (std::size_t i = 0 ; i < 8 ; ++ i) {
+                const auto &handle = b.at(i)->getHandle()->data();
+                if (handle.getN() > 0 && b_dst->at(i)->data().getN() == 0)
+                    b_dst->at(i)->data() = handle;
             }
         }
-    }
+    });
 
     return dst;
 }
@@ -67,25 +58,16 @@ inline cslibs_ndt_3d::static_maps::Gridmap::Ptr from(
                                               src->getResolution(),
                                               size));
 
-    for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx) {
-        for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy) {
-            for (int idz = min_distribution_index[2] ; idz <= max_distribution_index[2] ; ++ idz) {
-                const index_t bi({idx, idy, idz});
-
-                if (const typename src_map_t::distribution_bundle_t* b = src->getDistributionBundle(bi)) {
-                    const index_t bi_dst = get_bundle_index(bi);
-                    if (const typename dst_map_t::distribution_bundle_t* b_dst = dst->getDistributionBundle(bi_dst)) {
-
-                        for (std::size_t i = 0 ; i < 8 ; ++ i) {
-                            const auto &handle = b->at(i)->getHandle()->data();
-                            if (handle.getN() > 0 && b_dst->at(i)->data().getN() == 0)
-                                b_dst->at(i)->data() = handle;
-                        }
-                    }
-                }
+    src->traverse([&dst, &get_bundle_index](const index_t &bi, const src_map_t::distribution_bundle_t &b){
+        const index_t bi_dst = get_bundle_index(bi);
+        if (const typename dst_map_t::distribution_bundle_t* b_dst = dst->getDistributionBundle(bi_dst)) {
+            for (std::size_t i = 0 ; i < 8 ; ++ i) {
+                const auto &handle = b.at(i)->getHandle()->data();
+                if (handle.getN() > 0 && b_dst->at(i)->data().getN() == 0)
+                    b_dst->at(i)->data() = handle;
             }
         }
-    }
+    });
 
     return dst;
 }

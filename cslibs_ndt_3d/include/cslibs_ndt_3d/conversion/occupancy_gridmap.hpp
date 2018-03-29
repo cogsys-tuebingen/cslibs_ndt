@@ -40,7 +40,6 @@ inline cslibs_ndt_3d::static_maps::OccupancyGridmap::Ptr from(
 
     using index_t = std::array<int, 3>;
     const index_t min_distribution_index = src->getMinDistributionIndex();
-    const index_t max_distribution_index = src->getMaxDistributionIndex();
 
     const std::array<std::size_t, 3> size =
     {{static_cast<std::size_t>(std::ceil((src->getMax()(0) - src->getMin()(0)) / src->getResolution())),

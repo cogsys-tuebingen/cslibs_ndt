@@ -340,66 +340,6 @@ cslibs_ndt_2d::static_maps::OccupancyGridmap::Ptr generateStaticOccMap()
     return map;
 }
 
-TEST(Test_cslibs_ndt_2d, testDynamicGridmapSerialization)
-{
-    using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
-    const typename map_t::Ptr map = generateDynamicMap();
-
-    // serialization
-    YAML::Node n(map);
-
-    // de-serialization
-    const typename map_t::Ptr & map_converted = n.as<typename map_t::Ptr>();
-
-    // tests
-    testDynamicMap(map, map_converted);
-}
-
-TEST(Test_cslibs_ndt_2d, testStaticGridmapSerialization)
-{    
-    using map_t = cslibs_ndt_2d::static_maps::Gridmap;
-    const typename map_t::Ptr map = generateStaticMap();
-
-    // serialization
-    YAML::Node n(map);
-
-    // de-serialization
-    const typename map_t::Ptr & map_converted = n.as<typename map_t::Ptr>();
-
-    // tests
-    testStaticMap(map, map_converted);
-}
-
-TEST(Test_cslibs_ndt_2d, testDynamicOccGridmapSerialization)
-{
-    using map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap;
-    const typename map_t::Ptr map = generateDynamicOccMap();
-
-    // serialization
-    YAML::Node n(map);
-
-    // de-serialization
-    const typename map_t::Ptr & map_converted = n.as<typename map_t::Ptr>();
-
-    // tests
-    testDynamicOccMap(map, map_converted);
-}
-
-TEST(Test_cslibs_ndt_2d, testStaticOccGridmapSerialization)
-{
-    using map_t = cslibs_ndt_2d::static_maps::OccupancyGridmap;
-    const typename map_t::Ptr map = generateStaticOccMap();
-
-    // serialization
-    YAML::Node n(map);
-
-    // de-serialization
-    const typename map_t::Ptr & map_converted = n.as<typename map_t::Ptr>();
-
-    // tests
-    testStaticOccMap(map, map_converted);
-}
-
 TEST(Test_cslibs_ndt_2d, testDynamicGridmapFileSerialization)
 {
     using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;

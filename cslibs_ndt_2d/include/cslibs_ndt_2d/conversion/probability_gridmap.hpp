@@ -52,7 +52,8 @@ inline void from(
             for (int l = 0 ; l < chunk_step ; ++ l) {
                 const int dst_x = (bi[0] - min_bi[0]) * chunk_step + k;
                 const int dst_y = (bi[1] - min_bi[1]) * chunk_step + l;
-                if (dst_x < 0 || dst_y < 0 || dst_x >= dst->getWidth() || dst_y >= dst->getHeight())
+                if (dst_x < 0 || dst_y < 0 ||
+                        dst_x >= static_cast<int>(dst->getWidth()) || dst_y >= static_cast<int>(dst->getHeight()))
                     return;
 
                 const cslibs_math_2d::Point2d p(bi[0] * bundle_resolution + k * sampling_resolution,
@@ -114,7 +115,8 @@ inline void from(
             for (int l = 0 ; l < chunk_step ; ++ l) {
                 const int dst_x = (bi[0] - min_bi[0]) * chunk_step + k;
                 const int dst_y = (bi[1] - min_bi[1]) * chunk_step + l;
-                if (dst_x < 0 || dst_y < 0 || dst_x >= dst->getWidth() || dst_y >= dst->getHeight())
+                if (dst_x < 0 || dst_y < 0 ||
+                        dst_x >= static_cast<int>(dst->getWidth()) || dst_y >= static_cast<int>(dst->getHeight()))
                     return;
 
                 const cslibs_math_2d::Point2d p(bi[0] * bundle_resolution + k * sampling_resolution,

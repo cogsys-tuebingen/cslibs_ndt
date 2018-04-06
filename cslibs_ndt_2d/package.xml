@@ -2,7 +2,10 @@
 <package format="2">
   <name>cslibs_ndt_2d</name>
   <version>0.0.2</version>
-  <description>The ndt package contains an implementation of the Normal Distributions Transform.</description>
+  <description>
+  The cslibs_ndt_2d package contains two-dimensional implementations of map representations using
+  Normal Distributions Transforms.
+  </description>
 
   <author email="richard.hanten@uni-tuebingen.de">Richard Hanten</author>
   <author email="cornelia.schulz@uni-tuebingen.de">Cornelia Schulz</author>

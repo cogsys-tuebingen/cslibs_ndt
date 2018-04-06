@@ -6,7 +6,7 @@ This package is divided up into the following subpackages:
 
 * [cslibs\_ndt](cslibs_ndt/):
 
-    This package contains common utilities needed for the different implementations and their serializations.
+    This package contains common utilities needed for the different implementations and their serialization.
 
 * [cslibs\_ndt\_2d](cslibs_ndt_2d/):
 

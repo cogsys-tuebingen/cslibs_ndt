@@ -1,5 +1,5 @@
 # CS - Library: NDT
-This library contains fast and sparse implementations of multi-dimensional map representations using Normal Distributions Transforms. The code is open-source (BSD License) and has been tested under Ubuntu 16.04 with ROS Kinetic. Please note that this project is part of ongoing research and that there will be changes in the future.
+This library contains fast and sparse implementations of multi-dimensional map representations using Normal Distributions Transforms. The code is open-source ([BSD License](LICENSE)) and has been tested under Ubuntu 16.04 with ROS Kinetic. Please note that this project is part of ongoing research and that there will be changes in the future.
 
 ## Structure
 This package is divided up into the following subpackages:

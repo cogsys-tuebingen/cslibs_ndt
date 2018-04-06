@@ -5,7 +5,6 @@
 
 #include <cslibs_ndt/serialization/filesystem.hpp>
 #include <cslibs_ndt/serialization/storage.hpp>
-#include <cslibs_ndt/serialization/indexed_occupancy_distribution.hpp>
 
 #include <cslibs_math_2d/serialization/transform.hpp>
 #include <cslibs_math/serialization/array.hpp>

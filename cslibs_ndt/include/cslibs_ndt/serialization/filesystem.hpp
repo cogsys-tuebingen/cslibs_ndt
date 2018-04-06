@@ -8,11 +8,11 @@ namespace common {
 namespace serialization {
 inline bool check_directory(const boost::filesystem::path &p)
 {
-    if(!boost::filesystem::exists(p)) {
+    if (!boost::filesystem::exists(p)) {
         std::cerr << "Path '" << p.string() << "' does not exist.\n";
         return false;
     }
-    if(!boost::filesystem::is_directory(p)) {
+    if (!boost::filesystem::is_directory(p)) {
         std::cerr << "Path '" << p.string() << "' is not a directory.\n";
         return false;
     }
@@ -22,11 +22,11 @@ inline bool check_directory(const boost::filesystem::path &p)
 
 inline bool check_file(const boost::filesystem::path &p)
 {
-    if(!boost::filesystem::exists(p)) {
+    if (!boost::filesystem::exists(p)) {
         std::cerr << "Path '" << p.string() << "' does not exist.\n";
         return false;
     }
-    if(!boost::filesystem::is_regular_file(p)) {
+    if (!boost::filesystem::is_regular_file(p)) {
         std::cerr << "Path '" << p.string() << "' is not a directory.\n";
         return false;
     }
@@ -36,13 +36,13 @@ inline bool check_file(const boost::filesystem::path &p)
 
 inline bool create_directory(const boost::filesystem::path &p)
 {
-    if(boost::filesystem::exists(p)) {
+    if (boost::filesystem::exists(p)) {
         if(!boost::filesystem::remove_all(p)) {
             std::cerr << "Error deleting folder '" << p << "'from filesystem.\n";
             return false;
         }
     }
-    if(!boost::filesystem::create_directory(p)) {
+    if (!boost::filesystem::create_directory(p)) {
         std::cerr << "Error creating folder '" << p << "' in filesystem, check your rights.\n";
         return false;
     }

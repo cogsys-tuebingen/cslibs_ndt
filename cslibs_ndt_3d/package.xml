@@ -26,6 +26,6 @@
   <build_depend>message_generation</build_depend>
 
   <export>
-    <rviz plugin="${prefix}/plugin_description.xml"/>
+    <rviz plugin="${prefix}/plugins.xml"/>
   </export>
 </package>

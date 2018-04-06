@@ -538,4 +538,5 @@ protected:
 };
 }
 }
+
 #endif // CSLIBS_NDT_3D_STATIC_MAPS_OCCUPANCY_GRIDMAP_HPP

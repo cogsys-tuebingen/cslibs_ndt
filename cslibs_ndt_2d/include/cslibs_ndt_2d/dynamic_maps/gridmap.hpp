@@ -44,8 +44,8 @@ public:
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
 
-    Gridmap(const pose_t        &origin,
-            const double         resolution) :
+    Gridmap(const pose_t &origin,
+            const double &resolution) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -63,11 +63,11 @@ public:
     }
 
     Gridmap(const pose_t &origin,
-            const double  resolution,
+            const double &resolution,
+            const index_t &min_index,
+            const index_t &max_index,
             const std::shared_ptr<distribution_bundle_storage_t> &bundles,
-            const distribution_storage_array_t                   &storage,
-            const index_t                                        &min_index,
-            const index_t                                        &max_index) :
+            const distribution_storage_array_t                   &storage) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -81,10 +81,10 @@ public:
     {
     }
 
-    Gridmap(const double origin_x,
-            const double origin_y,
-            const double origin_phi,
-            const double resolution) :
+    Gridmap(const double &origin_x,
+            const double &origin_y,
+            const double &origin_phi,
+            const double &resolution) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -370,7 +370,5 @@ protected:
 };
 }
 }
-
-
 
 #endif // CSLIBS_NDT_2D_DYNAMIC_MAPS_GRIDMAP_HPP

@@ -21,11 +21,11 @@ namespace dynamic_maps {
 inline bool saveBinary(const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr &map,
                        const std::string &path)
 {
-    using path_t                        = boost::filesystem::path;
-    using paths_t                       = std::array<path_t, 8>;
-    using index_t                       = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::index_t;
-    using distribution_storage_array_t  = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_storage_array_t;
-    using binary_t                      = cslibs_ndt::binary<cslibs_ndt::OccupancyDistribution, 3, 3>;
+    using path_t     = boost::filesystem::path;
+    using paths_t    = std::array<path_t, 8>;
+    using index_t    = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::index_t;
+    using storages_t = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_storage_array_t;
+    using binary_t   = cslibs_ndt::binary<cslibs_ndt::OccupancyDistribution, 3, 3>;
 
     /// step one: check if the root diretory exists
     path_t path_root(path);
@@ -46,7 +46,7 @@ inline bool saveBinary(const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr 
     /// meta file
     const path_t path_file = path_t("map.yaml");
     {
-        std::ofstream out((path_root / path_file).string());
+        std::ofstream out((path_root / path_file).string(), std::fstream::trunc);
         YAML::Emitter yaml(out);
         YAML::Node n;
         std::vector<index_t> indices;
@@ -60,14 +60,14 @@ inline bool saveBinary(const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr 
     }
 
     /// step four: write out the storages
-    const distribution_storage_array_t storages = {{map->getStorages()[0],
-                                                    map->getStorages()[1],
-                                                    map->getStorages()[2],
-                                                    map->getStorages()[3],
-                                                    map->getStorages()[4],
-                                                    map->getStorages()[5],
-                                                    map->getStorages()[6],
-                                                    map->getStorages()[7]}};
+    const storages_t storages = {{map->getStorages()[0],
+                                  map->getStorages()[1],
+                                  map->getStorages()[2],
+                                  map->getStorages()[3],
+                                  map->getStorages()[4],
+                                  map->getStorages()[5],
+                                  map->getStorages()[6],
+                                  map->getStorages()[7]}};
 
     std::array<std::thread, 8> threads;
     std::atomic_bool success(true);
@@ -84,12 +84,12 @@ inline bool saveBinary(const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr 
 inline bool loadBinary(const std::string &path,
                        cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr &map)
 {
-    using path_t                        = boost::filesystem::path;
-    using paths_t                       = std::array<path_t, 8>;
-    using index_t                       = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::index_t;
-    using binary_t                      = cslibs_ndt::binary<cslibs_ndt::OccupancyDistribution, 3, 3>;
-    using bundle_storage_t              = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_bundle_storage_t;
-    using distribution_storage_array_t  = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_storage_array_t;
+    using path_t           = boost::filesystem::path;
+    using paths_t          = std::array<path_t, 8>;
+    using index_t          = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::index_t;
+    using binary_t         = cslibs_ndt::binary<cslibs_ndt::OccupancyDistribution, 3, 3>;
+    using bundle_storage_t = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_bundle_storage_t;
+    using storages_t       = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_storage_array_t;
 
     /// step one: check if the root diretory exists
     path_t path_root(path);
@@ -115,7 +115,7 @@ inline bool loadBinary(const std::string &path,
     path_t  path_file = path_t("map.yaml");
 
     std::shared_ptr<bundle_storage_t> bundles(new bundle_storage_t);
-    distribution_storage_array_t storages;
+    storages_t storages;
 
     YAML::Node n = YAML::LoadFile((path_root / path_file).string());
     const cslibs_math_3d::Transform3d origin     = n["origin"].as<cslibs_math_3d::Transform3d>();

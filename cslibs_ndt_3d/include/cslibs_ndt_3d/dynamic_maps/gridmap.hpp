@@ -397,4 +397,5 @@ protected:
 };
 }
 }
+
 #endif // CSLIBS_NDT_3D_DYNAMIC_MAPS_GRIDMAP_HPP

@@ -74,11 +74,11 @@ public:
     }
 
     OccupancyGridmap(const pose_t &origin,
-                     const double  resolution,
+                     const double resolution,
+                     const index_t &min_index,
+                     const index_t &max_index,
                      const std::shared_ptr<distribution_bundle_storage_t> &bundles,
-                     const distribution_storage_array_t                   &storage,
-                     const index_t                                        &min_index,
-                     const index_t                                        &max_index) :
+                     const distribution_storage_array_t                   &storage) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),

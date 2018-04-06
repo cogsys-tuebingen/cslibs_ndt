@@ -45,9 +45,9 @@ public:
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::array::Array>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
 
-    Gridmap(const pose_t        &origin,
-            const double         resolution,
-            const size_t        &size) :
+    Gridmap(const pose_t &origin,
+            const double &resolution,
+            const size_t &size) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -65,23 +65,17 @@ public:
                   distribution_storage_ptr_t(new distribution_storage_t)}},
         bundle_storage_(new distribution_bundle_storage_t)
     {
-        storage_[0]->template set<cis::option::tags::array_size>(size[0],
-                                                                 size[1],
-                                                                 size[2]);
-        for(std::size_t i = 1 ; i < 8 ; ++i) {
-            storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1,
-                                                                     size[1] + 1,
-                                                                     size[2] + 1);
-        }
-        bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2,
-                                                                     size[1] * 2,
-                                                                     size[2] * 2);
+        storage_[0]->template set<cis::option::tags::array_size>(size[0], size[1], size[2]);
+        for(std::size_t i = 1 ; i < 8 ; ++ i)
+            storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1, size[1] + 1, size[2] + 1);
+
+        bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2, size[1] * 2, size[2] * 2);
     }
 
-    Gridmap(const double  origin_x,
-            const double  origin_y,
-            const double  origin_phi,
-            const double  resolution,
+    Gridmap(const double &origin_x,
+            const double &origin_y,
+            const double &origin_phi,
+            const double &resolution,
             const size_t &size) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
@@ -100,17 +94,11 @@ public:
                   distribution_storage_ptr_t(new distribution_storage_t)}},
         bundle_storage_(new distribution_bundle_storage_t)
     {
-        storage_[0]->template set<cis::option::tags::array_size>(size[0],
-                                                                 size[1],
-                                                                 size[2]);
-        for(std::size_t i = 1 ; i < 8 ; ++i) {
-            storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1,
-                                                                     size[1] + 1,
-                                                                     size[2] + 1);
-        }
-        bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2,
-                                                                     size[1] * 2,
-                                                                     size[2] * 2);
+        storage_[0]->template set<cis::option::tags::array_size>(size[0], size[1], size[2]);
+        for(std::size_t i = 1 ; i < 8 ; ++ i)
+            storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1, size[1] + 1, size[2] + 1);
+
+        bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2, size[1] * 2, size[2] * 2);
     }
 
     Gridmap(const pose_t &origin,

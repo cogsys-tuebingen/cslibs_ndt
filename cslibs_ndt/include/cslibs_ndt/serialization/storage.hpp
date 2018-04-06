@@ -3,6 +3,7 @@
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
+#include <cslibs_indexed_storage/backend/array/array.hpp>
 
 #include <cslibs_ndt/serialization/filesystem.hpp>
 #include <cslibs_ndt/serialization/indexed_occupancy_distribution.hpp>
@@ -17,7 +18,6 @@
 namespace cis = cslibs_indexed_storage;
 
 namespace cslibs_ndt {
-
 template <template <std::size_t> class T, std::size_t Size>
 void write(const T<Size> &d, std::ofstream &out)
 {
@@ -34,12 +34,10 @@ template<std::size_t Size>
 void write(const OccupancyDistribution<Size> &d, std::ofstream &out)
 {
     cslibs_math::serialization::io<std::size_t>::write(d.numFree(), out);
-    if(!d.getDistribution()) {
+    if (!d.getDistribution())
         cslibs_math::serialization::distribution::binary<Size, 3>::write(out);
-    } else{
+    else
         cslibs_math::serialization::distribution::binary<Size, 3>::write(*(d.getDistribution()), out);
-    }
-
 }
 
 template<std::size_t Size>
@@ -49,24 +47,28 @@ std::size_t read(std::ifstream &in, OccupancyDistribution<Size> &d)
     d = OccupancyDistribution<Size>(f);
     typename OccupancyDistribution<Size>::distribution_t tmp;
     std::size_t r = cslibs_math::serialization::distribution::binary<Size, 3>::read(in,tmp);
-    if(tmp.getN() != 0) {
+    if (tmp.getN() != 0)
         d.getDistribution().reset(new typename OccupancyDistribution<Size>::distribution_t(tmp));
-    }
-    return  sizeof(std::size_t) + r;
+    return sizeof(std::size_t) + r;
 }
 
 
 template <template <std::size_t> class T, std::size_t Size, std::size_t Dim>
 struct binary {
-    using index_t   = std::array<int, Dim>;
-    using data_t    = T<Size>;
-    using storage_t =  cis::Storage<data_t, index_t, cis::backend::kdtree::KDTree>;
+    using index_t      = std::array<int, Dim>;
+    using size_t       = std::array<std::size_t, Dim>;
+    using data_t       = T<Size>;
+    template <template<typename, typename, typename...> class be>
+    using storage_t    = cis::Storage<data_t, index_t, be>;
+    using kd_storage_t = storage_t<cis::backend::kdtree::KDTree>;
+    using ar_storage_t = storage_t<cis::backend::array::Array>;
 
-    inline static bool save(const std::shared_ptr<storage_t>   &storage,
-                            const boost::filesystem::path      &path)
+    template <template<typename, typename, typename...> class be>
+    inline static bool save(const std::shared_ptr<storage_t<be>> &storage,
+                            const boost::filesystem::path        &path)
     {
         std::ofstream out(path.string(), std::ios::binary | std::ios::trunc);
-        if(!out.is_open()) {
+        if (!out.is_open()) {
             std::cerr << "Could not open '" << path.string() << "'\n";
             return false;
         }
@@ -81,11 +83,28 @@ struct binary {
     }
 
     inline static bool load(const boost::filesystem::path &path,
-                            std::shared_ptr<storage_t> &storage)
+                            std::shared_ptr<kd_storage_t> &storage)
     {
-        storage.reset(new storage_t);
+        storage.reset(new kd_storage_t);
+        return loadStorage(path, storage);
+    }
+
+    inline static bool load(const boost::filesystem::path &path,
+                            std::shared_ptr<ar_storage_t> &storage,
+                            const size_t &size)
+    {
+        storage.reset(new ar_storage_t);
+        storage->template set<cis::option::tags::array_size>(size);
+        return loadStorage(path, storage);
+    }
+
+private:
+    template <template<typename, typename, typename...> class be>
+    inline static bool loadStorage(const boost::filesystem::path  &path,
+                                   std::shared_ptr<storage_t<be>> &storage)
+    {
         std::ifstream in(path.string(), std::ios::binary);
-        if(!in.is_open()) {
+        if (!in.is_open()) {
             std::cerr << "Could not open '" << path.string() << "'\n";
             return false;
         }
@@ -95,7 +114,7 @@ struct binary {
             const std::size_t size = in.tellg();
             in.seekg (0, std::ios::beg);
             std::size_t read = 0;
-            while(read < size) {
+            while (read < size) {
                 index_t index;
                 data_t  data;
                 read += cslibs_math::serialization::array::binary<int, Dim>::read(in, index);

@@ -117,6 +117,23 @@ public:
                                                                      size[2] * 2);
     }
 
+    OccupancyGridmap(const pose_t &origin,
+                     const double &resolution,
+                     const size_t &size,
+                     const std::shared_ptr<distribution_bundle_storage_t> &bundles,
+                     const distribution_storage_array_t                   &storage) :
+        resolution_(resolution),
+        resolution_inv_(1.0 / resolution_),
+        bundle_resolution_(0.5 * resolution_),
+        bundle_resolution_inv_(1.0 / bundle_resolution_),
+        w_T_m_(origin),
+        m_T_w_(w_T_m_.inverse()),
+        size_(size),
+        storage_(storage),
+        bundle_storage_(bundles)
+    {
+    }
+
     inline pose_t getOrigin() const
     {
         return w_T_m_;
@@ -440,7 +457,14 @@ protected:
 
         using neighborhood_t = cis::operations::clustering::GridNeighborhoodStatic<std::tuple_size<index_t>::value, 3>;
         static constexpr neighborhood_t grid{};
-        grid.visit([&get_allocate, &bi](neighborhood_t::offset_t o) { get_allocate({{bi[0]+o[0], bi[1]+o[1], bi[2]+o[2]}}); });
+        grid.visit([this, &get_allocate, &bi](neighborhood_t::offset_t o) {
+            const index_t bi_o({{bi[0]+o[0], bi[1]+o[1], bi[2]+o[2]}});
+            if (bi_o[0] >= 0 && bi_o[1] >= 0 && bi_o[2] >=0 &&
+                    bi_o[0] < (2 * static_cast<int>(size_[0])) &&
+                    bi_o[1] < (2 * static_cast<int>(size_[1])) &&
+                    bi_o[2] < (2 * static_cast<int>(size_[2])))
+                get_allocate(bi_o);
+        });
 
         return get_allocate(bi);
     }

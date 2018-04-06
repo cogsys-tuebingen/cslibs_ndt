@@ -42,7 +42,6 @@ public:
         return *this;
     }
 
-
     inline T& operator [] (const std::size_t i)
     {
         return data_[i];

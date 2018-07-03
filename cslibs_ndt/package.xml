@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>cslibs_ndt</name>
-  <version>0.0.3</version>
+  <version>0.0.4</version>
   <description>
   The cslibs_ndt package contains common utilities needed for the different implementations and their serialization.
   </description>

@@ -43,6 +43,12 @@ public:
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
 
+    Gridmap(const double resolution) :
+      Gridmap(pose_t::identity(),
+              resolution)
+    {
+    }
+
     Gridmap(const pose_t &origin,
             const double &resolution) :
         resolution_(resolution),
@@ -164,6 +170,13 @@ public:
             bundle->at(2)->getHandle()->data() += d.data();
             bundle->at(3)->getHandle()->data() += d.data();
         });
+    }
+
+    inline const distribution_bundle_t * get(const point_t &p) const
+    {
+        const index_t bi = toBundleIndex(p);
+        lock_t(bundle_storage_mutex_);
+        return bundle_storage_->get(bi);
     }
 
     inline double sample(const point_t &p) const

@@ -106,6 +106,10 @@ public:
     {
     }
 
+    /**
+     * @brief Get minimum in map coordinates.
+     * @return the minimum
+     */
     inline point_t getMin() const
     {
         lock_t(bundle_storage_mutex_);
@@ -113,6 +117,10 @@ public:
                        min_index_[1] * bundle_resolution_);
     }
 
+    /**
+     * @brief Get maximum in map coordinates.
+     * @return the maximum
+     */
     inline point_t getMax() const
     {
         lock_t(bundle_storage_mutex_);
@@ -120,6 +128,10 @@ public:
                        (max_index_[1] + 1) * bundle_resolution_);
     }
 
+    /**
+     * @brief Get the origin.
+     * @return the origin
+     */
     inline pose_t getOrigin() const
     {
         cslibs_math_2d::Transform2d origin = w_T_m_;
@@ -127,6 +139,10 @@ public:
         return origin;
     }
 
+    /**
+     * @brief Get the initial origin of the map.
+     * @return the inital origin
+     */
     inline pose_t getInitialOrigin() const
     {
         return w_T_m_;
@@ -286,7 +302,7 @@ public:
     {
         lock_t(storage_mutex_);
         lock_t(bundle_storage_mutex_);
-        auto add_index = [&indices](const index_t &i, const distribution_bundle_t &d) {
+        auto add_index = [&indices](const index_t &i, const distribution_bundle_t &) {
             indices.emplace_back(i);
         };
         bundle_storage_->traverse(add_index);
@@ -302,6 +318,17 @@ public:
                 storage_[1]->byte_size() +
                 storage_[2]->byte_size() +
                 storage_[3]->byte_size();
+    }
+
+    inline virtual bool validate(const pose_t &p_w) const
+    {
+      lock_t l(bundle_storage_mutex_);
+      const point_t p_m = m_T_w_ * p_w.translation();
+      index_t i = {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_)),
+                    static_cast<int>(std::floor(p_m(1) * bundle_resolution_))}};
+
+      return (i[0] >= min_index_[0]  && i[0] <= max_index_[0]) &&
+             (i[1] >= min_index_[1]  && i[1] <= max_index_[1]);
     }
 
 protected:

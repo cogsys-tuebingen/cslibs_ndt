@@ -37,6 +37,7 @@ public:
     using point_t                           = cslibs_math_2d::Point2d;
     using index_t                           = std::array<int, 2>;
     using size_t                            = std::array<std::size_t, 2>;
+    using size_m_t                          = std::array<double, 2>;
     using mutex_t                           = std::mutex;
     using lock_t                            = std::unique_lock<mutex_t>;
     using distribution_t                    = cslibs_ndt::OccupancyDistribution<2>;
@@ -60,6 +61,8 @@ public:
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
         size_(size),
+        size_m_{{(size[0] + 1) * resolution,
+                 (size[1] + 1) * resolution}},
         storage_{{distribution_storage_ptr_t(new distribution_storage_t),
                   distribution_storage_ptr_t(new distribution_storage_t),
                   distribution_storage_ptr_t(new distribution_storage_t),
@@ -85,6 +88,8 @@ public:
         w_T_m_(origin_x, origin_y, origin_phi),
         m_T_w_(w_T_m_.inverse()),
         size_(size),
+        size_m_{{(size[0] + 1) * resolution,
+                 (size[1] + 1) * resolution}},
         storage_{{distribution_storage_ptr_t(new distribution_storage_t),
                   distribution_storage_ptr_t(new distribution_storage_t),
                   distribution_storage_ptr_t(new distribution_storage_t),
@@ -110,14 +115,40 @@ public:
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
         size_(size),
+        size_m_{{(size[0] + 1) * resolution,
+                 (size[1] + 1) * resolution}},
         storage_(storage),
         bundle_storage_(bundles)
     {
     }
 
+    /**
+     * @brief Get minimum in map coordinates.
+     * @return the minimum
+     */
+    inline point_t getMin() const
+    {
+        return point_t();
+    }
+
+    /**
+     * @brief Get maximum in map coordinates.
+     * @return the maximum
+     */
+    inline point_t getMax() const
+    {
+        return point_t(size_[0] * resolution_,
+                       size_[1] * bundle_resolution_);
+    }
+
+    /**
+     * @brief Get the origin.
+     * @return the origin
+     */
     inline pose_t getOrigin() const
     {
-        return w_T_m_;
+        cslibs_math_2d::Transform2d origin = w_T_m_;
+        return origin;
     }
 
     template <typename line_iterator_t = simple_iterator_t>
@@ -371,6 +402,13 @@ public:
                 storage_[3]->byte_size();
     }
 
+    inline virtual bool validate(const pose_t &p_w) const
+    {
+      const point_t p_m = m_T_w_ * p_w.translation();
+      return p_m(0) >= 0.0 && p_m(0) < size_m_[0] &&
+             p_m(1) >= 0.0 && p_m(1) < size_m_[1];
+    }
+
 protected:
     const double                                    resolution_;
     const double                                    resolution_inv_;
@@ -379,6 +417,7 @@ protected:
     const transform_t                               w_T_m_;
     const transform_t                               m_T_w_;
     const size_t                                    size_;
+    const size_m_t                                  size_m_;
 
     mutable mutex_t                                 storage_mutex_;
     mutable distribution_storage_array_t            storage_;
@@ -487,6 +526,13 @@ protected:
         const point_t p_m = m_T_w_ * p_w;
         return {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
                  static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
+    }
+
+    inline void fromIndex(const index_t &i,
+                          point_t &p_w) const
+    {
+        p_w = w_T_m_ * point_t(i[0] * resolution_,
+                               i[1] * resolution_);
     }
 };
 }

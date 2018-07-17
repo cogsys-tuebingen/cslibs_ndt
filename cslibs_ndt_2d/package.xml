@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>cslibs_ndt_2d</name>
-  <version>0.0.3</version>
+  <version>0.0.4</version>
   <description>
   The cslibs_ndt_2d package contains two-dimensional implementations of map representations using
   Normal Distributions Transforms.

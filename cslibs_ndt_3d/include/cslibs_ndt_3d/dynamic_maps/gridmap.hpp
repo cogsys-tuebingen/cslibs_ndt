@@ -19,7 +19,6 @@
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
-#include <cslibs_indexed_storage/operations/clustering/grid_neighborhood.hpp>
 
 namespace cis = cslibs_indexed_storage;
 
@@ -373,11 +372,6 @@ protected:
             };
             return bundle ? bundle : allocate_bundle();
         };
-
-        using neighborhood_t = cis::operations::clustering::GridNeighborhoodStatic<std::tuple_size<index_t>::value, 3>;
-        static constexpr neighborhood_t grid{};
-        grid.visit([&get_allocate, &bi](neighborhood_t::offset_t o) { get_allocate({{bi[0]+o[0], bi[1]+o[1], bi[2]+o[2]}}); });
-
         return get_allocate(bi);
     }
 

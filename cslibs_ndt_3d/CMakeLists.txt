@@ -30,9 +30,14 @@ generate_messages(
 )
 
 catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES
-  CATKIN_DEPENDS cslibs_ndt cslibs_math_3d cslibs_time cslibs_gridmaps
+  INCLUDE_DIRS   include
+  CATKIN_DEPENDS cslibs_ndt 
+                 cslibs_math_3d 
+                 cslibs_time 
+                 cslibs_gridmaps 
+                 message_generation
+                 message_runtime
+                 std_msgs
 )
 
 include_directories(

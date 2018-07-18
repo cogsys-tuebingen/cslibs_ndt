@@ -15,16 +15,18 @@ template<std::size_t Dim>
 class OccupancyDistribution
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    using allocator_t               = Eigen::aligned_allocator<OccupancyDistribution>;
     using Ptr                       = std::shared_ptr<OccupancyDistribution<Dim>>;
     using distribution_container_t  = OccupancyDistribution<Dim>;
     using distribution_t            = cslibs_math::statistics::Distribution<Dim, 3>;
     using distribution_ptr_t        = typename distribution_t::Ptr;
     using point_t                   = typename distribution_t::sample_t;
 
-    using mutex_t        = std::mutex;
-    using lock_t         = std::unique_lock<mutex_t>;
-    using handle_t       = cslibs_utility::synchronized::WrapAround<OccupancyDistribution<Dim>>;
-    using const_handle_t = cslibs_utility::synchronized::WrapAround<const OccupancyDistribution<Dim>>;
+    using mutex_t                   = std::mutex;
+    using lock_t                    = std::unique_lock<mutex_t>;
+    using handle_t                  = cslibs_utility::synchronized::WrapAround<OccupancyDistribution<Dim>>;
+    using const_handle_t            = cslibs_utility::synchronized::WrapAround<const OccupancyDistribution<Dim>>;
 
     inline OccupancyDistribution() :
         num_free_(0)
@@ -160,7 +162,7 @@ private:
 
     mutable double                                      occupancy_;
     mutable cslibs_gridmaps::utility::InverseModel::Ptr inverse_model_;
-} __attribute__ ((aligned (16)));
+};
 }
 
 #endif // CSLIBS_NDT_COMMON_OCCUPANCY_DISTRIBUTION_HPP

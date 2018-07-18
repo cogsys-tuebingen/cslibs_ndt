@@ -34,6 +34,9 @@ namespace dynamic_maps {
 class OccupancyGridmap
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    using allocator_t = Eigen::aligned_allocator<OccupancyGridmap>;
+
     using Ptr                               = std::shared_ptr<OccupancyGridmap>;
     using pose_2d_t                         = cslibs_math_2d::Pose2d;
     using pose_t                            = cslibs_math_3d::Pose3d;

@@ -31,6 +31,9 @@ namespace static_maps {
 class OccupancyGridmap
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    using allocator_t = Eigen::aligned_allocator<Gridmap>;
+
     using Ptr                               = std::shared_ptr<OccupancyGridmap>;
     using pose_t                            = cslibs_math_2d::Pose2d;
     using transform_t                       = cslibs_math_2d::Transform2d;

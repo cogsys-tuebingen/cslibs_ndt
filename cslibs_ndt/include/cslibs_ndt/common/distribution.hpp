@@ -14,13 +14,14 @@ template<std::size_t Dim>
 class Distribution
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    using allocator_t              = Eigen::aligned_allocator<Distribution>;
     using distribution_container_t = Distribution<Dim>;
-    using distribution_t = cslibs_math::statistics::Distribution<Dim, 3>;
-    using mutex_t        = std::mutex;
-    using lock_t         = std::unique_lock<mutex_t>;
-
-    using handle_t       = cslibs_utility::synchronized::WrapAround<distribution_container_t>;
-    using const_handle_t = cslibs_utility::synchronized::WrapAround<const distribution_container_t>;
+    using distribution_t           = cslibs_math::statistics::Distribution<Dim, 3>;
+    using mutex_t                  = std::mutex;
+    using lock_t                   = std::unique_lock<mutex_t>;
+    using handle_t                 = cslibs_utility::synchronized::WrapAround<distribution_container_t>;
+    using const_handle_t           = cslibs_utility::synchronized::WrapAround<const distribution_container_t>;
 
     inline Distribution()
     {

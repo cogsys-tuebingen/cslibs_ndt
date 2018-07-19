@@ -90,6 +90,11 @@ public:
     {
     }
 
+    inline bool empty() const
+    {
+        return min_index_[0] == std::numeric_limits<int>::max();
+    }
+
     /**
      * @brief Get minimum in map coordinates.
      * @return the minimum

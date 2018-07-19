@@ -3,6 +3,7 @@
 
 #include <cslibs_ndt_2d/dynamic_maps/gridmap.hpp>
 #include <cslibs_ndt_2d/dynamic_maps/occupancy_gridmap.hpp>
+#include <cslibs_ndt_2d/static_maps/flat_gridmap.hpp>
 
 #include <cslibs_ndt_2d/conversion/gridmap.hpp>
 #include <cslibs_ndt_2d/conversion/occupancy_gridmap.hpp>
@@ -14,7 +15,7 @@ namespace conversion {
 inline void from(
         const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &src,
         cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr &dst,
-        const double &sampling_resolution)
+        const double sampling_resolution)
 {
     if (!src)
         return;
@@ -54,9 +55,41 @@ inline void from(
 }
 
 inline void from(
+        const cslibs_ndt_2d::static_maps::flat::Gridmap::Ptr  &src,
+        cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr &dst,
+        const double sampling_resolution)
+{
+    if (!src)
+        return;
+
+    using dst_map_t = cslibs_gridmaps::static_maps::ProbabilityGridmap;
+    dst.reset(new dst_map_t(src->getOrigin(),
+                            sampling_resolution,
+                            src->getHeight() / sampling_resolution,
+                            src->getWidth()  / sampling_resolution));
+    std::fill(dst->getData().begin(), dst->getData().end(), 0);
+
+
+    const std::size_t height = dst->getHeight();
+    const std::size_t width  = dst->getWidth();
+
+    for(std::size_t i = 0 ; i < height ; ++i) {
+      for(std::size_t j = 0 ; j < width ; ++j) {
+        const cslibs_math_2d::Point2d p(j * sampling_resolution,
+                                        i * sampling_resolution);
+        const double v = src->sample(p);
+        if(v != 0.0) {
+          std::cerr << i << " " << j << " " << v << "\n";
+          dst->at(j,i) = v;
+        }
+      }
+    }
+}
+
+inline void from(
         const cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr &src,
         cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr &dst,
-        const double &sampling_resolution,
+        const double sampling_resolution,
         const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model)
 {
     if (!src || !inverse_model)

@@ -9,11 +9,12 @@ namespace conversion {
 inline cslibs_ndt_2d::static_maps::flat::Gridmap::Ptr flatten(
         const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr& src)
 {
-    if (!src)
+  if (!src)
         return nullptr;
 
     using index_t = std::array<int, 2>;
     const index_t min_distribution_index = src->getMinDistributionIndex();
+
 
     const cslibs_math_2d::Point2d min_corner = src->getMin();
     const cslibs_math_2d::Point2d max_corner = src->getMax();
@@ -30,15 +31,20 @@ inline cslibs_ndt_2d::static_maps::flat::Gridmap::Ptr flatten(
     typename dst_map_t::Ptr dst(new dst_map_t(src->getOrigin(),
                                               src->getResolution(),
                                               size));
+
     auto traverse = [&min_distribution_index, &dst](const index_t &i, const src_map_t::distribution_bundle_t &b)
     {
       const index_t index = {{i[0] - min_distribution_index[0], i[1] - min_distribution_index[1]}};
       dst_map_t::distribution_t* dst_d = dst->getDistribution(index);
+      std::cerr << "++++++++++++++++++" << std::endl;
       for(const src_map_t::distribution_t *src_d : b) {
+        std::cerr << src_d->getHandle()->data() << "\n";
         dst_d->getHandle()->data() += src_d->getHandle()->data();
       }
-
+      std::cerr << dst_d->getHandle()->data() << "\n";
+      std::cerr << "------------------" << std::endl;
     };
+
     src->traverse(traverse);
     return dst;
 }

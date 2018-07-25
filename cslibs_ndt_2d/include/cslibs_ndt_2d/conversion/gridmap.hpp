@@ -43,8 +43,8 @@ inline cslibs_ndt_2d::static_maps::Gridmap::Ptr from(
         return nullptr;
 
     using index_t = std::array<int, 2>;
-    const index_t min_distribution_index = src->getMinDistributionIndex();
-    const index_t max_distribution_index = src->getMaxDistributionIndex();
+    const index_t min_distribution_index = src->getMinBundleIndex();
+    const index_t max_distribution_index = src->getMaxBundleIndex();
 
     const std::array<std::size_t, 2> size =
     {{static_cast<std::size_t>(std::ceil((src->getMax()(0) - src->getMin()(0)) / src->getResolution())),
@@ -59,7 +59,8 @@ inline cslibs_ndt_2d::static_maps::Gridmap::Ptr from(
     using dst_map_t = cslibs_ndt_2d::static_maps::Gridmap;
     typename dst_map_t::Ptr dst(new dst_map_t(src->getOrigin(),
                                               src->getResolution(),
-                                              size));
+                                              size,
+                                              src->getMinBundleIndex()));
 
     for (int idx = min_distribution_index[0] ; idx <= max_distribution_index[0] ; ++ idx) {
         for (int idy = min_distribution_index[1] ; idy <= max_distribution_index[1] ; ++ idy) {

@@ -45,9 +45,10 @@ public:
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;
     using distribution_storage_const_ptr_t  = std::shared_ptr<distribution_storage_t const>;
 
-    Gridmap(const pose_t &origin,
-            const double &resolution,
-            const size_t &size) :
+    Gridmap(const pose_t  &origin,
+            const double  &resolution,
+            const size_t  &size,
+            const index_t &min_index) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         w_T_m_(origin),
@@ -55,16 +56,21 @@ public:
         size_(size),
         size_m_{{(size[0] + 1) * resolution,
                  (size[1] + 1) * resolution}},
+        min_index_(min_index),
+        max_index_{{min_index[0] + static_cast<int>(size[0]),
+                    min_index[1] + static_cast<int>(size[1])}},
         storage_(distribution_storage_ptr_t(new distribution_storage_t))
     {
       storage_->template set<cis::option::tags::array_size>(size[0], size[1]);
+      storage_->template set<cis::option::tags::array_offset>(min_index[0], min_index[1]);
     }
 
     Gridmap(const double &origin_x,
             const double &origin_y,
             const double &origin_phi,
             const double &resolution,
-            const size_t &size) :
+            const size_t &size,
+            const index_t &min_index) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         w_T_m_(origin_x, origin_y, origin_phi),
@@ -72,9 +78,13 @@ public:
         size_(size),
         size_m_{{(size[0] + 1) * resolution,
                  (size[1] + 1) * resolution}},
+        min_index_(min_index),
+        max_index_{{min_index[0] + static_cast<int>(size[0]),
+                    min_index[1] + static_cast<int>(size[1])}},
         storage_(distribution_storage_ptr_t(new distribution_storage_t))
     {
         storage_->template set<cis::option::tags::array_size>(size[0], size[1]);
+        storage_->template set<cis::option::tags::array_offset>(min_index[0], min_index[1]);
     }
 
     /**
@@ -83,8 +93,8 @@ public:
      */
     inline point_t getMin() const
     {
-        lock_t(bundle_storage_mutex_);
-        return point_t();
+        return point_t(min_index_[0] * resolution_,
+                       min_index_[1] * resolution_);
     }
 
     /**
@@ -93,8 +103,8 @@ public:
      */
     inline point_t getMax() const
     {
-        lock_t(bundle_storage_mutex_);
-        return point_t(size_m_[0],size_m_[1]);
+        return point_t((max_index_[0] + 1) * resolution_,
+                       (max_index_[1] + 1) * resolution_);
     }
 
     /**
@@ -104,14 +114,36 @@ public:
     inline pose_t getOrigin() const
     {
         cslibs_math_2d::Transform2d origin = w_T_m_;
+        origin.translation() += getMin();
         return origin;
+    }
+
+    /**
+     * @brief Get the initial origin of the map.
+     * @return the inital origin
+     */
+    inline pose_t getInitialOrigin() const
+    {
+        return w_T_m_;
+    }
+
+    inline index_t getMinIndex() const
+    {
+        return min_index_;
+    }
+
+    inline index_t getMaxIndex() const
+    {
+        return max_index_;
     }
 
     inline void add(const point_t &p)
     {
         distribution_t *distribution;
         {
-            const index_t i = toIndex(p);
+            index_t i;
+            if(!toIndex(p, i))
+              return;
             lock_t(storage_mutex_);
             distribution = getAllocate(i);
         }
@@ -120,8 +152,8 @@ public:
 
     inline double sample(const point_t &p) const
     {
-        const index_t i = toIndex(p);
-        return sample(p, i);
+        index_t i;
+        return toIndex(p, i) ? sample(p, i) : 0.0;
     }
 
     inline double sample(const point_t &p,
@@ -132,13 +164,14 @@ public:
             lock_t(storage_mutex_);
             distribution = storage_->get(i);
         }
+
         return distribution ? distribution->getHandle()->data().sample(p) : 0.0;
     }
 
     inline double sampleNonNormalized(const point_t &p) const
     {
-        const index_t i = toIndex(p);
-        return sampleNonNormalized(p, i);
+        index_t i;
+        return toIndex(p, i) ? sampleNonNormalized(p, i) : 0.0;
     }
 
     inline double sampleNonNormalized(const point_t &p,
@@ -154,7 +187,10 @@ public:
 
     inline distribution_t* get(const point_t &p) const
     {
-        const index_t i = toIndex(p);
+        index_t i;
+        if(!toIndex(p,i))
+          return nullptr;
+
         distribution_t *distribution;
         {
             lock_t(storage_mutex_);
@@ -220,8 +256,10 @@ public:
     inline virtual bool validate(const pose_t &p_w) const
     {
       const point_t p_m = m_T_w_ * p_w.translation();
-      return p_m(0) >= 0.0 && p_m(0) < size_m_[0] &&
-             p_m(1) >= 0.0 && p_m(1) < size_m_[1];
+      const index_t index = {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
+                              static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
+      return (index[0] >= min_index_[0] && index[0] <= max_index_[0] ) &&
+             (index[1] >= min_index_[1] && index[1] <= max_index_[1] );
     }
 
 protected:
@@ -231,6 +269,8 @@ protected:
     const transform_t                               m_T_w_;
     const size_t                                    size_;
     const size_m_t                                  size_m_;
+    const index_t                                   min_index_;
+    const index_t                                   max_index_;
 
     mutable mutex_t                                 storage_mutex_;
     mutable distribution_storage_ptr_t              storage_;
@@ -257,11 +297,14 @@ protected:
         return distribution ? distribution : allocate();
     }
 
-    inline index_t toIndex(const point_t &p_w) const
+    inline bool toIndex(const point_t &p_w,
+                        index_t &index) const
     {
         const point_t p_m = m_T_w_ * p_w;
-        return {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
-                 static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
+        index = {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
+                  static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
+        return (index[0] >= min_index_[0] && index[0] <= max_index_[0] ) &&
+               (index[1] >= min_index_[1] && index[1] <= max_index_[1] );
     }
 
     inline void fromIndex(const index_t &i,

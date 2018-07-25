@@ -60,8 +60,8 @@ public:
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
-        min_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
-        max_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
+        min_bundle_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
+        max_bundle_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
         storage_{{distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t),
@@ -82,8 +82,8 @@ public:
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
-        min_index_(min_index),
-        max_index_(max_index),
+        min_bundle_index_(min_index),
+        max_bundle_index_(max_index),
         storage_(storage),
         bundle_storage_(bundles)
     {
@@ -99,8 +99,8 @@ public:
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin_x, origin_y, origin_phi),
         m_T_w_(w_T_m_.inverse()),
-        min_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
-        max_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
+        min_bundle_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
+        max_bundle_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
         storage_{{distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t),
@@ -111,7 +111,7 @@ public:
 
     inline bool empty() const
     {
-        return min_index_[0] == std::numeric_limits<int>::max();
+        return min_bundle_index_[0] == std::numeric_limits<int>::max();
     }
 
     /**
@@ -121,8 +121,8 @@ public:
     inline point_t getMin() const
     {
         lock_t(bundle_storage_mutex_);
-        return point_t(min_index_[0] * bundle_resolution_,
-                       min_index_[1] * bundle_resolution_);
+        return point_t(min_bundle_index_[0] * bundle_resolution_,
+                       min_bundle_index_[1] * bundle_resolution_);
     }
 
     /**
@@ -132,8 +132,8 @@ public:
     inline point_t getMax() const
     {
         lock_t(bundle_storage_mutex_);
-        return point_t((max_index_[0] + 1) * bundle_resolution_,
-                       (max_index_[1] + 1) * bundle_resolution_);
+        return point_t((max_bundle_index_[0] + 1) * bundle_resolution_,
+                       (max_bundle_index_[1] + 1) * bundle_resolution_);
     }
 
     /**
@@ -143,7 +143,7 @@ public:
     inline pose_t getOrigin() const
     {
         cslibs_math_2d::Transform2d origin = w_T_m_;
-        origin.translation() = getMin();
+        origin.translation() += getMin();
         return origin;
     }
 
@@ -249,16 +249,16 @@ public:
         return bundle ? evaluate() : 0.0;
     }
 
-    inline index_t getMinDistributionIndex() const
+    inline index_t getMinBundleIndex() const
     {
         lock_t(bundle_storage_mutex_);
-        return min_index_;
+        return min_bundle_index_;
     }
 
-    inline index_t getMaxDistributionIndex() const
+    inline index_t getMaxBundleIndex() const
     {
         lock_t(bundle_storage_mutex_);
-        return max_index_;
+        return max_bundle_index_;
     }
 
     inline const distribution_bundle_t* getDistributionBundle(const index_t &bi) const
@@ -284,13 +284,13 @@ public:
     inline double getHeight() const
     {
         lock_t(bundle_storage_mutex_);
-        return (max_index_[1] - min_index_[1] + 1) * bundle_resolution_;
+        return (max_bundle_index_[1] - min_bundle_index_[1] + 1) * bundle_resolution_;
     }
 
     inline double getWidth() const
     {
         lock_t(bundle_storage_mutex_);
-        return (max_index_[0] - min_index_[0] + 1) * bundle_resolution_;
+        return (max_bundle_index_[0] - min_bundle_index_[0] + 1) * bundle_resolution_;
     }
 
     inline distribution_storage_array_t const & getStorages() const
@@ -335,8 +335,8 @@ public:
       index_t i = {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_)),
                     static_cast<int>(std::floor(p_m(1) * bundle_resolution_))}};
 
-      return (i[0] >= min_index_[0]  && i[0] <= max_index_[0]) &&
-             (i[1] >= min_index_[1]  && i[1] <= max_index_[1]);
+      return (i[0] >= min_bundle_index_[0]  && i[0] <= max_bundle_index_[0]) &&
+             (i[1] >= min_bundle_index_[1]  && i[1] <= max_bundle_index_[1]);
     }
 
 protected:
@@ -347,8 +347,8 @@ protected:
     const transform_t                               w_T_m_;
     const transform_t                               m_T_w_;
 
-    mutable index_t                                 min_index_;
-    mutable index_t                                 max_index_;
+    mutable index_t                                 min_bundle_index_;
+    mutable index_t                                 max_bundle_index_;
     mutable mutex_t                                 storage_mutex_;
     mutable distribution_storage_array_t            storage_;
     mutable mutex_t                                 bundle_storage_mutex_;
@@ -399,8 +399,8 @@ protected:
 
     inline void updateIndices(const index_t &chunk_index) const
     {
-        min_index_ = std::min(min_index_, chunk_index);
-        max_index_ = std::max(max_index_, chunk_index);
+        min_bundle_index_ = std::min(min_bundle_index_, chunk_index);
+        max_bundle_index_ = std::max(max_bundle_index_, chunk_index);
     }
 
     inline index_t toBundleIndex(const point_t &p_w) const

@@ -145,7 +145,7 @@ public:
     inline pose_t getOrigin() const
     {
         cslibs_math_2d::Transform2d origin = w_T_m_;
-        origin.translation() = getMin();
+        origin.translation() += getMin();
         return origin;
     }
 

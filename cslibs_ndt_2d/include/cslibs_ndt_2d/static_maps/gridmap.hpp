@@ -97,8 +97,8 @@ public:
         w_T_m_(origin_x, origin_y, origin_phi),
         m_T_w_(w_T_m_.inverse()),
         size_(size),
-        size_m_{{(size[0] + 1) * resolution,
-                 (size[1] + 1) * resolution}},
+        size_m_{{(size[0]) * resolution,
+                 (size[1]) * resolution}},
         min_bundle_index_(min_bundle_index),
         max_bundle_index_{{min_bundle_index[0] + static_cast<int>(size[0] * 2),
                            min_bundle_index[1] + static_cast<int>(size[1] * 2)}},
@@ -293,12 +293,12 @@ public:
 
     inline double getHeight() const
     {
-        return size_[1] * resolution_;
+        return size_m_[1];
     }
 
     inline double getWidth() const
     {
-        return size_[0] * resolution_;
+        return size_m_[0];
     }
 
     inline size_t getSize() const
@@ -349,8 +349,10 @@ public:
     inline virtual bool validate(const pose_t &p_w) const
     {
       const point_t p_m = m_T_w_ * p_w.translation();
-      return p_m(0) >= 0.0 && p_m(0) < size_m_[0] &&
-             p_m(1) >= 0.0 && p_m(1) < size_m_[1];
+      const point_t min = getMin();
+      const point_t max = getMax();
+      return p_m(0) >= min(0) && p_m(0) < min(1) &&
+             p_m(1) >= max(0) && p_m(1) < max(1);
     }
 
 protected:

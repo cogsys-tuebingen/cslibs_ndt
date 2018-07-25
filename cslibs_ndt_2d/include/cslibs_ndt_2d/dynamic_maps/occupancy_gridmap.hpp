@@ -371,13 +371,13 @@ public:
         return bundle ? evaluate() : 0.0;
     }
 
-    inline index_t getMinDistributionIndex() const
+    inline index_t getMinBundleIndex() const
     {
         lock_t(bundle_storage_mutex_);
         return min_index_;
     }
 
-    inline index_t getMaxDistributionIndex() const
+    inline index_t getMaxBundleIndex() const
     {
         lock_t(bundle_storage_mutex_);
         return max_index_;

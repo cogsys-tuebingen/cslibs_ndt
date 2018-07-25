@@ -136,10 +136,10 @@ void testDynamicOccMap(const typename cslibs_ndt_2d::dynamic_maps::OccupancyGrid
     EXPECT_NEAR(map->getHeight(),           map_converted->getHeight(),           1e-3);
     EXPECT_NEAR(map->getWidth(),            map_converted->getWidth(),            1e-3);
 
-    EXPECT_EQ(map->getMinDistributionIndex()[0], map_converted->getMinDistributionIndex()[0]);
-    EXPECT_EQ(map->getMinDistributionIndex()[1], map_converted->getMinDistributionIndex()[1]);
-    EXPECT_EQ(map->getMaxDistributionIndex()[0], map_converted->getMaxDistributionIndex()[0]);
-    EXPECT_EQ(map->getMaxDistributionIndex()[1], map_converted->getMaxDistributionIndex()[1]);
+    EXPECT_EQ(map->getMinBundleIndex()[0], map_converted->getMinBundleIndex()[0]);
+    EXPECT_EQ(map->getMinBundleIndex()[1], map_converted->getMinBundleIndex()[1]);
+    EXPECT_EQ(map->getMaxBundleIndex()[0], map_converted->getMaxBundleIndex()[0]);
+    EXPECT_EQ(map->getMaxBundleIndex()[1], map_converted->getMaxBundleIndex()[1]);
 
     EXPECT_NEAR(map->getOrigin().tx(),         map_converted->getOrigin().tx(),         1e-3);
     EXPECT_NEAR(map->getOrigin().ty(),         map_converted->getOrigin().ty(),         1e-3);
@@ -150,8 +150,8 @@ void testDynamicOccMap(const typename cslibs_ndt_2d::dynamic_maps::OccupancyGrid
     EXPECT_NEAR(map->getMax()(0),              map_converted->getMax()(0),              1e-3);
     EXPECT_NEAR(map->getMax()(1),              map_converted->getMax()(1),              1e-3);
 
-    for (int idx = map->getMinDistributionIndex()[0] ; idx <= map->getMaxDistributionIndex()[0] ; ++ idx) {
-        for (int idy = map->getMinDistributionIndex()[1] ; idy <= map->getMaxDistributionIndex()[1] ; ++ idy) {
+    for (int idx = map->getMinBundleIndex()[0] ; idx <= map->getMaxBundleIndex()[0] ; ++ idx) {
+        for (int idy = map->getMinBundleIndex()[1] ; idy <= map->getMaxBundleIndex()[1] ; ++ idy) {
             std::array<int, 2> bi({idx, idy});
 
             if (typename cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::distribution_bundle_t* b =

@@ -447,8 +447,8 @@ public:
       const point_t p_m = m_T_w_ * p_w.translation();
       const point_t min = getMin();
       const point_t max = getMax();
-      return p_m(0) >= min(0) && p_m(0) < min(1) &&
-             p_m(1) >= max(0) && p_m(1) < max(1);
+      return p_m(0) >= min(0) && p_m(0) < min(0) &&
+             p_m(1) >= min(1) && p_m(1) < max(1);
     }
 
 protected:

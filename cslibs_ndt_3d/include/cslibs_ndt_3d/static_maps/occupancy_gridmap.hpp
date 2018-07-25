@@ -57,7 +57,8 @@ public:
 
     OccupancyGridmap(const pose_t &origin,
                      const double &resolution,
-                     const size_t &size) :
+                     const size_t &size,
+                     const index_t &min_bundle_index) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -68,6 +69,10 @@ public:
         size_m_{{(size[0] + 1) * resolution,
                  (size[1] + 1) * resolution,
                  (size[2] + 1) * resolution}},
+        min_bundle_index_(min_bundle_index),
+        max_bundle_index_{{min_bundle_index[0] + static_cast<int>(size[0] * 2),
+                           min_bundle_index[1] + static_cast<int>(size[1] * 2),
+                           min_bundle_index[2] + static_cast<int>(size[2] * 2)}},
         storage_{{distribution_storage_ptr_t(new distribution_storage_t),
                   distribution_storage_ptr_t(new distribution_storage_t),
                   distribution_storage_ptr_t(new distribution_storage_t),
@@ -79,17 +84,29 @@ public:
         bundle_storage_(new distribution_bundle_storage_t)
     {
         storage_[0]->template set<cis::option::tags::array_size>(size[0], size[1], size[2]);
-        for(std::size_t i = 1 ; i < 8 ; ++ i)
-            storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1, size[1] + 1, size[2] + 1);
+        storage_[0]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2,
+                                                                   min_bundle_index[1] / 2,
+                                                                   min_bundle_index[2] / 2);
+
+        for(std::size_t i = 1 ; i < 8 ; ++ i) {
+          storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1, size[1] + 1, size[2] + 1);
+          storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2,
+                                                                     min_bundle_index[1] / 2,
+                                                                     min_bundle_index[2] / 2);
+        }
 
         bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2, size[1] * 2, size[2] * 2);
+        storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0],
+                                                                   min_bundle_index[1],
+                                                                   min_bundle_index[2]);
     }
 
     OccupancyGridmap(const double &origin_x,
                      const double &origin_y,
                      const double &origin_phi,
                      const double &resolution,
-                     const size_t &size) :
+                     const size_t &size,
+                     const index_t &min_bundle_index) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -100,6 +117,10 @@ public:
         size_m_{{(size[0] + 1) * resolution,
                  (size[1] + 1) * resolution,
                  (size[2] + 1) * resolution}},
+        min_bundle_index_(min_bundle_index),
+        max_bundle_index_{{min_bundle_index[0] + static_cast<int>(size[0] * 2),
+                           min_bundle_index[1] + static_cast<int>(size[1] * 2),
+                           min_bundle_index[2] + static_cast<int>(size[2] * 2)}},
         storage_{{distribution_storage_ptr_t(new distribution_storage_t),
                   distribution_storage_ptr_t(new distribution_storage_t),
                   distribution_storage_ptr_t(new distribution_storage_t),
@@ -111,17 +132,29 @@ public:
         bundle_storage_(new distribution_bundle_storage_t)
     {
         storage_[0]->template set<cis::option::tags::array_size>(size[0], size[1], size[2]);
-        for(std::size_t i = 1 ; i < 8 ; ++ i)
-            storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1, size[1] + 1, size[2] + 1);
+        storage_[0]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2,
+                                                                   min_bundle_index[1] / 2,
+                                                                   min_bundle_index[2] / 2);
+
+        for(std::size_t i = 1 ; i < 8 ; ++ i) {
+          storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1, size[1] + 1, size[2] + 1);
+          storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2,
+                                                                     min_bundle_index[1] / 2,
+                                                                     min_bundle_index[2] / 2);
+        }
 
         bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2, size[1] * 2, size[2] * 2);
+        storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0],
+                                                                   min_bundle_index[1],
+                                                                   min_bundle_index[2]);
     }
 
     OccupancyGridmap(const pose_t &origin,
                      const double &resolution,
                      const size_t &size,
                      const std::shared_ptr<distribution_bundle_storage_t> &bundles,
-                     const distribution_storage_array_t                   &storage) :
+                     const distribution_storage_array_t                   &storage,
+                     const index_t                                        &min_bundle_index) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -132,6 +165,10 @@ public:
         size_m_{{(size[0] + 1) * resolution,
                  (size[1] + 1) * resolution,
                  (size[2] + 1) * resolution}},
+        min_bundle_index_(min_bundle_index),
+        max_bundle_index_{{min_bundle_index[0] + static_cast<int>(size[0] * 2),
+                           min_bundle_index[1] + static_cast<int>(size[1] * 2),
+                           min_bundle_index[2] + static_cast<int>(size[2] * 2)}},
         storage_(storage),
         bundle_storage_(bundles)
     {
@@ -143,8 +180,8 @@ public:
      */
     inline point_t getMin() const
     {
-        lock_t(bundle_storage_mutex_);
-        return point_t();
+      return point_t(min_bundle_index_[0] * bundle_resolution_,
+                     min_bundle_index_[1] * bundle_resolution_);
     }
 
     /**
@@ -153,8 +190,8 @@ public:
      */
     inline point_t getMax() const
     {
-        lock_t(bundle_storage_mutex_);
-        return point_t(size_m_[0], size_m_[1], size_m_[2]);
+      return point_t((max_bundle_index_[0] + 1) * bundle_resolution_,
+                     (max_bundle_index_[1] + 1) * bundle_resolution_);
     }
 
     /**
@@ -166,6 +203,15 @@ public:
         cslibs_math_2d::Transform2d origin = w_T_m_;
         origin.translation() = getMin();
         return origin;
+    }
+
+    /**
+     * @brief Get the initial origin of the map.
+     * @return the inital origin
+     */
+    inline pose_t getInitialOrigin() const
+    {
+        return w_T_m_;
     }
 
     template <typename line_iterator_t = simple_iterator_t>
@@ -363,12 +409,12 @@ public:
 
     inline double getHeight() const
     {
-        return size_[1] * resolution_;
+        return size_m_[1];
     }
 
     inline double getWidth() const
     {
-        return size_[0] * resolution_;
+        return size_m_[0];
     }
 
     inline size_t getSize() const
@@ -422,18 +468,23 @@ public:
 
     inline virtual bool validate(const pose_t &p_w) const
     {
-      const point_t p_m = m_T_w_ * p_w.translation();
-      return p_m(0) >= 0.0 && p_m(0) < size_m_[0] &&
-             p_m(1) >= 0.0 && p_m(1) < size_m_[1] &&
-             p_m(2) >= 0.0 && p_m(2) < size_m_[2];
+        const point_t p_m = m_T_w_ * p_w.translation();
+        const point_t min = getMin();
+        const point_t max = getMax();
+        return p_m(0) >= min(0) && p_m(0) < max(0) &&
+               p_m(1) >= min(1) && p_m(1) < max(1) &&
+               p_m(2) >= min(2) && p_m(2) < max(2);
     }
 
     inline virtual bool validate(const pose_2d_t &p_w) const
     {
-      const point_t p_m = m_T_w_ * point_t(p_w.translation()(0), p_w.translation()(1), 0.0);
-      return p_m(0) >= 0.0 && p_m(0) < size_m_[0] &&
-             p_m(1) >= 0.0 && p_m(1) < size_m_[1];
+        const point_t p_m = m_T_w_ * point_t(p_w.translation()(0), p_w.translation()(1), 0.0);
+        const point_t min = getMin();
+        const point_t max = getMax();
+        return p_m(0) >= min(0) && p_m(0) < max(0) &&
+               p_m(1) >= min(1) && p_m(1) < max(1);
     }
+
 
 protected:
     const double                                    resolution_;
@@ -443,6 +494,8 @@ protected:
     const transform_t                               w_T_m_;
     const transform_t                               m_T_w_;
     const size_t                                    size_;
+    const index_t                                   min_bundle_index_;
+    const index_t                                   max_bundle_index_;
 
     mutable mutex_t                                 storage_mutex_;
     mutable distribution_storage_array_t            storage_;

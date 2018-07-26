@@ -1,6 +1,6 @@
 #include "ndt_map_loader.h"
 
-#include <cslibs_ndt_3d/conversion/pointcloud.hpp>
+#include <cslibs_ndt_3d/conversion/sensor_msgs_pointcloud2.hpp>
 #include <cslibs_ndt_3d/conversion/distributions.hpp>
 
 namespace cslibs_ndt_3d {
@@ -48,17 +48,13 @@ bool NDTMapLoader::setup()
             return false;
         }
 
-        pcl::PointCloud<pcl::PointXYZI>::Ptr points;
-        cslibs_ndt_3d::conversion::from(map_ndt_, points);
-        if (points) {
-            map_ndt_means_.reset(new sensor_msgs::PointCloud2);
-            pcl::toROSMsg(*points, *map_ndt_means_);
-            map_ndt_means_->header.frame_id = "/map";
+        map_ndt_means_.reset(new sensor_msgs::PointCloud2);
+        cslibs_ndt_3d::conversion::from(map_ndt_, *map_ndt_means_);
+        map_ndt_means_->header.frame_id = "/map";
 
-            cslibs_ndt_3d::conversion::from(map_ndt_, map_ndt_distributions_);
-            if (map_ndt_distributions_)
-                map_ndt_distributions_->header.frame_id = "/map";
-        }
+        cslibs_ndt_3d::conversion::from(map_ndt_, map_ndt_distributions_);
+        if (map_ndt_distributions_)
+            map_ndt_distributions_->header.frame_id = "/map";
     }
     if (path_occ_ndt != "") {
         if (!cslibs_ndt_3d::dynamic_maps::loadBinary(path_occ_ndt, map_occ_ndt_)) {
@@ -67,18 +63,13 @@ bool NDTMapLoader::setup()
         }
 
         cslibs_gridmaps::utility::InverseModel::Ptr ivm(new cslibs_gridmaps::utility::InverseModel(0.5, 0.45, 0.65));
-        pcl::PointCloud<pcl::PointXYZI>::Ptr points;
-        cslibs_ndt_3d::conversion::from(map_occ_ndt_, points, ivm);
+        map_occ_ndt_means_.reset(new sensor_msgs::PointCloud2);
+        cslibs_ndt_3d::conversion::from(map_occ_ndt_, *map_occ_ndt_means_, ivm);
+        map_occ_ndt_means_->header.frame_id = "/map";
 
-        if (points) {
-            map_occ_ndt_means_.reset(new sensor_msgs::PointCloud2);
-            pcl::toROSMsg(*points, *map_occ_ndt_means_);
-            map_occ_ndt_means_->header.frame_id = "/map";
-
-            cslibs_ndt_3d::conversion::from(map_occ_ndt_, map_occ_ndt_distributions_, ivm);
-            if (map_occ_ndt_distributions_)
-                map_occ_ndt_distributions_->header.frame_id = "/map";
-        }
+        cslibs_ndt_3d::conversion::from(map_occ_ndt_, map_occ_ndt_distributions_, ivm);
+        if (map_occ_ndt_distributions_)
+            map_occ_ndt_distributions_->header.frame_id = "/map";
     }
 
     service_ = nh_.advertiseService(nh_.getNamespace() + "/resend", &NDTMapLoader::resend, this);

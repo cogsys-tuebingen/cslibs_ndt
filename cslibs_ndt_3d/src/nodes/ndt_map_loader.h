@@ -6,7 +6,6 @@
 
 #include <sensor_msgs/PointCloud2.h>
 #include <cslibs_ndt_3d/DistributionArray.h>
-#include <pcl_conversions/pcl_conversions.h>
 
 #include <ros/ros.h>
 #include <ros/service.h>

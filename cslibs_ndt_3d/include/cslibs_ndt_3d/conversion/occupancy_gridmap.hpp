@@ -40,7 +40,7 @@ inline cslibs_ndt_3d::static_maps::OccupancyGridmap::Ptr from(
         return nullptr;
 
     using index_t = std::array<int, 3>;
-    const index_t min_distribution_index = src->getMinDistributionIndex();
+    const index_t min_distribution_index = src->getMinBundleIndex();
     const index_t max_distribution_index = src->getMaxDistributionIndex();
     if (min_distribution_index[0] == std::numeric_limits<int>::max() ||
             min_distribution_index[1] == std::numeric_limits<int>::max() ||
@@ -65,7 +65,8 @@ inline cslibs_ndt_3d::static_maps::OccupancyGridmap::Ptr from(
     using dst_map_t = cslibs_ndt_3d::static_maps::OccupancyGridmap;
     typename dst_map_t::Ptr dst(new dst_map_t(src->getOrigin(),
                                               src->getResolution(),
-                                              size));
+                                              size,
+                                              src->getMinBundleIndex()));
 
     auto process_bundle = [&dst, &get_bundle_index](const index_t &bi, const src_map_t::distribution_bundle_t &b){
         const index_t bi_dst = get_bundle_index(bi);

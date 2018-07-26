@@ -27,6 +27,9 @@ namespace dynamic_maps {
 class Gridmap
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    using allocator_t = Eigen::aligned_allocator<Gridmap>;
+
     using Ptr                               = std::shared_ptr<Gridmap>;
     using pose_t                            = cslibs_math_2d::Pose2d;
     using transform_t                       = cslibs_math_2d::Transform2d;
@@ -43,6 +46,12 @@ public:
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
 
+    Gridmap(const double resolution) :
+      Gridmap(pose_t::identity(),
+              resolution)
+    {
+    }
+
     Gridmap(const pose_t &origin,
             const double &resolution) :
         resolution_(resolution),
@@ -51,8 +60,8 @@ public:
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
-        min_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
-        max_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
+        min_bundle_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
+        max_bundle_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
         storage_{{distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t),
@@ -73,8 +82,8 @@ public:
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
-        min_index_(min_index),
-        max_index_(max_index),
+        min_bundle_index_(min_index),
+        max_bundle_index_(max_index),
         storage_(storage),
         bundle_storage_(bundles)
     {
@@ -90,8 +99,8 @@ public:
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin_x, origin_y, origin_phi),
         m_T_w_(w_T_m_.inverse()),
-        min_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
-        max_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
+        min_bundle_index_{{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()}},
+        max_bundle_index_{{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()}},
         storage_{{distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t),
@@ -100,27 +109,48 @@ public:
     {
     }
 
+    inline bool empty() const
+    {
+        return min_bundle_index_[0] == std::numeric_limits<int>::max();
+    }
+
+    /**
+     * @brief Get minimum in map coordinates.
+     * @return the minimum
+     */
     inline point_t getMin() const
     {
         lock_t(bundle_storage_mutex_);
-        return point_t(min_index_[0] * bundle_resolution_,
-                       min_index_[1] * bundle_resolution_);
+        return point_t(min_bundle_index_[0] * bundle_resolution_,
+                       min_bundle_index_[1] * bundle_resolution_);
     }
 
+    /**
+     * @brief Get maximum in map coordinates.
+     * @return the maximum
+     */
     inline point_t getMax() const
     {
         lock_t(bundle_storage_mutex_);
-        return point_t((max_index_[0] + 1) * bundle_resolution_,
-                       (max_index_[1] + 1) * bundle_resolution_);
+        return point_t((max_bundle_index_[0] + 1) * bundle_resolution_,
+                       (max_bundle_index_[1] + 1) * bundle_resolution_);
     }
 
+    /**
+     * @brief Get the origin.
+     * @return the origin
+     */
     inline pose_t getOrigin() const
     {
         cslibs_math_2d::Transform2d origin = w_T_m_;
-        origin.translation() = getMin();
+        origin.translation() += getMin();
         return origin;
     }
 
+    /**
+     * @brief Get the initial origin of the map.
+     * @return the inital origin
+     */
     inline pose_t getInitialOrigin() const
     {
         return w_T_m_;
@@ -164,6 +194,13 @@ public:
             bundle->at(2)->getHandle()->data() += d.data();
             bundle->at(3)->getHandle()->data() += d.data();
         });
+    }
+
+    inline const distribution_bundle_t * get(const point_t &p) const
+    {
+        const index_t bi = toBundleIndex(p);
+        lock_t(bundle_storage_mutex_);
+        return bundle_storage_->get(bi);
     }
 
     inline double sample(const point_t &p) const
@@ -212,16 +249,16 @@ public:
         return bundle ? evaluate() : 0.0;
     }
 
-    inline index_t getMinDistributionIndex() const
+    inline index_t getMinBundleIndex() const
     {
         lock_t(bundle_storage_mutex_);
-        return min_index_;
+        return min_bundle_index_;
     }
 
-    inline index_t getMaxDistributionIndex() const
+    inline index_t getMaxBundleIndex() const
     {
         lock_t(bundle_storage_mutex_);
-        return max_index_;
+        return max_bundle_index_;
     }
 
     inline const distribution_bundle_t* getDistributionBundle(const index_t &bi) const
@@ -247,13 +284,13 @@ public:
     inline double getHeight() const
     {
         lock_t(bundle_storage_mutex_);
-        return (max_index_[1] - min_index_[1] + 1) * bundle_resolution_;
+        return (max_bundle_index_[1] - min_bundle_index_[1] + 1) * bundle_resolution_;
     }
 
     inline double getWidth() const
     {
         lock_t(bundle_storage_mutex_);
-        return (max_index_[0] - min_index_[0] + 1) * bundle_resolution_;
+        return (max_bundle_index_[0] - min_bundle_index_[0] + 1) * bundle_resolution_;
     }
 
     inline distribution_storage_array_t const & getStorages() const
@@ -273,7 +310,7 @@ public:
     {
         lock_t(storage_mutex_);
         lock_t(bundle_storage_mutex_);
-        auto add_index = [&indices](const index_t &i, const distribution_bundle_t &d) {
+        auto add_index = [&indices](const index_t &i, const distribution_bundle_t &) {
             indices.emplace_back(i);
         };
         bundle_storage_->traverse(add_index);
@@ -291,6 +328,17 @@ public:
                 storage_[3]->byte_size();
     }
 
+    inline virtual bool validate(const pose_t &p_w) const
+    {
+      lock_t l(bundle_storage_mutex_);
+      const point_t p_m = m_T_w_ * p_w.translation();
+      index_t i = {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_)),
+                    static_cast<int>(std::floor(p_m(1) * bundle_resolution_))}};
+
+      return (i[0] >= min_bundle_index_[0]  && i[0] <= max_bundle_index_[0]) &&
+             (i[1] >= min_bundle_index_[1]  && i[1] <= max_bundle_index_[1]);
+    }
+
 protected:
     const double                                    resolution_;
     const double                                    resolution_inv_;
@@ -299,8 +347,8 @@ protected:
     const transform_t                               w_T_m_;
     const transform_t                               m_T_w_;
 
-    mutable index_t                                 min_index_;
-    mutable index_t                                 max_index_;
+    mutable index_t                                 min_bundle_index_;
+    mutable index_t                                 max_bundle_index_;
     mutable mutex_t                                 storage_mutex_;
     mutable distribution_storage_array_t            storage_;
     mutable mutex_t                                 bundle_storage_mutex_;
@@ -352,8 +400,8 @@ protected:
 
     inline void updateIndices(const index_t &chunk_index) const
     {
-        min_index_ = std::min(min_index_, chunk_index);
-        max_index_ = std::max(max_index_, chunk_index);
+        min_bundle_index_ = std::min(min_bundle_index_, chunk_index);
+        max_bundle_index_ = std::max(max_bundle_index_, chunk_index);
     }
 
     inline index_t toBundleIndex(const point_t &p_w) const

@@ -27,9 +27,9 @@ void testDynamicMap(const typename cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr & m
     EXPECT_NEAR(map->getHeight(),           map_converted->getHeight(),           1e-3);
     EXPECT_NEAR(map->getWidth(),            map_converted->getWidth(),            1e-3);
 
-    EXPECT_EQ(map->getMinDistributionIndex()[0], map_converted->getMinDistributionIndex()[0]);
-    EXPECT_EQ(map->getMinDistributionIndex()[1], map_converted->getMinDistributionIndex()[1]);
-    EXPECT_EQ(map->getMinDistributionIndex()[2], map_converted->getMinDistributionIndex()[2]);
+    EXPECT_EQ(map->getMinBundleIndex()[0], map_converted->getMinBundleIndex()[0]);
+    EXPECT_EQ(map->getMinBundleIndex()[1], map_converted->getMinBundleIndex()[1]);
+    EXPECT_EQ(map->getMinBundleIndex()[2], map_converted->getMinBundleIndex()[2]);
     EXPECT_EQ(map->getMaxDistributionIndex()[0], map_converted->getMaxDistributionIndex()[0]);
     EXPECT_EQ(map->getMaxDistributionIndex()[1], map_converted->getMaxDistributionIndex()[1]);
     EXPECT_EQ(map->getMaxDistributionIndex()[2], map_converted->getMaxDistributionIndex()[2]);
@@ -54,9 +54,9 @@ void testDynamicMap(const typename cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr & m
     EXPECT_NEAR(map->getInitialOrigin().pitch(), map_converted->getInitialOrigin().pitch(), 1e-3);
     EXPECT_NEAR(map->getInitialOrigin().yaw(),   map_converted->getInitialOrigin().yaw(),   1e-3);
 
-    for (int idx = map->getMinDistributionIndex()[0] ; idx <= map->getMaxDistributionIndex()[0] ; ++ idx) {
-        for (int idy = map->getMinDistributionIndex()[1] ; idy <= map->getMaxDistributionIndex()[1] ; ++ idy) {
-            for (int idz = map->getMinDistributionIndex()[2] ; idz <= map->getMinDistributionIndex()[2] ; ++ idz) {
+    for (int idx = map->getMinBundleIndex()[0] ; idx <= map->getMaxDistributionIndex()[0] ; ++ idx) {
+        for (int idy = map->getMinBundleIndex()[1] ; idy <= map->getMaxDistributionIndex()[1] ; ++ idy) {
+            for (int idz = map->getMinBundleIndex()[2] ; idz <= map->getMinBundleIndex()[2] ; ++ idz) {
                 std::array<int, 3> bi({idx, idy, idz});
                 if (typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t* b =
                         map->getDistributionBundle(bi)) {
@@ -158,9 +158,9 @@ void testDynamicOccMap(const typename cslibs_ndt_3d::dynamic_maps::OccupancyGrid
     EXPECT_NEAR(map->getHeight(),           map_converted->getHeight(),           1e-3);
     EXPECT_NEAR(map->getWidth(),            map_converted->getWidth(),            1e-3);
 
-    EXPECT_EQ(map->getMinDistributionIndex()[0], map_converted->getMinDistributionIndex()[0]);
-    EXPECT_EQ(map->getMinDistributionIndex()[1], map_converted->getMinDistributionIndex()[1]);
-    EXPECT_EQ(map->getMinDistributionIndex()[2], map_converted->getMinDistributionIndex()[2]);
+    EXPECT_EQ(map->getMinBundleIndex()[0], map_converted->getMinBundleIndex()[0]);
+    EXPECT_EQ(map->getMinBundleIndex()[1], map_converted->getMinBundleIndex()[1]);
+    EXPECT_EQ(map->getMinBundleIndex()[2], map_converted->getMinBundleIndex()[2]);
     EXPECT_EQ(map->getMaxDistributionIndex()[0], map_converted->getMaxDistributionIndex()[0]);
     EXPECT_EQ(map->getMaxDistributionIndex()[1], map_converted->getMaxDistributionIndex()[1]);
     EXPECT_EQ(map->getMaxDistributionIndex()[2], map_converted->getMaxDistributionIndex()[2]);
@@ -185,9 +185,9 @@ void testDynamicOccMap(const typename cslibs_ndt_3d::dynamic_maps::OccupancyGrid
     EXPECT_NEAR(map->getInitialOrigin().pitch(), map_converted->getInitialOrigin().pitch(), 1e-3);
     EXPECT_NEAR(map->getInitialOrigin().yaw(),   map_converted->getInitialOrigin().yaw(),   1e-3);
 
-    for (int idx = map->getMinDistributionIndex()[0] ; idx <= map->getMaxDistributionIndex()[0] ; ++ idx) {
-        for (int idy = map->getMinDistributionIndex()[1] ; idy <= map->getMaxDistributionIndex()[1] ; ++ idy) {
-            for (int idz = map->getMinDistributionIndex()[2] ; idz <= map->getMinDistributionIndex()[2] ; ++ idz) {
+    for (int idx = map->getMinBundleIndex()[0] ; idx <= map->getMaxDistributionIndex()[0] ; ++ idx) {
+        for (int idy = map->getMinBundleIndex()[1] ; idy <= map->getMaxDistributionIndex()[1] ; ++ idy) {
+            for (int idz = map->getMinBundleIndex()[2] ; idz <= map->getMinBundleIndex()[2] ; ++ idz) {
                 std::array<int, 3> bi({idx, idy, idz});
                 if (typename cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_bundle_t* b =
                         map->getDistributionBundle(bi)) {

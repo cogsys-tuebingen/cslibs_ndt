@@ -86,6 +86,26 @@ public:
         return id_;
     }
 
+    inline typename data_t::const_iterator begin() const
+    {
+        return data_.begin();
+    }
+
+    inline typename data_t::const_iterator end() const
+    {
+        return data_.end();
+    }
+
+    inline typename data_t::iterator begin()
+    {
+        return data_.begin();
+    }
+
+    inline typename data_t::iterator end()
+    {
+        return data_.end();
+    }
+
 private:
     data_t     data_;
     const int  id_;

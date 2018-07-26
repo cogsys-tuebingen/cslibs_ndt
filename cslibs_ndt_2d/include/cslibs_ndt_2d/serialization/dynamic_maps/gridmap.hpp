@@ -48,8 +48,8 @@ inline bool saveBinary(const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &map,
         map->getBundleIndices(indices);
         n["origin"]     = map->getInitialOrigin();
         n["resolution"] = map->getResolution();
-        n["min_index"]  = map->getMinDistributionIndex();
-        n["max_index"]  = map->getMaxDistributionIndex();
+        n["min_index"]  = map->getMinBundleIndex();
+        n["max_index"]  = map->getMaxBundleIndex();
         n["bundles"]    = indices;
         yaml << n;
     }

@@ -35,8 +35,8 @@ inline void from(
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
     using index_t = std::array<int, 2>;
-    const index_t min_distribution_index = src->getMinDistributionIndex();
-    const index_t max_distribution_index = src->getMaxDistributionIndex();
+    const index_t min_distribution_index = src->getMinBundleIndex();
+    const index_t max_distribution_index = src->getMaxBundleIndex();
 
     for (int i = min_distribution_index[0] ; i < max_distribution_index[0] ; ++ i) {
         for (int j = min_distribution_index[1] ; j < max_distribution_index[1] ; ++ j) {
@@ -87,8 +87,8 @@ inline void from(
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
     using index_t = std::array<int, 2>;
-    const index_t min_distribution_index = src->getMinDistributionIndex();
-    const index_t max_distribution_index = src->getMaxDistributionIndex();
+    const index_t min_distribution_index = src->getMinBundleIndex();
+    const index_t max_distribution_index = src->getMaxBundleIndex();
 
     for (int i = min_distribution_index[0] ; i < max_distribution_index[0] ; ++ i) {
         for (int j = min_distribution_index[1] ; j < max_distribution_index[1] ; ++ j) {

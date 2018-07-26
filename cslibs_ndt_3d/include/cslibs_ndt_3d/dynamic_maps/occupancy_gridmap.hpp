@@ -6,6 +6,8 @@
 #include <cmath>
 #include <memory>
 
+#include <cslibs_math_2d/linear/pose.hpp>
+
 #include <cslibs_math_3d/linear/pose.hpp>
 #include <cslibs_math_3d/linear/point.hpp>
 
@@ -32,7 +34,11 @@ namespace dynamic_maps {
 class OccupancyGridmap
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    using allocator_t = Eigen::aligned_allocator<OccupancyGridmap>;
+
     using Ptr                               = std::shared_ptr<OccupancyGridmap>;
+    using pose_2d_t                         = cslibs_math_2d::Pose2d;
     using pose_t                            = cslibs_math_3d::Pose3d;
     using transform_t                       = cslibs_math_3d::Transform3d;
     using point_t                           = cslibs_math_3d::Point3d;
@@ -91,6 +97,15 @@ public:
     {
     }
 
+    inline bool empty() const
+    {
+        return min_index_[0] == std::numeric_limits<int>::max();
+    }
+
+    /**
+     * @brief Get minimum in map coordinates.
+     * @return the minimum
+     */
     inline point_t getMin() const
     {
         lock_t(bundle_storage_mutex_);
@@ -99,6 +114,10 @@ public:
                        min_index_[2] * bundle_resolution_);
     }
 
+    /**
+     * @brief Get maximum in map coordinates.
+     * @return the maximum
+     */
     inline point_t getMax() const
     {
         lock_t(bundle_storage_mutex_);
@@ -107,6 +126,10 @@ public:
                        (max_index_[2] + 1) * bundle_resolution_);
     }
 
+    /**
+     * @brief Get the map origin.
+     * @return the map origin
+     */
     inline pose_t getOrigin() const
     {
         cslibs_math_3d::Transform3d origin = w_T_m_;
@@ -114,6 +137,10 @@ public:
         return origin;
     }
 
+    /**
+     * @brief Get the initial origin of the map.
+     * @return the intial origin
+     */
     inline pose_t getInitialOrigin() const
     {
         return w_T_m_;
@@ -307,7 +334,7 @@ public:
         return bundle ? evaluate() : 0.0;
     }
 
-    inline index_t getMinDistributionIndex() const
+    inline index_t getMinBundleIndex() const
     {
         lock_t(bundle_storage_mutex_);
         return min_index_;
@@ -389,6 +416,32 @@ public:
                 storage_[6]->byte_size() +
                 storage_[7]->byte_size();
     }
+
+    inline virtual bool validate(const pose_t &p_w) const
+    {
+      lock_t l(bundle_storage_mutex_);
+      const point_t p_m = m_T_w_ * p_w.translation();
+      index_t i = {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_)),
+                    static_cast<int>(std::floor(p_m(1) * bundle_resolution_)),
+                    static_cast<int>(std::floor(p_m(2) * bundle_resolution_))}};
+
+      return (i[0] >= min_index_[0]  && i[0] <= max_index_[0]) &&
+             (i[1] >= min_index_[1]  && i[1] <= max_index_[1]) &&
+             (i[2] >= min_index_[2]  && i[2] <= max_index_[2]);
+    }
+
+    inline virtual bool validate(const pose_2d_t &p_w) const
+    {
+      lock_t l(bundle_storage_mutex_);
+      const point_t p_m = m_T_w_ * point_t(p_w.translation()(0), p_w.translation()(1), 0.0);
+      index_t i = {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_)),
+                    static_cast<int>(std::floor(p_m(1) * bundle_resolution_)),
+                    0}};
+
+      return (i[0] >= min_index_[0]  && i[0] <= max_index_[0]) &&
+             (i[1] >= min_index_[1]  && i[1] <= max_index_[1]);
+    }
+
 
 private:
     const double                                    resolution_;

@@ -16,7 +16,6 @@ find_package(catkin REQUIRED COMPONENTS
     message_generation
 )
 find_package(Boost COMPONENTS filesystem)
-find_package(PCL REQUIRED COMPONENTS common filters segmentation io QUIET)
 find_package(rviz QUIET)
 
 add_message_files(
@@ -103,19 +102,11 @@ if(rviz_FOUND)
             DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/icons)
 endif()
 
-
-if(PCL_FOUND)
-    include_directories(
-        ${PCL_INCLUDE_DIRS}
-    )
-    link_directories(${PCL_LIBRARY_DIRS})
-    add_executable(${PROJECT_NAME}_map_loader
-        src/nodes/ndt_map_loader.cpp
-    )
-    target_link_libraries(${PROJECT_NAME}_map_loader
-        ${catkin_LIBRARIES}
-        ${PCL_LIBRARIES}
-        yaml-cpp
-    )
-    add_dependencies(${PROJECT_NAME}_map_loader ${${PROJECT_NAME}_EXPORTED_TARGETS})
-endif()
+add_executable(${PROJECT_NAME}_map_loader
+    src/nodes/ndt_map_loader.cpp
+)
+target_link_libraries(${PROJECT_NAME}_map_loader
+    ${catkin_LIBRARIES}
+    yaml-cpp
+)
+add_dependencies(${PROJECT_NAME}_map_loader ${${PROJECT_NAME}_EXPORTED_TARGETS})

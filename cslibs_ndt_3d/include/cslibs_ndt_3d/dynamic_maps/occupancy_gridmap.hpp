@@ -247,7 +247,7 @@ public:
         }
 
         const point_t start_p = m_T_w_ * origin.translation();
-        storage.traverse([this, &ivm_visibility, &start_p, &current_visibility](const index_t& bi, const distribution_t &d) {
+        storage.traverse([this, &origin, &ivm_visibility, &start_p, &current_visibility](const index_t& bi, const distribution_t &d) {
             if (!d.getDistribution())
                 return;
 

@@ -15,7 +15,7 @@ This project is divided up into the following subpackages:
     * [nodes](cslibs_ndt_2d/src/nodes/) contains ROS nodes. Exemplary launch files are provided in the [launch](cslibs_ndt_2d/launch/) folder.
 
 * [cslibs\_ndt\_3d](cslibs_ndt_3d/):<br>
-    This package contains the three-dimensional implementations. It is structured as [cslibs\_ndt\_2d](cslibs_ndt_2d/). Additionally, there are dedicated ROS messages and an RVIZ plugin for visualization. The [conversion](cslibs_ndt_3d/include/cslibs_ndt_3d/conversion/) folder contains methods to convert 3D NDT maps into ``pcl::PointCloud``s and into these ROS messages.
+    This package contains the three-dimensional implementations. It is structured as [cslibs\_ndt\_2d](cslibs_ndt_2d/). Additionally, there are dedicated ROS messages and an RVIZ plugin for visualization. The [conversion](cslibs_ndt_3d/include/cslibs_ndt_3d/conversion/) folder contains methods to convert 3D NDT maps to ``pcl::PointCloud`` and ``sensor_msgs::PointCloud2``.
 
 ## Usage
 

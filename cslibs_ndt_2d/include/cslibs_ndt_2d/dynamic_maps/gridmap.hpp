@@ -394,6 +394,7 @@ protected:
             };
             return bundle ? bundle : allocate_bundle();
         };
+
         return get_allocate(bi);
     }
 

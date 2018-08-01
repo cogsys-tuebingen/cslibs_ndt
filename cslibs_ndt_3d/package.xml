@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>cslibs_ndt_3d</name>
-  <version>0.0.4</version>
+  <version>0.0.5</version>
   <description>
   The cslibs_ndt_3d package contains three-dimensional implementations of map representations using
   Normal Distributions Transforms.

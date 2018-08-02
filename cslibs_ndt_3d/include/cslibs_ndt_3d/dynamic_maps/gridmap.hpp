@@ -251,6 +251,7 @@ public:
         return bundle ? evaluate() : 0.0;
     }
 
+
     inline index_t getMinBundleIndex() const
     {
         lock_t(bundle_storage_mutex_);
@@ -261,6 +262,17 @@ public:
     {
         lock_t(bundle_storage_mutex_);
         return max_index_;
+    }
+
+    inline const distribution_bundle_t* getDistributionBundle(const point_t &p) const
+    {
+        const index_t bi = toBundleIndex(p);
+        distribution_bundle_t *bundle;
+        {
+            lock_t(bundle_storage_mutex_);
+            bundle = bundle_storage_->get(bi);
+        }
+        return bundle;
     }
 
     inline const distribution_bundle_t* getDistributionBundle(const index_t &bi) const

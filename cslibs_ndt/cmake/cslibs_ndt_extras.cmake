@@ -3,8 +3,10 @@ add_definitions(-W
                 -Wno-unused-parameter
                 -Wno-unused-function
                 -fno-strict-aliasing
-                -Wno-deprecated-register
-                -march=native)
+                -Wno-deprecated-register)
+if(${PROJECT_NAME}_USE_NATIVE)
+    add_definitions(-march=native)
+endif()
 
 if(NOT ${CMAKE_BUILD_TYPE} STREQUAL Debug)
     add_definitions(-Ofast

@@ -137,7 +137,7 @@ public:
         return max_index_;
     }
 
-    inline void add(const point_t &p)
+    inline void insert(const point_t &p)
     {
         distribution_t *distribution;
         {

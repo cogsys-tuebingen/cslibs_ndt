@@ -159,8 +159,8 @@ public:
     }
 
     template <typename line_iterator_t = simple_iterator_t>
-    inline void add(const point_t &start_p,
-                    const point_t &end_p)
+    inline void insert(const point_t &start_p,
+                       const point_t &end_p)
     {
         const index_t &end_index = toBundleIndex(end_p);
         updateOccupied(end_index, end_p);
@@ -173,12 +173,12 @@ public:
     }
 
     template <typename line_iterator_t = simple_iterator_t>
-    inline void insert(const pose_t &origin,
-                       const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points)
+    inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points,
+                       const pose_t &points_origin = pose_t())
     {
         distribution_storage_t storage;
         for (const auto &p : *points) {
-            const point_t pm = origin * p;
+            const point_t pm = points_origin * p;
             if (pm.isNormal()) {
                 const index_t &bi = toBundleIndex(pm);
                 distribution_t *d = storage.get(bi);
@@ -186,7 +186,7 @@ public:
             }
         }
 
-        const point_t start_p = m_T_w_ * origin.translation();
+        const point_t start_p = m_T_w_ * points_origin.translation();
         storage.traverse([this, &start_p](const index_t& bi, const distribution_t &d) {
             if (!d.getDistribution())
                 return;
@@ -209,7 +209,7 @@ public:
     {
         if (!ivm || !ivm_visibility) {
             std::cout << "[OccupancyGridmap2D]: Cannot evaluate visibility, using model-free update rule instead!" << std::endl;
-            return insert(origin, points);
+            return insert(points, origin);
         }
 
         const index_t start_bi = toBundleIndex(origin.translation());

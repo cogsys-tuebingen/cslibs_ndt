@@ -147,7 +147,7 @@ public:
     }
 
     template <typename line_iterator_t = simple_iterator_t>
-    inline void add(const point_t &start_p,
+    inline void insert(const point_t &start_p,
                     const point_t &end_p)
     {
         const index_t &end_index = toBundleIndex(end_p);
@@ -161,7 +161,7 @@ public:
     }
 
     template <typename line_iterator_t = simple_iterator_t>
-    inline void add(const point_t &start_p,
+    inline void insert(const point_t &start_p,
                     const point_t &end_p,
                     index_t       &end_index)
     {
@@ -176,12 +176,12 @@ public:
     }
 
     template <typename line_iterator_t = simple_iterator_t>
-    inline void insert(const pose_t &origin,
-                       const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points)
+    inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points,
+                       const pose_t &points_origin = pose_t())
     {
         distribution_storage_t storage;
         for (const auto &p : *points) {
-            const point_t pm = origin * p;
+            const point_t pm = points_origin * p;
             if (pm.isNormal()) {
                 const index_t &bi = toBundleIndex(pm);
                 distribution_t *d = storage.get(bi);
@@ -189,7 +189,7 @@ public:
             }
         }
 
-        const point_t start_p = m_T_w_ * origin.translation();
+        const point_t start_p = m_T_w_ * points_origin.translation();
         storage.traverse([this, &start_p](const index_t& bi, const distribution_t &d) {
             if (!d.getDistribution())
                 return;
@@ -205,17 +205,17 @@ public:
     }
 
     template <typename line_iterator_t = simple_iterator_t>
-    inline void insertVisible(const pose_t &origin,
-                              const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points,
+    inline void insertVisible(const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points,
                               const inverse_sensor_model_t::Ptr &ivm,
-                              const inverse_sensor_model_t::Ptr &ivm_visibility)
+                              const inverse_sensor_model_t::Ptr &ivm_visibility,
+                              const pose_t &points_origin = pose_t())
     {
         if (!ivm || !ivm_visibility) {
             std::cout << "[OccupancyGridmap3D]: Cannot evaluate visibility, using model-free update rule instead!" << std::endl;
-            return insert(origin, points);
+            return insert(points, points_origin);
         }
 
-        const index_t start_bi = toBundleIndex(origin.translation());
+        const index_t start_bi = toBundleIndex(points_origin.translation());
         auto occupancy = [this, &ivm](const index_t &bi) {
             const distribution_bundle_t *bundle = getDistributionBundle(bi);
             return 0.125 * (bundle->at(0)->getHandle()->getOccupancy(ivm) +
@@ -238,7 +238,7 @@ public:
 
         distribution_storage_t storage;
         for (const auto &p : *points) {
-            const point_t pm = origin * p;
+            const point_t pm = points_origin * p;
             if (pm.isNormal()) {
                 const index_t &bi = toBundleIndex(pm);
                 distribution_t *d = storage.get(bi);
@@ -246,8 +246,8 @@ public:
             }
         }
 
-        const point_t start_p = m_T_w_ * origin.translation();
-        storage.traverse([this, &origin, &ivm_visibility, &start_p, &current_visibility](const index_t& bi, const distribution_t &d) {
+        const point_t start_p = m_T_w_ * points_origin.translation();
+        storage.traverse([this, &points_origin, &ivm_visibility, &start_p, &current_visibility](const index_t& bi, const distribution_t &d) {
             if (!d.getDistribution())
                 return;
 

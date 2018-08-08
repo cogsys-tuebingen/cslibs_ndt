@@ -139,7 +139,7 @@ public:
         return w_T_m_;
     }
 
-    inline void add(const point_t &p)
+    inline void insert(const point_t &p)
     {
         distribution_bundle_t *bundle;
         {
@@ -158,7 +158,7 @@ public:
         bundle->at(7)->getHandle()->data().add(p);
     }
 
-    inline void add(const point_t &p,
+    inline void insert(const point_t &p,
                     index_t &bi)
     {
         distribution_bundle_t *bundle;
@@ -178,12 +178,12 @@ public:
         bundle->at(7)->getHandle()->data().add(p);
     }
 
-    inline void insert(const pose_t &origin,
-                       const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points)
+    inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points,
+                       const pose_t &points_origin = pose_t())
     {
         distribution_storage_t storage;
         for (const auto &p : *points) {
-            const point_t pm = origin * p;
+            const point_t pm = points_origin * p;
             if (pm.isNormal()) {
                 const index_t &bi = toBundleIndex(pm);
                 distribution_t *d = storage.get(bi);

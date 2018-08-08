@@ -178,7 +178,7 @@ public:
         bundle->at(7)->getHandle()->data().add(p);
     }
 
-    inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points,
+    inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::ConstPtr &points,
                        const pose_t &points_origin = pose_t())
     {
         distribution_storage_t storage;

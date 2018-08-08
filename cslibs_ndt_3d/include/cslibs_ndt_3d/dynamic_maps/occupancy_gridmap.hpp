@@ -176,7 +176,7 @@ public:
     }
 
     template <typename line_iterator_t = simple_iterator_t>
-    inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points,
+    inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::ConstPtr &points,
                        const pose_t &points_origin = pose_t())
     {
         distribution_storage_t storage;
@@ -205,7 +205,7 @@ public:
     }
 
     template <typename line_iterator_t = simple_iterator_t>
-    inline void insertVisible(const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points,
+    inline void insertVisible(const typename cslibs_math::linear::Pointcloud<point_t>::ConstPtr &points,
                               const inverse_sensor_model_t::Ptr &ivm,
                               const inverse_sensor_model_t::Ptr &ivm_visibility,
                               const pose_t &points_origin = pose_t())

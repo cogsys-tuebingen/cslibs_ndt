@@ -261,7 +261,7 @@ cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr generateDynamicMap()
     const int num_samples = static_cast<int>(rng_t<1>(MIN_NUM_SAMPLES, MAX_NUM_SAMPLES).get());
     for (int i = 0 ; i < num_samples ; ++ i) {
         const cslibs_math_2d::Point2d p(rng_coord.get(), rng_coord.get());
-        map->add(p);
+        map->insert(p);
     }
 
     return map;
@@ -287,7 +287,7 @@ cslibs_ndt_2d::static_maps::Gridmap::Ptr generateStaticMap()
     rng_t<1> rng_coord_y(0.0, max_coord_y);
     for (int i = 0 ; i < num_samples ; ++ i) {
         const cslibs_math_2d::Point2d p(rng_coord_x.get(), rng_coord_y.get());
-        map->add(origin * p);
+        map->insert(origin * p);
     }
 
     return map;
@@ -306,7 +306,7 @@ cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr generateDynamicOccMap()
     for (int i = 0 ; i < num_samples ; ++ i) {
         const cslibs_math_2d::Point2d p(rng_coord.get(), rng_coord.get());
         const cslibs_math_2d::Point2d q(rng_coord.get(), rng_coord.get());
-        map->add(p, q);
+        map->insert(p, q);
     }
 
     return map;
@@ -333,7 +333,7 @@ cslibs_ndt_2d::static_maps::OccupancyGridmap::Ptr generateStaticOccMap()
     for (int i = 0 ; i < num_samples ; ++ i) {
         const cslibs_math_2d::Point2d p(rng_coord_x.get(), rng_coord_y.get());
         const cslibs_math_2d::Point2d q(rng_coord_x.get(), rng_coord_y.get());
-        map->add(origin * p, origin * q);
+        map->insert(origin * p, origin * q);
     }
 
     return map;

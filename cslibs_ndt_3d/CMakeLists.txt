@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(cslibs_ndt_3d)
+project(cslibs_ndt_3d CXX)
 
 set(CSLIBS_NDT_USE_OMP False)
 
@@ -26,6 +26,7 @@ add_message_files(
 generate_messages(
     DEPENDENCIES
     std_msgs
+    LANGS gencpp
 )
 
 catkin_package(

@@ -33,6 +33,7 @@ public:
     using allocator_t = Eigen::aligned_allocator<Gridmap>;
 
     using Ptr                               = std::shared_ptr<Gridmap>;
+    using ConstPtr                          = std::shared_ptr<const Gridmap>;
     using pose_2d_t                         = cslibs_math_2d::Pose2d;
     using pose_t                            = cslibs_math_3d::Pose3d;
     using transform_t                       = cslibs_math_3d::Transform3d;

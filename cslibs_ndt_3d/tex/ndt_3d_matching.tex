@@ -1,0 +1,122 @@
+\documentclass[10pt]{article}
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{a4wide}
+
+\begin{document}	
+	Parameters for 3D are
+	\begin{equation*}
+		\mathbf{p} = \lbrace t_x,t_y,t_z,\alpha,\beta,\gamma \rbrace, 
+	\end{equation*}
+	three translative components and angles for roll, pitch and yaw (in order).
+	
+	\begin{equation*}
+		\mathbf{x} = 
+		\begin{bmatrix}
+			x \\
+			y \\
+			z \\
+		\end{bmatrix}
+	\end{equation*}
+	\begin{equation*}
+		\mathbf{x^\prime} = T(\mathbf{p}, \mathbf{x}) = \mathbf{R} \cdot \mathbf{x} + \mathbf{t}
+	\end{equation*}
+	\begin{equation*}
+		\mathbf{R} = \mathbf{R_z}(\gamma) \mathbf{R_y}(\beta) \mathbf{R_x}(\alpha)
+	\end{equation*}
+	
+
+	\begin{equation*}
+		\mathbf{x^\prime} = 
+		\begin{bmatrix}
+		tx + x \cos{\left (\beta \right )} \cos{\left (\gamma \right )} + y \left(\sin{\left (\alpha \right )} \sin{\left (\beta \right )} \cos{\left (\gamma \right )} - \sin{\left (\gamma \right )} \cos{\left (\alpha \right )}\right) + z \left(\sin{\left (\alpha \right )} \sin{\left (\gamma \right )} + \sin{\left (\beta \right )} \cos{\left (\alpha \right )} \cos{\left (\gamma \right )}\right) \\
+		ty + x \sin{\left (\gamma \right )} \cos{\left (\beta \right )} + y \left(\sin{\left (\alpha \right )} \sin{\left (\beta \right )} \sin{\left (\gamma \right )} + \cos{\left (\alpha \right )} \cos{\left (\gamma \right )}\right) + z \left(- \sin{\left (\alpha \right )} \cos{\left (\gamma \right )} + \sin{\left (\beta \right )} \sin{\left (\gamma \right )} \cos{\left (\alpha \right )}\right)\\
+		tz - x \sin{\left (\beta \right )} + y \sin{\left (\alpha \right )} \cos{\left (\beta \right )} + z \cos{\left (\alpha \right )} \cos{\left (\beta \right )} \end{bmatrix}
+	\end{equation*}
+	
+	
+	\begin{eqnarray*}
+		\frac{\partial}{\partial \alpha} \mathbf{x^\prime} &=& 
+		\left[\begin{matrix}
+		y \left(\sin{\left (\alpha \right )} \sin{\left (\gamma \right )} + \sin{\left (\beta \right )} \cos{\left (\alpha \right )} \cos{\left (\gamma \right )}\right) + z \left(- \sin{\left (\alpha \right )} \sin{\left (\beta \right )} \cos{\left (\gamma \right )} + \sin{\left (\gamma \right )} \cos{\left (\alpha \right )}\right)\\y \left(- \sin{\left (\alpha \right )} \cos{\left (\gamma \right )} + \sin{\left (\beta \right )} \sin{\left (\gamma \right )} \cos{\left (\alpha \right )}\right) + z \left(- \sin{\left (\alpha \right )} \sin{\left (\beta \right )} \sin{\left (\gamma \right )} - \cos{\left (\alpha \right )} \cos{\left (\gamma \right )}\right)\\y \cos{\left (\alpha \right )} \cos{\left (\beta \right )} - z \sin{\left (\alpha \right )} \cos{\left (\beta \right )}
+		\end{matrix}\right] \\
+		\frac{\partial}{\partial \beta} \mathbf{x^\prime} &=&
+		\left[\begin{matrix}- x \sin{\left (\beta \right )} \cos{\left (\gamma \right )} + y \sin{\left (\alpha \right )} \cos{\left (\beta \right )} \cos{\left (\gamma \right )} + z \cos{\left (\alpha \right )} \cos{\left (\beta \right )} \cos{\left (\gamma \right )}\\- x \sin{\left (\beta \right )} \sin{\left (\gamma \right )} + y \sin{\left (\alpha \right )} \sin{\left (\gamma \right )} \cos{\left (\beta \right )} + z \sin{\left (\gamma \right )} \cos{\left (\alpha \right )} \cos{\left (\beta \right )}\\- x \cos{\left (\beta \right )} - y \sin{\left (\alpha \right )} \sin{\left (\beta \right )} - z \sin{\left (\beta \right )} \cos{\left (\alpha \right )}\end{matrix}\right] \\
+		\frac{\partial}{\partial \gamma} \mathbf{x^\prime} &=& 
+		\left[\begin{matrix}- x \sin{\left (\gamma \right )} \cos{\left (\beta \right )} + y \left(- \sin{\left (\alpha \right )} \sin{\left (\beta \right )} \sin{\left (\gamma \right )} - \cos{\left (\alpha \right )} \cos{\left (\gamma \right )}\right) + z \left(\sin{\left (\alpha \right )} \cos{\left (\gamma \right )} - \sin{\left (\beta \right )} \sin{\left (\gamma \right )} \cos{\left (\alpha \right )}\right)\\x \cos{\left (\beta \right )} \cos{\left (\gamma \right )} + y \left(\sin{\left (\alpha \right )} \sin{\left (\beta \right )} \cos{\left (\gamma \right )} - \sin{\left (\gamma \right )} \cos{\left (\alpha \right )}\right) + z \left(\sin{\left (\alpha \right )} \sin{\left (\gamma \right )} + \sin{\left (\beta \right )} \cos{\left (\alpha \right )} \cos{\left (\gamma \right )}\right)\\0\end{matrix}\right]
+	\end{eqnarray*}
+	
+	The linear components completely vanish from the Hessian matrix, more formally appearing as 
+	zero entries. Therefore the derivation of the angular components is necessary, nothing else.
+	For the Hessian entry calculations we get a 3-dimensional matrix from which columns have to be selected.
+	
+	\scalebox{0.5}{
+	\begin{math}
+	\left[\begin{matrix}y \left(- \sin{\left (\alpha \right )} \sin{\left (\beta \right )} \cos{\left (\gamma \right )} + \sin{\left (\gamma \right )} \cos{\left (\alpha \right )}\right) + z \left(- \sin{\left (\alpha \right )} \sin{\left (\gamma \right )} - \sin{\left (\beta \right )} \cos{\left (\alpha \right )} \cos{\left (\gamma \right )}\right) & y \cos{\left (\alpha \right )} \cos{\left (\beta \right )} \cos{\left (\gamma \right )} - z \sin{\left (\alpha \right )} \cos{\left (\beta \right )} \cos{\left (\gamma \right )} & y \left(\sin{\left (\alpha \right )} \cos{\left (\gamma \right )} - \sin{\left (\beta \right )} \sin{\left (\gamma \right )} \cos{\left (\alpha \right )}\right) + z \left(\sin{\left (\alpha \right )} \sin{\left (\beta \right )} \sin{\left (\gamma \right )} + \cos{\left (\alpha \right )} \cos{\left (\gamma \right )}\right)\\y \left(- \sin{\left (\alpha \right )} \sin{\left (\beta \right )} \sin{\left (\gamma \right )} - \cos{\left (\alpha \right )} \cos{\left (\gamma \right )}\right) + z \left(\sin{\left (\alpha \right )} \cos{\left (\gamma \right )} - \sin{\left (\beta \right )} \sin{\left (\gamma \right )} \cos{\left (\alpha \right )}\right) & y \sin{\left (\gamma \right )} \cos{\left (\alpha \right )} \cos{\left (\beta \right )} - z \sin{\left (\alpha \right )} \sin{\left (\gamma \right )} \cos{\left (\beta \right )} & y \left(\sin{\left (\alpha \right )} \sin{\left (\gamma \right )} + \sin{\left (\beta \right )} \cos{\left (\alpha \right )} \cos{\left (\gamma \right )}\right) + z \left(- \sin{\left (\alpha \right )} \sin{\left (\beta \right )} \cos{\left (\gamma \right )} + \sin{\left (\gamma \right )} \cos{\left (\alpha \right )}\right)\\- y \sin{\left (\alpha \right )} \cos{\left (\beta \right )} - z \cos{\left (\alpha \right )} \cos{\left (\beta \right )} & - y \sin{\left (\beta \right )} \cos{\left (\alpha \right )} + z \sin{\left (\alpha \right )} \sin{\left (\beta \right )} & 0\end{matrix}\right]
+	\end{math}
+	}
+	
+	\scalebox{0.5}{
+		\begin{math}
+			\left[\begin{matrix}y \cos{\left (\alpha \right )} \cos{\left (\beta \right )} \cos{\left (\gamma \right )} - z \sin{\left (\alpha \right )} \cos{\left (\beta \right )} \cos{\left (\gamma \right )} & - x \cos{\left (\beta \right )} \cos{\left (\gamma \right )} - y \sin{\left (\alpha \right )} \sin{\left (\beta \right )} \cos{\left (\gamma \right )} - z \sin{\left (\beta \right )} \cos{\left (\alpha \right )} \cos{\left (\gamma \right )} & x \sin{\left (\beta \right )} \sin{\left (\gamma \right )} - y \sin{\left (\alpha \right )} \sin{\left (\gamma \right )} \cos{\left (\beta \right )} - z \sin{\left (\gamma \right )} \cos{\left (\alpha \right )} \cos{\left (\beta \right )}\\y \sin{\left (\gamma \right )} \cos{\left (\alpha \right )} \cos{\left (\beta \right )} - z \sin{\left (\alpha \right )} \sin{\left (\gamma \right )} \cos{\left (\beta \right )} & - x \sin{\left (\gamma \right )} \cos{\left (\beta \right )} - y \sin{\left (\alpha \right )} \sin{\left (\beta \right )} \sin{\left (\gamma \right )} - z \sin{\left (\beta \right )} \sin{\left (\gamma \right )} \cos{\left (\alpha \right )} & - x \sin{\left (\beta \right )} \cos{\left (\gamma \right )} + y \sin{\left (\alpha \right )} \cos{\left (\beta \right )} \cos{\left (\gamma \right )} + z \cos{\left (\alpha \right )} \cos{\left (\beta \right )} \cos{\left (\gamma \right )}\\- y \sin{\left (\beta \right )} \cos{\left (\alpha \right )} + z \sin{\left (\alpha \right )} \sin{\left (\beta \right )} & x \sin{\left (\beta \right )} - y \sin{\left (\alpha \right )} \cos{\left (\beta \right )} - z \cos{\left (\alpha \right )} \cos{\left (\beta \right )} & 0\end{matrix}\right]
+		\end{math}
+	}
+
+	\scalebox{0.40}{
+		\begin{math}
+		\left[\begin{matrix}y \left(\sin{\left (\alpha \right )} \cos{\left (\gamma \right )} - \sin{\left (\beta \right )} \sin{\left (\gamma \right )} \cos{\left (\alpha \right )}\right) + z \left(\sin{\left (\alpha \right )} \sin{\left (\beta \right )} \sin{\left (\gamma \right )} + \cos{\left (\alpha \right )} \cos{\left (\gamma \right )}\right) & x \sin{\left (\beta \right )} \sin{\left (\gamma \right )} - y \sin{\left (\alpha \right )} \sin{\left (\gamma \right )} \cos{\left (\beta \right )} - z \sin{\left (\gamma \right )} \cos{\left (\alpha \right )} \cos{\left (\beta \right )} & - x \cos{\left (\beta \right )} \cos{\left (\gamma \right )} + y \left(- \sin{\left (\alpha \right )} \sin{\left (\beta \right )} \cos{\left (\gamma \right )} + \sin{\left (\gamma \right )} \cos{\left (\alpha \right )}\right) + z \left(- \sin{\left (\alpha \right )} \sin{\left (\gamma \right )} - \sin{\left (\beta \right )} \cos{\left (\alpha \right )} \cos{\left (\gamma \right )}\right)\\y \left(\sin{\left (\alpha \right )} \sin{\left (\gamma \right )} + \sin{\left (\beta \right )} \cos{\left (\alpha \right )} \cos{\left (\gamma \right )}\right) + z \left(- \sin{\left (\alpha \right )} \sin{\left (\beta \right )} \cos{\left (\gamma \right )} + \sin{\left (\gamma \right )} \cos{\left (\alpha \right )}\right) & - x \sin{\left (\beta \right )} \cos{\left (\gamma \right )} + y \sin{\left (\alpha \right )} \cos{\left (\beta \right )} \cos{\left (\gamma \right )} + z \cos{\left (\alpha \right )} \cos{\left (\beta \right )} \cos{\left (\gamma \right )} & - x \sin{\left (\gamma \right )} \cos{\left (\beta \right )} + y \left(- \sin{\left (\alpha \right )} \sin{\left (\beta \right )} \sin{\left (\gamma \right )} - \cos{\left (\alpha \right )} \cos{\left (\gamma \right )}\right) + z \left(\sin{\left (\alpha \right )} \cos{\left (\gamma \right )} - \sin{\left (\beta \right )} \sin{\left (\gamma \right )} \cos{\left (\alpha \right )}\right)\\0 & 0 & 0\end{matrix}\right]
+		\end{math}
+	}
+	
+	\clearpage
+	
+	Parameters for 2D are
+	\begin{equation*}
+	\mathbf{p} = \lbrace t_x,t_y, \gamma \rbrace, 
+	\end{equation*}
+	two translative components and only one angle.
+	
+	\begin{equation*}
+	\mathbf{x} = 
+	\begin{bmatrix}
+	x \\
+	y \\
+	\end{bmatrix}
+	\end{equation*}
+	\begin{equation*}
+	\mathbf{x^\prime} = T(\mathbf{p}, \mathbf{x}) = \mathbf{R} \cdot \mathbf{x} + \mathbf{t}
+	\end{equation*}
+	
+	\begin{equation*}
+	\mathbf{x^\prime} = 
+	\begin{bmatrix}
+		tx + x \cos{\left (\gamma \right )} - y \sin{\left (\gamma \right )} \\
+		ty + x \sin{\left (\gamma \right )} + y \cos{\left (\gamma \right )} \\
+	\end{bmatrix}
+	\end{equation*}
+	
+	\begin{eqnarray*}
+		\frac{\partial}{\partial \gamma} \mathbf{x^\prime} &=& 
+		\left[\begin{matrix}- x \sin{\left (\gamma \right )} - y \cos{\left (\gamma \right )}\\x \cos{\left (\gamma \right )} - y \sin{\left (\gamma \right )}\end{matrix}\right]
+	\end{eqnarray*}
+	
+	This entry is only for the angle. Other entries are zero, since only linear components are part of those.
+	\begin{equation*}
+	\left[\begin{matrix}- x \cos{\left (\gamma \right )} + y \sin{\left (\gamma \right )}\\- x \sin{\left (\gamma \right )} - y \cos{\left (\gamma \right )}\end{matrix}\right]
+	\end{equation*}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+

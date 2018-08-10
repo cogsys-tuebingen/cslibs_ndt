@@ -461,7 +461,7 @@ public:
              (i[1] >= min_index_[1]  && i[1] <= max_index_[1]);
     }
 
-private:
+protected:
     const double                                    resolution_;
     const double                                    resolution_inv_;
     const double                                    bundle_resolution_;

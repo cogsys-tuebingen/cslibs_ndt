@@ -20,12 +20,12 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
   const auto size_m = dst->max() - min;
   const double resolution = params.getResolution();
 
-  const size_t size = {{static_cast<std::size_t>(std::floor(size_m(0) / resolution + 0.5)),
-                        static_cast<std::size_t>(std::floor(size_m(1) / resolution + 0.5)),
-                        static_cast<std::size_t>(std::floor(size_m(2) / resolution + 0.5))}};
-  const index_t min_index = {{static_cast<int>(min(0) / (0.5 * resolution)),
-                              static_cast<int>(min(1) / (0.5 * resolution)),
-                              static_cast<int>(min(2) / (0.5 * resolution))}};
+  const size_t size = {{static_cast<std::size_t>(std::ceil(size_m(0) / resolution)) + 1,
+                        static_cast<std::size_t>(std::ceil(size_m(1) / resolution)) + 1,
+                        static_cast<std::size_t>(std::ceil(size_m(2) / resolution)) + 1}};
+  const index_t min_index = {{static_cast<int>(std::floor(min(0) / resolution)) * 2,
+                              static_cast<int>(std::floor(min(1) / resolution)) * 2,
+                              static_cast<int>(std::floor(min(2) / resolution)) * 2}};
 
 
   ndt_t::Ptr ndt(new ndt_t(ndt_t::pose_t(), params.getResolution(), size, min_index));
@@ -43,16 +43,16 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
   using size_t  = ndt_t::size_t;
   using index_t = ndt_t::index_t;
 
-  const auto min = dst->min();
-  const auto size_m = dst->max() - min;
+  const auto   min = dst->min();
+  const auto   size_m = dst->max() - min;
   const double resolution = params.getResolution();
 
-  const size_t size = {{static_cast<std::size_t>(std::floor(size_m(0) / resolution + 0.5)),
-                        static_cast<std::size_t>(std::floor(size_m(1) / resolution + 0.5)),
-                        static_cast<std::size_t>(std::floor(size_m(2) / resolution + 0.5))}};
-  const index_t min_index = {{static_cast<int>(min(0) / (0.5 * resolution)),
-                              static_cast<int>(min(1) / (0.5 * resolution)),
-                              static_cast<int>(min(2) / (0.5 * resolution))}};
+  const size_t size = {{static_cast<std::size_t>(std::ceil(size_m(0) / resolution)) + 1,
+                        static_cast<std::size_t>(std::ceil(size_m(1) / resolution)) + 1,
+                        static_cast<std::size_t>(std::ceil(size_m(2) / resolution)) + 1}};
+  const index_t min_index = {{static_cast<int>(std::floor(min(0) / resolution)) * 2,
+                              static_cast<int>(std::floor(min(1) / resolution)) * 2,
+                              static_cast<int>(std::floor(min(2) / resolution)) * 2}};
 
 
   ndt_t::Ptr ndt(new ndt_t(ndt_t::pose_t(), params.getResolution(), size, min_index));

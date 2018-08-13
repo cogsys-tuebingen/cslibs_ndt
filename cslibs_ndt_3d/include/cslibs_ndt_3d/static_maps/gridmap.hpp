@@ -33,6 +33,7 @@ public:
     using allocator_t = Eigen::aligned_allocator<Gridmap>;
 
     using Ptr                               = std::shared_ptr<Gridmap>;
+    using ConstPtr                          = std::shared_ptr<Gridmap>;
     using pose_2d_t                         = cslibs_math_2d::Pose2d;
     using pose_t                            = cslibs_math_3d::Pose3d;
     using transform_t                       = cslibs_math_3d::Transform3d;
@@ -92,9 +93,9 @@ public:
         }
 
         bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2, size[1] * 2, size[2] * 2);
-        storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0],
-                                                                   min_bundle_index[1],
-                                                                   min_bundle_index[2]);
+        bundle_storage_->template set<cis::option::tags::array_offset>(min_bundle_index[0],
+                                                                       min_bundle_index[1],
+                                                                       min_bundle_index[2]);
     }
 
     Gridmap(const double &origin_x,
@@ -140,9 +141,9 @@ public:
         }
 
         bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2, size[1] * 2, size[2] * 2);
-        storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0],
-                                                                   min_bundle_index[1],
-                                                                   min_bundle_index[2]);
+        bundle_storage_->template set<cis::option::tags::array_offset>(min_bundle_index[0],
+                                                                       min_bundle_index[1],
+                                                                       min_bundle_index[2]);
     }
 
     Gridmap(const pose_t &origin,
@@ -177,7 +178,8 @@ public:
     inline point_t getMin() const
     {
       return point_t(min_bundle_index_[0] * bundle_resolution_,
-                     min_bundle_index_[1] * bundle_resolution_);
+                     min_bundle_index_[1] * bundle_resolution_,
+                     min_bundle_index_[2] * bundle_resolution_);
     }
 
     /**
@@ -187,7 +189,8 @@ public:
     inline point_t getMax() const
     {
       return point_t((max_bundle_index_[0] + 1) * bundle_resolution_,
-                     (max_bundle_index_[1] + 1) * bundle_resolution_);
+                     (max_bundle_index_[1] + 1) * bundle_resolution_,
+                     (max_bundle_index_[2] + 1) * bundle_resolution_);
     }
 
     /**
@@ -196,7 +199,7 @@ public:
      */
     inline pose_t getOrigin() const
     {
-        cslibs_math_2d::Transform2d origin = w_T_m_;
+        pose_t origin = w_T_m_;
         origin.translation() = getMin();
         return origin;
     }
@@ -229,7 +232,7 @@ public:
         bundle->at(7)->getHandle()->data().add(p);
     }
 
-    inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points,
+    inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::ConstPtr &points,
                        const pose_t &points_origin = pose_t())
     {
         distribution_storage_t storage;
@@ -309,6 +312,17 @@ public:
     inline distribution_bundle_t* getDistributionBundle(const index_t &bi)
     {
         return getAllocate(bi);
+    }
+
+    inline const distribution_bundle_t* getDistributionBundle(const point_t &p) const
+    {
+        const index_t bi = toBundleIndex(p);
+        distribution_bundle_t *bundle;
+        {
+            lock_t l(bundle_storage_mutex_);
+            bundle = bundle_storage_->get(bi);
+        }
+        return bundle;
     }
 
     inline double getBundleResolution() const

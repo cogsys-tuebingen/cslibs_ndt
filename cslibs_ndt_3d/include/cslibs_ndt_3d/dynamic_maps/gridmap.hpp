@@ -279,6 +279,7 @@ public:
 
     inline const distribution_bundle_t* getDistributionBundle(const index_t &bi) const
     {
+        lock_t l(bundle_storage_mutex_);
         return getAllocate(bi);
     }
 

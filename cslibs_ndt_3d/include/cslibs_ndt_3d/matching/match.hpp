@@ -86,6 +86,8 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
         step_readjust > max_step_readjust;
   };
 
+  const std::size_t size_prime = src_prime->size();
+
   for(std::size_t i = 0 ; i < max_iterations ; ++i, ++iterations) {
     if(readjust()) {
       /// drop out if too many consecutive step readjustments occur
@@ -106,7 +108,6 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
     gradient_t dp = gradient_t::Zero();
     double score = 0.0;
 
-    const std::size_t size_prime = src_prime->size();
     std::atomic_uint  it_prime(0);
 
     std::mutex mutex_hg;

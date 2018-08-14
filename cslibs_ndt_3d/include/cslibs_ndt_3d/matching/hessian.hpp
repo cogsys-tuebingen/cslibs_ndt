@@ -14,8 +14,8 @@ public:
 
   inline Hessian()
   {
-    for(std::size_t i = 0 ; i < 6 ; ++i) {
-      for(std::size_t j = 0 ; j < 6 ; ++j) {
+    for(std::size_t i = 0 ; i < 3 ; ++i) {
+      for(std::size_t j = 0 ; j < 3 ; ++j) {
         data_[i][j] = Eigen::Matrix3d::Zero();
       }
     }

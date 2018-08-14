@@ -44,6 +44,7 @@ public:
   using transform_t                       = cslibs_math_3d::Transform3d;
   using point_t                           = cslibs_math_3d::Point3d;
   using index_t                           = std::array<int, 3>;
+  using size_m_t                          = std::array<double, 3>;
   using mutex_t                           = std::mutex;
   using lock_t                            = std::unique_lock<mutex_t>;
   using distribution_t                    = cslibs_ndt::OccupancyDistribution<3>;
@@ -109,10 +110,10 @@ public:
      */
   inline point_t getMin() const
   {
-    lock_t(bundle_storage_mutex_);
+    lock_t l(bundle_storage_mutex_);
     return point_t(min_index_[0] * bundle_resolution_,
-        min_index_[1] * bundle_resolution_,
-        min_index_[2] * bundle_resolution_);
+                   min_index_[1] * bundle_resolution_,
+                   min_index_[2] * bundle_resolution_);
   }
 
   /**
@@ -121,7 +122,7 @@ public:
      */
   inline point_t getMax() const
   {
-    lock_t(bundle_storage_mutex_);
+    lock_t l(bundle_storage_mutex_);
     return point_t((max_index_[0] + 1) * bundle_resolution_,
         (max_index_[1] + 1) * bundle_resolution_,
         (max_index_[2] + 1) * bundle_resolution_);
@@ -133,6 +134,7 @@ public:
      */
   inline pose_t getOrigin() const
   {
+    lock_t l(bundle_storage_mutex_);
     cslibs_math_3d::Transform3d origin = w_T_m_;
     origin.translation() = getMin();
     return origin;
@@ -277,7 +279,7 @@ public:
     const index_t bi = toBundleIndex(p);
     distribution_bundle_t *bundle;
     {
-      lock_t(bundle_storage_mutex_);
+      lock_t l(bundle_storage_mutex_);
       bundle = bundle_storage_->get(bi);
     }
 
@@ -309,7 +311,7 @@ public:
     const index_t bi = toBundleIndex(p);
     distribution_bundle_t *bundle;
     {
-      lock_t(bundle_storage_mutex_);
+      lock_t l(bundle_storage_mutex_);
       bundle = bundle_storage_->get(bi);
     }
 
@@ -337,24 +339,34 @@ public:
 
   inline index_t getMinBundleIndex() const
   {
-    lock_t(bundle_storage_mutex_);
+    lock_t l(bundle_storage_mutex_);
     return min_index_;
   }
 
   inline index_t getMaxDistributionIndex() const
   {
-    lock_t(bundle_storage_mutex_);
+    lock_t l(bundle_storage_mutex_);
     return max_index_;
   }
 
   inline const distribution_bundle_t* getDistributionBundle(const index_t &bi) const
   {
-    return getAllocate(bi);
+    distribution_bundle_t* bundle;
+    {
+      lock_t l(bundle_storage_mutex_);
+      bundle = getAllocate(bi);
+    }
+    return bundle;
   }
 
   inline distribution_bundle_t* getDistributionBundle(const index_t &bi)
   {
-    return getAllocate(bi);
+    distribution_bundle_t* bundle;
+    {
+      lock_t l(bundle_storage_mutex_);
+      bundle = getAllocate(bi);
+    }
+    return bundle;
   }
 
   inline double getBundleResolution() const
@@ -367,16 +379,12 @@ public:
     return resolution_;
   }
 
-  inline double getHeight() const
+  inline size_m_t getSizeM() const
   {
-    lock_t(bundle_storage_mutex_);
-    return (max_index_[1] - min_index_[1] + 1) * bundle_resolution_;
-  }
-
-  inline double getWidth() const
-  {
-    lock_t(bundle_storage_mutex_);
-    return (max_index_[0] - min_index_[0] + 1) * bundle_resolution_;
+    lock_t l(bundle_storage_mutex_);
+    return {{(max_index_[0] - min_index_[0] + 1) * bundle_resolution_,
+             (max_index_[1] - min_index_[1] + 1) * bundle_resolution_,
+             (max_index_[2] - min_index_[2] + 1) * bundle_resolution_}};
   }
 
   inline distribution_storage_array_t const & getStorages() const
@@ -387,15 +395,13 @@ public:
   template <typename Fn>
   inline void traverse(const Fn& function) const
   {
-    lock_t(storage_mutex_);
-    lock_t(bundle_storage_mutex_);
+    lock_t l(bundle_storage_mutex_);
     return bundle_storage_->traverse(function);
   }
 
   inline void getBundleIndices(std::vector<index_t> &indices) const
   {
-    lock_t(storage_mutex_);
-    lock_t(bundle_storage_mutex_);
+    lock_t l(bundle_storage_mutex_);
     auto add_index = [&indices](const index_t &i, const distribution_bundle_t &d) {
       indices.emplace_back(i);
     };
@@ -404,8 +410,7 @@ public:
 
   inline std::size_t getByteSize() const
   {
-    lock_t(storage_mutex_);
-    lock_t(bundle_storage_mutex_);
+    lock_t l(bundle_storage_mutex_);
     return sizeof(*this) +
         bundle_storage_->byte_size() +
         storage_[0]->byte_size() +
@@ -454,7 +459,6 @@ private:
 
   mutable index_t                                 min_index_;
   mutable index_t                                 max_index_;
-  mutable mutex_t                                 storage_mutex_;
   mutable distribution_storage_array_t            storage_;
   mutable mutex_t                                 bundle_storage_mutex_;
   mutable distribution_bundle_storage_ptr_t       bundle_storage_;
@@ -462,7 +466,6 @@ private:
   inline distribution_t* getAllocate(const distribution_storage_ptr_t &s,
                                      const index_t &i) const
   {
-    lock_t(storage_mutex_);
     distribution_t *d = s->get(i);
     return d ? d : &(s->insert(i, distribution_t()));
   }
@@ -470,11 +473,7 @@ private:
   inline distribution_bundle_t *getAllocate(const index_t &bi) const
   {
     auto get_allocate = [this](const index_t &bi) {
-      distribution_bundle_t *bundle;
-      {
-        lock_t(bundle_storage_mutex_);
-        bundle = bundle_storage_->get(bi);
-      }
+      distribution_bundle_t *bundle = bundle_storage_->get(bi);
 
       auto allocate_bundle = [this, &bi]() {
         distribution_bundle_t b;
@@ -503,7 +502,6 @@ private:
         b[6] = getAllocate(storage_[6], storage_6_index);
         b[7] = getAllocate(storage_[7], storage_7_index);
 
-        lock_t(bundle_storage_mutex_);
         updateIndices(bi);
         return &(bundle_storage_->insert(bi, b));
       };
@@ -516,7 +514,7 @@ private:
   {
     distribution_bundle_t *bundle;
     {
-      lock_t(bundle_storage_mutex_);
+      lock_t l(bundle_storage_mutex_);
       bundle = getAllocate(bi);
     }
     bundle->at(0)->getHandle()->updateFree();
@@ -534,7 +532,7 @@ private:
   {
     distribution_bundle_t *bundle;
     {
-      lock_t(bundle_storage_mutex_);
+      lock_t l(bundle_storage_mutex_);
       bundle = getAllocate(bi);
     }
     bundle->at(0)->getHandle()->updateFree(n);
@@ -552,7 +550,7 @@ private:
   {
     distribution_bundle_t *bundle;
     {
-      lock_t(bundle_storage_mutex_);
+      lock_t l(bundle_storage_mutex_);
       bundle = getAllocate(bi);
     }
     bundle->at(0)->getHandle()->updateOccupied(p);
@@ -570,7 +568,7 @@ private:
   {
     distribution_bundle_t *bundle;
     {
-      lock_t(bundle_storage_mutex_);
+      lock_t l(bundle_storage_mutex_);
       bundle = getAllocate(bi);
     }
     bundle->at(0)->getHandle()->updateOccupied(d);

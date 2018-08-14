@@ -110,8 +110,10 @@ void testStaticMap(const typename cslibs_ndt_3d::static_maps::Gridmap::Ptr & map
     EXPECT_NEAR(map->getOrigin().pitch(), map_converted->getOrigin().pitch(), 1e-3);
     EXPECT_NEAR(map->getOrigin().yaw(),   map_converted->getOrigin().yaw(),   1e-3);
 
-    EXPECT_NEAR(map->getHeight(),         map_converted->getHeight(),         1e-3);
-    EXPECT_NEAR(map->getWidth(),          map_converted->getWidth(),          1e-3);
+    EXPECT_NEAR(map->getSizeM()[0],         map_converted->getSizeM()[0],     1e-3);
+    EXPECT_NEAR(map->getSizeM()[1],         map_converted->getSizeM()[1],     1e-3);
+    EXPECT_NEAR(map->getSizeM()[2],         map_converted->getSizeM()[2],     1e-3);
+
 
     for (int idx = 0 ; idx < static_cast<int>(map->getBundleSize()[0]) ; ++ idx) {
         for (int idy = 0 ; idy < static_cast<int>(map->getBundleSize()[1]) ; ++ idy) {
@@ -155,8 +157,9 @@ void testDynamicOccMap(const typename cslibs_ndt_3d::dynamic_maps::OccupancyGrid
 
     EXPECT_NEAR(map->getResolution(),       map_converted->getResolution(),       1e-3);
     EXPECT_NEAR(map->getBundleResolution(), map_converted->getBundleResolution(), 1e-3);
-    EXPECT_NEAR(map->getHeight(),           map_converted->getHeight(),           1e-3);
-    EXPECT_NEAR(map->getWidth(),            map_converted->getWidth(),            1e-3);
+    EXPECT_NEAR(map->getSizeM()[0],         map_converted->getSizeM()[0],     1e-3);
+    EXPECT_NEAR(map->getSizeM()[1],         map_converted->getSizeM()[1],     1e-3);
+    EXPECT_NEAR(map->getSizeM()[2],         map_converted->getSizeM()[2],     1e-3);
 
     EXPECT_EQ(map->getMinBundleIndex()[0], map_converted->getMinBundleIndex()[0]);
     EXPECT_EQ(map->getMinBundleIndex()[1], map_converted->getMinBundleIndex()[1]);
@@ -248,8 +251,9 @@ void testStaticOccMap(const typename cslibs_ndt_3d::static_maps::OccupancyGridma
     EXPECT_NEAR(map->getOrigin().pitch(), map_converted->getOrigin().pitch(), 1e-3);
     EXPECT_NEAR(map->getOrigin().yaw(),   map_converted->getOrigin().yaw(),   1e-3);
 
-    EXPECT_NEAR(map->getHeight(),         map_converted->getHeight(),         1e-3);
-    EXPECT_NEAR(map->getWidth(),          map_converted->getWidth(),          1e-3);
+    EXPECT_NEAR(map->getSizeM()[0],         map_converted->getSizeM()[0],     1e-3);
+    EXPECT_NEAR(map->getSizeM()[1],         map_converted->getSizeM()[1],     1e-3);
+    EXPECT_NEAR(map->getSizeM()[2],         map_converted->getSizeM()[2],     1e-3);
 
     for (int idx = 0 ; idx < static_cast<int>(map->getBundleSize()[0]) ; ++ idx) {
         for (int idy = 0 ; idy < static_cast<int>(map->getBundleSize()[1]) ; ++ idy) {
@@ -347,7 +351,7 @@ cslibs_ndt_3d::static_maps::Gridmap::Ptr generateStaticMap()
     const std::size_t size_x = rng_size.get();
     const std::size_t size_y = rng_size.get();
     const std::size_t size_z = rng_size.get();
-    typename map_t::Ptr map(new map_t(origin, resolution, {{size_x, size_y, size_z}}));
+    typename map_t::Ptr map(new map_t(origin, resolution, {{size_x, size_y, size_z}}, {{0,0,0}}));
     const int num_samples = static_cast<int>(rng_t<1>(MIN_NUM_SAMPLES, MAX_NUM_SAMPLES).get());
 
     const double max_coord_x = static_cast<double>(size_x) * resolution;
@@ -378,7 +382,7 @@ cslibs_ndt_3d::static_maps::OccupancyGridmap::Ptr generateStaticOccMap()
     const std::size_t size_x = rng_size.get();
     const std::size_t size_y = rng_size.get();
     const std::size_t size_z = rng_size.get();
-    typename map_t::Ptr map(new map_t(origin, resolution, {{size_x, size_y, size_z}}));
+    typename map_t::Ptr map(new map_t(origin, resolution, {{size_x, size_y, size_z}}, {{0,0,0}}));
     const int num_samples = static_cast<int>(rng_t<1>(MIN_NUM_SAMPLES, MAX_NUM_SAMPLES).get());
 
     const double max_coord_x = static_cast<double>(size_x) * resolution;

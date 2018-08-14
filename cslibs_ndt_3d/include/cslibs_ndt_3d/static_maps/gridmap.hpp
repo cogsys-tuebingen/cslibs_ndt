@@ -213,6 +213,11 @@ public:
         return w_T_m_;
     }
 
+    inline index_t getMinBundleIndex() const
+    {
+        return min_bundle_index_;
+    }
+
     inline void insert(const point_t &p)
     {
         distribution_bundle_t *bundle;
@@ -324,8 +329,12 @@ public:
         if(!valid(bi))
             return nullptr;
 
-        lock_t l(bundle_storage_mutex_);
-        return getAllocate(bi);
+        distribution_bundle_t *bundle;
+        {
+            lock_t(bundle_storage_mutex_);
+            bundle = bundle_storage_->get(bi);
+        }
+        return bundle;
     }
 
     inline distribution_bundle_t* getDistributionBundle(const index_t &bi)
@@ -333,8 +342,12 @@ public:
         if(!valid(bi))
             return nullptr;
 
-        lock_t l(bundle_storage_mutex_);
-        return getAllocate(bi);
+        distribution_bundle_t *bundle;
+        {
+            lock_t(bundle_storage_mutex_);
+            bundle = bundle_storage_->get(bi);
+        }
+        return bundle;
     }
 
     inline const distribution_bundle_t* getDistributionBundle(const point_t &p) const
@@ -361,14 +374,9 @@ public:
         return resolution_;
     }
 
-    inline double getHeight() const
+    inline size_m_t getSizeM() const
     {
-        return size_m_[1];
-    }
-
-    inline double getWidth() const
-    {
-        return size_m_[0];
+        return size_m_;
     }
 
     inline size_t getSize() const
@@ -389,14 +397,12 @@ public:
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
-        lock_t(storage_mutex_);
         lock_t(bundle_storage_mutex_);
         return bundle_storage_->traverse(function);
     }
 
     inline void getBundleIndices(std::vector<index_t> &indices) const
     {
-        lock_t(storage_mutex_);
         lock_t(bundle_storage_mutex_);
         auto add_index = [&indices](const index_t &i, const distribution_bundle_t &d) {
             indices.emplace_back(i);
@@ -406,7 +412,6 @@ public:
 
     inline std::size_t getByteSize() const
     {
-        lock_t(storage_mutex_);
         lock_t(bundle_storage_mutex_);
         return sizeof(*this) +
                 bundle_storage_->byte_size() +
@@ -451,7 +456,6 @@ protected:
     const index_t                                   min_bundle_index_;
     const index_t                                   max_bundle_index_;
 
-    mutable mutex_t                                 storage_mutex_;
     mutable distribution_storage_array_t            storage_;
     mutable mutex_t                                 bundle_storage_mutex_;
     mutable distribution_bundle_storage_ptr_t       bundle_storage_;
@@ -459,7 +463,6 @@ protected:
     inline distribution_t* getAllocate(const distribution_storage_ptr_t &s,
                                        const index_t &i) const
     {
-        lock_t(storage_mutex_);
         distribution_t *d = s->get(i);
         return d ? d : &(s->insert(i, distribution_t()));
     }

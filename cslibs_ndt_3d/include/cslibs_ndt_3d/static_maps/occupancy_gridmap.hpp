@@ -35,7 +35,7 @@ public:
     using allocator_t = Eigen::aligned_allocator<OccupancyGridmap>;
 
     using Ptr                               = std::shared_ptr<OccupancyGridmap>;
-    using pose_2d_t                         = cslibs_math_3d::Pose3d;
+    using pose_2d_t                         = cslibs_math_2d::Pose2d;
     using pose_t                            = cslibs_math_3d::Pose3d;
     using transform_t                       = cslibs_math_3d::Transform3d;
     using point_t                           = cslibs_math_3d::Point3d;
@@ -96,9 +96,9 @@ public:
         }
 
         bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2, size[1] * 2, size[2] * 2);
-        storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0],
-                                                                   min_bundle_index[1],
-                                                                   min_bundle_index[2]);
+        bundle_storage_->template set<cis::option::tags::array_offset>(min_bundle_index[0],
+                                                                       min_bundle_index[1],
+                                                                       min_bundle_index[2]);
     }
 
     OccupancyGridmap(const double &origin_x,
@@ -144,9 +144,9 @@ public:
         }
 
         bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2, size[1] * 2, size[2] * 2);
-        storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0],
-                                                                   min_bundle_index[1],
-                                                                   min_bundle_index[2]);
+        bundle_storage_->template set<cis::option::tags::array_offset>(min_bundle_index[0],
+                                                                       min_bundle_index[1],
+                                                                       min_bundle_index[2]);
     }
 
     OccupancyGridmap(const pose_t &origin,
@@ -181,7 +181,8 @@ public:
     inline point_t getMin() const
     {
       return point_t(min_bundle_index_[0] * bundle_resolution_,
-                     min_bundle_index_[1] * bundle_resolution_);
+                     min_bundle_index_[1] * bundle_resolution_,
+                     min_bundle_index_[2] * bundle_resolution_);
     }
 
     /**
@@ -191,7 +192,8 @@ public:
     inline point_t getMax() const
     {
       return point_t((max_bundle_index_[0] + 1) * bundle_resolution_,
-                     (max_bundle_index_[1] + 1) * bundle_resolution_);
+                     (max_bundle_index_[1] + 1) * bundle_resolution_,
+                     (max_bundle_index_[2] + 1) * bundle_resolution_);
     }
 
     /**
@@ -200,7 +202,7 @@ public:
      */
     inline pose_t getOrigin() const
     {
-        cslibs_math_2d::Transform2d origin = w_T_m_;
+        pose_t origin = w_T_m_;
         origin.translation() = getMin();
         return origin;
     }
@@ -212,6 +214,11 @@ public:
     inline pose_t getInitialOrigin() const
     {
         return w_T_m_;
+    }
+
+    inline index_t getMinBundleIndex() const
+    {
+        return min_bundle_index_;
     }
 
     template <typename line_iterator_t = simple_iterator_t>
@@ -229,7 +236,7 @@ public:
     }
 
     template <typename line_iterator_t = simple_iterator_t>
-    inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points,
+    inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::ConstPtr &points,
                        const pose_t &points_origin = pose_t())
     {
         distribution_storage_t storage;
@@ -259,13 +266,13 @@ public:
 
     template <typename line_iterator_t = simple_iterator_t>
     inline void insertVisible(const pose_t &origin,
-                              const typename cslibs_math::linear::Pointcloud<point_t>::Ptr &points,
+                              const typename cslibs_math::linear::Pointcloud<point_t>::ConstPtr &points,
                               const inverse_sensor_model_t::Ptr &ivm,
                               const inverse_sensor_model_t::Ptr &ivm_visibility)
     {
         if (!ivm || !ivm_visibility) {
             std::cout << "[OccupancyGridmap3D]: Cannot evaluate visibility, using model-free update rule instead!" << std::endl;
-            return insert(origin, points);
+            return insert(points, origin);
         }
 
         const index_t start_bi = toBundleIndex(origin.translation());
@@ -327,6 +334,9 @@ public:
                          const inverse_sensor_model_t::Ptr &ivm) const
     {
         const index_t bi = toBundleIndex(p);
+        if(!valid(bi))
+            return 0.0;
+
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);
@@ -359,6 +369,9 @@ public:
                                       const inverse_sensor_model_t::Ptr &ivm) const
     {
         const index_t bi = toBundleIndex(p);
+        if(!valid(bi))
+            return 0.0;
+
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);
@@ -389,13 +402,30 @@ public:
 
     inline const distribution_bundle_t* getDistributionBundle(const index_t &bi) const
     {
-        return getAllocate(bi);
+        if(!valid(bi))
+            return nullptr;
+
+        distribution_bundle_t *bundle;
+        {
+            lock_t(bundle_storage_mutex_);
+            bundle = bundle_storage_->get(bi);
+        }
+        return bundle;
     }
 
     inline distribution_bundle_t* getDistributionBundle(const index_t &bi)
     {
-        return getAllocate(bi);
+        if(!valid(bi))
+            return nullptr;
+
+        distribution_bundle_t *bundle;
+        {
+            lock_t(bundle_storage_mutex_);
+            bundle = bundle_storage_->get(bi);
+        }
+        return bundle;
     }
+
 
     inline double getBundleResolution() const
     {
@@ -407,14 +437,9 @@ public:
         return resolution_;
     }
 
-    inline double getHeight() const
+    inline size_m_t getSizeM() const
     {
-        return size_m_[1];
-    }
-
-    inline double getWidth() const
-    {
-        return size_m_[0];
+        return size_m_;
     }
 
     inline size_t getSize() const
@@ -435,14 +460,12 @@ public:
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
-        lock_t(storage_mutex_);
         lock_t(bundle_storage_mutex_);
         return bundle_storage_->traverse(function);
     }
 
     inline void getBundleIndices(std::vector<index_t> &indices) const
     {
-        lock_t(storage_mutex_);
         lock_t(bundle_storage_mutex_);
         auto add_index = [&indices](const index_t &i, const distribution_bundle_t &d) {
             indices.emplace_back(i);
@@ -452,7 +475,6 @@ public:
 
     inline std::size_t getByteSize() const
     {
-        lock_t(storage_mutex_);
         lock_t(bundle_storage_mutex_);
         return sizeof(*this) +
                 bundle_storage_->byte_size() +
@@ -494,10 +516,10 @@ protected:
     const transform_t                               w_T_m_;
     const transform_t                               m_T_w_;
     const size_t                                    size_;
+    const size_m_t                                  size_m_;
     const index_t                                   min_bundle_index_;
     const index_t                                   max_bundle_index_;
 
-    mutable mutex_t                                 storage_mutex_;
     mutable distribution_storage_array_t            storage_;
     mutable mutex_t                                 bundle_storage_mutex_;
     mutable distribution_bundle_storage_ptr_t       bundle_storage_;
@@ -505,7 +527,6 @@ protected:
     inline distribution_t* getAllocate(const distribution_storage_ptr_t &s,
                                        const index_t &i) const
     {
-        lock_t(storage_mutex_);
         distribution_t *d = s->get(i);
         return d ? d : &(s->insert(i, distribution_t()));
     }
@@ -514,10 +535,7 @@ protected:
     {
         auto get_allocate = [this](const index_t &bi) {
             distribution_bundle_t *bundle;
-            {
-                lock_t(bundle_storage_mutex_);
-                bundle = bundle_storage_->get(bi);
-            }
+            bundle = bundle_storage_->get(bi);
 
             auto allocate_bundle = [this, &bi]() {
                 distribution_bundle_t b;
@@ -556,6 +574,9 @@ protected:
 
     inline void updateFree(const index_t &bi) const
     {
+        if(!valid(bi))
+            return;
+
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);
@@ -574,6 +595,9 @@ protected:
     inline void updateFree(const index_t &bi,
                            const std::size_t &n) const
     {
+        if(!valid(bi))
+            return;
+
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);
@@ -592,6 +616,9 @@ protected:
     inline void updateOccupied(const index_t &bi,
                                const point_t &p) const
     {
+        if(!valid(bi))
+            return;
+
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);
@@ -632,6 +659,18 @@ protected:
                  static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_)),
                  static_cast<int>(std::floor(p_m(2) * bundle_resolution_inv_))}};
     }
+
+    inline bool valid(const index_t &bi) const
+    {
+        return bi[0] >= min_bundle_index_[0] &&
+               bi[1] >= min_bundle_index_[1] &&
+               bi[2] >= min_bundle_index_[2] &&
+               bi[0] <= max_bundle_index_[0] &&
+               bi[1] <= max_bundle_index_[1] &&
+               bi[2] <= max_bundle_index_[2];
+
+    }
+
 }__attribute__ ((aligned (16)));
 }
 }

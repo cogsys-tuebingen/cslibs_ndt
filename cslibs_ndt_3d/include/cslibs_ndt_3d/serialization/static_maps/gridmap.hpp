@@ -54,6 +54,7 @@ inline bool saveBinary(const cslibs_ndt_3d::static_maps::Gridmap::Ptr &map,
         n["resolution"] = map->getResolution();
         n["size"]       = map->getSize();
         n["bundles"]    = indices;
+        n["min_index"]  = map->getMinBundleIndex();
         yaml << n;
     }
 
@@ -121,7 +122,11 @@ inline bool loadBinary(const std::string &path,
     const double                      resolution = n["resolution"].as<double>();
     const size_t                      size       = n["size"].as<size_t>();
     const std::vector<index_t>        indices    = n["bundles"].as<std::vector<index_t>>();
+    const index_t                     min_index  = n["min_index"].as<index_t>();
+
     bundles->template set<cslibs_indexed_storage::option::tags::array_size>(size[0] * 2, size[1] * 2, size[2] * 2);
+    bundles->template set<cslibs_indexed_storage::option::tags::array_offset>(min_index[0], min_index[1], min_index[2]);
+
 
     std::array<std::thread, 8> threads;
     std::atomic_bool success(true);
@@ -173,7 +178,8 @@ inline bool loadBinary(const std::string &path,
                                                       resolution,
                                                       size,
                                                       bundles,
-                                                      storages));
+                                                      storages,
+                                                      min_index));
 
     return true;
 }

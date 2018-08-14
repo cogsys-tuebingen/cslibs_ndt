@@ -319,14 +319,12 @@ public:
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
-        lock_t ls(storage_mutex_);
         lock_t lb(bundle_storage_mutex_);
         return bundle_storage_->traverse(function);
     }
 
     inline void getBundleIndices(std::vector<index_t> &indices) const
     {
-        lock_t ls(storage_mutex_);
         lock_t lb(bundle_storage_mutex_);
         auto add_index = [&indices](const index_t &i, const distribution_bundle_t &d) {
             indices.emplace_back(i);
@@ -336,7 +334,6 @@ public:
 
     inline std::size_t getByteSize() const
     {
-        lock_t ls(storage_mutex_);
         lock_t lb(bundle_storage_mutex_);
         return sizeof(*this) +
                 bundle_storage_->byte_size() +
@@ -385,7 +382,6 @@ protected:
 
     mutable index_t                                 min_index_;
     mutable index_t                                 max_index_;
-    mutable mutex_t                                 storage_mutex_;
     mutable distribution_storage_array_t            storage_;
     mutable mutex_t                                 bundle_storage_mutex_;
     mutable distribution_bundle_storage_ptr_t       bundle_storage_;
@@ -393,7 +389,6 @@ protected:
     inline distribution_t* getAllocate(const distribution_storage_ptr_t &s,
                                        const index_t &i) const
     {
-        lock_t l(storage_mutex_);
         distribution_t *d = s->get(i);
         return d ? d : &(s->insert(i, distribution_t()));
     }

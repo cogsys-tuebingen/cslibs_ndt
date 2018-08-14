@@ -77,6 +77,7 @@ inline cslibs_ndt_3d::static_maps::Gridmap::Ptr from(
             }
         }
     };
+
     src->traverse(process_bundle);
 
     return dst;

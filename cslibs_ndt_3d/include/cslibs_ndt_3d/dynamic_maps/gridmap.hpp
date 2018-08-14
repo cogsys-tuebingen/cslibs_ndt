@@ -128,7 +128,9 @@ public:
     {
         lock_t l(bundle_storage_mutex_);
         pose_t origin = w_T_m_;
-        origin.translation() = getMin();
+        origin.translation() = point_t(min_index_[0] * bundle_resolution_,
+                                       min_index_[1] * bundle_resolution_,
+                                       min_index_[2] * bundle_resolution_);
         return origin;
     }
 
@@ -161,7 +163,7 @@ public:
     }
 
     inline void insert(const point_t &p,
-                    index_t &bi)
+                       index_t &bi)
     {
         distribution_bundle_t *bundle;
         {

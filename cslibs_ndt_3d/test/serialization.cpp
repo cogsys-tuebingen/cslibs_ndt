@@ -404,10 +404,10 @@ TEST(Test_cslibs_ndt_3d, testDynamicGridmapConversion)
 {
     using map_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
     const typename map_t::Ptr map = generateDynamicMap();
-
     // conversion
+    auto  static_map = cslibs_ndt_3d::conversion::from(map);
     const typename map_t::Ptr & map_double_converted =
-            cslibs_ndt_3d::conversion::from(cslibs_ndt_3d::conversion::from(map));
+            cslibs_ndt_3d::conversion::from(static_map);
 
     EXPECT_NE(map_double_converted, nullptr);
     // TODO: test

@@ -134,10 +134,12 @@ public:
      */
   inline pose_t getOrigin() const
   {
-    lock_t l(bundle_storage_mutex_);
-    cslibs_math_3d::Transform3d origin = w_T_m_;
-    origin.translation() = getMin();
-    return origin;
+      lock_t l(bundle_storage_mutex_);
+      pose_t origin = w_T_m_;
+      origin.translation() = point_t(min_index_[0] * bundle_resolution_,
+                                     min_index_[1] * bundle_resolution_,
+                                     min_index_[2] * bundle_resolution_);
+      return origin;
   }
 
   /**

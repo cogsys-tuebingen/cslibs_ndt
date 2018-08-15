@@ -125,7 +125,7 @@ public:
     {
         lock_t l(bundle_storage_mutex_);
         return point_t(min_index_[0] * bundle_resolution_,
-                       min_index_[1] * bundle_resolution_);
+                min_index_[1] * bundle_resolution_);
     }
 
     /**
@@ -136,7 +136,7 @@ public:
     {
         lock_t l(bundle_storage_mutex_);
         return point_t((max_index_[0] + 1) * bundle_resolution_,
-                       (max_index_[1] + 1) * bundle_resolution_);
+                (max_index_[1] + 1) * bundle_resolution_);
     }
 
     /**
@@ -148,7 +148,7 @@ public:
         lock_t l(bundle_storage_mutex_);
         pose_t origin = w_T_m_;
         origin.translation() += point_t(min_index_[0] * bundle_resolution_,
-                                        min_index_[1] * bundle_resolution_);
+                min_index_[1] * bundle_resolution_);
         return origin;
     }
 
@@ -228,7 +228,7 @@ public:
                     std::min(occupancy({{bi[0] + ((bi[0] > start_bi[0]) ? -1 : 1), bi[1]}}),
                              occupancy({{bi[0], bi[1] + ((bi[1] > start_bi[1]) ? -1 : 1)}}));
             return ivm_visibility->getProbFree() * occlusion_prob +
-                   ivm_visibility->getProbOccupied() * (1.0 - occlusion_prob);
+                    ivm_visibility->getProbOccupied() * (1.0 - occlusion_prob);
         };
 
         distribution_storage_t storage;
@@ -330,10 +330,10 @@ public:
             return d ? do_sample() : 0.0;
         };
         auto evaluate = [&p, &bundle, &sample]() {
-          return 0.25 * (sample(bundle->at(0)) +
-                         sample(bundle->at(1)) +
-                         sample(bundle->at(2)) +
-                         sample(bundle->at(3)));
+            return 0.25 * (sample(bundle->at(0)) +
+                           sample(bundle->at(1)) +
+                           sample(bundle->at(2)) +
+                           sample(bundle->at(3)));
         };
         return bundle ? evaluate() : 0.0;
     }
@@ -366,10 +366,10 @@ public:
             return d ? do_sample() : 0.0;
         };
         auto evaluate = [&p, &bundle, &sample]() {
-          return 0.25 * (sample(bundle->at(0)) +
-                         sample(bundle->at(1)) +
-                         sample(bundle->at(2)) +
-                         sample(bundle->at(3)));
+            return 0.25 * (sample(bundle->at(0)) +
+                           sample(bundle->at(1)) +
+                           sample(bundle->at(2)) +
+                           sample(bundle->at(3)));
         };
         return bundle ? evaluate() : 0.0;
     }
@@ -452,13 +452,41 @@ public:
 
     inline virtual bool validate(const pose_t &p_w) const
     {
-      lock_t l(bundle_storage_mutex_);
-      const point_t p_m = m_T_w_ * p_w.translation();
-      index_t i = {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_)),
-                    static_cast<int>(std::floor(p_m(1) * bundle_resolution_))}};
+        lock_t l(bundle_storage_mutex_);
+        const point_t p_m = m_T_w_ * p_w.translation();
+        index_t i = {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_)),
+                      static_cast<int>(std::floor(p_m(1) * bundle_resolution_))}};
 
-      return (i[0] >= min_index_[0]  && i[0] <= max_index_[0]) &&
-             (i[1] >= min_index_[1]  && i[1] <= max_index_[1]);
+        return (i[0] >= min_index_[0]  && i[0] <= max_index_[0]) &&
+               (i[1] >= min_index_[1]  && i[1] <= max_index_[1]);
+    }
+
+    inline void allocatePartiallyAllocatedBundles()
+    {
+
+        /// HAS TO DO
+        ///
+        std::vector<index_t> bis;
+        getBundleIndices(bis);
+
+        lock_t l(bundle_storage_mutex_);
+        const static int dx[] = {-1, 0, 1 -1, 1,-1, 0, 1};
+        const static int dy[] = {-1,-1,-1, 0, 0, 1, 1, 1};
+        for(const index_t &bi : bis) {
+            const distribution_bundle_t *bundle = bundle_storage_->get(bi);
+            bool expand = false;
+            expand |= bundle->at(0)->getHandle()->getDistribution()->getN() >= 3;
+            expand |= bundle->at(1)->getHandle()->getDistribution()->getN() >= 3;
+            expand |= bundle->at(2)->getHandle()->getDistribution()->getN() >= 3;
+            expand |= bundle->at(3)->getHandle()->getDistribution()->getN() >= 3;
+
+            if(expand) {
+                for(std::size_t i = 0 ; i < 8 ; ++i) {
+                    const index_t bni = {{dx[i] + bi[0], dy[i] + bi[1]}};
+                    getAllocate(bni);
+                }
+            }
+        }
     }
 
 protected:
@@ -579,7 +607,7 @@ protected:
     {
         const point_t p_m = m_T_w_ * p_w;
         return {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
-                 static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
+                        static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
     }
 }__attribute__ ((aligned (16)));
 }

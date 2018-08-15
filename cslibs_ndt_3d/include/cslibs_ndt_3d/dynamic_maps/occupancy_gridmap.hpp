@@ -450,6 +450,36 @@ public:
         (i[1] >= min_index_[1]  && i[1] <= max_index_[1]);
   }
 
+  inline void allocatePartiallyAllocatedBundles()
+  {
+      std::vector<index_t> bis;
+      getBundleIndices(bis);
+
+      lock_t l(bundle_storage_mutex_);
+      const static int dx[] = {-1, 0, 1 -1, 0, 1,-1, 0, 1,-1, 0, 1 -1, 1,-1, 0, 1,-1, 0, 1 -1, 0, 1,-1, 0, 1};
+      const static int dy[] = {-1,-1,-1, 0, 0, 0, 1, 1, 1,-1,-1,-1, 0, 0, 1, 1, 1,-1,-1,-1, 0, 0, 0, 1, 1, 1};
+      const static int dz[] = {-1,-1,-1,-1,-1,-1,-1,-1,-1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+
+      for(const index_t &bi : bis) {
+          const distribution_bundle_t *bundle = bundle_storage_->get(bi);
+          bool expand = false;
+          expand |= bundle->at(0)->getHandle()->getDistribution()->getN() >= 4;
+          expand |= bundle->at(1)->getHandle()->getDistribution()->getN() >= 4;
+          expand |= bundle->at(2)->getHandle()->getDistribution()->getN() >= 4;
+          expand |= bundle->at(3)->getHandle()->getDistribution()->getN() >= 4;
+          expand |= bundle->at(4)->getHandle()->getDistribution()->getN() >= 4;
+          expand |= bundle->at(5)->getHandle()->getDistribution()->getN() >= 4;
+          expand |= bundle->at(6)->getHandle()->getDistribution()->getN() >= 4;
+          expand |= bundle->at(7)->getHandle()->getDistribution()->getN() >= 4;
+
+          if(expand) {
+              for(std::size_t i = 0 ; i < 26 ; ++i) {
+                  const index_t bni = {{dx[i] + bi[0], dy[i] + bi[1], dz[i] + bi[2]}};
+                  getAllocate(bni);
+              }
+          }
+      }
+  }
 
 private:
   const double                                    resolution_;

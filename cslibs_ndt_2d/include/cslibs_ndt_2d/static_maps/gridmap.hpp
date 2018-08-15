@@ -30,6 +30,7 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     using allocator_t = Eigen::aligned_allocator<Gridmap>;
 
+    using ConstPtr                          = std::shared_ptr<const Gridmap>;
     using Ptr                               = std::shared_ptr<Gridmap>;
     using pose_t                            = cslibs_math_2d::Pose2d;
     using transform_t                       = cslibs_math_2d::Transform2d;
@@ -189,8 +190,10 @@ public:
     {
         distribution_bundle_t *bundle;
         {
-            lock_t(bundle_storage_mutex_);
-            const index_t bi = toBundleIndex(p);
+            index_t bi;
+            if(!toBundleIndex(p, bi))
+               return;
+            lock_t l(bundle_storage_mutex_);
             bundle = getAllocate(bi);
         }
         bundle->at(0)->getHandle()->data().add(p);
@@ -203,19 +206,24 @@ public:
                        const pose_t &points_origin = pose_t())
     {
         distribution_storage_t storage;
+        storage.template set<cis::option::tags::array_size>(size_[0] * 2, size_[1] * 2);
+        storage.template set<cis::option::tags::array_offset>(min_bundle_index_[0],
+                                                               min_bundle_index_[1]);
         for (const auto &p : *points) {
             const point_t pm = points_origin * p;
             if (pm.isNormal()) {
-                const index_t &bi = toBundleIndex(pm);
-                distribution_t *d = storage.get(bi);
-                (d ? d : &storage.insert(bi, distribution_t()))->data().add(pm);
+                index_t bi;
+                if(toBundleIndex(p, bi)) {
+                  distribution_t *d = storage.get(bi);
+                  (d ? d : &storage.insert(bi, distribution_t()))->data().add(pm);
+                }
             }
         }
 
         storage.traverse([this](const index_t& bi, const distribution_t &d) {
             distribution_bundle_t *bundle;
             {
-                lock_t(bundle_storage_mutex_);
+                lock_t l(bundle_storage_mutex_);
                 bundle = getAllocate(bi);
             }
             bundle->at(0)->getHandle()->data() += d.data();
@@ -227,16 +235,18 @@ public:
 
     inline double sample(const point_t &p) const
     {
-        const index_t bi = toBundleIndex(p);
-        return sample(p, bi);
+        return sample(p, toBundleIndex(p));
     }
 
     inline double sample(const point_t &p,
                          const index_t &bi) const
     {
-        distribution_bundle_t *bundle;
+      if(!valid(bi))
+          return 0.0;
+
+      distribution_bundle_t *bundle;
         {
-            lock_t(bundle_storage_mutex_);
+            lock_t l(bundle_storage_mutex_);
             bundle = bundle_storage_->get(bi);
         }
         auto evaluate = [&p, &bundle]() {
@@ -250,16 +260,18 @@ public:
 
     inline double sampleNonNormalized(const point_t &p) const
     {
-        const index_t bi = toBundleIndex(p);
-        return sampleNonNormalized(p, bi);
+        return sampleNonNormalized(p, toBundleIndex(p));
     }
 
     inline double sampleNonNormalized(const point_t &p,
                                       const index_t &bi) const
     {
+        if(!valid(bi))
+             return 0.0;
+
         distribution_bundle_t *bundle;
         {
-            lock_t(bundle_storage_mutex_);
+            lock_t l(bundle_storage_mutex_);
             bundle = bundle_storage_->get(bi);
         }
         auto evaluate = [&p, &bundle]() {
@@ -273,12 +285,30 @@ public:
 
     inline const distribution_bundle_t* getDistributionBundle(const index_t &bi) const
     {
-        return getAllocate(bi);
+        if(!valid(bi))
+            return nullptr;
+
+        distribution_bundle_t *bundle;
+        {
+            lock_t l(bundle_storage_mutex_);
+            bundle = bundle_storage_->get(bi);
+        }
+
+        return bundle;
     }
 
     inline distribution_bundle_t* getDistributionBundle(const index_t &bi)
     {
-        return getAllocate(bi);
+        if(!valid(bi))
+            return nullptr;
+
+        distribution_bundle_t *bundle;
+        {
+            lock_t l(bundle_storage_mutex_);
+            bundle = bundle_storage_->get(bi);
+        }
+
+        return bundle;
     }
 
     inline double getBundleResolution() const
@@ -319,15 +349,13 @@ public:
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
-        lock_t(storage_mutex_);
-        lock_t(bundle_storage_mutex_);
+         lock_t l(bundle_storage_mutex_);
         return bundle_storage_->traverse(function);
     }
 
     inline void getBundleIndices(std::vector<index_t> &indices) const
     {
-        lock_t(storage_mutex_);
-        lock_t(bundle_storage_mutex_);
+        lock_t l(bundle_storage_mutex_);
         auto add_index = [&indices](const index_t &i, const distribution_bundle_t &d) {
             indices.emplace_back(i);
         };
@@ -336,8 +364,7 @@ public:
 
     inline std::size_t getByteSize() const
     {
-        lock_t(storage_mutex_);
-        lock_t(bundle_storage_mutex_);
+        lock_t l(bundle_storage_mutex_);
         return sizeof(*this) +
                 bundle_storage_->byte_size() +
                 storage_[0]->byte_size() +
@@ -376,7 +403,6 @@ protected:
     inline distribution_t* getAllocate(const distribution_storage_ptr_t &s,
                                        const index_t &i) const
     {
-        lock_t(storage_mutex_);
         distribution_t *d = s->get(i);
         return d ? d : &(s->insert(i, distribution_t()));
     }
@@ -384,11 +410,7 @@ protected:
     inline distribution_bundle_t *getAllocate(const index_t &bi) const
     {
         auto get_allocate = [this](const index_t &bi) {
-            distribution_bundle_t *bundle;
-            {
-                lock_t(bundle_storage_mutex_);
-                bundle = bundle_storage_->get(bi);
-            }
+            distribution_bundle_t *bundle = bundle_storage_->get(bi);
 
             auto allocate_bundle = [this, &bi]() {
                 distribution_bundle_t b;
@@ -407,7 +429,6 @@ protected:
                 b[2] = getAllocate(storage_[2], storage_2_index);
                 b[3] = getAllocate(storage_[3], storage_3_index);
 
-                lock_t(bundle_storage_mutex_);
                 return &(bundle_storage_->insert(bi, b));
             };
             return bundle ? bundle : allocate_bundle();
@@ -418,9 +439,26 @@ protected:
     inline index_t toBundleIndex(const point_t &p_w) const
     {
         const point_t p_m = m_T_w_ * p_w;
-        return {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
-                 static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
+        return {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
+                 static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
     }
+
+    inline bool toBundleIndex(const point_t &p_w,
+                              index_t &index) const
+    {
+        const point_t p_m = m_T_w_ * p_w;
+        index = {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
+                  static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
+        return (index[0] >= min_bundle_index_[0] && index[0] <= max_bundle_index_[0] ) &&
+               (index[1] >= min_bundle_index_[1] && index[1] <= max_bundle_index_[1] );
+    }
+
+    inline bool valid(const index_t &bi) const
+    {
+        return (bi[0] >= min_bundle_index_[0] && bi[0] <= max_bundle_index_[0] ) &&
+               (bi[1] >= min_bundle_index_[1] && bi[1] <= max_bundle_index_[1] );
+    }
+
 }__attribute__ ((aligned (16)));
 }
 }

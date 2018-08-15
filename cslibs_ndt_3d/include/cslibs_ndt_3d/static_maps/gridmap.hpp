@@ -222,8 +222,11 @@ public:
     {
         distribution_bundle_t *bundle;
         {
+            index_t bi;
+            if(!toBundleIndex(p, bi))
+               return;
+
             lock_t(bundle_storage_mutex_);
-            const index_t bi = toBundleIndex(p);
             if(!valid(bi))
                 return;
 
@@ -251,8 +254,8 @@ public:
         for (const auto &p : *points) {
             const point_t pm = points_origin * p;
             if (pm.isNormal()) {
-                const index_t &bi = toBundleIndex(pm);
-                if(valid(bi)) {
+                index_t bi;
+                if(toBundleIndex(pm, bi)) {
                   distribution_t *d = storage.get(bi);
                   (d ? d : &storage.insert(bi, distribution_t()))->data().add(pm);
                 }
@@ -278,9 +281,9 @@ public:
 
     inline double sample(const point_t &p) const
     {
-        const index_t bi = toBundleIndex(p);
-        if(!valid(bi))
-            return 0.0;
+        index_t bi;
+        if(!toBundleIndex(p, bi))
+             return 0.0;
 
         distribution_bundle_t *bundle;
         {
@@ -302,8 +305,8 @@ public:
 
     inline double sampleNonNormalized(const point_t &p) const
     {
-        const index_t bi = toBundleIndex(p);
-        if(!valid(bi))
+       index_t bi;
+       if(!toBundleIndex(p, bi))
             return 0.0;
 
         distribution_bundle_t *bundle;
@@ -327,7 +330,7 @@ public:
     inline const distribution_bundle_t* getDistributionBundle(const index_t &bi) const
     {
         if(!valid(bi))
-            return nullptr;
+          return nullptr;
 
         distribution_bundle_t *bundle;
         {
@@ -340,7 +343,7 @@ public:
     inline distribution_bundle_t* getDistributionBundle(const index_t &bi)
     {
         if(!valid(bi))
-            return nullptr;
+          return nullptr;
 
         distribution_bundle_t *bundle;
         {
@@ -352,9 +355,9 @@ public:
 
     inline const distribution_bundle_t* getDistributionBundle(const point_t &p) const
     {
-        const index_t bi = toBundleIndex(p);
-        if(!valid(bi))
-            return nullptr;
+        index_t bi;
+        if(!toBundleIndex(p, bi))
+          return nullptr;
 
         distribution_bundle_t *bundle;
         {
@@ -512,18 +515,27 @@ protected:
         const point_t p_m = m_T_w_ * p_w;
         return {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
                  static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_)),
-                 static_cast<int>(std::floor(p_m(2) * bundle_resolution_inv_))}};
+                 static_cast<int>(std::floor(p_m(2) * bundle_resolution_inv_))}};;
     }
 
-    inline bool valid(const index_t &bi) const
+    inline bool valid(const index_t &index) const
     {
-        return bi[0] >= min_bundle_index_[0] &&
-               bi[1] >= min_bundle_index_[1] &&
-               bi[2] >= min_bundle_index_[2] &&
-               bi[0] <= max_bundle_index_[0] &&
-               bi[1] <= max_bundle_index_[1] &&
-               bi[2] <= max_bundle_index_[2];
+        return (index[0] >= min_bundle_index_[0] && index[0] <= max_bundle_index_[0]) &&
+               (index[1] >= min_bundle_index_[1] && index[1] <= max_bundle_index_[1]) &&
+               (index[2] >= min_bundle_index_[2] && index[2] <= max_bundle_index_[2]);
 
+    }
+
+    inline bool toBundleIndex(const point_t &p_w,
+                              index_t &index) const
+    {
+        const point_t p_m = m_T_w_ * p_w;
+        index = {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
+                  static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_)),
+                  static_cast<int>(std::floor(p_m(2) * bundle_resolution_inv_))}};;
+        return (index[0] >= min_bundle_index_[0] && index[0] <= max_bundle_index_[0]) &&
+               (index[1] >= min_bundle_index_[1] && index[1] <= max_bundle_index_[1]) &&
+               (index[2] >= min_bundle_index_[2] && index[2] <= max_bundle_index_[2]);
     }
 
 }__attribute__ ((aligned (16)));

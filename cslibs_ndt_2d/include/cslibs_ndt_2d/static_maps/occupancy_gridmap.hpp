@@ -34,6 +34,7 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     using allocator_t = Eigen::aligned_allocator<Gridmap>;
 
+    using ConstPtr                          = std::shared_ptr<const OccupancyGridmap>;
     using Ptr                               = std::shared_ptr<OccupancyGridmap>;
     using pose_t                            = cslibs_math_2d::Pose2d;
     using transform_t                       = cslibs_math_2d::Transform2d;
@@ -178,7 +179,8 @@ public:
     inline pose_t getOrigin() const
     {
       cslibs_math_2d::Transform2d origin = w_T_m_;
-      origin.translation() += getMin();
+      origin.translation() += point_t(min_bundle_index_[0] * bundle_resolution_,
+                                      min_bundle_index_[1] * bundle_resolution_);
       return origin;
     }
 
@@ -195,7 +197,7 @@ public:
     inline void insert(const point_t &start_p,
                        const point_t &end_p)
     {
-        const index_t &end_index = toBundleIndex(end_p);
+        const index_t end_index = toBundleIndex(end_p);
         updateOccupied(end_index, end_p);
 
         line_iterator_t it(m_T_w_ * start_p, m_T_w_ * end_p, bundle_resolution_);
@@ -210,12 +212,17 @@ public:
                        const pose_t &points_origin = pose_t())
     {
         distribution_storage_t storage;
+        storage.template set<cis::option::tags::array_size>(size_[0] * 2, size_[1] * 2);
+        storage.template set<cis::option::tags::array_offset>(min_bundle_index_[0],
+                                                              min_bundle_index_[1]);
         for (const auto &p : *points) {
             const point_t pm = points_origin * p;
             if (pm.isNormal()) {
-                const index_t &bi = toBundleIndex(pm);
-                distribution_t *d = storage.get(bi);
-                (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
+                index_t bi;
+                if(toBundleIndex(pm, bi)) {
+                  distribution_t *d = storage.get(bi);
+                  (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
+                }
             }
         }
 
@@ -246,6 +253,7 @@ public:
         }
 
         const index_t start_bi = toBundleIndex(origin.translation());
+
         auto occupancy = [this, &ivm](const index_t &bi) {
             const distribution_bundle_t *bundle = getDistributionBundle(bi);
             return 0.25 * (bundle->at(0)->getHandle()->getOccupancy(ivm) +
@@ -262,12 +270,17 @@ public:
         };
 
         distribution_storage_t storage;
+        storage.template set<cis::option::tags::array_size>(size_[0] * 2, size_[1] * 2);
+        storage.template set<cis::option::tags::array_offset>(min_bundle_index_[0],
+                                                              min_bundle_index_[1]);
         for (const auto &p : *points) {
             const point_t pm = origin * p;
             if (pm.isNormal()) {
-                const index_t &bi = toBundleIndex(pm);
-                distribution_t *d = storage.get(bi);
-                (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
+                index_t bi;
+                if(toBundleIndex(pm, bi)) {
+                  distribution_t *d = storage.get(bi);
+                  (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
+                }
             }
         }
 
@@ -298,14 +311,16 @@ public:
     inline double sample(const point_t &p,
                          const inverse_sensor_model_t::Ptr &ivm) const
     {
-        const index_t bi = toBundleIndex(p);
-        return sample(p, bi, ivm);
+        return sample(p, toBundleIndex(p), ivm);
     }
 
     inline double sample(const point_t &p,
                          const index_t &bi,
                          const inverse_sensor_model_t::Ptr &ivm) const
     {
+        if(!valid(bi))
+            return 0.0;
+
         if (!ivm)
             throw std::runtime_error("[OccupancyGridMap]: inverse model not set");
 
@@ -334,14 +349,16 @@ public:
     inline double sampleNonNormalized(const point_t &p,
                                       const inverse_sensor_model_t::Ptr &ivm) const
     {
-        const index_t bi = toBundleIndex(p);
-        return sampleNonNormalized(p, bi, ivm);
+        return sampleNonNormalized(p, toBundleIndex(p), ivm);
     }
 
     inline double sampleNonNormalized(const point_t &p,
                                       const index_t &bi,
                                       const inverse_sensor_model_t::Ptr &ivm) const
     {
+        if(!valid(bi))
+            return 0.0;
+
         if (!ivm)
             throw std::runtime_error("[OccupancyGridMap]: inverse model not set");
 
@@ -369,12 +386,12 @@ public:
 
     inline const distribution_bundle_t* getDistributionBundle(const index_t &bi) const
     {
-        return getAllocate(bi);
+        return valid(bi) ? getAllocate(bi) : nullptr;
     }
 
     inline distribution_bundle_t* getDistributionBundle(const index_t &bi)
     {
-        return getAllocate(bi);
+        return valid(bi) ? getAllocate(bi) : nullptr;
     }
 
     inline double getBundleResolution() const
@@ -415,14 +432,12 @@ public:
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
-        lock_t(storage_mutex_);
         lock_t(bundle_storage_mutex_);
         return bundle_storage_->traverse(function);
     }
 
     inline void getBundleIndices(std::vector<index_t> &indices) const
     {
-        lock_t(storage_mutex_);
         lock_t(bundle_storage_mutex_);
         auto add_index = [&indices](const index_t &i, const distribution_bundle_t &d) {
             indices.emplace_back(i);
@@ -432,7 +447,6 @@ public:
 
     inline std::size_t getByteSize() const
     {
-        lock_t(storage_mutex_);
         lock_t(bundle_storage_mutex_);
         return sizeof(*this) +
                 bundle_storage_->byte_size() +
@@ -463,7 +477,6 @@ protected:
     const index_t                                   min_bundle_index_;
     const index_t                                   max_bundle_index_;
 
-    mutable mutex_t                                 storage_mutex_;
     mutable distribution_storage_array_t            storage_;
     mutable mutex_t                                 bundle_storage_mutex_;
     mutable distribution_bundle_storage_ptr_t       bundle_storage_;
@@ -471,7 +484,6 @@ protected:
     inline distribution_t* getAllocate(const distribution_storage_ptr_t &s,
                                        const index_t &i) const
     {
-        lock_t(storage_mutex_);
         distribution_t *d = s->get(i);
         return d ? d : &(s->insert(i, distribution_t()));
     }
@@ -479,11 +491,7 @@ protected:
     inline distribution_bundle_t *getAllocate(const index_t &bi) const
     {
         auto get_allocate = [this](const index_t &bi) {
-            distribution_bundle_t *bundle;
-            {
-                lock_t(bundle_storage_mutex_);
-                bundle = bundle_storage_->get(bi);
-            }
+            distribution_bundle_t *bundle = bundle_storage_->get(bi);
 
             auto allocate_bundle = [this, &bi]() {
                 distribution_bundle_t b;
@@ -502,7 +510,6 @@ protected:
                 b[2] = getAllocate(storage_[2], storage_2_index);
                 b[3] = getAllocate(storage_[3], storage_3_index);
 
-                lock_t(bundle_storage_mutex_);
                 return &(bundle_storage_->insert(bi, b));
             };
             return bundle ? bundle : allocate_bundle();
@@ -512,6 +519,9 @@ protected:
 
     inline void updateFree(const index_t &bi) const
     {
+        if(!valid(bi))
+            return;
+
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);
@@ -526,6 +536,9 @@ protected:
     inline void updateFree(const index_t &bi,
                            const std::size_t &n) const
     {
+        if(!valid(bi))
+            return;
+
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);
@@ -540,6 +553,9 @@ protected:
     inline void updateOccupied(const index_t &bi,
                                const point_t &p) const
     {
+        if(!valid(bi))
+            return;
+
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);
@@ -554,6 +570,9 @@ protected:
     inline void updateOccupied(const index_t &bi,
                                const distribution_t::distribution_ptr_t &d) const
     {
+        if(!valid(bi))
+            return;
+
         distribution_bundle_t *bundle;
         {
             lock_t(bundle_storage_mutex_);
@@ -568,8 +587,24 @@ protected:
     inline index_t toBundleIndex(const point_t &p_w) const
     {
         const point_t p_m = m_T_w_ * p_w;
-        return {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
-                 static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
+        return {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
+                 static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
+    }
+
+    inline bool toBundleIndex(const point_t &p_w,
+                              index_t &index) const
+    {
+        const point_t p_m = m_T_w_ * p_w;
+        index = {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
+                  static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
+        return (index[0] >= min_bundle_index_[0] && index[0] <= max_bundle_index_[0] ) &&
+               (index[1] >= min_bundle_index_[1] && index[1] <= max_bundle_index_[1] );
+    }
+
+    inline bool valid(const index_t &bi) const
+    {
+        return (bi[0] >= min_bundle_index_[0] && bi[0] <= max_bundle_index_[0] ) &&
+               (bi[1] >= min_bundle_index_[1] && bi[1] <= max_bundle_index_[1] );
     }
 
     inline void fromIndex(const index_t &i,

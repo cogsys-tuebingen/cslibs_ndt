@@ -133,7 +133,7 @@ public:
 
 private:
   hessian_t data_;
-}__attribute__ ((aligned (16)));
+};
 
 
 }

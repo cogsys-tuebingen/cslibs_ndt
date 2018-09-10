@@ -314,7 +314,7 @@ protected:
         p_w = w_T_m_ * point_t(i[0] * resolution_,
                 i[1] * resolution_);
     }
-}__attribute__ ((aligned (16)));
+};
 }
 }
 }

@@ -93,7 +93,7 @@ public:
 private:
   linear_jacobian_t   linear_data_;
   angular_jacobian_t  angular_data_;
-} __attribute__ ((aligned (16)));
+} ;
 }
 }
 #endif // CSLIBS_NDT_3D_JACOBIAN_HPP

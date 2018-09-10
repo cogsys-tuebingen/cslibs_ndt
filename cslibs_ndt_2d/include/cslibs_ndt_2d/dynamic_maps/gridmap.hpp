@@ -440,7 +440,7 @@ protected:
         return {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
                         static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
     }
-}__attribute__ ((aligned (16)));
+};
 }
 }
 

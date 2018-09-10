@@ -486,7 +486,7 @@ protected:
                 (bi[1] >= min_bundle_index_[1] && bi[1] <= max_bundle_index_[1] );
     }
 
-}__attribute__ ((aligned (16)));
+};
 }
 }
 

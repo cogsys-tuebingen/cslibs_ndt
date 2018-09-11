@@ -19,6 +19,7 @@
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
+#include <cslibs_indexed_storage/operations/clustering/grid_neighborhood.hpp>
 
 #include <cslibs_gridmaps/utility/inverse_model.hpp>
 
@@ -431,7 +432,7 @@ public:
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
-        lock_t l(bundle_storage_mutex_);
+//        lock_t l(bundle_storage_mutex_);
         return bundle_storage_->traverse(function);
     }
 
@@ -469,31 +470,34 @@ public:
 
     inline void allocatePartiallyAllocatedBundles()
     {
-
-        /// HAS TO DO
-        ///
         std::vector<index_t> bis;
         getBundleIndices(bis);
 
-        const static int dx[] = {-1, 0, 1 -1, 1,-1, 0, 1};
-        const static int dy[] = {-1,-1,-1, 0, 0, 1, 1, 1};
-        for(const index_t &bi : bis) {
+        using neighborhood_t = cis::operations::clustering::GridNeighborhoodStatic<std::tuple_size<index_t>::value, 3>;
+        static constexpr neighborhood_t grid{};
+
+        auto expand_distribution = [](const distribution_t* d) {
+            if (!d || !d->getHandle()->getDistribution())
+                return false;
+            return d->getHandle()->getDistribution()->getN() >= 3;
+        };
+
+        for (const index_t &bi : bis) {
             const distribution_bundle_t *bundle;
             {
                 lock_t l(bundle_storage_mutex_);
                 bundle = bundle_storage_->get(bi);
             }
-            bool expand = false;
-            expand |= bundle->at(0)->getHandle()->getDistribution()->getN() >= 3;
-            expand |= bundle->at(1)->getHandle()->getDistribution()->getN() >= 3;
-            expand |= bundle->at(2)->getHandle()->getDistribution()->getN() >= 3;
-            expand |= bundle->at(3)->getHandle()->getDistribution()->getN() >= 3;
+            bool expand =
+                expand_distribution(bundle->at(0)) ||
+                expand_distribution(bundle->at(1)) ||
+                expand_distribution(bundle->at(2)) ||
+                expand_distribution(bundle->at(3));
 
-            if(expand) {
-                for(std::size_t i = 0 ; i < 8 ; ++i) {
-                    const index_t bni = {{dx[i] + bi[0], dy[i] + bi[1]}};
-                    getAllocate(bni);
-                }
+            if (expand) {
+                grid.visit([this, &bi](neighborhood_t::offset_t o) {
+                    getAllocate({{bi[0]+o[0], bi[1]+o[1]}});
+                });
             }
         }
     }

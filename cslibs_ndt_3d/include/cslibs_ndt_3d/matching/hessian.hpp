@@ -5,7 +5,7 @@
 
 namespace cslibs_ndt_3d {
 namespace matching {
-class Hessian {
+class EIGEN_ALIGN16 Hessian {
 public:
   using hessian_t = std::array<std::array<Eigen::Matrix3d, 3>, 3>;
   using point_t   = Eigen::Vector3d;

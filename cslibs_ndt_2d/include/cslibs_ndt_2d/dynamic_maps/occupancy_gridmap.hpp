@@ -30,10 +30,12 @@ namespace cis = cslibs_indexed_storage;
 
 namespace cslibs_ndt_2d {
 namespace dynamic_maps {
-class OccupancyGridmap
+class EIGEN_ALIGN16 OccupancyGridmap
 {
 public:
+
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     using allocator_t = Eigen::aligned_allocator<OccupancyGridmap>;
 
     using ConstPtr                          = std::shared_ptr<const OccupancyGridmap>;

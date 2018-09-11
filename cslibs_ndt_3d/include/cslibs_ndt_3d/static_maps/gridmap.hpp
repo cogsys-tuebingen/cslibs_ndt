@@ -26,10 +26,12 @@ namespace cis = cslibs_indexed_storage;
 
 namespace cslibs_ndt_3d {
 namespace static_maps {
-class Gridmap
+class EIGEN_ALIGN16 Gridmap
 {
 public:
+
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     using allocator_t = Eigen::aligned_allocator<Gridmap>;
 
     using Ptr                               = std::shared_ptr<Gridmap>;

@@ -12,10 +12,12 @@
 
 namespace cslibs_ndt {
 template<std::size_t Dim>
-class OccupancyDistribution
+class EIGEN_ALIGN16 OccupancyDistribution
 {
 public:
+
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
     using allocator_t               = Eigen::aligned_allocator<OccupancyDistribution>;
     using Ptr                       = std::shared_ptr<OccupancyDistribution<Dim>>;
     using distribution_container_t  = OccupancyDistribution<Dim>;

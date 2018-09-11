@@ -5,7 +5,7 @@
 
 namespace cslibs_ndt_3d {
 namespace matching {
-class Jacobian {
+class EIGEN_ALIGN16 Jacobian {
 public:
   using linear_jacobian_t  = std::array<Eigen::Vector3d, 3>;
   using angular_jacobian_t = std::array<Eigen::Matrix3d, 3>;

@@ -535,14 +535,14 @@ public:
         for(const index_t &bi : bis) {
             const distribution_bundle_t *bundle = bundle_storage_->get(bi);
             bool expand = false;
-            expand |= bundle->at(0)->getHandle()->data().getDistribution().getN() >= 4;
-            expand |= bundle->at(1)->getHandle()->data().getDistribution().getN() >= 4;
-            expand |= bundle->at(2)->getHandle()->data().getDistribution().getN() >= 4;
-            expand |= bundle->at(3)->getHandle()->data().getDistribution().getN() >= 4;
-            expand |= bundle->at(4)->getHandle()->data().getDistribution().getN() >= 4;
-            expand |= bundle->at(5)->getHandle()->data().getDistribution().getN() >= 4;
-            expand |= bundle->at(6)->getHandle()->data().getDistribution().getN() >= 4;
-            expand |= bundle->at(7)->getHandle()->data().getDistribution().getN() >= 4;
+            expand |= bundle->at(0)->getHandle().data().getDistribution()->getN() >= 4;
+            expand |= bundle->at(1)->getHandle().data().getDistribution()->getN() >= 4;
+            expand |= bundle->at(2)->getHandle().data().getDistribution()->getN() >= 4;
+            expand |= bundle->at(3)->getHandle().data().getDistribution()->getN() >= 4;
+            expand |= bundle->at(4)->getHandle().data().getDistribution()->getN() >= 4;
+            expand |= bundle->at(5)->getHandle().data().getDistribution()->getN() >= 4;
+            expand |= bundle->at(6)->getHandle().data().getDistribution()->getN() >= 4;
+            expand |= bundle->at(7)->getHandle().data().getDistribution()->getN() >= 4;
 
             if(expand) {
                 for(std::size_t i = 0 ; i < 26 ; ++i) {
@@ -706,7 +706,7 @@ protected:
                  static_cast<int>(std::floor(p_m(2) * bundle_resolution_inv_))}};;
     }
 
-    inline bool valid(const index_t &index)
+    inline bool valid(const index_t &index) const
     {
         return (index[0] >= min_bundle_index_[0] && index[0] <= max_bundle_index_[0]) &&
                (index[1] >= min_bundle_index_[1] && index[1] <= max_bundle_index_[1]) &&

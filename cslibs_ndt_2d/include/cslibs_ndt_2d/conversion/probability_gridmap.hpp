@@ -16,7 +16,7 @@ inline void from(
         const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &src,
         cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr &dst,
         const double sampling_resolution)
-{
+{std::cout << "converting" << std::endl;
     if (!src)
         return;
 
@@ -51,7 +51,7 @@ inline void from(
                 }
             }
         }
-    }
+    }std::cout << "converted" << std::endl;
 }
 
 inline void from(
@@ -78,18 +78,18 @@ inline void from(
     std::cerr << "converting " << width << " " << height << "\n";
 
     for(std::size_t i = 0 ; i < height ; ++i) {
-      for(std::size_t j = 0 ; j < width ; ++j) {
-        const cslibs_math_2d::Point2d  p(j * sampling_resolution,
-                                         i * sampling_resolution);
+        for(std::size_t j = 0 ; j < width ; ++j) {
+            const cslibs_math_2d::Point2d  p(j * sampling_resolution,
+                                             i * sampling_resolution);
 
-        const cslibs_ndt_2d::static_maps::flat::Gridmap::index_t idx = {{min_index[0] + static_cast<int>(p(0) / src->getResolution()),
-                                                                         min_index[1] + static_cast<int>(p(1) / src->getResolution())}};
+            const cslibs_ndt_2d::static_maps::flat::Gridmap::index_t idx = {{min_index[0] + static_cast<int>(p(0) / src->getResolution()),
+                                                                             min_index[1] + static_cast<int>(p(1) / src->getResolution())}};
 
-        const double v = src->sampleNonNormalized(src->getOrigin() * p,idx);
-        if(v >= 0.0) {
-          dst->at(j,i) = v;
+            const double v = src->sampleNonNormalized(src->getOrigin() * p,idx);
+            if(v >= 0.0) {
+                dst->at(j,i) = v;
+            }
         }
-      }
     }
     std::cerr << "converted" << std::endl;
 }

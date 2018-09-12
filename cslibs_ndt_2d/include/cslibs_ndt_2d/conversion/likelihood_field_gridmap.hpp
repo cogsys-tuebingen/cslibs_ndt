@@ -32,8 +32,8 @@ inline void from(
     using dst_map_t = cslibs_gridmaps::static_maps::ProbabilityGridmap;
     dst.reset(new dst_map_t(src->getOrigin(),
                             sampling_resolution,
-                            src->getHeight() / sampling_resolution,
-                            src->getWidth()  / sampling_resolution));
+                            src->getHeight() / sampling_resolution + 1,
+                            src->getWidth()  / sampling_resolution + 1));
     std::fill(dst->getData().begin(), dst->getData().end(), 0);
 
     const double bundle_resolution = src->getBundleResolution();
@@ -91,8 +91,8 @@ inline void from(
     using dst_map_t = cslibs_gridmaps::static_maps::ProbabilityGridmap;
     dst.reset(new dst_map_t(src->getOrigin(),
                             sampling_resolution,
-                            src->getHeight() / sampling_resolution,
-                            src->getWidth()  / sampling_resolution));
+                            src->getHeight() / sampling_resolution + 1,
+                            src->getWidth()  / sampling_resolution + 1));
     std::fill(dst->getData().begin(), dst->getData().end(), 0);
 
     const double bundle_resolution = src->getBundleResolution();

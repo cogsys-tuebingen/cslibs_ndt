@@ -130,7 +130,7 @@ inline bool loadBinary(const std::string &path,
     std::array<std::thread, 8> threads;
     std::atomic_bool success(true);
     for (std::size_t i = 0 ; i < 8 ; ++i) {
-        const int off   = (i > 1) ? 1 : 0;
+        const std::size_t off   = (i > 1ul) ? 1ul : 0ul;
         const size_t sz = {{size[0] + off, size[1] + off, size[2] + off}};
         threads[i] = std::thread([&storages, &paths, i, &sz, &success](){
             success = success && binary_t::load(paths[i], storages[i], sz);

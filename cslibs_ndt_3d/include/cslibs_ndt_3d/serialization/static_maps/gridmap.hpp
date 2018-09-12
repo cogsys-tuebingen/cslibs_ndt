@@ -124,14 +124,14 @@ inline bool loadBinary(const std::string &path,
     const std::vector<index_t>        indices    = n["bundles"].as<std::vector<index_t>>();
     const index_t                     min_index  = n["min_index"].as<index_t>();
 
-    bundles->template set<cslibs_indexed_storage::option::tags::array_size>(size[0] * 2, size[1] * 2, size[2] * 2);
+    bundles->template set<cslibs_indexed_storage::option::tags::array_size>(size[0] * 2ul, size[1] * 2ul, size[2] * 2ul);
     bundles->template set<cslibs_indexed_storage::option::tags::array_offset>(min_index[0], min_index[1], min_index[2]);
 
 
     std::array<std::thread, 8> threads;
     std::atomic_bool success(true);
     for (std::size_t i = 0 ; i < 8 ; ++ i) {
-        const int off   = (i > 1) ? 1 : 0;
+        const std::size_t off   = (i > 1ul) ? 1ul : 0ul;
         const size_t sz = {{size[0] + off, size[1] + off, size[2] + off}};
         threads[i] = std::thread([&storages, &paths, i, &sz, &success](){
             success = success && binary_t::load(paths[i], storages[i], sz);

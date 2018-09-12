@@ -52,8 +52,8 @@ public:
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
 
-    Gridmap(const pose_t        &origin,
-            const double         resolution) :
+    inline Gridmap(const pose_t        &origin,
+                   const double         resolution) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -74,12 +74,12 @@ public:
     {
     }
 
-    Gridmap(const pose_t &origin,
-            const double &resolution,
-            const index_t &min_index,
-            const index_t &max_index,
-            const std::shared_ptr<distribution_bundle_storage_t> &bundles,
-            const distribution_storage_array_t                   &storage) :
+    inline Gridmap(const pose_t &origin,
+                   const double &resolution,
+                   const index_t &min_index,
+                   const index_t &max_index,
+                   const std::shared_ptr<distribution_bundle_storage_t> &bundles,
+                   const distribution_storage_array_t                   &storage) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -90,6 +90,41 @@ public:
         max_index_(max_index),
         storage_(storage),
         bundle_storage_(bundles)
+    {
+    }
+
+    inline Gridmap(const Gridmap &other) :
+        resolution_(other.resolution_),
+        resolution_inv_(other.resolution_inv_),
+        bundle_resolution_(other.bundle_resolution_),
+        bundle_resolution_inv_(other.bundle_resolution_inv_),
+        w_T_m_(other.w_T_m_),
+        m_T_w_(other.m_T_w_),
+        min_index_(other.min_index_),
+        max_index_(other.max_index_),
+        storage_{{distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[0])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[1])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[2])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[3])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[4])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[5])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[6])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[7]))}},
+        bundle_storage_(new distribution_bundle_storage_t(*other.bundle_storage_))
+    {
+    }
+
+    inline Gridmap(Gridmap &&other) :
+        resolution_(other.resolution_),
+        resolution_inv_(other.resolution_inv_),
+        bundle_resolution_(other.bundle_resolution_),
+        bundle_resolution_inv_(other.bundle_resolution_inv_),
+        w_T_m_(other.w_T_m_),
+        m_T_w_(other.m_T_w_),
+        min_index_(other.min_index_),
+        max_index_(other.max_index_),
+        storage_(other.storage_),
+        bundle_storage_(other.bundle_storage_)
     {
     }
 
@@ -106,8 +141,8 @@ public:
     {
         lock_t l(bundle_storage_mutex_);
         return point_t(min_index_[0] * bundle_resolution_,
-                       min_index_[1] * bundle_resolution_,
-                       min_index_[2] * bundle_resolution_);
+                min_index_[1] * bundle_resolution_,
+                min_index_[2] * bundle_resolution_);
     }
 
     /**
@@ -118,8 +153,8 @@ public:
     {
         lock_t l(bundle_storage_mutex_);
         return point_t((max_index_[0] + 1) * bundle_resolution_,
-                       (max_index_[1] + 1) * bundle_resolution_,
-                       (max_index_[2] + 1) * bundle_resolution_);
+                (max_index_[1] + 1) * bundle_resolution_,
+                (max_index_[2] + 1) * bundle_resolution_);
     }
 
     /**
@@ -131,8 +166,8 @@ public:
         lock_t l(bundle_storage_mutex_);
         pose_t origin = w_T_m_;
         origin.translation() = point_t(min_index_[0] * bundle_resolution_,
-                                       min_index_[1] * bundle_resolution_,
-                                       min_index_[2] * bundle_resolution_);
+                min_index_[1] * bundle_resolution_,
+                min_index_[2] * bundle_resolution_);
         return origin;
     }
 
@@ -313,7 +348,7 @@ public:
     {
         lock_t l(bundle_storage_mutex_);
         return (max_index_[0] - min_index_[0] + 1) * bundle_resolution_;
-    }    
+    }
 
     inline distribution_storage_array_t const & getStorages() const
     {
@@ -353,27 +388,27 @@ public:
 
     inline virtual bool validate(const pose_t &p_w) const
     {
-      lock_t l(bundle_storage_mutex_);
-      const point_t p_m = m_T_w_ * p_w.translation();
-      index_t i = {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_)),
-                    static_cast<int>(std::floor(p_m(1) * bundle_resolution_)),
-                    static_cast<int>(std::floor(p_m(2) * bundle_resolution_))}};
+        lock_t l(bundle_storage_mutex_);
+        const point_t p_m = m_T_w_ * p_w.translation();
+        index_t i = {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_)),
+                      static_cast<int>(std::floor(p_m(1) * bundle_resolution_)),
+                      static_cast<int>(std::floor(p_m(2) * bundle_resolution_))}};
 
-      return (i[0] >= min_index_[0]  && i[0] <= max_index_[0]) &&
-             (i[1] >= min_index_[1]  && i[1] <= max_index_[1]) &&
-             (i[2] >= min_index_[2]  && i[2] <= max_index_[2]);
+        return (i[0] >= min_index_[0]  && i[0] <= max_index_[0]) &&
+                (i[1] >= min_index_[1]  && i[1] <= max_index_[1]) &&
+                (i[2] >= min_index_[2]  && i[2] <= max_index_[2]);
     }
 
     inline virtual bool validate(const pose_2d_t &p_w) const
     {
-      lock_t l(bundle_storage_mutex_);
-      const point_t p_m = m_T_w_ * point_t(p_w.translation()(0), p_w.translation()(1), 0.0);
-      index_t i = {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_)),
-                    static_cast<int>(std::floor(p_m(1) * bundle_resolution_)),
-                    0}};
+        lock_t l(bundle_storage_mutex_);
+        const point_t p_m = m_T_w_ * point_t(p_w.translation()(0), p_w.translation()(1), 0.0);
+        index_t i = {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_)),
+                      static_cast<int>(std::floor(p_m(1) * bundle_resolution_)),
+                      0}};
 
-      return (i[0] >= min_index_[0]  && i[0] <= max_index_[0]) &&
-             (i[1] >= min_index_[1]  && i[1] <= max_index_[1]);
+        return (i[0] >= min_index_[0]  && i[0] <= max_index_[0]) &&
+                (i[1] >= min_index_[1]  && i[1] <= max_index_[1]);
     }
 
     inline void allocatePartiallyAllocatedBundles()
@@ -476,10 +511,10 @@ protected:
 
     inline index_t toBundleIndex(const point_t &p_w) const
     {
-        const point_t p_m = m_T_w_ * p_w;        
+        const point_t p_m = m_T_w_ * p_w;
         return {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
-                 static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_)),
-                 static_cast<int>(std::floor(p_m(2) * bundle_resolution_inv_))}};
+                        static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_)),
+                        static_cast<int>(std::floor(p_m(2) * bundle_resolution_inv_))}};
     }
 };
 }

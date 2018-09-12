@@ -50,14 +50,14 @@ public:
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
 
-    Gridmap(const double resolution) :
+    inline Gridmap(const double resolution) :
         Gridmap(pose_t::identity(),
                 resolution)
     {
     }
 
-    Gridmap(const pose_t &origin,
-            const double &resolution) :
+    inline Gridmap(const pose_t &origin,
+                   const double &resolution) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -74,12 +74,12 @@ public:
     {
     }
 
-    Gridmap(const pose_t &origin,
-            const double &resolution,
-            const index_t &min_index,
-            const index_t &max_index,
-            const std::shared_ptr<distribution_bundle_storage_t> &bundles,
-            const distribution_storage_array_t                   &storage) :
+    inline Gridmap(const pose_t &origin,
+                   const double &resolution,
+                   const index_t &min_index,
+                   const index_t &max_index,
+                   const std::shared_ptr<distribution_bundle_storage_t> &bundles,
+                   const distribution_storage_array_t                   &storage) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -93,10 +93,10 @@ public:
     {
     }
 
-    Gridmap(const double &origin_x,
-            const double &origin_y,
-            const double &origin_phi,
-            const double &resolution) :
+    inline Gridmap(const double &origin_x,
+                   const double &origin_y,
+                   const double &origin_phi,
+                   const double &resolution) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -110,6 +110,37 @@ public:
                  distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t)}},
         bundle_storage_(new distribution_bundle_storage_t)
+    {
+    }
+
+    inline Gridmap(const Gridmap &other) :
+        resolution_(other.resolution_),
+        resolution_inv_(other.resolution_inv_),
+        bundle_resolution_(other.bundle_resolution_),
+        bundle_resolution_inv_(other.bundle_resolution_inv_),
+        w_T_m_(other.w_T_m_),
+        m_T_w_(other.m_T_w_),
+        min_bundle_index_(other.min_bundle_index_),
+        max_bundle_index_(other.max_bundle_index_),
+        storage_{{distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[0])),
+                  distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[1])),
+                  distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[2])),
+                  distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[3]))}},
+        bundle_storage_(new distribution_bundle_storage_t(*other.bundle_storage_))
+    {
+    }
+
+    inline Gridmap(Gridmap &&other) :
+        resolution_(other.resolution_),
+        resolution_inv_(other.resolution_inv_),
+        bundle_resolution_(other.bundle_resolution_),
+        bundle_resolution_inv_(other.bundle_resolution_inv_),
+        w_T_m_(std::move(other.w_T_m_)),
+        m_T_w_(std::move(other.m_T_w_)),
+        min_bundle_index_(other.min_bundle_index_),
+        max_bundle_index_(other.max_bundle_index_),
+        storage_(other.storage_),
+        bundle_storage_(other.bundle_storage_)
     {
     }
 
@@ -127,7 +158,7 @@ public:
     {
         lock_t l(bundle_storage_mutex_);
         return point_t(min_bundle_index_[0] * bundle_resolution_,
-                       min_bundle_index_[1] * bundle_resolution_);
+                min_bundle_index_[1] * bundle_resolution_);
     }
 
     /**
@@ -138,7 +169,7 @@ public:
     {
         lock_t l(bundle_storage_mutex_);
         return point_t((max_bundle_index_[0] + 1) * bundle_resolution_,
-                       (max_bundle_index_[1] + 1) * bundle_resolution_);
+                (max_bundle_index_[1] + 1) * bundle_resolution_);
     }
 
     /**
@@ -150,7 +181,7 @@ public:
         lock_t l(bundle_storage_mutex_);
         pose_t origin = w_T_m_;
         origin.translation() += point_t(min_bundle_index_[0] * bundle_resolution_,
-                                        min_bundle_index_[1] * bundle_resolution_);
+                min_bundle_index_[1] * bundle_resolution_);
         return origin;
     }
 
@@ -301,7 +332,7 @@ public:
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
-//        lock_t l(bundle_storage_mutex_);
+        //        lock_t l(bundle_storage_mutex_);
         return bundle_storage_->traverse(function);
     }
 
@@ -334,13 +365,13 @@ public:
                       static_cast<int>(std::floor(p_m(1) * bundle_resolution_))}};
 
         return (i[0] >= min_bundle_index_[0]  && i[0] <= max_bundle_index_[0]) &&
-               (i[1] >= min_bundle_index_[1]  && i[1] <= max_bundle_index_[1]);
+                (i[1] >= min_bundle_index_[1]  && i[1] <= max_bundle_index_[1]);
     }
 
     inline void allocatePartiallyAllocatedBundles()
     {
         std::vector<index_t> bis;
-        getBundleIndices(bis);        
+        getBundleIndices(bis);
 
         using neighborhood_t = cis::operations::clustering::GridNeighborhoodStatic<std::tuple_size<index_t>::value, 3>;
         static constexpr neighborhood_t grid{};
@@ -352,10 +383,10 @@ public:
                 bundle = bundle_storage_->get(bi);
             }
             bool expand =
-                (bundle->at(0)->getHandle()->data().getN() >= 3) ||
-                (bundle->at(1)->getHandle()->data().getN() >= 3) ||
-                (bundle->at(2)->getHandle()->data().getN() >= 3) ||
-                (bundle->at(3)->getHandle()->data().getN() >= 3);
+                    (bundle->at(0)->getHandle()->data().getN() >= 3) ||
+                    (bundle->at(1)->getHandle()->data().getN() >= 3) ||
+                    (bundle->at(2)->getHandle()->data().getN() >= 3) ||
+                    (bundle->at(3)->getHandle()->data().getN() >= 3);
             if (expand) {
                 grid.visit([this, &bi](neighborhood_t::offset_t o) {
                     getAllocate({{bi[0]+o[0], bi[1]+o[1]}});
@@ -435,7 +466,7 @@ protected:
     {
         const point_t p_m = m_T_w_ * p_w;
         return {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
-                 static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
+                        static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
     }
 };
 }

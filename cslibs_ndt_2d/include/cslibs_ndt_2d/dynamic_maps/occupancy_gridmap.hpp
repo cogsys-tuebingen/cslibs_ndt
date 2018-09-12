@@ -58,8 +58,8 @@ public:
     using simple_iterator_t                 = cslibs_math_2d::algorithms::SimpleIterator;
     using inverse_sensor_model_t            = cslibs_gridmaps::utility::InverseModel;
 
-    OccupancyGridmap(const pose_t &origin,
-                     const double &resolution) :
+    inline OccupancyGridmap(const pose_t &origin,
+                            const double &resolution) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -76,12 +76,12 @@ public:
     {
     }
 
-    OccupancyGridmap(const pose_t &origin,
-                     const double &resolution,
-                     const index_t &min_index,
-                     const index_t &max_index,
-                     const std::shared_ptr<distribution_bundle_storage_t> &bundles,
-                     const distribution_storage_array_t                   &storage) :
+    inline OccupancyGridmap(const pose_t &origin,
+                            const double &resolution,
+                            const index_t &min_index,
+                            const index_t &max_index,
+                            const std::shared_ptr<distribution_bundle_storage_t> &bundles,
+                            const distribution_storage_array_t                   &storage) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -95,10 +95,10 @@ public:
     {
     }
 
-    OccupancyGridmap(const double &origin_x,
-                     const double &origin_y,
-                     const double &origin_phi,
-                     const double &resolution) :
+    inline OccupancyGridmap(const double &origin_x,
+                            const double &origin_y,
+                            const double &origin_phi,
+                            const double &resolution) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -112,6 +112,37 @@ public:
                  distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t)}},
         bundle_storage_(new distribution_bundle_storage_t)
+    {
+    }
+
+    inline OccupancyGridmap(const OccupancyGridmap &other) :
+        resolution_(other.resolution_),
+        resolution_inv_(other.resolution_inv_),
+        bundle_resolution_(other.bundle_resolution_),
+        bundle_resolution_inv_(other.bundle_resolution_inv_),
+        w_T_m_(other.w_T_m_),
+        m_T_w_(other.m_T_w_),
+        min_index_(other.min_index_),
+        max_index_(other.max_index_),
+        storage_{{distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[0])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[1])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[2])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[3]))}},
+        bundle_storage_(new distribution_bundle_storage_t(*other.bundle_storage_))
+    {
+    }
+
+    inline OccupancyGridmap(OccupancyGridmap &&other) :
+        resolution_(other.resolution_),
+        resolution_inv_(other.resolution_inv_),
+        bundle_resolution_(other.bundle_resolution_),
+        bundle_resolution_inv_(other.bundle_resolution_inv_),
+        w_T_m_(std::move(other.w_T_m_)),
+        m_T_w_(std::move(other.m_T_w_)),
+        min_index_(other.min_index_),
+        max_index_(other.max_index_),
+        storage_(other.storage_),
+        bundle_storage_(other.bundle_storage_)
     {
     }
 
@@ -288,7 +319,7 @@ public:
                                       static_cast<int>(std::floor(end_p(1) * bundle_resolution_inv_))}};
         line_iterator_t it(start_index, end_index);
 
-        auto occupied = [this, &ivm, &occupied_threshold](const index_t &bi) {          
+        auto occupied = [this, &ivm, &occupied_threshold](const index_t &bi) {
             distribution_bundle_t *bundle;
             {
                 lock_t l(bundle_storage_mutex_);
@@ -434,7 +465,7 @@ public:
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
-//        lock_t l(bundle_storage_mutex_);
+        //        lock_t l(bundle_storage_mutex_);
         return bundle_storage_->traverse(function);
     }
 
@@ -467,7 +498,7 @@ public:
                       static_cast<int>(std::floor(p_m(1) * bundle_resolution_))}};
 
         return (i[0] >= min_index_[0]  && i[0] <= max_index_[0]) &&
-               (i[1] >= min_index_[1]  && i[1] <= max_index_[1]);
+                (i[1] >= min_index_[1]  && i[1] <= max_index_[1]);
     }
 
     inline void allocatePartiallyAllocatedBundles()
@@ -491,10 +522,10 @@ public:
                 bundle = bundle_storage_->get(bi);
             }
             bool expand =
-                expand_distribution(bundle->at(0)) ||
-                expand_distribution(bundle->at(1)) ||
-                expand_distribution(bundle->at(2)) ||
-                expand_distribution(bundle->at(3));
+                    expand_distribution(bundle->at(0)) ||
+                    expand_distribution(bundle->at(1)) ||
+                    expand_distribution(bundle->at(2)) ||
+                    expand_distribution(bundle->at(3));
 
             if (expand) {
                 grid.visit([this, &bi](neighborhood_t::offset_t o) {
@@ -613,7 +644,7 @@ protected:
     {
         const point_t p_m = m_T_w_ * p_w;
         return {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
-                 static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
+                        static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
     }
 };
 }

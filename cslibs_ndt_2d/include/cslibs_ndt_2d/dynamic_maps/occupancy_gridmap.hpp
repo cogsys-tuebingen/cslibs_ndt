@@ -129,7 +129,7 @@ public:
     {
         lock_t l(bundle_storage_mutex_);
         return point_t(min_index_[0] * bundle_resolution_,
-                min_index_[1] * bundle_resolution_);
+                       min_index_[1] * bundle_resolution_);
     }
 
     /**
@@ -140,7 +140,7 @@ public:
     {
         lock_t l(bundle_storage_mutex_);
         return point_t((max_index_[0] + 1) * bundle_resolution_,
-                (max_index_[1] + 1) * bundle_resolution_);
+                       (max_index_[1] + 1) * bundle_resolution_);
     }
 
     /**
@@ -152,7 +152,7 @@ public:
         lock_t l(bundle_storage_mutex_);
         pose_t origin = w_T_m_;
         origin.translation() += point_t(min_index_[0] * bundle_resolution_,
-                min_index_[1] * bundle_resolution_);
+                                        min_index_[1] * bundle_resolution_);
         return origin;
     }
 
@@ -313,8 +313,7 @@ public:
     inline double sample(const point_t &p,
                          const inverse_sensor_model_t::Ptr &ivm) const
     {
-        const index_t bi = toBundleIndex(p);
-        return sample(p, bi, ivm);
+        return sample(p, toBundleIndex(p), ivm);
     }
 
     inline double sample(const point_t &p,
@@ -349,8 +348,7 @@ public:
     inline double sampleNonNormalized(const point_t &p,
                                       const inverse_sensor_model_t::Ptr &ivm) const
     {
-        const index_t bi = toBundleIndex(p);
-        return sampleNonNormalized(p, bi, ivm);
+        return sampleNonNormalized(p, toBundleIndex(p), ivm);
     }
 
     inline double sampleNonNormalized(const point_t &p,

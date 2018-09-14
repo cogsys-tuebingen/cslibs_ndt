@@ -32,6 +32,7 @@ inline void from(
 {
     if (!src)
         return;
+    src->allocatePartiallyAllocatedBundles();
 
     using point_t   = cslibs_math_3d::Point3d;
     using dst_map_t = cslibs_ndt_3d::DistributionArray;
@@ -60,9 +61,9 @@ inline void from(
         distribution_t::distribution_t d;
         for (std::size_t i = 0; i < 8; ++ i)
             d += b.at(i)->getHandle()->data();
-
         if (d.getN() == 0)
             return;
+
         dst->data.emplace_back(from(d, b.id(), sample_bundle(b, point_t(d.getMean()))));
     };
 
@@ -72,10 +73,12 @@ inline void from(
 inline void from(
         const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr &src,
         cslibs_ndt_3d::DistributionArray::Ptr &dst,
-        const cslibs_gridmaps::utility::InverseModel::Ptr &ivm)
+        const cslibs_gridmaps::utility::InverseModel::Ptr &ivm,
+        const double &threshold = 0.169)
 {
     if (!src)
         return;
+    src->allocatePartiallyAllocatedBundles();
 
     using point_t   = cslibs_math_3d::Point3d;
     using dst_map_t = cslibs_ndt_3d::DistributionArray;
@@ -87,7 +90,7 @@ inline void from(
                          const point_t &p) -> double {
         auto evaluate = [&ivm, d, p] {
             const auto &handle = d->getHandle();
-            return handle->getDistribution() ?
+            return d && handle->getDistribution() ?
                         handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(ivm) : 0.0;
         };
         return d ? evaluate() : 0.0;
@@ -105,14 +108,19 @@ inline void from(
     };    
 
     using index_t = std::array<int, 3>;
-    auto process_bundle = [&dst, &ivm, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
+    auto process_bundle = [&dst, &ivm, &threshold, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
         distribution_t::distribution_t d;
-        for (std::size_t i = 0; i < 8; ++ i)
-            if (const auto &d_tmp = b.at(i)->getHandle()->getDistribution())
-                d += *d_tmp;
+        double occupancy = 0.0;
 
-        if (d.getN() == 0)
+        for (std::size_t i = 0 ; i < 8 ; ++i) {
+            const auto &handle = b.at(i)->getHandle();
+            occupancy += 0.125 * handle->getOccupancy(ivm);
+            if (const auto &d_tmp = handle->getDistribution())
+                d += *d_tmp;
+        }
+        if (d.getN() == 0 || occupancy < threshold)
             return;
+
         dst->data.emplace_back(from(d, b.id(), sample_bundle(b, point_t(d.getMean()))));
     };
     src->traverse(process_bundle);

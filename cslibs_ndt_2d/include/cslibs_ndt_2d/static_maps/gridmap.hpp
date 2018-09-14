@@ -19,6 +19,7 @@
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/array/array.hpp>
+#include <cslibs_indexed_storage/operations/clustering/grid_neighborhood.hpp>
 
 namespace cis = cslibs_indexed_storage;
 
@@ -326,7 +327,7 @@ public:
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
-//        lock_t l(bundle_storage_mutex_);
+        lock_t l(bundle_storage_mutex_);
         return bundle_storage_->traverse(function);
     }
 
@@ -438,7 +439,7 @@ protected:
                 const index_t storage_3_index = {{divx + modx, divy + mody}}; /// shifted diagonally
 
                 {
-                    lock_t(storage_mutex_);
+                    lock_t ls(storage_mutex_);
                     b[0] = getAllocate(storage_[0], storage_0_index);
                     b[1] = getAllocate(storage_[1], storage_1_index);
                     b[2] = getAllocate(storage_[2], storage_2_index);

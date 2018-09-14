@@ -44,12 +44,30 @@ inline void from(
 {
     if (!src)
         return;
+    src->allocatePartiallyAllocatedBundles();
 
     using index_t = std::array<int, 3>;
+    using point_t = cslibs_math_3d::Point3d;
+    using distribution_t = cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_t;
     using distribution_bundle_t = cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t;
+    auto sample = [](const distribution_t *d,
+                     const point_t &p) -> double {
+        return d ? d->getHandle()->data().sampleNonNormalized(p) : 0.0;
+    };
+    auto sample_bundle = [&sample](const distribution_bundle_t &b,
+                                   const point_t &p) -> double {
+        return 0.125 * (sample(b.at(0), p) +
+                        sample(b.at(1), p) +
+                        sample(b.at(2), p) +
+                        sample(b.at(3), p) +
+                        sample(b.at(4), p) +
+                        sample(b.at(5), p) +
+                        sample(b.at(6), p) +
+                        sample(b.at(7), p));
+    };
 
     std::vector<float> tmp;
-    auto process_bundle = [&src, &tmp](const index_t &bi, const distribution_bundle_t &b) {
+    auto process_bundle = [&src, &tmp, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
         cslibs_math::statistics::Distribution<3, 3> d;
         for (std::size_t i = 0 ; i < 8 ; ++i)
             d += b.at(i)->getHandle()->data();
@@ -60,7 +78,7 @@ inline void from(
         tmp.emplace_back(static_cast<float>(mean(0)));
         tmp.emplace_back(static_cast<float>(mean(1)));
         tmp.emplace_back(static_cast<float>(mean(2)));
-        tmp.emplace_back(static_cast<float>(src->sampleNonNormalized(mean)));
+        tmp.emplace_back(static_cast<float>(sample_bundle(b, mean)));
     };
     src->traverse(process_bundle);
     from(tmp, dst);
@@ -74,12 +92,35 @@ inline void from(
 {
     if (!src)
         return;
+    src->allocatePartiallyAllocatedBundles();
 
     using index_t = std::array<int, 3>;
+    using point_t = cslibs_math_3d::Point3d;
+    using distribution_t = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_t;
     using distribution_bundle_t = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_bundle_t;
+    auto sample = [&ivm](const distribution_t *d,
+                         const point_t &p) -> double {
+        auto evaluate = [&ivm, d, p] {
+            const auto &handle = d->getHandle();
+            return d && handle->getDistribution() ?
+                        handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(ivm) : 0.0;
+        };
+        return d ? evaluate() : 0.0;
+    };
+    auto sample_bundle = [&sample](const distribution_bundle_t &b,
+                                   const point_t &p) -> double {
+        return 0.125 * (sample(b.at(0), p) +
+                        sample(b.at(1), p) +
+                        sample(b.at(2), p) +
+                        sample(b.at(3), p) +
+                        sample(b.at(4), p) +
+                        sample(b.at(5), p) +
+                        sample(b.at(6), p) +
+                        sample(b.at(7), p));
+    };
 
     std::vector<float> tmp;
-    auto process_bundle = [&src, &tmp, &ivm, &threshold](const index_t &bi, const distribution_bundle_t &b) {
+    auto process_bundle = [&src, &tmp, &ivm, &threshold, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
         cslibs_math::statistics::Distribution<3, 3> d;
         double occupancy = 0.0;
 
@@ -96,7 +137,7 @@ inline void from(
         tmp.emplace_back(static_cast<float>(mean(0)));
         tmp.emplace_back(static_cast<float>(mean(1)));
         tmp.emplace_back(static_cast<float>(mean(2)));
-        tmp.emplace_back(static_cast<float>(src->sampleNonNormalized(mean, ivm)));
+        tmp.emplace_back(static_cast<float>(sample_bundle(b, mean)));
     };
     src->traverse(process_bundle);
     from(tmp, dst);

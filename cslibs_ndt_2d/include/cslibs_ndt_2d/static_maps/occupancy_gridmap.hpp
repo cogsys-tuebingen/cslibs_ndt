@@ -19,6 +19,7 @@
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/array/array.hpp>
+#include <cslibs_indexed_storage/operations/clustering/grid_neighborhood.hpp>
 
 #include <cslibs_math_2d/algorithms/bresenham.hpp>
 #include <cslibs_math_2d/algorithms/simple_iterator.hpp>
@@ -257,11 +258,7 @@ public:
         const index_t start_bi = toBundleIndex(origin.translation());
 
         auto occupancy = [this, &ivm](const index_t &bi) {
-            distribution_bundle_t *bundle;
-            {
-                lock_t l(bundle_storage_mutex_);
-                bundle = bundle_storage_->get(bi);
-            }
+            distribution_bundle_t *bundle = getAllocate(bi);
             return 0.25 * (bundle->at(0)->getHandle()->getOccupancy(ivm) +
                            bundle->at(1)->getHandle()->getOccupancy(ivm) +
                            bundle->at(2)->getHandle()->getOccupancy(ivm) +
@@ -438,7 +435,7 @@ public:
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
-//        lock_t l(bundle_storage_mutex_);
+        lock_t l(bundle_storage_mutex_);
         return bundle_storage_->traverse(function);
     }
 
@@ -554,7 +551,7 @@ protected:
                 const index_t storage_3_index = {{divx + modx, divy + mody}}; /// shifted diagonally
 
                 {
-                    lock_t l(storage_mutex_);
+                    lock_t ls(storage_mutex_);
                     b[0] = getAllocate(storage_[0], storage_0_index);
                     b[1] = getAllocate(storage_[1], storage_1_index);
                     b[2] = getAllocate(storage_[2], storage_2_index);
@@ -574,11 +571,7 @@ protected:
         if (!valid(bi))
             return;
 
-        distribution_bundle_t *bundle;
-        {
-            lock_t l(bundle_storage_mutex_);
-            bundle = getAllocate(bi);
-        }
+        distribution_bundle_t *bundle = getAllocate(bi);
         bundle->at(0)->getHandle()->updateFree();
         bundle->at(1)->getHandle()->updateFree();
         bundle->at(2)->getHandle()->updateFree();
@@ -591,11 +584,7 @@ protected:
         if (!valid(bi))
             return;
 
-        distribution_bundle_t *bundle;
-        {
-            lock_t l(bundle_storage_mutex_);
-            bundle = getAllocate(bi);
-        }
+        distribution_bundle_t *bundle = getAllocate(bi);
         bundle->at(0)->getHandle()->updateFree(n);
         bundle->at(1)->getHandle()->updateFree(n);
         bundle->at(2)->getHandle()->updateFree(n);
@@ -608,11 +597,7 @@ protected:
         if (!valid(bi))
             return;
 
-        distribution_bundle_t *bundle;
-        {
-            lock_t l(bundle_storage_mutex_);
-            bundle = getAllocate(bi);
-        }
+        distribution_bundle_t *bundle = getAllocate(bi);
         bundle->at(0)->getHandle()->updateOccupied(p);
         bundle->at(1)->getHandle()->updateOccupied(p);
         bundle->at(2)->getHandle()->updateOccupied(p);
@@ -625,11 +610,7 @@ protected:
         if (!valid(bi))
             return;
 
-        distribution_bundle_t *bundle;
-        {
-            lock_t l(bundle_storage_mutex_);
-            bundle = getAllocate(bi);
-        }
+        distribution_bundle_t *bundle = getAllocate(bi);
         bundle->at(0)->getHandle()->updateOccupied(d);
         bundle->at(1)->getHandle()->updateOccupied(d);
         bundle->at(2)->getHandle()->updateOccupied(d);

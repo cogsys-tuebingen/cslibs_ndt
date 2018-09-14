@@ -21,6 +21,7 @@
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/array/array.hpp>
+#include <cslibs_indexed_storage/operations/clustering/grid_neighborhood.hpp>
 
 namespace cis = cslibs_indexed_storage;
 
@@ -222,19 +223,11 @@ public:
 
     inline void insert(const point_t &p)
     {
-        distribution_bundle_t *bundle;
-        {
-            index_t bi;
-            if(!toBundleIndex(p, bi))
-               return;
+        index_t bi;
+        if(!toBundleIndex(p, bi))
+            return;
 
-            lock_t(bundle_storage_mutex_);
-            if(!valid(bi))
-                return;
-
-            bundle = getAllocate(bi);
-        }
-
+        distribution_bundle_t *bundle = getAllocate(bi);
         bundle->at(0)->getHandle()->data().add(p);
         bundle->at(1)->getHandle()->data().add(p);
         bundle->at(2)->getHandle()->data().add(p);
@@ -258,18 +251,14 @@ public:
             if (pm.isNormal()) {
                 index_t bi;
                 if(toBundleIndex(pm, bi)) {
-                  distribution_t *d = storage.get(bi);
-                  (d ? d : &storage.insert(bi, distribution_t()))->data().add(pm);
+                    distribution_t *d = storage.get(bi);
+                    (d ? d : &storage.insert(bi, distribution_t()))->data().add(pm);
                 }
             }
         }
 
         storage.traverse([this](const index_t& bi, const distribution_t &d) {
-            distribution_bundle_t *bundle;
-            {
-                lock_t(bundle_storage_mutex_);
-                bundle = getAllocate(bi);
-            }
+            distribution_bundle_t *bundle = getAllocate(bi);
             bundle->at(0)->getHandle()->data() += d.data();
             bundle->at(1)->getHandle()->data() += d.data();
             bundle->at(2)->getHandle()->data() += d.data();
@@ -289,7 +278,7 @@ public:
 
         distribution_bundle_t *bundle;
         {
-            lock_t(bundle_storage_mutex_);
+            lock_t l(bundle_storage_mutex_);
             bundle = bundle_storage_->get(bi);
         }
         auto evaluate = [&p, &bundle]() {
@@ -313,7 +302,7 @@ public:
 
         distribution_bundle_t *bundle;
         {
-            lock_t(bundle_storage_mutex_);
+            lock_t l(bundle_storage_mutex_);
             bundle = bundle_storage_->get(bi);
         }
         auto evaluate = [&p, &bundle]() {
@@ -331,28 +320,12 @@ public:
 
     inline const distribution_bundle_t* getDistributionBundle(const index_t &bi) const
     {
-        if(!valid(bi))
-          return nullptr;
-
-        distribution_bundle_t *bundle;
-        {
-            lock_t(bundle_storage_mutex_);
-            bundle = bundle_storage_->get(bi);
-        }
-        return bundle;
+        return valid(bi) ? getAllocate(bi) : nullptr;
     }
 
     inline distribution_bundle_t* getDistributionBundle(const index_t &bi)
     {
-        if(!valid(bi))
-          return nullptr;
-
-        distribution_bundle_t *bundle;
-        {
-            lock_t(bundle_storage_mutex_);
-            bundle = bundle_storage_->get(bi);
-        }
-        return bundle;
+        return valid(bi) ? getAllocate(bi) : nullptr;
     }
 
     inline const distribution_bundle_t* getDistributionBundle(const point_t &p) const
@@ -361,12 +334,7 @@ public:
         if(!toBundleIndex(p, bi))
           return nullptr;
 
-        distribution_bundle_t *bundle;
-        {
-            lock_t l(bundle_storage_mutex_);
-            bundle = bundle_storage_->get(bi);
-        }
-        return bundle;
+        return getAllocate(bi);
     }
 
     inline double getBundleResolution() const
@@ -402,22 +370,23 @@ public:
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
-        lock_t(bundle_storage_mutex_);
+        lock_t l(bundle_storage_mutex_);
         return bundle_storage_->traverse(function);
     }
 
     inline void getBundleIndices(std::vector<index_t> &indices) const
     {
-        lock_t(bundle_storage_mutex_);
         auto add_index = [&indices](const index_t &i, const distribution_bundle_t &d) {
             indices.emplace_back(i);
         };
+        lock_t l(bundle_storage_mutex_);
         bundle_storage_->traverse(add_index);
     }
 
     inline std::size_t getByteSize() const
     {
-        lock_t(bundle_storage_mutex_);
+        lock_t ls(storage_mutex_);
+        lock_t lb(bundle_storage_mutex_);
         return sizeof(*this) +
                 bundle_storage_->byte_size() +
                 storage_[0]->byte_size() +
@@ -454,29 +423,31 @@ public:
         std::vector<index_t> bis;
         getBundleIndices(bis);
 
-        lock_t l(bundle_storage_mutex_);
-        const static int dx[] = {-1, 0, 1 -1, 0, 1,-1, 0, 1,-1, 0, 1 -1, 1,-1, 0, 1,-1, 0, 1 -1, 0, 1,-1, 0, 1};
-        const static int dy[] = {-1,-1,-1, 0, 0, 0, 1, 1, 1,-1,-1,-1, 0, 0, 1, 1, 1,-1,-1,-1, 0, 0, 0, 1, 1, 1};
-        const static int dz[] = {-1,-1,-1,-1,-1,-1,-1,-1,-1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+        using neighborhood_t = cis::operations::clustering::GridNeighborhoodStatic<std::tuple_size<index_t>::value, 3>;
+        static constexpr neighborhood_t grid{};
 
         for(const index_t &bi : bis) {
-            const distribution_bundle_t *bundle = bundle_storage_->get(bi);
-            bool expand = false;
-            expand |= bundle->at(0)->getHandle()->data().getN() >= 4;
-            expand |= bundle->at(1)->getHandle()->data().getN() >= 4;
-            expand |= bundle->at(2)->getHandle()->data().getN() >= 4;
-            expand |= bundle->at(3)->getHandle()->data().getN() >= 4;
-            expand |= bundle->at(4)->getHandle()->data().getN() >= 4;
-            expand |= bundle->at(5)->getHandle()->data().getN() >= 4;
-            expand |= bundle->at(6)->getHandle()->data().getN() >= 4;
-            expand |= bundle->at(7)->getHandle()->data().getN() >= 4;
+            const distribution_bundle_t *bundle;
+            {
+                lock_t l(bundle_storage_mutex_);
+                bundle = bundle_storage_->get(bi);
+            }
+            bool expand =
+                (bundle->at(0)->getHandle()->data().getN() >= 3) ||
+                (bundle->at(1)->getHandle()->data().getN() >= 3) ||
+                (bundle->at(2)->getHandle()->data().getN() >= 3) ||
+                (bundle->at(3)->getHandle()->data().getN() >= 3) ||
+                (bundle->at(4)->getHandle()->data().getN() >= 3) ||
+                (bundle->at(5)->getHandle()->data().getN() >= 3) ||
+                (bundle->at(6)->getHandle()->data().getN() >= 3) ||
+                (bundle->at(7)->getHandle()->data().getN() >= 3);
 
             if(expand) {
-                for(std::size_t i = 0 ; i < 26 ; ++i) {
-                    const index_t bni = {{dx[i] + bi[0], dy[i] + bi[1], dz[i] + bi[2]}};
-                    if(valid(bni))
+                grid.visit([this, &bi](neighborhood_t::offset_t o) {
+                    const index_t bni = {{bi[0]+o[0], bi[1]+o[1], bi[2]+o[2]}};
+                    if (valid(bni))
                         getAllocate(bni);
-                }
+                });
             }
         }
 
@@ -494,6 +465,7 @@ protected:
     const index_t                                   min_bundle_index_;
     const index_t                                   max_bundle_index_;
 
+    mutable mutex_t                                 storage_mutex_;
     mutable distribution_storage_array_t            storage_;
     mutable mutex_t                                 bundle_storage_mutex_;
     mutable distribution_bundle_storage_ptr_t       bundle_storage_;
@@ -508,7 +480,10 @@ protected:
     inline distribution_bundle_t *getAllocate(const index_t &bi) const
     {
         auto get_allocate = [this](const index_t &bi) {
-            distribution_bundle_t *bundle = bundle_storage_->get(bi);
+            {
+                lock_t l(bundle_storage_mutex_);
+                bundle = bundle_storage_->get(bi);
+            }
 
             auto allocate_bundle = [this, &bi]() {
                 distribution_bundle_t b;
@@ -528,16 +503,19 @@ protected:
                 const index_t storage_6_index = {{divx,        divy + mody, divz + modz}};
                 const index_t storage_7_index = {{divx + modx, divy + mody, divz + modz}};
 
-                b[0] = getAllocate(storage_[0], storage_0_index);
-                b[1] = getAllocate(storage_[1], storage_1_index);
-                b[2] = getAllocate(storage_[2], storage_2_index);
-                b[3] = getAllocate(storage_[3], storage_3_index);
-                b[4] = getAllocate(storage_[4], storage_4_index);
-                b[5] = getAllocate(storage_[5], storage_5_index);
-                b[6] = getAllocate(storage_[6], storage_6_index);
-                b[7] = getAllocate(storage_[7], storage_7_index);
+                {
+                    lock_t ls(storage_mutex_);
+                    b[0] = getAllocate(storage_[0], storage_0_index);
+                    b[1] = getAllocate(storage_[1], storage_1_index);
+                    b[2] = getAllocate(storage_[2], storage_2_index);
+                    b[3] = getAllocate(storage_[3], storage_3_index);
+                    b[4] = getAllocate(storage_[4], storage_4_index);
+                    b[5] = getAllocate(storage_[5], storage_5_index);
+                    b[6] = getAllocate(storage_[6], storage_6_index);
+                    b[7] = getAllocate(storage_[7], storage_7_index);
+                }
 
-                lock_t(bundle_storage_mutex_);
+                lock_t l(bundle_storage_mutex_);
                 return &(bundle_storage_->insert(bi, b));
             };
             return bundle ? bundle : allocate_bundle();

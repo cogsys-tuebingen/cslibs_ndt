@@ -221,11 +221,7 @@ public:
 
         const index_t start_bi = toBundleIndex(origin.translation());
         auto occupancy = [this, &ivm](const index_t &bi) {
-            distribution_bundle_t *bundle;
-            {
-                lock_t l(bundle_storage_mutex_);
-                bundle = bundle_storage_->get(bi);
-            }
+            distribution_bundle_t *bundle = getAllocate(bi);
             return 0.25 * (bundle->at(0)->getHandle()->getOccupancy(ivm) +
                            bundle->at(1)->getHandle()->getOccupancy(ivm) +
                            bundle->at(2)->getHandle()->getOccupancy(ivm) +
@@ -236,7 +232,7 @@ public:
                     std::min(occupancy({{bi[0] + ((bi[0] > start_bi[0]) ? -1 : 1), bi[1]}}),
                              occupancy({{bi[0], bi[1] + ((bi[1] > start_bi[1]) ? -1 : 1)}}));
             return ivm_visibility->getProbFree() * occlusion_prob +
-                    ivm_visibility->getProbOccupied() * (1.0 - occlusion_prob);
+                   ivm_visibility->getProbOccupied() * (1.0 - occlusion_prob);
         };
 
         distribution_storage_t storage;
@@ -432,7 +428,7 @@ public:
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
-//        lock_t l(bundle_storage_mutex_);
+        lock_t l(bundle_storage_mutex_);
         return bundle_storage_->traverse(function);
     }
 
@@ -546,7 +542,7 @@ protected:
                 const index_t storage_3_index = {{divx + modx, divy + mody}}; /// shifted diagonally
 
                 {
-                    lock_t(storage_mutex_);
+                    lock_t ls(storage_mutex_);
                     b[0] = getAllocate(storage_[0], storage_0_index);
                     b[1] = getAllocate(storage_[1], storage_1_index);
                     b[2] = getAllocate(storage_[2], storage_2_index);

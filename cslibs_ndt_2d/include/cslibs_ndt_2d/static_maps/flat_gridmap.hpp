@@ -142,14 +142,11 @@ public:
 
     inline void insert(const point_t &p)
     {
-        distribution_t *distribution;
-        {
-            index_t i;
-            if(!toIndex(p, i))
-                return;
-            lock_t(storage_mutex_);
-            distribution = getAllocate(i);
-        }
+        index_t i;
+        if(!toIndex(p, i))
+            return;
+
+        distribution_t *distribution = getAllocate(i);
         distribution->getHandle()->data().add(p);
     }
 
@@ -164,7 +161,7 @@ public:
     {
         distribution_t *distribution;
         {
-            lock_t(storage_mutex_);
+            lock_t l(storage_mutex_);
             distribution = storage_->get(i);
         }
 
@@ -182,7 +179,7 @@ public:
     {
         distribution_t *distribution;
         {
-            lock_t(storage_mutex_);
+            lock_t l(storage_mutex_);
             distribution = storage_->get(i);
         }
         return distribution ? distribution->getHandle()->data().sampleNonNormalized(p) : 0.0;
@@ -196,7 +193,7 @@ public:
 
         distribution_t *distribution;
         {
-            lock_t(storage_mutex_);
+            lock_t l(storage_mutex_);
             distribution = storage_->get(i);
         }
         return distribution;
@@ -236,22 +233,22 @@ public:
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
-        lock_t(storage_mutex_);
+        lock_t l(storage_mutex_);
         return storage_->traverse(function);
     }
 
     inline void getIndices(std::vector<index_t> &indices) const
     {
-        lock_t(storage_mutex_);
         auto add_index = [&indices](const index_t &i, const distribution_t &) {
             indices.emplace_back(i);
         };
+        lock_t l(storage_mutex_);
         storage_->traverse(add_index);
     }
 
     inline std::size_t getByteSize() const
     {
-        lock_t(storage_mutex_);
+        lock_t l(storage_mutex_);
         return sizeof(*this) +
                 storage_->byte_size();
     }
@@ -262,7 +259,7 @@ public:
         const index_t index = {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
                                 static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
         return (index[0] >= min_index_[0] && index[0] <= max_index_[0] ) &&
-                (index[1] >= min_index_[1] && index[1] <= max_index_[1] );
+               (index[1] >= min_index_[1] && index[1] <= max_index_[1] );
     }
 
 protected:
@@ -278,23 +275,15 @@ protected:
     mutable mutex_t                                 storage_mutex_;
     mutable distribution_storage_ptr_t              storage_;
 
-    inline distribution_t* getAllocate(const distribution_storage_ptr_t &s,
-                                       const index_t &i) const
-    {
-        lock_t(storage_mutex_);
-        distribution_t *d = s->get(i);
-        return d ? d : &(s->insert(i, distribution_t()));
-    }
-
     inline distribution_t *getAllocate(const index_t &i) const
     {
         distribution_t *distribution;
         {
-            lock_t(storage_mutex_);
+            lock_t l(storage_mutex_);
             distribution = storage_->get(i);
         }
         auto allocate = [this, &i]() {
-            lock_t(storage_mutex_);
+            lock_t l(storage_mutex_);
             return &(storage_->insert(i, distribution_t()));
         };
         return distribution ? distribution : allocate();
@@ -307,14 +296,14 @@ protected:
         index = {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
                   static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
         return (index[0] >= min_index_[0] && index[0] <= max_index_[0] ) &&
-                (index[1] >= min_index_[1] && index[1] <= max_index_[1] );
+               (index[1] >= min_index_[1] && index[1] <= max_index_[1] );
     }
 
     inline void fromIndex(const index_t &i,
                           point_t &p_w) const
     {
         p_w = w_T_m_ * point_t(i[0] * resolution_,
-                i[1] * resolution_);
+                               i[1] * resolution_);
     }
 };
 }

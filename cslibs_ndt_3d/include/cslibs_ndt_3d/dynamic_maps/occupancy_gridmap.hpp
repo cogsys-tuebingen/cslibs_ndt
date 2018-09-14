@@ -102,6 +102,41 @@ public:
     {
     }
 
+    inline OccupancyGridmap(const OccupancyGridmap &other) :
+        resolution_(other.resolution_),
+        resolution_inv_(other.resolution_inv_),
+        bundle_resolution_(other.bundle_resolution_),
+        bundle_resolution_inv_(other.bundle_resolution_inv_),
+        w_T_m_(other.w_T_m_),
+        m_T_w_(other.m_T_w_),
+        min_index_(other.min_index_),
+        max_index_(other.max_index_),
+        storage_{{distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[0])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[1])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[2])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[3])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[4])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[5])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[6])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[7]))}},
+        bundle_storage_(new distribution_bundle_storage_t(*other.bundle_storage_))
+    {
+    }
+
+    inline OccupancyGridmap(OccupancyGridmap &&other) :
+        resolution_(other.resolution_),
+        resolution_inv_(other.resolution_inv_),
+        bundle_resolution_(other.bundle_resolution_),
+        bundle_resolution_inv_(other.bundle_resolution_inv_),
+        w_T_m_(other.w_T_m_),
+        m_T_w_(other.m_T_w_),
+        min_index_(other.min_index_),
+        max_index_(other.max_index_),
+        storage_(other.storage_),
+        bundle_storage_(other.bundle_storage_)
+    {
+    }
+
     inline bool empty() const
     {
         lock_t l(bundle_storage_mutex_);
@@ -116,8 +151,8 @@ public:
     {
         lock_t l(bundle_storage_mutex_);
         return point_t(min_index_[0] * bundle_resolution_,
-                min_index_[1] * bundle_resolution_,
-                min_index_[2] * bundle_resolution_);
+                       min_index_[1] * bundle_resolution_,
+                       min_index_[2] * bundle_resolution_);
     }
 
     /**
@@ -143,7 +178,6 @@ public:
         origin.translation() = point_t(min_index_[0] * bundle_resolution_,
                                        min_index_[1] * bundle_resolution_,
                                        min_index_[2] * bundle_resolution_);
-        return origin;
     }
 
     /**
@@ -448,7 +482,8 @@ public:
                       0}};
 
         return (i[0] >= min_index_[0]  && i[0] <= max_index_[0]) &&
-               (i[1] >= min_index_[1]  && i[1] <= max_index_[1]);
+               (i[1] >= min_index_[1]  && i[1] <= max_index_[1]) &&
+               (i[2] >= min_index_[2]  && i[2] <= max_index_[2]);
     }
 
     inline void allocatePartiallyAllocatedBundles()
@@ -499,6 +534,7 @@ private:
 
     mutable index_t                                 min_index_;
     mutable index_t                                 max_index_;
+
     mutable mutex_t                                 storage_mutex_;
     mutable distribution_storage_array_t            storage_;
     mutable mutex_t                                 bundle_storage_mutex_;

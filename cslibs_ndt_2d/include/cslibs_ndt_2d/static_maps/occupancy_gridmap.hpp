@@ -58,10 +58,10 @@ public:
     using simple_iterator_t                 = cslibs_math_2d::algorithms::SimpleIterator;
     using inverse_sensor_model_t            = cslibs_gridmaps::utility::InverseModel;
 
-    OccupancyGridmap(const pose_t &origin,
-                     const double &resolution,
-                     const size_t &size,
-                     const index_t &min_bundle_index) :
+    inline OccupancyGridmap(const pose_t &origin,
+                            const double &resolution,
+                            const size_t &size,
+                            const index_t &min_bundle_index) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -94,12 +94,12 @@ public:
                 min_bundle_index[1]);
     }
 
-    OccupancyGridmap(const double &origin_x,
-                     const double &origin_y,
-                     const double &origin_phi,
-                     const double &resolution,
-                     const size_t &size,
-                     const index_t &min_bundle_index) :
+    inline OccupancyGridmap(const double &origin_x,
+                            const double &origin_y,
+                            const double &origin_phi,
+                            const double &resolution,
+                            const size_t &size,
+                            const index_t &min_bundle_index) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -132,12 +132,12 @@ public:
                 min_bundle_index[1]);
     }
 
-    OccupancyGridmap(const pose_t &origin,
-                     const double &resolution,
-                     const size_t &size,
-                     const std::shared_ptr<distribution_bundle_storage_t> &bundles,
-                     const distribution_storage_array_t                   &storage,
-                     const index_t &min_bundle_index) :
+    inline OccupancyGridmap(const pose_t &origin,
+                            const double &resolution,
+                            const size_t &size,
+                            const std::shared_ptr<distribution_bundle_storage_t> &bundles,
+                            const distribution_storage_array_t                   &storage,
+                            const index_t &min_bundle_index) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -152,6 +152,41 @@ public:
         min_bundle_index[1] + static_cast<int>(size[1] * 2)}},
         storage_(storage),
         bundle_storage_(bundles)
+    {
+    }
+
+    inline OccupancyGridmap(const OccupancyGridmap &other) :
+        resolution_(other.resolution_),
+        resolution_inv_(other.resolution_inv_),
+        bundle_resolution_(other.bundle_resolution_),
+        bundle_resolution_inv_(other.bundle_resolution_inv_),
+        w_T_m_(other.w_T_m_),
+        m_T_w_(other.m_T_w_),
+        size_(other.size_),
+        size_m_(other.size_m_),
+        min_bundle_index_(other.min_bundle_index_),
+        max_bundle_index_(other.max_bundle_index_),
+        storage_{{distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[0])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[1])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[2])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[3]))}},
+        bundle_storage_(new distribution_bundle_storage_t(*other.bundle_storage_))
+    {
+    }
+
+    inline OccupancyGridmap(OccupancyGridmap &&other) :
+        resolution_(other.resolution_),
+        resolution_inv_(other.resolution_inv_),
+        bundle_resolution_(other.bundle_resolution_),
+        bundle_resolution_inv_(other.bundle_resolution_inv_),
+        w_T_m_(std::move(other.w_T_m_)),
+        m_T_w_(std::move(other.m_T_w_)),
+        size_(other.size_),
+        size_m_(other.size_m_),
+        min_bundle_index_(other.min_bundle_index_),
+        max_bundle_index_(other.max_bundle_index_),
+        storage_(other.storage_),
+        bundle_storage_(other.bundle_storage_)
     {
     }
 

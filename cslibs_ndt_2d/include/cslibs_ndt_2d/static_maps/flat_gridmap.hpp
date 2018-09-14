@@ -48,10 +48,10 @@ public:
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;
     using distribution_storage_const_ptr_t  = std::shared_ptr<distribution_storage_t const>;
 
-    Gridmap(const pose_t  &origin,
-            const double  &resolution,
-            const size_t  &size,
-            const index_t &min_index) :
+    inline Gridmap(const pose_t  &origin,
+                   const double  &resolution,
+                   const size_t  &size,
+                   const index_t &min_index) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         w_T_m_(origin),
@@ -68,12 +68,12 @@ public:
         storage_->template set<cis::option::tags::array_offset>(min_index[0], min_index[1]);
     }
 
-    Gridmap(const double &origin_x,
-            const double &origin_y,
-            const double &origin_phi,
-            const double &resolution,
-            const size_t &size,
-            const index_t &min_index) :
+    inline Gridmap(const double &origin_x,
+                   const double &origin_y,
+                   const double &origin_phi,
+                   const double &resolution,
+                   const size_t &size,
+                   const index_t &min_index) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         w_T_m_(origin_x, origin_y, origin_phi),
@@ -88,6 +88,32 @@ public:
     {
         storage_->template set<cis::option::tags::array_size>(size[0], size[1]);
         storage_->template set<cis::option::tags::array_offset>(min_index[0], min_index[1]);
+    }
+
+    inline Gridmap(const Gridmap &other) :
+        resolution_(other.resolution_),
+        resolution_inv_(other.resolution_inv_),
+        w_T_m_(other.w_T_m_),
+        m_T_w_(other.m_T_w_),
+        size_(other.size_),
+        size_m_(other.size_m_),
+        min_index_(other.min_index_),
+        max_index_(other.max_index_),
+        storage_(distribution_storage_ptr_t(new distribution_storage_t(*other.storage_)))
+    {
+    }
+
+    inline Gridmap(Gridmap &&other) :
+        resolution_(other.resolution_),
+        resolution_inv_(other.resolution_inv_),
+        w_T_m_(std::move(other.w_T_m_)),
+        m_T_w_(std::move(other.m_T_w_)),
+        size_(other.size_),
+        size_m_(other.size_m_),
+        min_index_(other.min_index_),
+        max_index_(other.max_index_),
+        storage_(other.storage_)
+    {
     }
 
     /**

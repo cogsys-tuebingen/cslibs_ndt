@@ -58,10 +58,10 @@ public:
     using simple_iterator_t                 = cslibs_math_3d::algorithms::SimpleIterator;
     using inverse_sensor_model_t            = cslibs_gridmaps::utility::InverseModel;
 
-    OccupancyGridmap(const pose_t &origin,
-                     const double &resolution,
-                     const size_t &size,
-                     const index_t &min_bundle_index) :
+    inline OccupancyGridmap(const pose_t &origin,
+                            const double &resolution,
+                            const size_t &size,
+                            const index_t &min_bundle_index) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -70,32 +70,32 @@ public:
         m_T_w_(w_T_m_.inverse()),
         size_(size),
         size_m_{{(size[0] + 1) * resolution,
-                 (size[1] + 1) * resolution,
-                 (size[2] + 1) * resolution}},
+        (size[1] + 1) * resolution,
+        (size[2] + 1) * resolution}},
         min_bundle_index_(min_bundle_index),
         max_bundle_index_{{min_bundle_index[0] + static_cast<int>(size[0] * 2),
-                           min_bundle_index[1] + static_cast<int>(size[1] * 2),
-                           min_bundle_index[2] + static_cast<int>(size[2] * 2)}},
+        min_bundle_index[1] + static_cast<int>(size[1] * 2),
+        min_bundle_index[2] + static_cast<int>(size[2] * 2)}},
         storage_{{distribution_storage_ptr_t(new distribution_storage_t),
-                  distribution_storage_ptr_t(new distribution_storage_t),
-                  distribution_storage_ptr_t(new distribution_storage_t),
-                  distribution_storage_ptr_t(new distribution_storage_t),
-                  distribution_storage_ptr_t(new distribution_storage_t),
-                  distribution_storage_ptr_t(new distribution_storage_t),
-                  distribution_storage_ptr_t(new distribution_storage_t),
-                  distribution_storage_ptr_t(new distribution_storage_t)}},
+                 distribution_storage_ptr_t(new distribution_storage_t),
+                 distribution_storage_ptr_t(new distribution_storage_t),
+                 distribution_storage_ptr_t(new distribution_storage_t),
+                 distribution_storage_ptr_t(new distribution_storage_t),
+                 distribution_storage_ptr_t(new distribution_storage_t),
+                 distribution_storage_ptr_t(new distribution_storage_t),
+                 distribution_storage_ptr_t(new distribution_storage_t)}},
         bundle_storage_(new distribution_bundle_storage_t)
     {
         storage_[0]->template set<cis::option::tags::array_size>(size[0], size[1], size[2]);
         storage_[0]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2,
-                                                                   min_bundle_index[1] / 2,
-                                                                   min_bundle_index[2] / 2);
+                                                                       min_bundle_index[1] / 2,
+                                                                       min_bundle_index[2] / 2);
 
         for(std::size_t i = 1 ; i < 8 ; ++ i) {
-          storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1, size[1] + 1, size[2] + 1);
-          storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2,
-                                                                     min_bundle_index[1] / 2,
-                                                                     min_bundle_index[2] / 2);
+            storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1, size[1] + 1, size[2] + 1);
+            storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2,
+                                                                       min_bundle_index[1] / 2,
+                                                                       min_bundle_index[2] / 2);
         }
 
         bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2, size[1] * 2, size[2] * 2);
@@ -104,12 +104,12 @@ public:
                                                                        min_bundle_index[2]);
     }
 
-    OccupancyGridmap(const double &origin_x,
-                     const double &origin_y,
-                     const double &origin_phi,
-                     const double &resolution,
-                     const size_t &size,
-                     const index_t &min_bundle_index) :
+    inline OccupancyGridmap(const double &origin_x,
+                            const double &origin_y,
+                            const double &origin_phi,
+                            const double &resolution,
+                            const size_t &size,
+                            const index_t &min_bundle_index) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -118,20 +118,20 @@ public:
         m_T_w_(w_T_m_.inverse()),
         size_(size),
         size_m_{{(size[0] + 1) * resolution,
-                 (size[1] + 1) * resolution,
-                 (size[2] + 1) * resolution}},
+        (size[1] + 1) * resolution,
+        (size[2] + 1) * resolution}},
         min_bundle_index_(min_bundle_index),
         max_bundle_index_{{min_bundle_index[0] + static_cast<int>(size[0] * 2),
-                           min_bundle_index[1] + static_cast<int>(size[1] * 2),
-                           min_bundle_index[2] + static_cast<int>(size[2] * 2)}},
+        min_bundle_index[1] + static_cast<int>(size[1] * 2),
+        min_bundle_index[2] + static_cast<int>(size[2] * 2)}},
         storage_{{distribution_storage_ptr_t(new distribution_storage_t),
-                  distribution_storage_ptr_t(new distribution_storage_t),
-                  distribution_storage_ptr_t(new distribution_storage_t),
-                  distribution_storage_ptr_t(new distribution_storage_t),
-                  distribution_storage_ptr_t(new distribution_storage_t),
-                  distribution_storage_ptr_t(new distribution_storage_t),
-                  distribution_storage_ptr_t(new distribution_storage_t),
-                  distribution_storage_ptr_t(new distribution_storage_t)}},
+                 distribution_storage_ptr_t(new distribution_storage_t),
+                 distribution_storage_ptr_t(new distribution_storage_t),
+                 distribution_storage_ptr_t(new distribution_storage_t),
+                 distribution_storage_ptr_t(new distribution_storage_t),
+                 distribution_storage_ptr_t(new distribution_storage_t),
+                 distribution_storage_ptr_t(new distribution_storage_t),
+                 distribution_storage_ptr_t(new distribution_storage_t)}},
         bundle_storage_(new distribution_bundle_storage_t)
     {
         storage_[0]->template set<cis::option::tags::array_size>(size[0], size[1], size[2]);
@@ -140,10 +140,10 @@ public:
                                                                    min_bundle_index[2] / 2);
 
         for(std::size_t i = 1 ; i < 8 ; ++ i) {
-          storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1, size[1] + 1, size[2] + 1);
-          storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2,
-                                                                     min_bundle_index[1] / 2,
-                                                                     min_bundle_index[2] / 2);
+            storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1, size[1] + 1, size[2] + 1);
+            storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2,
+                                                                       min_bundle_index[1] / 2,
+                                                                       min_bundle_index[2] / 2);
         }
 
         bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2, size[1] * 2, size[2] * 2);
@@ -152,12 +152,12 @@ public:
                                                                        min_bundle_index[2]);
     }
 
-    OccupancyGridmap(const pose_t &origin,
-                     const double &resolution,
-                     const size_t &size,
-                     const std::shared_ptr<distribution_bundle_storage_t> &bundles,
-                     const distribution_storage_array_t                   &storage,
-                     const index_t                                        &min_bundle_index) :
+    inline OccupancyGridmap(const pose_t &origin,
+                            const double &resolution,
+                            const size_t &size,
+                            const std::shared_ptr<distribution_bundle_storage_t> &bundles,
+                            const distribution_storage_array_t                   &storage,
+                            const index_t                                        &min_bundle_index) :
         resolution_(resolution),
         resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
@@ -166,14 +166,53 @@ public:
         m_T_w_(w_T_m_.inverse()),
         size_(size),
         size_m_{{(size[0] + 1) * resolution,
-                 (size[1] + 1) * resolution,
-                 (size[2] + 1) * resolution}},
+        (size[1] + 1) * resolution,
+        (size[2] + 1) * resolution}},
         min_bundle_index_(min_bundle_index),
         max_bundle_index_{{min_bundle_index[0] + static_cast<int>(size[0] * 2),
-                           min_bundle_index[1] + static_cast<int>(size[1] * 2),
-                           min_bundle_index[2] + static_cast<int>(size[2] * 2)}},
+        min_bundle_index[1] + static_cast<int>(size[1] * 2),
+        min_bundle_index[2] + static_cast<int>(size[2] * 2)}},
         storage_(storage),
         bundle_storage_(bundles)
+    {
+    }
+
+    inline OccupancyGridmap(const Gridmap &other) :
+        resolution_(other.resolution_),
+        resolution_inv_(other.resolution_inv_),
+        bundle_resolution_(other.bundle_resolution_),
+        bundle_resolution_inv_(other.bundle_resolution_inv_),
+        w_T_m_(other.w_T_m_),
+        m_T_w_(other.m_T_w_),
+        size_(other.size_),
+        size_m_(other.size_m_),
+        min_bundle_index_(other.min_bundle_index_),
+        max_bundle_index_(other.max_bundle_index_),
+        storage_{{distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[0])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[1])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[2])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[3])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[4])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[5])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[6])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[7]))}},
+        bundle_storage_(new distribution_bundle_storage_t(*other.bundle_storage_))
+    {
+    }
+
+    inline OccupancyGridmap(Gridmap &&other) :
+        resolution_(other.resolution_),
+        resolution_inv_(other.resolution_inv_),
+        bundle_resolution_(other.bundle_resolution_),
+        bundle_resolution_inv_(other.bundle_resolution_inv_),
+        w_T_m_(std::move(other.w_T_m_)),
+        m_T_w_(std::move(other.m_T_w_)),
+        size_(other.size_),
+        size_m_(other.size_m_),
+        min_bundle_index_(other.min_bundle_index_),
+        max_bundle_index_(other.max_bundle_index_),
+        storage_(other.storage_),
+        bundle_storage_(other.bundle_storage_)
     {
     }
 
@@ -183,9 +222,9 @@ public:
      */
     inline point_t getMin() const
     {
-      return point_t(min_bundle_index_[0] * bundle_resolution_,
-                     min_bundle_index_[1] * bundle_resolution_,
-                     min_bundle_index_[2] * bundle_resolution_);
+        return point_t(min_bundle_index_[0] * bundle_resolution_,
+                       min_bundle_index_[1] * bundle_resolution_,
+                       min_bundle_index_[2] * bundle_resolution_);
     }
 
     /**
@@ -194,9 +233,9 @@ public:
      */
     inline point_t getMax() const
     {
-      return point_t((max_bundle_index_[0] + 1) * bundle_resolution_,
-                     (max_bundle_index_[1] + 1) * bundle_resolution_,
-                     (max_bundle_index_[2] + 1) * bundle_resolution_);
+        return point_t((max_bundle_index_[0] + 1) * bundle_resolution_,
+                       (max_bundle_index_[1] + 1) * bundle_resolution_,
+                       (max_bundle_index_[2] + 1) * bundle_resolution_);
     }
 
     /**
@@ -245,16 +284,16 @@ public:
         distribution_storage_t storage;
         storage.template set<cis::option::tags::array_size>(size_[0] * 2, size_[1] * 2, size_[2] * 2);
         storage.template set<cis::option::tags::array_offset>(min_bundle_index_[0],
-                                                              min_bundle_index_[1],
-                                                              min_bundle_index_[2]);
+                min_bundle_index_[1],
+                min_bundle_index_[2]);
 
         for (const auto &p : *points) {
             const point_t pm = points_origin * p;
             if (pm.isNormal()) {
                 index_t bi;
                 if(toBundleIndex(pm,bi)) {
-                   distribution_t *d = storage.get(bi);
-                   (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
+                    distribution_t *d = storage.get(bi);
+                    (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
                 }
             }
         }
@@ -303,14 +342,14 @@ public:
                              std::min(occupancy({{bi[0], bi[1] + ((bi[1] > start_bi[1]) ? -1 : 1), bi[2]}}),
                                       occupancy({{bi[0], bi[1], bi[2] + ((bi[2] > start_bi[2]) ? -1 : 1)}})));
             return ivm_visibility->getProbFree() * occlusion_prob +
-                   ivm_visibility->getProbOccupied() * (1.0 - occlusion_prob);
+                    ivm_visibility->getProbOccupied() * (1.0 - occlusion_prob);
         };
 
         distribution_storage_t storage;
         storage.template set<cis::option::tags::array_size>(size_[0] * 2, size_[1] * 2, size_[2] * 2);
         storage.template set<cis::option::tags::array_offset>(min_bundle_index_[0],
-                                                              min_bundle_index_[1],
-                                                              min_bundle_index_[2]);
+                min_bundle_index_[1],
+                min_bundle_index_[2]);
         for (const auto &p : *points) {
             const point_t pm = origin * p;
             if (pm.isNormal()) {
@@ -432,7 +471,6 @@ public:
         return valid(bi) ? getAllocate(bi) : nullptr;
     }
 
-
     inline double getBundleResolution() const
     {
         return bundle_resolution_;
@@ -511,7 +549,8 @@ public:
         const point_t min = getMin();
         const point_t max = getMax();
         return p_m(0) >= min(0) && p_m(0) < max(0) &&
-               p_m(1) >= min(1) && p_m(1) < max(1);
+               p_m(1) >= min(1) && p_m(1) < max(1) &&
+               p_m(2) >= min(2) && p_m(2) < max(2);
     }
 
     inline void allocatePartiallyAllocatedBundles()
@@ -702,7 +741,6 @@ protected:
         return (index[0] >= min_bundle_index_[0] && index[0] <= max_bundle_index_[0]) &&
                (index[1] >= min_bundle_index_[1] && index[1] <= max_bundle_index_[1]) &&
                (index[2] >= min_bundle_index_[2] && index[2] <= max_bundle_index_[2]);
-
     }
 
     inline bool toBundleIndex(const point_t &p_w,

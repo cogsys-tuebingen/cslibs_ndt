@@ -178,6 +178,7 @@ public:
         origin.translation() = point_t(min_index_[0] * bundle_resolution_,
                                        min_index_[1] * bundle_resolution_,
                                        min_index_[2] * bundle_resolution_);
+        return origin;
     }
 
     /**

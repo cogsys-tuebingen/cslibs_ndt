@@ -520,6 +520,7 @@ protected:
     inline distribution_bundle_t *getAllocate(const index_t &bi) const
     {
         auto get_allocate = [this](const index_t &bi) {
+            distribution_bundle_t *bundle = nullptr;
             {
                 lock_t l(bundle_storage_mutex_);
                 bundle = bundle_storage_->get(bi);

@@ -7,6 +7,7 @@
 #include <cslibs_ndt_3d/matching/result.hpp>
 
 #include <cslibs_math_3d/linear/pointcloud.hpp>
+#include <cslibs_math_3d/algorithms/icp.hpp>
 
 #include <cslibs_math/statistics/distribution.hpp>
 #include <thread>
@@ -15,6 +16,26 @@
 namespace cslibs_ndt_3d {
 namespace matching {
 namespace impl {
+
+template<typename ndt_t, const std::size_t Ts>
+inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
+                  const typename ndt_t::ConstPtr               &dst,
+                  const ParametersWithICP                      &params,
+                  Result                                       &r)
+{
+
+}
+
+template<typename ndt_t>
+inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
+                  const typename ndt_t::ConstPtr               &dst,
+                  const ParametersWithICP                      &params,
+                  Result                                       &r)
+{
+
+}
+
+
 template<typename ndt_t, const std::size_t Ts>
 inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
                   const typename ndt_t::ConstPtr               &dst,
@@ -62,7 +83,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
 
   std::size_t iterations = 0;
   std::size_t step_readjust = 0;
-  Result::Termination termination = Result::iteration;
+  Result::Termination termination = Result::ITERATIONS;
 
   /// termiantion tests
   const double rot_eps = params.getRotEps();
@@ -91,7 +112,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
   for(std::size_t i = 0 ; i < max_iterations ; ++i, ++iterations) {
     if(readjust()) {
       /// drop out if too many consecutive step readjustments occur
-      termination = Result::step_readjust;
+      termination = Result::STEP_READJUSTMENTS;
       break;
     }
 
@@ -190,7 +211,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
     }
 
     if(eps()) {
-      termination = Result::eps;
+      termination = Result::EPS;
       break;
     }
 
@@ -249,7 +270,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
 
   std::size_t iterations = 0;
   std::size_t step_readjust = 0;
-  Result::Termination termination = Result::iteration;
+  Result::Termination termination = Result::ITERATIONS;
 
   /// termiantion tests
   const double rot_eps = params.getRotEps();
@@ -276,7 +297,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
   for(std::size_t i = 0 ; i < max_iterations ; ++i, ++iterations) {
     if(readjust()) {
       /// drop out if too many consecutive step readjustments occur
-      termination = Result::step_readjust;
+      termination = Result::STEP_READJUSTMENTS;
       break;
     }
 
@@ -353,7 +374,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
     }
 
     if(eps()) {
-      termination = Result::eps;
+      termination = Result::EPS;
       break;
     }
 

@@ -10,20 +10,20 @@ public:
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    inline Parameters(const double resolution_ = 0.5,
-                      const std::size_t max_iterations_ = 100,
-                      const double rot_eps_ = 1e-4,
-                      const double trans_eps_ = 1e-4,
+    inline Parameters(const double resolution = 0.5,
+                      const std::size_t max_iterations = 100,
+                      const double rot_eps = 1e-4,
+                      const double trans_eps = 1e-4,
                       const std::size_t step_adjustment_retries = 5,
-                      const double alpha_ = 1.0,
-                      const cslibs_math_3d::Transform3d &transform_ = cslibs_math_3d::Transform3d()) :
-        resolution_(resolution_),
-        max_iterations_(max_iterations_),
-        rot_eps_(rot_eps_),
-        trans_eps_(trans_eps_),
+                      const double alpha = 1.0,
+                      const cslibs_math_3d::Transform3d &transform = cslibs_math_3d::Transform3d()) :
+        resolution_(resolution),
+        max_iterations_(max_iterations),
+        rot_eps_(rot_eps),
+        trans_eps_(trans_eps),
         max_step_readjust_(step_adjustment_retries),
-        alpha_(alpha_),
-        transform_(transform_)
+        alpha_(alpha),
+        transform_(transform)
     {
     }
 
@@ -98,7 +98,7 @@ public:
     }
 
 
-private:
+protected:
     double                      resolution_;       /// resolution_
     std::size_t                 max_iterations_;   /// maximum iterations
     double                      rot_eps_;          ///
@@ -106,7 +106,39 @@ private:
     std::size_t                 max_step_readjust_;
     double                      alpha_;            /// step correction
     cslibs_math_3d::Transform3d transform_;        /// initial transform_
+};
 
+class EIGEN_ALIGN16 ParametersWithICP : public Parameters
+{
+public:
+
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    inline ParametersWithICP(const double resolution = 0.5,
+                             const std::size_t max_iterations = 100,
+                             const std::size_t max_iterations_icp = 50,
+                             const double rot_eps = 1e-4,
+                             const double trans_eps = 1e-4,
+                             const std::size_t step_adjustment_retries = 5,
+                             const double alpha = 1.0,
+                             const cslibs_math_3d::Transform3d &transform = cslibs_math_3d::Transform3d()) :
+        Parameters(resolution, max_iterations, rot_eps, trans_eps, step_adjustment_retries, alpha, transform),
+        max_iterations_icp_(max_iterations_icp)
+    {
+    }
+
+    inline void setMaxIterationsICP(const std::size_t i)
+    {
+        max_iterations_icp_ = i;
+    }
+
+    inline std::size_t getMaxIterationsICP() const
+    {
+        return max_iterations_icp_;
+    }
+
+protected:
+    std::size_t max_iterations_icp_;
 
 };
 }

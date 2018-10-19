@@ -213,9 +213,16 @@ public:
     inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::ConstPtr &points,
                        const pose_t &points_origin = pose_t())
     {
+        insert(points->begin(), points->end(), points_origin);
+    }
+
+    template<typename iterator_t>
+    inline void insert(const iterator_t& points_begin, const iterator_t& points_end,
+                       const pose_t &points_origin = pose_t())
+    {
         distribution_storage_t storage;
-        for (const auto &p : *points) {
-            const point_t pm = points_origin * p;
+        for (auto itr = points_begin; itr != points_end; ++itr) {
+            const point_t pm = points_origin * (*itr);
             if (pm.isNormal()) {
                 const index_t &bi = toBundleIndex(pm);
                 distribution_t *d = storage.get(bi);

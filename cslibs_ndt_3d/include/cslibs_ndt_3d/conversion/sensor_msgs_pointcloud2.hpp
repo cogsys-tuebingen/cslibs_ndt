@@ -39,12 +39,10 @@ inline void from(
 }
 
 inline void from(
-        const cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr &src,
+        cslibs_ndt_3d::dynamic_maps::Gridmap &src,
         sensor_msgs::PointCloud2 &dst)
 {
-    if (!src)
-        return;
-    src->allocatePartiallyAllocatedBundles();
+    src.allocatePartiallyAllocatedBundles();
 
     using index_t = std::array<int, 3>;
     using point_t = cslibs_math_3d::Point3d;
@@ -80,8 +78,18 @@ inline void from(
         tmp.emplace_back(static_cast<float>(mean(2)));
         tmp.emplace_back(static_cast<float>(sample_bundle(b, mean)));
     };
-    src->traverse(process_bundle);
+    src.traverse(process_bundle);
     from(tmp, dst);
+}
+
+inline void from(
+        const cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr &src,
+        sensor_msgs::PointCloud2 &dst)
+{
+    if (!src)
+        return;
+
+    from(*src, dst);
 }
 
 inline void from(

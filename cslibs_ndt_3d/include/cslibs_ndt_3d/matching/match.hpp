@@ -223,11 +223,12 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
   r = Result(max_score, iterations, t * params.getTransform(), termination);
 }
 
-template<typename ndt_t>
-inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
-                  const typename ndt_t::ConstPtr               &dst,
-                  const Parameters                             &params,
-                  Result                                       &r)
+template<typename ndt_t, typename iterator_t>
+inline void match(const iterator_t& src_begin,
+                  const iterator_t& src_end,
+                  const ndt_t&      dst,
+                  const Parameters& params,
+                  Result&           r)
 {
   using point_t             = typename ndt_t::point_t;
   using point_transposed_t  = Eigen::Matrix<double, 1, 3>;
@@ -242,7 +243,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
   auto get = [&dst](const point_t &p,
       distributions_t &d)
   {
-    const bundle_t *b = dst->getDistributionBundle(p);
+    const bundle_t *b = dst.getDistributionBundle(p);
     if(b != nullptr) {
       for(std::size_t i = 0 ; i < 8 ; ++i) {
         d[i] = b->at(i)->getHandle()->data();
@@ -253,8 +254,10 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
   };
 
 
-  cslibs_math_3d::Pointcloud3d::Ptr src_prime(new cslibs_math_3d::Pointcloud3d(*src));
-  src_prime->transform(params.getTransform());
+  std::vector<point_t> src_prime;
+  src_prime.reserve(std::distance(src_begin, src_end));
+  std::transform(src_begin, src_end, std::back_inserter(src_prime),
+          [&](const point_t& point) { return params.getTransform() * point; });
 
   std::array<double,3> linear_old  = {{0.0, 0.0, 0.0}};
   std::array<double,3> angular_old = {{0.0, 0.0, 0.0}};
@@ -317,7 +320,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
     distributions_t distributions;
     double score = 0.0;
 
-    for(const point_t &x : *src_prime) {
+    for(const point_t &x : src_prime) {
       const point_t x_prime = t * x;
       if(get(x_prime, distributions)) {
         for(const distribution_t &d : distributions) {
@@ -385,6 +388,17 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
 
   r = Result(max_score, iterations, t * params.getTransform(), termination);
 }
+
+
+template<typename ndt_t>
+inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
+                  const typename ndt_t::ConstPtr               &dst,
+                  const Parameters                             &params,
+                  Result                                       &r)
+{
+  match(src->begin(), src->end(), *dst, params, r);
+}
+
 }
 }
 }

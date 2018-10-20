@@ -184,7 +184,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
       /// roll back and retry mit smaller step size
       lambda *= alpha;
       linear = linear_old;
-      angular_old = angular_old;
+      angular = angular_old;
       ++step_readjust;
       continue;
     }
@@ -350,7 +350,7 @@ inline void match(const iterator_t& src_begin,
       /// roll back and retry mit smaller step size
       lambda *= alpha;
       linear = linear_old;
-      angular_old = angular_old;
+      angular = angular_old;
       ++step_readjust;
       continue;
     }

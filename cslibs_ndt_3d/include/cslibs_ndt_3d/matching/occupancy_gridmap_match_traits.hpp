@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cslibs_ndt/matching/match_traits.hpp>
-#include <cslibs_ndt_3d/dynamic_maps/gridmap.hpp>
+#include <cslibs_ndt_3d/dynamic_maps/occupancy_gridmap.hpp>
 #include <cslibs_ndt_3d/matching/jacobian.hpp>
 #include <cslibs_ndt_3d/matching/hessian.hpp>
 
@@ -9,7 +9,7 @@ namespace cslibs_ndt {
 namespace matching {
 
 template<>
-struct MatchTraits<cslibs_ndt_3d::dynamic_maps::Gridmap>
+struct MatchTraits<cslibs_ndt_3d::dynamic_maps::OccupancyGridmap>
 {
     static constexpr int LINEAR_DIMS  = 3;
     static constexpr int ANGULAR_DIMS = 3;
@@ -30,7 +30,8 @@ struct MatchTraits<cslibs_ndt_3d::dynamic_maps::Gridmap>
                 angular.x(), angular.y(), angular.z()};
     }
 
-    static void computeGradient(const cslibs_ndt_3d::dynamic_maps::Gridmap& map,
+    // todo: deduplicate code, make model configureable...
+    static void computeGradient(const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap& map,
                                 const point_t& point,
                                 const Jacobian& J,
                                 const Hessian& H,
@@ -38,21 +39,26 @@ struct MatchTraits<cslibs_ndt_3d::dynamic_maps::Gridmap>
                                 gradient_t& g,
                                 hessian_t& h)
     {
+        static constexpr double d1 = 0.95;
+        static constexpr double d2 = 1 - d1;
+        static const auto model = std::make_shared<cslibs_gridmaps::utility::InverseModel>(0.5, 0.45, 0.65);
+
         auto* bundle = map.getDistributionBundle(point);
         if (!bundle)
             return;
 
         for (auto* distribution_wrapper : *bundle)
         {
-            auto& d = distribution_wrapper->data();
-            if (d.getN() < 3)
+            auto& d = distribution_wrapper->getDistribution();
+            if (!d || d->getN() < 3)
                 continue;
 
-            const auto info   = d.getInformationMatrix();
-            const auto q      = (point.data() - d.getMean()).eval();
+            const auto info   = d->getInformationMatrix();
+            const auto q      = (point.data() - d->getMean()).eval();
             const auto q_info = (q.transpose() * info).eval();
-            const auto e      = -0.5 * double(q_info * q);
-            const auto s      = std::exp(e);
+            const auto p_occ  = distribution_wrapper->getOccupancy(model);
+            const auto e      = -0.5 * double(q_info * q) * (d2 * (1 - p_occ));
+            const auto s      = d1 * p_occ * std::exp(e);
 
             // this part should be vectorized, may also remove common factors...
             for (std::size_t i = 0; i < LINEAR_DIMS + ANGULAR_DIMS; ++i)

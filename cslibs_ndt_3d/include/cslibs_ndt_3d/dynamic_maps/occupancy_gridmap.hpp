@@ -403,6 +403,12 @@ public:
         return max_index_;
     }
 
+    inline const distribution_bundle_t* getDistributionBundle(const point_t &p) const
+    {
+        const index_t bi = toBundleIndex(p);
+        return getAllocate(bi);
+    }
+
     inline const distribution_bundle_t* getDistributionBundle(const index_t &bi) const
     {
         return getAllocate(bi);

@@ -13,7 +13,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
                   Result                                       &r)
 {
   using ndt_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
-  ndt_t::Ptr ndt(new ndt_t(ndt_t::pose_t(), params.getResolution()));
+  ndt_t::Ptr ndt(new ndt_t(ndt_t::pose_t(), params.resolution()));
   ndt->insert(dst);
   impl::match<ndt_t>(src, ndt, params, r);
 }
@@ -25,7 +25,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
                   Result                                       &r)
 {
   using ndt_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
-  ndt_t::Ptr ndt(new ndt_t(ndt_t::pose_t(), params.getResolution()));
+  ndt_t::Ptr ndt(new ndt_t(ndt_t::pose_t(), params.resolution()));
   ndt->insert(dst);
   impl::match<ndt_t, Ts>(src, ndt, params, r);
 }

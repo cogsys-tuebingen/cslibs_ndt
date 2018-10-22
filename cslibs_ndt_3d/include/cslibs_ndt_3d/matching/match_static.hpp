@@ -18,7 +18,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
 
   const auto min = dst->min();
   const auto size_m = dst->max() - min;
-  const double resolution = params.getResolution();
+  const double resolution = params.resolution();
 
   const size_t size = {{static_cast<std::size_t>(std::ceil(size_m(0) / resolution)) + 1,
                         static_cast<std::size_t>(std::ceil(size_m(1) / resolution)) + 1,
@@ -28,7 +28,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
                               static_cast<int>(std::floor(min(2) / resolution)) * 2}};
 
 
-  ndt_t::Ptr ndt(new ndt_t(ndt_t::pose_t(), params.getResolution(), size, min_index));
+  ndt_t::Ptr ndt(new ndt_t(ndt_t::pose_t(), params.resolution(), size, min_index));
   ndt->insert(dst);
   impl::match<ndt_t>(src, ndt, params, r);
 }
@@ -45,7 +45,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
 
   const auto   min = dst->min();
   const auto   size_m = dst->max() - min;
-  const double resolution = params.getResolution();
+  const double resolution = params.resolution();
 
   const size_t size = {{static_cast<std::size_t>(std::ceil(size_m(0) / resolution)) + 1,
                         static_cast<std::size_t>(std::ceil(size_m(1) / resolution)) + 1,
@@ -55,7 +55,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
                               static_cast<int>(std::floor(min(2) / resolution)) * 2}};
 
 
-  ndt_t::Ptr ndt(new ndt_t(ndt_t::pose_t(), params.getResolution(), size, min_index));
+  ndt_t::Ptr ndt(new ndt_t(ndt_t::pose_t(), params.resolution(), size, min_index));
   ndt->insert(dst);
   impl::match<ndt_t, Ts>(src, ndt, params, r);
 }

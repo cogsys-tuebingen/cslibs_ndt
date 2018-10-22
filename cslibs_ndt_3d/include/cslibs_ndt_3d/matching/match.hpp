@@ -67,7 +67,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
 
 
   cslibs_math_3d::Pointcloud3d::Ptr src_prime(new cslibs_math_3d::Pointcloud3d(*src));
-  src_prime->transform(params.getTransform());
+  src_prime->transform(params.transform());
 
   std::array<double,3> linear_old  = {{0.0, 0.0, 0.0}};
   std::array<double,3> angular_old = {{0.0, 0.0, 0.0}};
@@ -86,11 +86,11 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
   Result::Termination termination = Result::ITERATIONS;
 
   /// termiantion tests
-  const double rot_eps = params.getRotEps();
-  const double trans_eps = params.getTransEps();
-  const std::size_t max_step_readjust = params.getMaxStepReadjust();
-  const std::size_t max_iterations = params.getMaxIterations();
-  const double alpha = params.getAlpha();
+  const double rot_eps = params.rotEps();
+  const double trans_eps = params.transEps();
+  const std::size_t max_step_readjust = params.maxStepReadjust();
+  const std::size_t max_iterations = params.maxIterations();
+  const double alpha = params.alpha();
 
   auto eps = [&linear_delta, &angular_delta, rot_eps, trans_eps](){
     return linear_delta[0]  < trans_eps &&
@@ -220,7 +220,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
   const transform_t t(linear[0],  linear[1],  linear[2],
       angular[0], angular[1], angular[2]);
 
-  r = Result(max_score, iterations, t * params.getTransform(), termination);
+  r = Result(max_score, iterations, t * params.transform(), termination);
 }
 
 template<typename ndt_t, typename iterator_t>
@@ -257,7 +257,7 @@ inline void match(const iterator_t& src_begin,
   std::vector<point_t> src_prime;
   src_prime.reserve(std::distance(src_begin, src_end));
   std::transform(src_begin, src_end, std::back_inserter(src_prime),
-          [&](const point_t& point) { return params.getTransform() * point; });
+          [&](const point_t& point) { return params.transform() * point; });
 
   std::array<double,3> linear_old  = {{0.0, 0.0, 0.0}};
   std::array<double,3> angular_old = {{0.0, 0.0, 0.0}};
@@ -276,11 +276,11 @@ inline void match(const iterator_t& src_begin,
   Result::Termination termination = Result::ITERATIONS;
 
   /// termiantion tests
-  const double rot_eps = params.getRotEps();
-  const double trans_eps = params.getTransEps();
-  const std::size_t max_step_readjust = params.getMaxStepReadjust();
-  const std::size_t max_iterations = params.getMaxIterations();
-  const double alpha = params.getAlpha();
+  const double rot_eps = params.rotEps();
+  const double trans_eps = params.transEps();
+  const std::size_t max_step_readjust = params.maxStepReadjust();
+  const std::size_t max_iterations = params.maxIterations();
+  const double alpha = params.alpha();
 
   auto eps = [&linear_delta, &angular_delta, rot_eps, trans_eps](){
     return linear_delta[0]  < trans_eps &&
@@ -386,7 +386,7 @@ inline void match(const iterator_t& src_begin,
   const transform_t t(linear[0],  linear[1],  linear[2],
       angular[0], angular[1], angular[2]);
 
-  r = Result(max_score, iterations, t * params.getTransform(), termination);
+  r = Result(max_score, iterations, t * params.transform(), termination);
 }
 
 

@@ -27,76 +27,76 @@ public:
     {
     }
 
-    inline double getResolution() const
+    inline double resolution() const
     {
         return resolution_;
     }
 
-    inline std::size_t getMaxIterations() const
+    inline double & resolution()
+    {
+        return resolution_;
+    }
+
+
+    inline std::size_t maxIterations() const
     {
         return max_iterations_;
     }
 
-    inline double getRotEps() const
+    inline std::size_t & maxIterations()
+    {
+        return max_iterations_;
+    }
+
+    inline double rotEps() const
     {
         return rot_eps_;
     }
 
-    inline double getTransEps() const
+    inline double & rotEps()
+    {
+        return rot_eps_;
+    }
+
+    inline double transEps() const
     {
         return trans_eps_;
     }
 
-    inline std::size_t getMaxStepReadjust() const
+    inline double & transEps()
+    {
+        return trans_eps_;
+    }
+
+    inline std::size_t maxStepReadjust() const
     {
         return max_step_readjust_;
     }
 
-    inline double getAlpha() const
+    inline std::size_t & maxStepReadjust()
+    {
+        return max_step_readjust_;
+    }
+
+    inline double alpha() const
     {
         return alpha_;
     }
 
-    inline const cslibs_math_3d::Transform3d &getTransform() const
+    inline double & alpha()
+    {
+        return alpha_;
+    }
+
+    inline const cslibs_math_3d::Transform3d &transform() const
     {
         return transform_;
     }
 
-    inline void setResolution(const double r)
+    inline cslibs_math_3d::Transform3d &transform()
     {
-        resolution_ = r;
+        return transform_;
     }
-
-    inline void setMaxIterations(const std::size_t i)
-    {
-        max_iterations_ = i;
-    }
-
-    inline void setRotEps(const double r)
-    {
-        rot_eps_ = r;
-    }
-
-    inline void setTransEps(const double t)
-    {
-        trans_eps_ = t;
-    }
-
-    inline void setMaxStepReadjust(const std::size_t s)
-    {
-        max_step_readjust_ = s;
-    }
-
-    inline void setAlpha(const double a)
-    {
-        alpha_ = a;
-    }
-
-    inline void setTransform(const cslibs_math_3d::Transform3d &t)
-    {
-        transform_ = t;
-    }
-
 
 protected:
     double                      resolution_;       /// resolution_
@@ -117,29 +117,42 @@ public:
     inline ParametersWithICP(const double resolution = 0.5,
                              const std::size_t max_iterations = 100,
                              const std::size_t max_iterations_icp = 50,
+                             const double max_distance_icp = 0.5,
                              const double rot_eps = 1e-4,
                              const double trans_eps = 1e-4,
                              const std::size_t step_adjustment_retries = 5,
                              const double alpha = 1.0,
                              const cslibs_math_3d::Transform3d &transform = cslibs_math_3d::Transform3d()) :
         Parameters(resolution, max_iterations, rot_eps, trans_eps, step_adjustment_retries, alpha, transform),
-        max_iterations_icp_(max_iterations_icp)
+        max_iterations_icp_(max_iterations_icp),
+        max_distance_icp_(max_distance_icp)
     {
     }
 
-    inline void setMaxIterationsICP(const std::size_t i)
-    {
-        max_iterations_icp_ = i;
-    }
-
-    inline std::size_t getMaxIterationsICP() const
+    inline std::size_t maxIterationsICP() const
     {
         return max_iterations_icp_;
     }
 
+    inline std::size_t & maxIterationsICP()
+    {
+        return max_iterations_icp_;
+    }
+
+    inline double maxDistanceICP() const
+    {
+        return max_distance_icp_;
+    }
+
+
+    inline double & maxDistanceICP()
+    {
+        return max_distance_icp_;
+    }
+
 protected:
     std::size_t max_iterations_icp_;
-
+    double      max_distance_icp_;
 };
 }
 }

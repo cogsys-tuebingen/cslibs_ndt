@@ -7,7 +7,7 @@
 #include <cslibs_ndt_3d/matching/result.hpp>
 
 #include <cslibs_math_3d/linear/pointcloud.hpp>
-#include <cslibs_math_3d/algorithms/icp.hpp>
+#include <cslibs_ndt_3d/matching/icp.hpp>
 
 #include <cslibs_math/statistics/distribution.hpp>
 #include <thread>
@@ -23,6 +23,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
                   const ParametersWithICP                      &params,
                   Result                                       &r)
 {
+    /// apply icps
 
 }
 

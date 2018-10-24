@@ -83,7 +83,7 @@ public:
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    enum ICPTermination {ICP_EPS, ICP_ITERATIONS, ICP_ERROR};
+    enum ICPTermination {ICP_EPS, ICP_ITERATIONS, ICP_ASSIGNMENT};
 
     inline ResultWithICP() :
         Result(),
@@ -106,12 +106,12 @@ public:
     {
     }
 
-    inline std::size_t & ICPIterations()
+    inline std::size_t & icpIterations()
     {
         return icp_iterations_;
     }
 
-    inline std::size_t ICPIterations() const
+    inline std::size_t icpIterations() const
     {
         return icp_iterations_;
     }
@@ -136,10 +136,22 @@ public:
         return icp_transform_;
     }
 
+    inline Eigen::Matrix3d& icpCovariance()
+    {
+        return icp_covariance_;
+    }
+
+    inline const Eigen::Matrix3d& icpCovariance() const
+    {
+        return icp_covariance_;
+    }
+
 protected:
     cslibs_math_3d::Transform3d     icp_transform_;
     std::size_t                     icp_iterations_;
     ICPTermination                  icp_termination_;
+    Eigen::Matrix3d                 icp_covariance_;
+
 };
 }
 }
@@ -173,7 +185,7 @@ inline std::string to_string(const cslibs_ndt_3d::matching::ResultWithICP &r)
 {
     std::string s;
     s += to_string(static_cast<const cslibs_ndt_3d::matching::Result&>(r));
-    s += "icp iterations  " + std::to_string(r.ICPIterations()) + "\n";
+    s += "icp iterations  " + std::to_string(r.icpIterations()) + "\n";
     s += "icp termination ";
     switch(r.icpTermination()) {
     case cslibs_ndt_3d::matching::ResultWithICP::ICP_ITERATIONS:
@@ -182,7 +194,7 @@ inline std::string to_string(const cslibs_ndt_3d::matching::ResultWithICP &r)
     case cslibs_ndt_3d::matching::ResultWithICP::ICP_EPS:
         s += "EPS";
         break;
-    case cslibs_ndt_3d::matching::ResultWithICP::ICP_ERROR:
+    case cslibs_ndt_3d::matching::ResultWithICP::ICP_ASSIGNMENT:
         s+= "ERROR";
         break;
     default:

@@ -4,6 +4,8 @@
 #include <cslibs_ndt_3d/matching/match.hpp>
 #include <cslibs_ndt_3d/dynamic_maps/gridmap.hpp>
 
+#include <cslibs_ndt_3d/matching/voxel.hpp>
+
 namespace cslibs_ndt_3d {
 namespace matching {
 namespace dynamic_maps {

@@ -4,9 +4,13 @@
 #include <cslibs_ndt_3d/matching/match.hpp>
 #include <cslibs_ndt_3d/static_maps/gridmap.hpp>
 
+#include <cslibs_ndt_3d/matching/voxel.hpp>
+
+
 namespace cslibs_ndt_3d {
 namespace matching {
 namespace static_maps {
+
 inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
                   const cslibs_math_3d::Pointcloud3d::ConstPtr &dst,
                   const Parameters                             &params,

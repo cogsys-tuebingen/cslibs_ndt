@@ -24,7 +24,7 @@ namespace cis = cslibs_indexed_storage;
 
 namespace cslibs_ndt_2d {
 namespace static_maps {
-namespace flat {
+namespace mono {
 class EIGEN_ALIGN16 Gridmap
 {
 public:

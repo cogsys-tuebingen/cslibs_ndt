@@ -2,12 +2,12 @@
 #define CSLIBS_NDT_2D_FLATTEN_HPP
 
 #include <cslibs_ndt_2d/dynamic_maps/gridmap.hpp>
-#include <cslibs_ndt_2d/static_maps/flat_gridmap.hpp>
+#include <cslibs_ndt_2d/static_maps/mono_gridmap.hpp>
 
 namespace cslibs_ndt_2d {
 namespace conversion {
-inline cslibs_ndt_2d::static_maps::flat::Gridmap::Ptr flatten(
-        const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr& src)
+inline cslibs_ndt_2d::static_maps::mono::Gridmap::Ptr merge(
+       const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr& src)
 {
   if (!src)
         return nullptr;
@@ -20,7 +20,7 @@ inline cslibs_ndt_2d::static_maps::flat::Gridmap::Ptr flatten(
                                               static_cast<std::size_t>(max_distribution_index[1] - min_distribution_index[1] + 1)}};
 
     using src_map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
-    using dst_map_t = cslibs_ndt_2d::static_maps::flat::Gridmap;
+    using dst_map_t = cslibs_ndt_2d::static_maps::mono::Gridmap;
 
     typename dst_map_t::Ptr dst(new dst_map_t(src->getInitialOrigin(),
                                               src->getBundleResolution(),

@@ -3,7 +3,7 @@
 
 #include <cslibs_ndt_2d/dynamic_maps/gridmap.hpp>
 #include <cslibs_ndt_2d/dynamic_maps/occupancy_gridmap.hpp>
-#include <cslibs_ndt_2d/static_maps/flat_gridmap.hpp>
+#include <cslibs_ndt_2d/static_maps/mono_gridmap.hpp>
 
 #include <cslibs_ndt_2d/conversion/gridmap.hpp>
 #include <cslibs_ndt_2d/conversion/occupancy_gridmap.hpp>
@@ -55,7 +55,7 @@ inline void from(
 }
 
 inline void from(
-        const cslibs_ndt_2d::static_maps::flat::Gridmap::Ptr  &src,
+        const cslibs_ndt_2d::static_maps::mono::Gridmap::Ptr  &src,
         cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr &dst,
         const double sampling_resolution)
 {
@@ -71,7 +71,7 @@ inline void from(
 
     const std::size_t height = dst->getHeight();
     const std::size_t width  = dst->getWidth();
-    const cslibs_ndt_2d::static_maps::flat::Gridmap::index_t min_index = src->getMinIndex();
+    const cslibs_ndt_2d::static_maps::mono::Gridmap::index_t min_index = src->getMinIndex();
 
     //// Todo: Check that code here!
 
@@ -82,7 +82,7 @@ inline void from(
             const cslibs_math_2d::Point2d  p(j * sampling_resolution,
                                              i * sampling_resolution);
 
-            const cslibs_ndt_2d::static_maps::flat::Gridmap::index_t idx = {{min_index[0] + static_cast<int>(p(0) / src->getResolution()),
+            const cslibs_ndt_2d::static_maps::mono::Gridmap::index_t idx = {{min_index[0] + static_cast<int>(p(0) / src->getResolution()),
                                                                              min_index[1] + static_cast<int>(p(1) / src->getResolution())}};
 
             const double v = src->sampleNonNormalized(src->getOrigin() * p,idx);

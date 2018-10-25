@@ -51,7 +51,8 @@ public:
   }
 
 
-  inline static void get(const std::array<double, 3> &angular,
+//  inline static void get(const std::array<double, 3> &angular,
+  inline static void get(const Eigen::Vector3d &angular,
                          Hessian &h)
   {
     const double alpha = angular[0];

@@ -93,14 +93,12 @@ inline void from(
 }
 
 inline void from(
-        const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr &src,
+        cslibs_ndt_3d::dynamic_maps::OccupancyGridmap &src,
         sensor_msgs::PointCloud2 &dst,
         const cslibs_gridmaps::utility::InverseModel::Ptr &ivm,
         const double &threshold = 0.169)
 {
-    if (!src)
-        return;
-    src->allocatePartiallyAllocatedBundles();
+    src.allocatePartiallyAllocatedBundles();
 
     using index_t = std::array<int, 3>;
     using point_t = cslibs_math_3d::Point3d;
@@ -147,9 +145,22 @@ inline void from(
         tmp.emplace_back(static_cast<float>(mean(2)));
         tmp.emplace_back(static_cast<float>(sample_bundle(b, mean)));
     };
-    src->traverse(process_bundle);
+    src.traverse(process_bundle);
     from(tmp, dst);
 }
+
+inline void from(
+        const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr &src,
+        sensor_msgs::PointCloud2 &dst,
+        const cslibs_gridmaps::utility::InverseModel::Ptr &ivm,
+        const double &threshold = 0.169)
+{
+    if (!src)
+        return;
+
+    from(*src, dst, ivm, threshold);
+}
+
 }
 }
 

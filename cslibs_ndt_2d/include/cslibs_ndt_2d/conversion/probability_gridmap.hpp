@@ -33,10 +33,10 @@ inline void from(
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
     auto sample = [](const cslibs_math_2d::Point2d &p, const src_map_t::distribution_bundle_t &bundle) {
-        return 0.25 * (bundle.at(0)->getHandle()->data().sampleNonNormalized(p) +
-                       bundle.at(1)->getHandle()->data().sampleNonNormalized(p) +
-                       bundle.at(2)->getHandle()->data().sampleNonNormalized(p) +
-                       bundle.at(3)->getHandle()->data().sampleNonNormalized(p));
+        return 0.25 * (bundle.at(0)->data().sampleNonNormalized(p) +
+                       bundle.at(1)->data().sampleNonNormalized(p) +
+                       bundle.at(2)->data().sampleNonNormalized(p) +
+                       bundle.at(3)->data().sampleNonNormalized(p));
     };
 
     using index_t = std::array<int, 2>;
@@ -118,7 +118,7 @@ inline void from(
     auto sample = [&inverse_model](const cslibs_math_2d::Point2d &p, const src_map_t::distribution_bundle_t &bundle) {
         auto sample = [&p, &inverse_model](const src_map_t::distribution_t *d) {
             auto do_sample = [&p, &inverse_model, &d]() {
-                const auto &handle = d->getHandle();
+                const auto &handle = d;
                 return handle->getDistribution() ?
                             handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(inverse_model) : 0.0;
             };

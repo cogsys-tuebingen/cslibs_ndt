@@ -59,7 +59,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
         const bundle_t *b = dst->getDistributionBundle(p);
         if(b != nullptr) {
             for(std::size_t i = 0 ; i < 8 ; ++i) {
-                d[i] = b->at(i)->getHandle()->data();
+                d[i] = b->at(i)->data();
             }
             return true;
         }
@@ -247,7 +247,7 @@ inline void match(const iterator_t& src_begin,
         const bundle_t *b = dst.getDistributionBundle(p);
         if(b != nullptr) {
             for(std::size_t i = 0 ; i < 8 ; ++i) {
-                d[i] = b->at(i)->getHandle()->data();
+                d[i] = b->at(i)->data();
             }
             return true;
         }

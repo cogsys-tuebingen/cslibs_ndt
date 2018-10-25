@@ -68,8 +68,8 @@ void testDynamicMap(const typename cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr & m
                         EXPECT_NE(b->at(i),  nullptr);
                         EXPECT_NE(bb->at(i), nullptr);
 
-                        const cslibs_math::statistics::Distribution<3, 3> & d  = b->at(i)->getHandle()->data();
-                        const cslibs_math::statistics::Distribution<3, 3> & dd = bb->at(i)->getHandle()->data();
+                        const cslibs_math::statistics::Distribution<3, 3> & d  = b->at(i)->data();
+                        const cslibs_math::statistics::Distribution<3, 3> & dd = bb->at(i)->data();
                         EXPECT_EQ(d.getN(), dd.getN());
 
                         for (std::size_t j = 0 ; j < 3 ; ++ j) {
@@ -129,8 +129,8 @@ void testStaticMap(const typename cslibs_ndt_3d::static_maps::Gridmap::Ptr & map
                         EXPECT_NE(b->at(i),  nullptr);
                         EXPECT_NE(bb->at(i), nullptr);
 
-                        const cslibs_math::statistics::Distribution<3, 3> & d  = b->at(i)->getHandle()->data();
-                        const cslibs_math::statistics::Distribution<3, 3> & dd = bb->at(i)->getHandle()->data();
+                        const cslibs_math::statistics::Distribution<3, 3> & d  = b->at(i)->data();
+                        const cslibs_math::statistics::Distribution<3, 3> & dd = bb->at(i)->data();
                         EXPECT_EQ(d.getN(), dd.getN());
 
                         for (std::size_t j = 0 ; j < 3 ; ++ j) {

@@ -31,7 +31,7 @@ inline cslibs_ndt_2d::static_maps::mono::Gridmap::Ptr merge(
     {
         dst_map_t::distribution_t* dst_d = dst->getDistribution(i);
         for(const src_map_t::distribution_t *src_d : b) {
-            dst_d->getHandle()->data() += src_d->getHandle()->data();
+            dst_d->data() += src_d->data();
         }
     };
 

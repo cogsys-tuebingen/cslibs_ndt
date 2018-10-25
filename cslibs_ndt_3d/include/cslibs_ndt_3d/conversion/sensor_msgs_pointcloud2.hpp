@@ -50,7 +50,7 @@ inline void from(
     using distribution_bundle_t = cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t;
     auto sample = [](const distribution_t *d,
                      const point_t &p) -> double {
-        return d ? d->getHandle()->data().sampleNonNormalized(p) : 0.0;
+        return d ? d->data().sampleNonNormalized(p) : 0.0;
     };
     auto sample_bundle = [&sample](const distribution_bundle_t &b,
                                    const point_t &p) -> double {
@@ -68,7 +68,7 @@ inline void from(
     auto process_bundle = [&src, &tmp, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
         cslibs_math::statistics::Distribution<3, 3> d;
         for (std::size_t i = 0 ; i < 8 ; ++i)
-            d += b.at(i)->getHandle()->data();
+            d += b.at(i)->data();
         if (d.getN() == 0)
             return;
 
@@ -109,7 +109,7 @@ inline void from(
     auto sample = [&ivm](const distribution_t *d,
                          const point_t &p) -> double {
         auto evaluate = [&ivm, d, p] {
-            const auto &handle = d->getHandle();
+            const auto &handle = d;
             return d && handle->getDistribution() ?
                         handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(ivm) : 0.0;
         };
@@ -133,7 +133,7 @@ inline void from(
         double occupancy = 0.0;
 
         for (std::size_t i = 0 ; i < 8 ; ++i) {
-            const auto &handle = b.at(i)->getHandle();
+            const auto &handle = b.at(i);
             occupancy += 0.125 * handle->getOccupancy(ivm);
             if (const auto &d_tmp = handle->getDistribution())
                 d += *d_tmp;

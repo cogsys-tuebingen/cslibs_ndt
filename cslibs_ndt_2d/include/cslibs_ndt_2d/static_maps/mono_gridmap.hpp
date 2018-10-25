@@ -173,7 +173,7 @@ public:
             return;
 
         distribution_t *distribution = getAllocate(i);
-        distribution->getHandle()->data().add(p);
+        distribution->data().add(p);
     }
 
     inline double sample(const point_t &p) const
@@ -186,12 +186,9 @@ public:
                          const index_t &i) const
     {
         distribution_t *distribution;
-        {
-            lock_t l(storage_mutex_);
-            distribution = storage_->get(i);
-        }
+        distribution = storage_->get(i);
 
-        return distribution ? distribution->getHandle()->data().sample(p) : 0.0;
+        return distribution ? distribution->data().sample(p) : 0.0;
     }
 
     inline double sampleNonNormalized(const point_t &p) const
@@ -203,12 +200,8 @@ public:
     inline double sampleNonNormalized(const point_t &p,
                                       const index_t &i) const
     {
-        distribution_t *distribution;
-        {
-            lock_t l(storage_mutex_);
-            distribution = storage_->get(i);
-        }
-        return distribution ? distribution->getHandle()->data().sampleNonNormalized(p) : 0.0;
+        distribution_t *distribution  = storage_->get(i);
+        return distribution ? distribution->data().sampleNonNormalized(p) : 0.0;
     }
 
     inline distribution_t* get(const point_t &p) const
@@ -217,12 +210,7 @@ public:
         if(!toIndex(p,i))
             return nullptr;
 
-        distribution_t *distribution;
-        {
-            lock_t l(storage_mutex_);
-            distribution = storage_->get(i);
-        }
-        return distribution;
+        return storage_->get(i);
     }
 
 
@@ -259,7 +247,6 @@ public:
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
-        lock_t l(storage_mutex_);
         return storage_->traverse(function);
     }
 
@@ -268,13 +255,11 @@ public:
         auto add_index = [&indices](const index_t &i, const distribution_t &) {
             indices.emplace_back(i);
         };
-        lock_t l(storage_mutex_);
         storage_->traverse(add_index);
     }
 
     inline std::size_t getByteSize() const
     {
-        lock_t l(storage_mutex_);
         return sizeof(*this) +
                 storage_->byte_size();
     }
@@ -298,18 +283,13 @@ protected:
     const index_t                                   min_index_;
     const index_t                                   max_index_;
 
-    mutable mutex_t                                 storage_mutex_;
     mutable distribution_storage_ptr_t              storage_;
 
     inline distribution_t *getAllocate(const index_t &i) const
     {
-        distribution_t *distribution;
-        {
-            lock_t l(storage_mutex_);
-            distribution = storage_->get(i);
-        }
+        distribution_t *distribution = storage_->get(i);
+
         auto allocate = [this, &i]() {
-            lock_t l(storage_mutex_);
             return &(storage_->insert(i, distribution_t()));
         };
         return distribution ? distribution : allocate();

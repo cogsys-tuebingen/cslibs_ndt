@@ -161,9 +161,9 @@ public:
         min_bundle_index_(other.min_bundle_index_),
         max_bundle_index_(other.max_bundle_index_),
         storage_{{distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[0])),
-                  distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[1])),
-                  distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[2])),
-                  distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[3]))}},
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[1])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[2])),
+        distribution_storage_ptr_t(new distribution_storage_t(*other.storage_[3]))}},
         bundle_storage_(new distribution_bundle_storage_t(*other.bundle_storage_))
     {
     }
@@ -191,7 +191,7 @@ public:
     inline point_t getMin() const
     {
         return point_t(min_bundle_index_[0] * bundle_resolution_,
-                       min_bundle_index_[1] * bundle_resolution_);
+                min_bundle_index_[1] * bundle_resolution_);
     }
 
     /**
@@ -201,7 +201,7 @@ public:
     inline point_t getMax() const
     {
         return point_t((max_bundle_index_[0] + 1) * bundle_resolution_,
-                       (max_bundle_index_[1] + 1) * bundle_resolution_);
+                (max_bundle_index_[1] + 1) * bundle_resolution_);
     }
 
     /**
@@ -231,10 +231,10 @@ public:
             return;
 
         distribution_bundle_t *bundle = getAllocate(bi);
-        bundle->at(0)->getHandle()->data().add(p);
-        bundle->at(1)->getHandle()->data().add(p);
-        bundle->at(2)->getHandle()->data().add(p);
-        bundle->at(3)->getHandle()->data().add(p);
+        bundle->at(0)->data().add(p);
+        bundle->at(1)->data().add(p);
+        bundle->at(2)->data().add(p);
+        bundle->at(3)->data().add(p);
     }
 
     inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::ConstPtr &points,
@@ -257,10 +257,10 @@ public:
 
         storage.traverse([this](const index_t& bi, const distribution_t &d) {
             distribution_bundle_t *bundle = getAllocate(bi);
-            bundle->at(0)->getHandle()->data() += d.data();
-            bundle->at(1)->getHandle()->data() += d.data();
-            bundle->at(2)->getHandle()->data() += d.data();
-            bundle->at(3)->getHandle()->data() += d.data();
+            bundle->at(0)->data() += d.data();
+            bundle->at(1)->data() += d.data();
+            bundle->at(2)->data() += d.data();
+            bundle->at(3)->data() += d.data();
         });
     }
 
@@ -275,16 +275,12 @@ public:
         if(!valid(bi))
             return 0.0;
 
-        distribution_bundle_t *bundle;
-        {
-            lock_t l(bundle_storage_mutex_);
-            bundle = bundle_storage_->get(bi);
-        }
+        distribution_bundle_t *bundle  = bundle_storage_->get(bi);
         auto evaluate = [&p, &bundle]() {
-            return 0.25 * (bundle->at(0)->getHandle()->data().sample(p) +
-                           bundle->at(1)->getHandle()->data().sample(p) +
-                           bundle->at(2)->getHandle()->data().sample(p) +
-                           bundle->at(3)->getHandle()->data().sample(p));
+            return 0.25 * (bundle->at(0)->data().sample(p) +
+                           bundle->at(1)->data().sample(p) +
+                           bundle->at(2)->data().sample(p) +
+                           bundle->at(3)->data().sample(p));
         };
         return bundle ? evaluate() : 0.0;
     }
@@ -300,16 +296,13 @@ public:
         if(!valid(bi))
             return 0.0;
 
-        distribution_bundle_t *bundle;
-        {
-            lock_t l(bundle_storage_mutex_);
-            bundle = bundle_storage_->get(bi);
-        }
+        distribution_bundle_t *bundle = bundle_storage_->get(bi);
+
         auto evaluate = [&p, &bundle]() {
-            return 0.25 * (bundle->at(0)->getHandle()->data().sampleNonNormalized(p) +
-                           bundle->at(1)->getHandle()->data().sampleNonNormalized(p) +
-                           bundle->at(2)->getHandle()->data().sampleNonNormalized(p) +
-                           bundle->at(3)->getHandle()->data().sampleNonNormalized(p));
+            return 0.25 * (bundle->at(0)->data().sampleNonNormalized(p) +
+                           bundle->at(1)->data().sampleNonNormalized(p) +
+                           bundle->at(2)->data().sampleNonNormalized(p) +
+                           bundle->at(3)->data().sampleNonNormalized(p));
         };
         return bundle ? evaluate() : 0.0;
     }
@@ -362,7 +355,6 @@ public:
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
-        lock_t l(bundle_storage_mutex_);
         return bundle_storage_->traverse(function);
     }
 
@@ -371,14 +363,11 @@ public:
         auto add_index = [&indices](const index_t &i, const distribution_bundle_t &d) {
             indices.emplace_back(i);
         };
-        lock_t l(bundle_storage_mutex_);
         bundle_storage_->traverse(add_index);
     }
 
     inline std::size_t getByteSize() const
     {
-        lock_t ls(storage_mutex_);
-        lock_t lb(bundle_storage_mutex_);
         return sizeof(*this) +
                 bundle_storage_->byte_size() +
                 storage_[0]->byte_size() +
@@ -393,7 +382,7 @@ public:
         const point_t min = getMin();
         const point_t max = getMax();
         return p_m(0) >= min(0) && p_m(0) < min(0) &&
-               p_m(1) >= min(1) && p_m(1) < max(1);
+                p_m(1) >= min(1) && p_m(1) < max(1);
     }
 
 
@@ -406,16 +395,12 @@ public:
         static constexpr neighborhood_t grid{};
 
         for(const index_t &bi : bis) {
-            const distribution_bundle_t *bundle;
-            {
-                lock_t l(bundle_storage_mutex_);
-                bundle = bundle_storage_->get(bi);
-            }
+            const distribution_bundle_t *bundle  = bundle_storage_->get(bi);
             bool expand =
-                (bundle->at(0)->getHandle()->data().getN() >= 3) ||
-                (bundle->at(1)->getHandle()->data().getN() >= 3) ||
-                (bundle->at(2)->getHandle()->data().getN() >= 3) ||
-                (bundle->at(3)->getHandle()->data().getN() >= 3);
+                    (bundle->at(0)->data().getN() >= 3) ||
+                    (bundle->at(1)->data().getN() >= 3) ||
+                    (bundle->at(2)->data().getN() >= 3) ||
+                    (bundle->at(3)->data().getN() >= 3);
 
             if(expand) {
                 grid.visit([this, &bi](neighborhood_t::offset_t o) {
@@ -439,10 +424,7 @@ protected:
     const index_t                                   min_bundle_index_;
     const index_t                                   max_bundle_index_;
 
-
-    mutable mutex_t                                 storage_mutex_;
     mutable distribution_storage_array_t            storage_;
-    mutable mutex_t                                 bundle_storage_mutex_;
     mutable distribution_bundle_storage_ptr_t       bundle_storage_;
 
     inline distribution_t* getAllocate(const distribution_storage_ptr_t &s,
@@ -455,14 +437,9 @@ protected:
     inline distribution_bundle_t *getAllocate(const index_t &bi) const
     {
         auto get_allocate = [this](const index_t &bi) {
-            distribution_bundle_t *bundle;
-            {
-                lock_t l(bundle_storage_mutex_);
-                bundle = bundle_storage_->get(bi);
-            }
+            distribution_bundle_t *bundle = bundle_storage_->get(bi);
 
             auto allocate_bundle = [this, &bi]() {
-                distribution_bundle_t b;
                 const int divx = cslibs_math::common::div(bi[0], 2);
                 const int divy = cslibs_math::common::div(bi[1], 2);
                 const int modx = cslibs_math::common::mod(bi[0], 2);
@@ -473,15 +450,12 @@ protected:
                 const index_t storage_2_index = {{divx,        divy + mody}}; /// shifted to the bottom
                 const index_t storage_3_index = {{divx + modx, divy + mody}}; /// shifted diagonally
 
-                {
-                    lock_t ls(storage_mutex_);
-                    b[0] = getAllocate(storage_[0], storage_0_index);
-                    b[1] = getAllocate(storage_[1], storage_1_index);
-                    b[2] = getAllocate(storage_[2], storage_2_index);
-                    b[3] = getAllocate(storage_[3], storage_3_index);
-                }
+                distribution_bundle_t b;
+                b[0] = getAllocate(storage_[0], storage_0_index);
+                b[1] = getAllocate(storage_[1], storage_1_index);
+                b[2] = getAllocate(storage_[2], storage_2_index);
+                b[3] = getAllocate(storage_[3], storage_3_index);
 
-                lock_t l(bundle_storage_mutex_);
                 return &(bundle_storage_->insert(bi, b));
             };
             return bundle ? bundle : allocate_bundle();
@@ -493,7 +467,7 @@ protected:
     {
         const point_t p_m = m_T_w_ * p_w;
         return {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
-                 static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
+                        static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
     }
 
     inline bool toBundleIndex(const point_t &p_w,
@@ -503,13 +477,13 @@ protected:
         index = {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
                   static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
         return (index[0] >= min_bundle_index_[0] && index[0] <= max_bundle_index_[0] ) &&
-               (index[1] >= min_bundle_index_[1] && index[1] <= max_bundle_index_[1] );
+                (index[1] >= min_bundle_index_[1] && index[1] <= max_bundle_index_[1] );
     }
 
     inline bool valid(const index_t &bi) const
     {
         return (bi[0] >= min_bundle_index_[0] && bi[0] <= max_bundle_index_[0] ) &&
-               (bi[1] >= min_bundle_index_[1] && bi[1] <= max_bundle_index_[1] );
+                (bi[1] >= min_bundle_index_[1] && bi[1] <= max_bundle_index_[1] );
     }
 
 };

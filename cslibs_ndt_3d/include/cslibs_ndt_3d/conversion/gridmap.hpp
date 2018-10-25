@@ -21,7 +21,7 @@ inline cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr from(
     auto process_bundle = [&dst](const index_t &bi, const src_map_t::distribution_bundle_t &b){
         if (const typename dst_map_t::distribution_bundle_t* b_dst = dst->getDistributionBundle(bi)) {
             for (std::size_t i = 0 ; i < 8 ; ++ i) {
-                const auto &handle = b.at(i)->getHandle()->data();
+                const auto &handle = b.at(i)->data();
                 if (handle.getN() > 0 && b_dst->at(i)->data().getN() == 0)
                     b_dst->at(i)->data() = handle;
             }
@@ -71,7 +71,7 @@ inline cslibs_ndt_3d::static_maps::Gridmap::Ptr from(
         const index_t bi_dst = get_bundle_index(bi);
         if (const typename dst_map_t::distribution_bundle_t* b_dst = dst->getDistributionBundle(bi_dst)) {
             for (std::size_t i = 0 ; i < 8 ; ++ i) {
-                const auto &handle = b.at(i)->getHandle()->data();
+                const auto &handle = b.at(i)->data();
                 if (handle.getN() > 0 && b_dst->at(i)->data().getN() == 0)
                     b_dst->at(i)->data() = handle;
             }

@@ -177,7 +177,7 @@ public:
     {
     }
 
-    inline OccupancyGridmap(const Gridmap &other) :
+    inline OccupancyGridmap(const OccupancyGridmap &other) :
         resolution_(other.resolution_),
         resolution_inv_(other.resolution_inv_),
         bundle_resolution_(other.bundle_resolution_),
@@ -200,7 +200,7 @@ public:
     {
     }
 
-    inline OccupancyGridmap(Gridmap &&other) :
+    inline OccupancyGridmap(OccupancyGridmap &&other) :
         resolution_(other.resolution_),
         resolution_inv_(other.resolution_inv_),
         bundle_resolution_(other.bundle_resolution_),

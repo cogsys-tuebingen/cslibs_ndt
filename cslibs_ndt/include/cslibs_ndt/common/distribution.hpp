@@ -4,7 +4,6 @@
 #include <mutex>
 
 #include <cslibs_math/statistics/distribution.hpp>
-#include <cslibs_utility/synchronized/wrap_around.hpp>
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
@@ -20,10 +19,6 @@ public:
     using allocator_t              = Eigen::aligned_allocator<Distribution>;
     using distribution_container_t = Distribution<Dim>;
     using distribution_t           = cslibs_math::statistics::Distribution<Dim, 3>;
-    using mutex_t                  = std::mutex;
-    using lock_t                   = std::unique_lock<mutex_t>;
-    using handle_t                 = cslibs_utility::synchronized::WrapAround<distribution_container_t>;
-    using const_handle_t           = cslibs_utility::synchronized::WrapAround<const distribution_container_t>;
 
     inline Distribution()
     {
@@ -87,23 +82,12 @@ public:
     {
     }
 
-    inline handle_t getHandle()
-    {
-        return handle_t(this, &data_mutex_);
-    }
-
-    inline const_handle_t getHandle() const
-    {
-        return const_handle_t(this, &data_mutex_);
-    }
-
     inline std::size_t byte_size() const
     {
         return sizeof(*this);
     }
 
 private:
-    mutable mutex_t data_mutex_;
     distribution_t  data_;
 };
 }

@@ -2,8 +2,8 @@
 #define CSLIBS_NDT_3D_ICP_HPP
 
 #include <cslibs_math_3d/linear/pointcloud.hpp>
-#include <cslibs_ndt_3d/matching/params.hpp>
-#include <cslibs_ndt_3d/matching/result.hpp>
+#include <cslibs_ndt_3d/matching/icp_params.hpp>
+#include <cslibs_ndt_3d/matching/icp_result.hpp>
 
 namespace cslibs_ndt_3d {
 namespace matching {

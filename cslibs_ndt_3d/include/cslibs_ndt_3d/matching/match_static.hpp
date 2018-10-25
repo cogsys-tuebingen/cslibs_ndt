@@ -4,8 +4,7 @@
 #include <cslibs_ndt/matching/match.hpp>
 #include <cslibs_ndt_3d/matching/gridmap_match_traits.hpp>
 
-#include <cslibs_ndt_3d/matching/voxel.hpp>
-
+#include <cslibs_ndt/matching/voxel.hpp>
 
 namespace cslibs_ndt_3d {
 namespace matching {

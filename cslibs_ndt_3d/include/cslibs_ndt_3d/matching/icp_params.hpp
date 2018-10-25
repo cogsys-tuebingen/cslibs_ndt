@@ -3,9 +3,11 @@
 
 #include <cslibs_math_3d/linear/transform.hpp>
 
+#include <cslibs_ndt/matching/parameter.hpp>
+
 namespace cslibs_ndt_3d {
 namespace matching {
-class EIGEN_ALIGN16 ParametersWithICP : public Parameters
+class EIGEN_ALIGN16 ParametersWithICP : public cslibs_ndt::matching::Parameter
 {
 public:
 
@@ -20,7 +22,7 @@ public:
                              const double                        trans_eps = 1e-4,
                              const std::size_t                   step_adjustment_retries = 5,
                              const double                        alpha = 1.0,
-                             const cslibs_math_3d::Transform3d &transform = cslibs_math_3d::Transform3d()) :
+                             const cslibs_math_3d::Transform3d  &transform = cslibs_math_3d::Transform3d()) :
         Parameters(resolution, max_iterations, rot_eps, trans_eps, step_adjustment_retries, alpha, transform),
         icp_max_iterations_(icp_max_iterations),
         icp_min_assigned_points_(icp_min_assigned_points),

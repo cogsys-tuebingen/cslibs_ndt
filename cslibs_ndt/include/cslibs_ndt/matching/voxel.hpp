@@ -8,14 +8,15 @@
 
 namespace cis = cslibs_indexed_storage;
 
-namespace cslibs_ndt_3d {
+namespace cslibs_ndt {
 namespace matching {
+template<std::size_t Dim>
 class EIGEN_ALIGN16 Voxel {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    using index_t = std::array<int, 3>;
-    using point_t = cslibs_math_3d::Point3d;
+    using index_t = std::array<int, Dim>;
+    using point_t = cslibs_math::linear::Vector<double, Dim>;
 
     inline Voxel() :
         n_(1),
@@ -68,20 +69,27 @@ public:
         mean_                   = _pt;
     }
 
+    inline static index_t getIndex(const point_t &p, const double inverse_resolution)
+    {
+        index_t index;
+        for(std::size_t i = 0 ; i < Dim ; ++i)
+            index[i] = static_cast<int>(std::floor(p(i) * inverse_resolution));
+
+        return index;
+    }
+
+
 private:
     std::size_t n_;
     std::size_t n_1_;
     point_t     mean_;
 };
 
-inline Voxel::index_t getIndex(const Voxel::point_t &p, const double inverse_resolution)
+template<std::size_t Dim>
+struct VoxelGrid
 {
-    return {{static_cast<int>(std::floor(p(0) * inverse_resolution)),
-             static_cast<int>(std::floor(p(1) * inverse_resolution)),
-             static_cast<int>(std::floor(p(2) * inverse_resolution))}};
-}
-
-using StaticVoxelGrid  = cis::Storage<Voxel, Voxel::index_t, cis::backend::array::Array>;
+    using type = cis::Storage<Voxel<Dim>, Voxel<Dim>::index_t, cis::backend::array::Array>;
+};
 }
 }
 

@@ -395,11 +395,7 @@ public:
         if (!ivm)
             throw std::runtime_error("[OccupancyGridMap]: inverse model not set");
 
-        distribution_bundle_t *bundle;
-        {
-            lock_t l(bundle_storage_mutex_);
-            bundle = bundle_storage_->get(bi);
-        }
+        distribution_bundle_t *bundle = bundle_storage_->get(bi);
 
         auto sample = [&p, &ivm] (const distribution_t *d) {
             auto do_sample = [&p, &ivm, &d]() {
@@ -433,11 +429,7 @@ public:
         if (!ivm)
             throw std::runtime_error("[OccupancyGridMap]: inverse model not set");
 
-        distribution_bundle_t *bundle;
-        {
-            lock_t l(bundle_storage_mutex_);
-            bundle = bundle_storage_->get(bi);
-        }
+        distribution_bundle_t *bundle = bundle_storage_->get(bi);
 
         auto sample = [&p, &ivm] (const distribution_t *d) {
             auto do_sample = [&p, &ivm, &d]() {
@@ -504,7 +496,6 @@ public:
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
-        lock_t l(bundle_storage_mutex_);
         return bundle_storage_->traverse(function);
     }
 
@@ -513,14 +504,11 @@ public:
         auto add_index = [&indices](const index_t &i, const distribution_bundle_t &d) {
             indices.emplace_back(i);
         };
-        lock_t l(bundle_storage_mutex_);
         bundle_storage_->traverse(add_index);
     }
 
     inline std::size_t getByteSize() const
     {
-        lock_t ls(storage_mutex_);
-        lock_t lb(bundle_storage_mutex_);
         return sizeof(*this) +
                 bundle_storage_->byte_size() +
                 storage_[0]->byte_size() +
@@ -568,11 +556,8 @@ public:
         };
 
         for(const index_t &bi : bis) {
-            const distribution_bundle_t *bundle;
-            {
-                lock_t l(bundle_storage_mutex_);
-                bundle = bundle_storage_->get(bi);
-            }
+            const distribution_bundle_t *bundle = bundle_storage_->get(bi);
+
             bool expand =
                 expand_distribution(bundle->at(0)) ||
                 expand_distribution(bundle->at(1)) ||
@@ -618,11 +603,7 @@ protected:
     inline distribution_bundle_t *getAllocate(const index_t &bi) const
     {
         auto get_allocate = [this](const index_t &bi) {
-            distribution_bundle_t *bundle;
-            {
-                lock_t l(bundle_storage_mutex_);
-                bundle = bundle_storage_->get(bi);
-            }
+            distribution_bundle_t *bundle = bundle_storage_->get(bi);
 
             auto allocate_bundle = [this, &bi]() {
                 distribution_bundle_t b;
@@ -642,19 +623,15 @@ protected:
                 const index_t storage_6_index = {{divx,        divy + mody, divz + modz}};
                 const index_t storage_7_index = {{divx + modx, divy + mody, divz + modz}};
 
-                {
-                    lock_t ls(storage_mutex_);
-                    b[0] = getAllocate(storage_[0], storage_0_index);
-                    b[1] = getAllocate(storage_[1], storage_1_index);
-                    b[2] = getAllocate(storage_[2], storage_2_index);
-                    b[3] = getAllocate(storage_[3], storage_3_index);
-                    b[4] = getAllocate(storage_[4], storage_4_index);
-                    b[5] = getAllocate(storage_[5], storage_5_index);
-                    b[6] = getAllocate(storage_[6], storage_6_index);
-                    b[7] = getAllocate(storage_[7], storage_7_index);
-                }
+                b[0] = getAllocate(storage_[0], storage_0_index);
+                b[1] = getAllocate(storage_[1], storage_1_index);
+                b[2] = getAllocate(storage_[2], storage_2_index);
+                b[3] = getAllocate(storage_[3], storage_3_index);
+                b[4] = getAllocate(storage_[4], storage_4_index);
+                b[5] = getAllocate(storage_[5], storage_5_index);
+                b[6] = getAllocate(storage_[6], storage_6_index);
+                b[7] = getAllocate(storage_[7], storage_7_index);
 
-                lock_t l(bundle_storage_mutex_);
                 return &(bundle_storage_->insert(bi, b));
             };
             return bundle ? bundle : allocate_bundle();

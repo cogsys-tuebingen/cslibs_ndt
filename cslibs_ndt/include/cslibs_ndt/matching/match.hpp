@@ -29,7 +29,7 @@ auto match(const iterator_t& points_begin,
     using gradient_t    = Eigen::Matrix<double, DIMS, 1>;
     using hessian_t     = Eigen::Matrix<double, DIMS, DIMS>;
 
-    // pre transform points, should be externalized or made completely optional...
+    // todo: pre transform points, should be externalized or made completely optional...
     std::vector<point_t> points_prime;
     points_prime.reserve(std::distance(points_begin, points_end));
     std::transform(points_begin, points_end, std::back_inserter(points_prime),
@@ -54,13 +54,13 @@ auto match(const iterator_t& points_begin,
     // termination criteria
     const auto test_eps = [&]()
     {
-        return (linear_delta.array().abs() < param.translation_epsilon).all()
-               && (angular_delta.array().abs() < param.rotation_epsilon).all();
+        return (linear_delta.array().abs() < param.translationEpsilon()).all()
+               && (angular_delta.array().abs() < param.rotationEpsilon()).all();
     };
 
     const auto test_readjustments = [&]()
     {
-        return step_adjustments > 0 && step_adjustments > param.max_step_readjustments;
+        return step_adjustments > 0 && step_adjustments > param.maxStepReadjustments();
     };
 
     // termination
@@ -74,7 +74,7 @@ auto match(const iterator_t& points_begin,
     };
 
     // iterations
-    for (iteration = 0; iteration < param.max_iterations; ++iteration)
+    for (iteration = 0; iteration < param.maxIterations(); ++iteration)
     {
         if (test_readjustments())
             return terminate(Termination::MAX_STEP_READJUSTMENTS);
@@ -90,6 +90,7 @@ auto match(const iterator_t& points_begin,
         hessian_t   h = hessian_t::Zero();
 
         double score = 0.0;
+        // todo: reimplement parallelization
         for (const point_t& point_prime : points_prime)
         {
             const point_t point = t * point_prime;
@@ -98,7 +99,7 @@ auto match(const iterator_t& points_begin,
 
         if (score < max_score)
         {
-            lambda *= param.alpha;
+            lambda *= param.alpha();
             linear = linear_old;
             angular = angular_old;
             ++step_adjustments;
@@ -108,7 +109,7 @@ auto match(const iterator_t& points_begin,
         if (score > max_score)
         {
             max_score = score;
-            lambda /= param.alpha;
+            lambda /= param.alpha();
             step_adjustments = 0;
         }
 
@@ -121,7 +122,8 @@ auto match(const iterator_t& points_begin,
 
         linear_delta = dp.template head<traits_t::LINEAR_DIMS>();
         linear += linear_delta;
-        
+
+        // todo: verify if we have to normalize here
         angular_delta = dp.template tail<traits_t::ANGULAR_DIMS>();
         angular += angular_delta;
 

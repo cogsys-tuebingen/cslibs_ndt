@@ -7,9 +7,9 @@
 namespace cslibs_ndt_2d {
 namespace conversion {
 inline cslibs_ndt_2d::static_maps::mono::Gridmap::Ptr merge(
-       const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr& src)
+        const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr& src)
 {
-  if (!src)
+    if (!src)
         return nullptr;
 
     using index_t = std::array<int, 2>;
@@ -29,10 +29,10 @@ inline cslibs_ndt_2d::static_maps::mono::Gridmap::Ptr merge(
 
     auto traverse = [&min_distribution_index, &dst](const index_t &i, const src_map_t::distribution_bundle_t &b)
     {
-      dst_map_t::distribution_t* dst_d = dst->getDistribution(i);
-      for(const src_map_t::distribution_t *src_d : b) {
-        dst_d->getHandle()->data() += src_d->getHandle()->data();
-      }
+        dst_map_t::distribution_t* dst_d = dst->getDistribution(i);
+        for(const src_map_t::distribution_t *src_d : b) {
+            dst_d->getHandle()->data() += src_d->getHandle()->data();
+        }
     };
 
     src->traverse(traverse);

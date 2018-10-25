@@ -34,10 +34,10 @@ public:
     Termination termination() const { return termination_; }
 
 private:
-    const double score_;
-    const std::size_t iterations_;
-    const transform_t transform_;
-    const Termination termination_;
+    double score_;
+    std::size_t iterations_;
+    transform_t transform_;
+    Termination termination_;
 };
 
 }

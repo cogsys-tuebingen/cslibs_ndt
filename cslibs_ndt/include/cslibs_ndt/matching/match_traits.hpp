@@ -3,7 +3,7 @@
 namespace cslibs_ndt {
 namespace matching {
 
-template<typename MapT>
+template<typename MapT, typename Enable = void>
 struct MatchTraits;
 /*
 Required Interface:

@@ -2,14 +2,19 @@
 
 #include <cslibs_ndt/matching/match_traits.hpp>
 #include <cslibs_ndt_3d/dynamic_maps/occupancy_gridmap.hpp>
+#include <cslibs_ndt_3d/static_maps/occupancy_gridmap.hpp>
 #include <cslibs_ndt_3d/matching/jacobian.hpp>
 #include <cslibs_ndt_3d/matching/hessian.hpp>
 
 namespace cslibs_ndt {
 namespace matching {
 
-template<>
-struct MatchTraits<cslibs_ndt_3d::dynamic_maps::OccupancyGridmap>
+template<typename MapT> struct IsOccupancyGridmap : std::false_type {};
+template<> struct IsOccupancyGridmap<cslibs_ndt_3d::dynamic_maps::OccupancyGridmap> : std::true_type {};
+template<> struct IsOccupancyGridmap<cslibs_ndt_3d::static_maps::OccupancyGridmap> : std::true_type {};
+
+template<typename MapT>
+struct MatchTraits<MapT, typename std::enable_if<IsOccupancyGridmap<MapT>::value>::type>
 {
     static constexpr int LINEAR_DIMS  = 3;
     static constexpr int ANGULAR_DIMS = 3;
@@ -31,7 +36,7 @@ struct MatchTraits<cslibs_ndt_3d::dynamic_maps::OccupancyGridmap>
     }
 
     // todo: deduplicate code, make model configureable...
-    static void computeGradient(const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap& map,
+    static void computeGradient(const MapT& map,
                                 const point_t& point,
                                 const Jacobian& J,
                                 const Hessian& H,

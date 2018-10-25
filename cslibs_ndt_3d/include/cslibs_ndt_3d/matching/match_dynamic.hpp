@@ -2,7 +2,7 @@
 #define CSLIBS_NDT_3D_MATCH_DYNAMIC_HPP
 
 #include <cslibs_ndt/matching/match.hpp>
-#include <cslibs_ndt_3d/dynamic_maps/gridmap.hpp>
+#include <cslibs_ndt_3d/matching/gridmap_match_traits.hpp>
 
 #include <cslibs_ndt_3d/matching/voxel.hpp>
 
@@ -19,7 +19,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
   using ndt_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
   ndt_t ndt(ndt_t::pose_t(), resolution);
   ndt.insert(dst);
-  cslibs_ndt::matching::match(src->begin(), src->end(), ndt, params, initial_transform, r);
+  r = cslibs_ndt::matching::match(src->begin(), src->end(), ndt, params, initial_transform);
 }
 }
 }

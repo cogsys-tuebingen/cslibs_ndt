@@ -55,7 +55,7 @@ struct MatchTraits<MapT, typename std::enable_if<IsOccupancyGridmap<MapT>::value
         for (auto* distribution_wrapper : *bundle)
         {
             auto& d = distribution_wrapper->getDistribution();
-            if (!d || d->getN() < 3)
+            if (!d || d->getN() < 4)
                 continue;
 
             const auto info   = d->getInformationMatrix();
@@ -64,6 +64,8 @@ struct MatchTraits<MapT, typename std::enable_if<IsOccupancyGridmap<MapT>::value
             const auto p_occ  = distribution_wrapper->getOccupancy(model);
             const auto e      = -0.5 * double(q_info * q) * (d2 * (1 - p_occ));
             const auto s      = d1 * p_occ * std::exp(e);
+            if (!std::isnormal(s) || s <= 1e-5)
+                continue;
 
             // this part should be vectorized, may also remove common factors...
             for (std::size_t i = 0; i < LINEAR_DIMS + ANGULAR_DIMS; ++i)

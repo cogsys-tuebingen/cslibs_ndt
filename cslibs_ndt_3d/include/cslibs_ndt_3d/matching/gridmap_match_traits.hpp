@@ -51,7 +51,7 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
         for (auto* distribution_wrapper : *bundle)
         {
             auto& d = distribution_wrapper->data();
-            if (d.getN() < 3)
+            if (d.getN() < 4)
                 continue;
 
             const auto info   = d.getInformationMatrix();
@@ -59,6 +59,8 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
             const auto q_info = (q.transpose() * info).eval();
             const auto e      = -0.5 * double(q_info * q);
             const auto s      = std::exp(e);
+            if (!std::isnormal(s) || s <= 1e-5)
+                continue;
 
             // this part should be vectorized, may also remove common factors...
             for (std::size_t i = 0; i < LINEAR_DIMS + ANGULAR_DIMS; ++i)

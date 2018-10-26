@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cslibs_ndt/matching/match_traits.hpp>
+#include <cslibs_ndt_3d/static_maps/gridmap.hpp>
 #include <cslibs_ndt_3d/dynamic_maps/gridmap.hpp>
 #include <cslibs_ndt_3d/static_maps/gridmap.hpp>
 #include <cslibs_ndt_3d/matching/jacobian.hpp>

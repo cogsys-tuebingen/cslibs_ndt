@@ -17,7 +17,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
                   const cslibs_math_3d::Transform3d            &initial_transform,
                   cslibs_ndt::matching::Result<cslibs_math_3d::Transform3d> &r)
 {
-  using ndt_t   = cslibs_ndt_3d::static_maps::Gridmap;
+  using ndt_t   = ::cslibs_ndt_3d::static_maps::Gridmap;
   using size_t  = ndt_t::size_t;
   using index_t = ndt_t::index_t;
 

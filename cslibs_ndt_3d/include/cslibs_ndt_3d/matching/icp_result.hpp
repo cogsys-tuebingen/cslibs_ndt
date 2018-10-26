@@ -7,29 +7,31 @@
 
 namespace cslibs_ndt_3d {
 namespace matching {
+
+enum class ICPTermination {NONE, ICP_MAX_ITERATIONS, ICP_DELTA_EPS, ICP_ASSIGNMENT_SUCCESS};
+
 class EIGEN_ALIGN16 ResultWithICP : public cslibs_ndt::matching::Result<cslibs_math_3d::Transform3d>
 {
 public:
+    using base_t = typename cslibs_ndt::matching::Result<cslibs_math_3d::Transform3d>;
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    enum ICPTermination {ICP_EPS, ICP_ITERATIONS, ICP_ASSIGNMENT};
-
-    inline ResultWithICP() :
+    inline explicit ResultWithICP() :
         Result(),
         icp_iterations_(0),
-        icp_termination_(ICP_ITERATIONS)
+        icp_termination_(ICPTermination::NONE)
     {
     }
 
-    inline ResultWithICP(const double                       score,
-                         const std::size_t                  iterations,
-                         const cslibs_math_3d::Transform3d &transform,
-                         const Result::Termination          termination,
-                         const std::size_t                  icp_iterations,
-                         const cslibs_math_3d::Transform3d &icp_transform,
-                         const ICPTermination               icp_termination) :
-        Result(score, iterations, transform, termination),
+    inline explicit ResultWithICP(const double                              score,
+                                  const std::size_t                         iterations,
+                                  const cslibs_math_3d::Transform3d        &transform,
+                                  const cslibs_ndt::matching::Termination   termination,
+                                  const std::size_t                         icp_iterations,
+                                  const cslibs_math_3d::Transform3d        &icp_transform,
+                                  const ICPTermination                      icp_termination) :
+        base_t(score, iterations, transform, termination),
         icp_transform_(icp_transform),
         icp_iterations_(icp_iterations),
         icp_termination_(icp_termination)

@@ -88,7 +88,7 @@ private:
 template<std::size_t Dim>
 struct VoxelGrid
 {
-    using type = cis::Storage<Voxel<Dim>, Voxel<Dim>::index_t, cis::backend::array::Array>;
+    using type = cis::Storage<Voxel<Dim>, typename Voxel<Dim>::index_t, cis::backend::array::Array>;
 };
 }
 }

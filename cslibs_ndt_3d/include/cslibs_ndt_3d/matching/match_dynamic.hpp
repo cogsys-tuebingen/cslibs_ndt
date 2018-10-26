@@ -34,7 +34,8 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr          &src,
   using ndt_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
   ndt_t ndt(ndt_t::pose_t(), resolution);
   ndt.insert(dst);
-  r = cslibs_ndt::matching::match(src->begin(), src->end(), ndt, params, initial_transform);
+  // r = cslibs_ndt::matching::match(src->begin(), src->end(), ndt, params, initial_transform);
+}
 }
 }
 }

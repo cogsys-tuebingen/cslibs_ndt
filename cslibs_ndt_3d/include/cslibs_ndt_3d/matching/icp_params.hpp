@@ -13,17 +13,15 @@ public:
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    inline ParametersWithICP(const double                        resolution = 0.5,
-                             const std::size_t                   max_iterations = 100,
+    inline ParametersWithICP(const std::size_t                   max_iterations = 100,
                              const std::size_t                   icp_max_iterations = 50,
                              const double                        icp_min_assigned_points = 0.75,
                              const double                        icp_max_distance = 0.5,
                              const double                        rot_eps = 1e-4,
                              const double                        trans_eps = 1e-4,
                              const std::size_t                   step_adjustment_retries = 5,
-                             const double                        alpha = 1.0,
-                             const cslibs_math_3d::Transform3d  &transform = cslibs_math_3d::Transform3d()) :
-        Parameters(resolution, max_iterations, rot_eps, trans_eps, step_adjustment_retries, alpha, transform),
+                             const double                        alpha = 1.0) :
+        cslibs_ndt::matching::Parameter(max_iterations, rot_eps, trans_eps, step_adjustment_retries, alpha),
         icp_max_iterations_(icp_max_iterations),
         icp_min_assigned_points_(icp_min_assigned_points),
         icp_max_distance_(icp_max_distance)

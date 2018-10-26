@@ -113,7 +113,8 @@ auto match(const iterator_t& points_begin,
             step_adjustments = 0;
         }
 
-        cslibs_math::statistics::LimitEigenValues<DIMS, 3>::apply(h);
+        /// limit H
+        cslibs_math::statistics::LimitEigenValuesByZero<DIMS>::apply(h);
         gradient_t dp = -h.fullPivLu().solve(g);
         dp *= lambda;
 

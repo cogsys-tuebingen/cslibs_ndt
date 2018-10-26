@@ -18,10 +18,10 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
                   const cslibs_math_3d::Transform3d            &initial_transform,
                   cslibs_ndt::matching::Result<cslibs_math_3d::Transform3d> &r)
 {
-  using ndt_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
-  ndt_t ndt(ndt_t::pose_t(), resolution);
-  ndt.insert(dst);
-  r = cslibs_ndt::matching::match(src->begin(), src->end(), ndt, params, initial_transform);
+    using ndt_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
+    ndt_t ndt(ndt_t::pose_t(), resolution);
+    ndt.insert(dst);
+    r = cslibs_ndt::matching::match(src->begin(), src->end(), ndt, params, initial_transform);
 }
 
 inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr          &src,
@@ -31,10 +31,14 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr          &src,
                   const cslibs_math_3d::Transform3d                     &initial_transform,
                   cslibs_ndt_3d::matching::ResultWithICP                &r)
 {
-  using ndt_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
-  ndt_t ndt(ndt_t::pose_t(), resolution);
-  ndt.insert(dst);
-  // r = cslibs_ndt::matching::match(src->begin(), src->end(), ndt, params, initial_transform);
+
+
+
+
+    using ndt_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
+    ndt_t ndt(ndt_t::pose_t(), resolution);
+    ndt.insert(dst);
+    r.assign(cslibs_ndt::matching::match(src->begin(), src->end(), ndt, params, initial_transform));
 }
 }
 }

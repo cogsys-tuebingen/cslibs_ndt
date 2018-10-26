@@ -33,8 +33,8 @@ public:
     const transform_t& transform() const { return transform_; }
     Termination termination() const { return termination_; }
 
-private:
-    double score_;
+protected:
+    double      score_;
     std::size_t iterations_;
     transform_t transform_;
     Termination termination_;

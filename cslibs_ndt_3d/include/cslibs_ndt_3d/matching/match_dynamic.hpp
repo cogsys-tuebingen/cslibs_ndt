@@ -63,16 +63,17 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr          &src,
 
     };
 
-
     /// here we voxel the input clouds, to apply icp up front
-    cslibs_math_3d::Pointcloud3d::Ptr voxel_src = create_voxeled_cloud(src);
-    cslibs_math_3d::Pointcloud3d::Ptr voxel_dst = create_voxeled_cloud(dst);
-    cslibs_ndt_3d::matching::impl::icp::apply(voxel_src, voxel_dst, params, initial_transform, r);
+    cslibs_ndt_3d::matching::impl::icp::apply(create_voxeled_cloud(src),
+                                              create_voxeled_cloud(dst),
+                                              params,
+                                              initial_transform,
+                                              r);
 
 
     ndt_t ndt(ndt_t::pose_t(), resolution);
     ndt.insert(dst);
-    // cslibs_ndt::matching::match(src->begin(), src->end(), ndt, params, initial_transform);
+    r.assign(cslibs_ndt::matching::match(src->begin(), src->end(), ndt, params, initial_transform));
 }
 }
 }

@@ -38,6 +38,14 @@ public:
     {
     }
 
+    inline void assign(const base_t &b)
+    {
+        score_          = b.score();
+        iterations_     = b.iterations();
+        transform_      = b.transform();
+        termination_    = b.termination();
+    }
+
     inline std::size_t & icpIterations()
     {
         return icp_iterations_;

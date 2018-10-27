@@ -17,6 +17,7 @@ public:
 
     using index_t = std::array<int, Dim>;
     using point_t = cslibs_math::linear::Vector<double, Dim>;
+    using size_t  = std::array<std::size_t, Dim>;
 
     inline Voxel() :
         n_(1),

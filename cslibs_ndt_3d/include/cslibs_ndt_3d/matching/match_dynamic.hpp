@@ -40,13 +40,13 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr          &src,
     {
         const voxel_t::index_t min_index = voxel_t::getIndex(src->min(), resolution);
         const voxel_t::index_t max_index = voxel_t::getIndex(src->max(), resolution);
-        const voxel_t::index_t size      = {{max_index[0] - min_index[0] + 1,
-                                             max_index[1] - min_index[1] + 1,
-                                             max_index[2] - min_index[2] + 1}};
+        const voxel_t::size_t  size      = {{static_cast<size_t>(max_index[0] - min_index[0] + 1),
+                                             static_cast<size_t>(max_index[1] - min_index[1] + 1),
+                                             static_cast<size_t>(max_index[2] - min_index[2] + 1)}};
 
         voxel_grid_t::Ptr voxel_grid(new voxel_grid_t::type);
-        voxel_grid->set<cis::option::tags::array_offset>(min_index);
-        voxel_grid->set<cis::option::tags::array_size>(size);
+        voxel_grid->set<cis::option::tags::array_offset>(min_index[0], min_index[1], min_index[2]);
+        voxel_grid->set<cis::option::tags::array_size>(size[0], size[1], size[2]);
 
         const cslibs_math_3d::Pointcloud3d::points_t &pts = src->getPoints();
         for(const auto &p : pts) {

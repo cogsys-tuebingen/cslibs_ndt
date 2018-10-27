@@ -28,10 +28,15 @@ public:
             termination_(termination)
     {}
 
-    double score() const { return score_; }
-    std::size_t iterations() const { return iterations_; }
-    const transform_t& transform() const { return transform_; }
-    Termination termination() const { return termination_; }
+    double              score()         const { return score_; }
+    std::size_t         iterations()    const { return iterations_; }
+    const transform_t&  transform()     const { return transform_; }
+    Termination         termination()   const { return termination_; }
+
+    double&      score()        { return score_; }
+    std::size_t& iterations()   { return iterations_; }
+    transform_t& transform()    { return transform_; }
+    Termination& termination()  { return termination_; }
 
 protected:
     double      score_;

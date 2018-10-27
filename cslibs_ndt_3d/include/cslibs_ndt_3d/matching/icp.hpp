@@ -22,8 +22,8 @@ inline static void apply(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
 
     auto sq = [](const double x) {return x * x;};
 
-    const double trans_eps = sq(params.transEps());
-    const double rot_eps = sq(params.rotEps());
+    const double trans_eps = sq(params.translationEpsilon());
+    const double rot_eps = sq(params.rotationEpsilon());
     const double max_distance = sq(params.maxDistanceICP());
     const std::size_t max_iterations = params.maxIterationsICP();
 
@@ -96,19 +96,19 @@ inline static void apply(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
         if(dt.translation().length2() < trans_eps ||
                 sq(q.angle(cslibs_math_3d::Quaternion())) < rot_eps) {
             r.icpIterations()  = i;
-            r.icpTermination() = ResultWithICP::ICP_EPS;
+            r.icpTermination() = ICPTermination::DELTA_EPS;
             return;
         }
         if(static_cast<double>(assigned) / static_cast<double>(src_size)
            < params.minAssignedPoints()) {
             r.iterations() = i;
-            r.icpTermination() = ResultWithICP::ICP_ASSIGNMENT;
+            r.icpTermination() = ICPTermination::ASSIGNMENT_SUCCESS;
         }
 
     }
 
     r.icpIterations() = params.maxIterations();
-    r.icpTermination() = ResultWithICP::ICP_ITERATIONS;
+    r.icpTermination() = ICPTermination::MAX_ITERATIONS;
 }
 };
 }

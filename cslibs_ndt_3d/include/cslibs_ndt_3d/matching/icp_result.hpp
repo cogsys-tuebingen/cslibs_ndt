@@ -8,7 +8,7 @@
 namespace cslibs_ndt_3d {
 namespace matching {
 
-enum class ICPTermination {NONE, ICP_MAX_ITERATIONS, ICP_DELTA_EPS, ICP_ASSIGNMENT_SUCCESS};
+enum class ICPTermination {NONE, MAX_ITERATIONS, DELTA_EPS, ASSIGNMENT_SUCCESS};
 
 class EIGEN_ALIGN16 ResultWithICP : public cslibs_ndt::matching::Result<cslibs_math_3d::Transform3d>
 {

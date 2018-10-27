@@ -26,9 +26,9 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
     const index_t min_index = {{static_cast<int>(min(0) / resolution),
                                 static_cast<int>(min(1) / resolution),
                                 static_cast<int>(min(2) / resolution)}};
-    const size_t size       = {{static_cast<std::size_t>(static_cast<int>(max(0) / resolution) - min_index[0]),
-                                static_cast<std::size_t>(static_cast<int>(max(0) / resolution) - min_index[0]),
-                                static_cast<std::size_t>(static_cast<int>(max(0) / resolution) - min_index[0])}};
+    const size_t size       = {{static_cast<std::size_t>(static_cast<int>(max(0) / resolution) - min_index[0]) + 1,
+                                static_cast<std::size_t>(static_cast<int>(max(1) / resolution) - min_index[1]) + 1,
+                                static_cast<std::size_t>(static_cast<int>(max(2) / resolution) - min_index[2]) + 1}};
 
     ndt_t ndt(ndt_t::pose_t(), resolution, size, min_index);
     ndt.insert(dst);

@@ -12,6 +12,7 @@ struct icp {
 inline static void apply(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
                          const cslibs_math_3d::Pointcloud3d::ConstPtr &dst,
                          const ParametersWithICP                      &params,
+                         const cslibs_math_3d::Transform3d            &initial_transform,
                          ResultWithICP                                &r)
 {
     const cslibs_math_3d::Pointcloud3d::points_t &src_points = src->getPoints();
@@ -27,7 +28,7 @@ inline static void apply(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
     const std::size_t max_iterations = params.maxIterationsICP();
 
     cslibs_math_3d::Transform3d &transform = r.transform();
-    transform = params.transform();
+    transform = initial_transform;
     cslibs_math_3d::Pointcloud3d::points_t src_points_transformed(src_size);
 
     std::vector<std::size_t> indices(src_size, std::numeric_limits<std::size_t>::max());

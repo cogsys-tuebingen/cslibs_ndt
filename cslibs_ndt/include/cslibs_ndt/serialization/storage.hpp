@@ -90,10 +90,12 @@ struct binary {
 
     inline static bool load(const boost::filesystem::path &path,
                             std::shared_ptr<ar_storage_t> &storage,
-                            const size_t &size)
+                            const size_t &size,
+                            const index_t &offset)
     {
         storage.reset(new ar_storage_t);
         storage->template set<cis::option::tags::array_size>(size);
+        storage->template set<cis::option::tags::array_offset>(offset);
         return loadStorage(path, storage);
     }
 

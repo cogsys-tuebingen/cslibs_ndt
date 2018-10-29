@@ -30,9 +30,9 @@ void testDynamicMap(const typename cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr & m
     EXPECT_EQ(map->getMinBundleIndex()[0], map_converted->getMinBundleIndex()[0]);
     EXPECT_EQ(map->getMinBundleIndex()[1], map_converted->getMinBundleIndex()[1]);
     EXPECT_EQ(map->getMinBundleIndex()[2], map_converted->getMinBundleIndex()[2]);
-    EXPECT_EQ(map->getMaxDistributionIndex()[0], map_converted->getMaxDistributionIndex()[0]);
-    EXPECT_EQ(map->getMaxDistributionIndex()[1], map_converted->getMaxDistributionIndex()[1]);
-    EXPECT_EQ(map->getMaxDistributionIndex()[2], map_converted->getMaxDistributionIndex()[2]);
+    EXPECT_EQ(map->getMaxBundleIndex()[0], map_converted->getMaxBundleIndex()[0]);
+    EXPECT_EQ(map->getMaxBundleIndex()[1], map_converted->getMaxBundleIndex()[1]);
+    EXPECT_EQ(map->getMaxBundleIndex()[2], map_converted->getMaxBundleIndex()[2]);
 
     EXPECT_NEAR(map->getMin()(0), map_converted->getMin()(0), 1e-3);
     EXPECT_NEAR(map->getMin()(1), map_converted->getMin()(1), 1e-3);
@@ -54,38 +54,36 @@ void testDynamicMap(const typename cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr & m
     EXPECT_NEAR(map->getInitialOrigin().pitch(), map_converted->getInitialOrigin().pitch(), 1e-3);
     EXPECT_NEAR(map->getInitialOrigin().yaw(),   map_converted->getInitialOrigin().yaw(),   1e-3);
 
-    for (int idx = map->getMinBundleIndex()[0] ; idx <= map->getMaxDistributionIndex()[0] ; ++ idx) {
-        for (int idy = map->getMinBundleIndex()[1] ; idy <= map->getMaxDistributionIndex()[1] ; ++ idy) {
-            for (int idz = map->getMinBundleIndex()[2] ; idz <= map->getMinBundleIndex()[2] ; ++ idz) {
-                std::array<int, 3> bi({idx, idy, idz});
-                if (typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t* b =
-                        map->getDistributionBundle(bi)) {
-                    typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t* bb =
-                            map_converted->getDistributionBundle(bi);
-                    EXPECT_NE(bb, nullptr);
+    using index_t = std::array<int, 3>;
+    using map_t   = cslibs_ndt_3d::dynamic_maps::Gridmap;
+    using db_t    = typename map_t::distribution_bundle_t;
+    auto check = [](const typename map_t::Ptr &m1, const typename map_t::Ptr &m2) {
+        m1->traverse([&m2](const index_t& bi, const db_t& b) {
+            const db_t* bb = m2->getDistributionBundle(bi);
+            EXPECT_NE(bb, nullptr);
 
-                    for (std::size_t i = 0 ; i < 8 ; ++ i) {
-                        EXPECT_NE(b->at(i),  nullptr);
-                        EXPECT_NE(bb->at(i), nullptr);
+            for (std::size_t i = 0 ; i < 8 ; ++ i) {
+                EXPECT_NE(b.at(i),  nullptr);
+                EXPECT_NE(bb->at(i), nullptr);
 
-                        const cslibs_math::statistics::Distribution<3, 3> & d  = b->at(i)->data();
-                        const cslibs_math::statistics::Distribution<3, 3> & dd = bb->at(i)->data();
-                        EXPECT_EQ(d.getN(), dd.getN());
+                const cslibs_math::statistics::Distribution<3, 3> & d  = b.at(i)->data();
+                const cslibs_math::statistics::Distribution<3, 3> & dd = bb->at(i)->data();
+                EXPECT_EQ(d.getN(), dd.getN());
 
-                        for (std::size_t j = 0 ; j < 3 ; ++ j) {
-                            EXPECT_NEAR(d.getMean()(j), dd.getMean()(j), 1e-3);
-                            for (std::size_t k = 0 ; k < 3 ; ++ k) {
-                                EXPECT_NEAR(d.getCorrelated()(j, k), dd.getCorrelated()(j, k), 1e-3);
-                                EXPECT_NEAR(d.getCovariance()(j, k), dd.getCovariance()(j, k), 1e-3);
-                                EXPECT_NEAR(d.getInformationMatrix()(j, k), dd.getInformationMatrix()(j, k), 1e-3);
-                            }
-                        }
+                for (std::size_t j = 0 ; j < 3 ; ++ j) {
+                    EXPECT_NEAR(d.getMean()(j), dd.getMean()(j), 1e-3);
+                    for (std::size_t k = 0 ; k < 3 ; ++ k) {
+                        EXPECT_NEAR(d.getCorrelated()(j, k), dd.getCorrelated()(j, k), 1e-3);
+                        EXPECT_NEAR(d.getCovariance()(j, k), dd.getCovariance()(j, k), 1e-3);
+                        EXPECT_NEAR(d.getInformationMatrix()(j, k), dd.getInformationMatrix()(j, k), 1e-3);
                     }
-                } else
-                    EXPECT_EQ(map_converted->getDistributionBundle(bi), nullptr);
+                }
             }
-        }
-    }
+        });
+    };
+
+    check(map, map_converted);
+    check(map_converted, map);
 }
 
 void testStaticMap(const typename cslibs_ndt_3d::static_maps::Gridmap::Ptr & map,
@@ -114,39 +112,36 @@ void testStaticMap(const typename cslibs_ndt_3d::static_maps::Gridmap::Ptr & map
     EXPECT_NEAR(map->getSizeM()[1],         map_converted->getSizeM()[1],     1e-3);
     EXPECT_NEAR(map->getSizeM()[2],         map_converted->getSizeM()[2],     1e-3);
 
+    using index_t = std::array<int, 3>;
+    using map_t   = cslibs_ndt_3d::static_maps::Gridmap;
+    using db_t    = typename map_t::distribution_bundle_t;
+    auto check = [](const typename map_t::Ptr &m1, const typename map_t::Ptr &m2) {
+        m1->traverse([&m2](const index_t& bi, const db_t& b) {
+            const db_t* bb = m2->getDistributionBundle(bi);
+            EXPECT_NE(bb, nullptr);
 
-    for (int idx = 0 ; idx < static_cast<int>(map->getBundleSize()[0]) ; ++ idx) {
-        for (int idy = 0 ; idy < static_cast<int>(map->getBundleSize()[1]) ; ++ idy) {
-            for (int idz = 0 ; idz < static_cast<int>(map->getBundleSize()[2]) ; ++ idz) {
-                std::array<int, 3> bi({idx, idy, idz});
-                if (typename cslibs_ndt_3d::static_maps::Gridmap::distribution_bundle_t* b =
-                        map->getDistributionBundle(bi)) {
-                    typename cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t* bb =
-                            map_converted->getDistributionBundle(bi);
-                    EXPECT_NE(bb, nullptr);
+            for (std::size_t i = 0 ; i < 8 ; ++ i) {
+                EXPECT_NE(b.at(i),  nullptr);
+                EXPECT_NE(bb->at(i), nullptr);
 
-                    for (std::size_t i = 0 ; i < 8 ; ++ i) {
-                        EXPECT_NE(b->at(i),  nullptr);
-                        EXPECT_NE(bb->at(i), nullptr);
+                const cslibs_math::statistics::Distribution<3, 3> & d  = b.at(i)->data();
+                const cslibs_math::statistics::Distribution<3, 3> & dd = bb->at(i)->data();
+                EXPECT_EQ(d.getN(), dd.getN());
 
-                        const cslibs_math::statistics::Distribution<3, 3> & d  = b->at(i)->data();
-                        const cslibs_math::statistics::Distribution<3, 3> & dd = bb->at(i)->data();
-                        EXPECT_EQ(d.getN(), dd.getN());
-
-                        for (std::size_t j = 0 ; j < 3 ; ++ j) {
-                            EXPECT_NEAR(d.getMean()(j), dd.getMean()(j), 1e-3);
-                            for (std::size_t k = 0 ; k < 3 ; ++ k) {
-                                EXPECT_NEAR(d.getCorrelated()(j, k), dd.getCorrelated()(j, k), 1e-3);
-                                EXPECT_NEAR(d.getCovariance()(j, k), dd.getCovariance()(j, k), 1e-3);
-                                EXPECT_NEAR(d.getInformationMatrix()(j, k), dd.getInformationMatrix()(j, k), 1e-3);
-                            }
-                        }
+                for (std::size_t j = 0 ; j < 3 ; ++ j) {
+                    EXPECT_NEAR(d.getMean()(j), dd.getMean()(j), 1e-3);
+                    for (std::size_t k = 0 ; k < 3 ; ++ k) {
+                        EXPECT_NEAR(d.getCorrelated()(j, k), dd.getCorrelated()(j, k), 1e-3);
+                        EXPECT_NEAR(d.getCovariance()(j, k), dd.getCovariance()(j, k), 1e-3);
+                        EXPECT_NEAR(d.getInformationMatrix()(j, k), dd.getInformationMatrix()(j, k), 1e-3);
                     }
-                } else
-                    EXPECT_EQ(map_converted->getDistributionBundle(bi), nullptr);
+                }
             }
-        }
-    }
+        });
+    };
+
+    check(map, map_converted);
+    check(map_converted, map);
 }
 
 
@@ -164,9 +159,9 @@ void testDynamicOccMap(const typename cslibs_ndt_3d::dynamic_maps::OccupancyGrid
     EXPECT_EQ(map->getMinBundleIndex()[0], map_converted->getMinBundleIndex()[0]);
     EXPECT_EQ(map->getMinBundleIndex()[1], map_converted->getMinBundleIndex()[1]);
     EXPECT_EQ(map->getMinBundleIndex()[2], map_converted->getMinBundleIndex()[2]);
-    EXPECT_EQ(map->getMaxDistributionIndex()[0], map_converted->getMaxDistributionIndex()[0]);
-    EXPECT_EQ(map->getMaxDistributionIndex()[1], map_converted->getMaxDistributionIndex()[1]);
-    EXPECT_EQ(map->getMaxDistributionIndex()[2], map_converted->getMaxDistributionIndex()[2]);
+    EXPECT_EQ(map->getMaxBundleIndex()[0], map_converted->getMaxBundleIndex()[0]);
+    EXPECT_EQ(map->getMaxBundleIndex()[1], map_converted->getMaxBundleIndex()[1]);
+    EXPECT_EQ(map->getMaxBundleIndex()[2], map_converted->getMaxBundleIndex()[2]);
 
     EXPECT_NEAR(map->getMin()(0), map_converted->getMin()(0), 1e-3);
     EXPECT_NEAR(map->getMin()(1), map_converted->getMin()(1), 1e-3);
@@ -188,45 +183,43 @@ void testDynamicOccMap(const typename cslibs_ndt_3d::dynamic_maps::OccupancyGrid
     EXPECT_NEAR(map->getInitialOrigin().pitch(), map_converted->getInitialOrigin().pitch(), 1e-3);
     EXPECT_NEAR(map->getInitialOrigin().yaw(),   map_converted->getInitialOrigin().yaw(),   1e-3);
 
-    for (int idx = map->getMinBundleIndex()[0] ; idx <= map->getMaxDistributionIndex()[0] ; ++ idx) {
-        for (int idy = map->getMinBundleIndex()[1] ; idy <= map->getMaxDistributionIndex()[1] ; ++ idy) {
-            for (int idz = map->getMinBundleIndex()[2] ; idz <= map->getMinBundleIndex()[2] ; ++ idz) {
-                std::array<int, 3> bi({idx, idy, idz});
-                if (typename cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_bundle_t* b =
-                        map->getDistributionBundle(bi)) {
-                    typename cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_bundle_t* bb =
-                            map_converted->getDistributionBundle(bi);
-                    EXPECT_NE(bb, nullptr);
+    using index_t = std::array<int, 3>;
+    using map_t   = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap;
+    using db_t    = typename map_t::distribution_bundle_t;
+    auto check = [](const typename map_t::Ptr &m1, const typename map_t::Ptr &m2) {
+        m1->traverse([&m2](const index_t& bi, const db_t& b) {
+            const db_t* bb = m2->getDistributionBundle(bi);
+            EXPECT_NE(bb, nullptr);
 
-                    for (std::size_t i = 0 ; i < 8 ; ++ i) {
-                        EXPECT_NE(b->at(i),  nullptr);
-                        EXPECT_NE(bb->at(i), nullptr);
+            for (std::size_t i = 0 ; i < 8 ; ++ i) {
+                EXPECT_NE(b.at(i),  nullptr);
+                EXPECT_NE(bb->at(i), nullptr);
 
-                        EXPECT_EQ(b->at(i)->numFree(), bb->at(i)->numFree());
-                        EXPECT_EQ(b->at(i)->numOccupied(), bb->at(i)->numOccupied());
+                EXPECT_EQ(b.at(i)->numFree(), bb->at(i)->numFree());
+                EXPECT_EQ(b.at(i)->numOccupied(), bb->at(i)->numOccupied());
 
-                        const std::shared_ptr<cslibs_math::statistics::Distribution<3, 3>> d  = b->at(i)->getDistribution();
-                        const std::shared_ptr<cslibs_math::statistics::Distribution<3, 3>> dd = bb->at(i)->getDistribution();
-                        if (d) {
-                            EXPECT_NE(dd, nullptr);
-                            EXPECT_EQ(d->getN(), dd->getN());
+                const std::shared_ptr<cslibs_math::statistics::Distribution<3, 3>> d  = b.at(i)->getDistribution();
+                const std::shared_ptr<cslibs_math::statistics::Distribution<3, 3>> dd = bb->at(i)->getDistribution();
+                if (d) {
+                    EXPECT_NE(dd, nullptr);
+                    EXPECT_EQ(d->getN(), dd->getN());
 
-                            for (std::size_t j = 0 ; j < 3 ; ++ j) {
-                                EXPECT_NEAR(d->getMean()(j), dd->getMean()(j), 1e-3);
-                                for (std::size_t k = 0 ; k < 3 ; ++ k) {
-                                    EXPECT_NEAR(d->getCorrelated()(j, k), dd->getCorrelated()(j, k), 1e-3);
-                                    EXPECT_NEAR(d->getCovariance()(j, k), dd->getCovariance()(j, k), 1e-3);
-                                    EXPECT_NEAR(d->getInformationMatrix()(j, k), dd->getInformationMatrix()(j, k), 1e-3);
-                                }
-                            }
-                        } else
-                            EXPECT_EQ(dd, nullptr);
+                    for (std::size_t j = 0 ; j < 3 ; ++ j) {
+                        EXPECT_NEAR(d->getMean()(j), dd->getMean()(j), 1e-3);
+                        for (std::size_t k = 0 ; k < 3 ; ++ k) {
+                            EXPECT_NEAR(d->getCorrelated()(j, k), dd->getCorrelated()(j, k), 1e-3);
+                            EXPECT_NEAR(d->getCovariance()(j, k), dd->getCovariance()(j, k), 1e-3);
+                            EXPECT_NEAR(d->getInformationMatrix()(j, k), dd->getInformationMatrix()(j, k), 1e-3);
+                        }
                     }
                 } else
-                    EXPECT_EQ(map_converted->getDistributionBundle(bi), nullptr);
+                    EXPECT_EQ(dd, nullptr);
             }
-        }
-    }
+        });
+    };
+
+    check(map, map_converted);
+    check(map_converted, map);
 }
 
 void testStaticOccMap(const typename cslibs_ndt_3d::static_maps::OccupancyGridmap::Ptr & map,
@@ -255,45 +248,43 @@ void testStaticOccMap(const typename cslibs_ndt_3d::static_maps::OccupancyGridma
     EXPECT_NEAR(map->getSizeM()[1],         map_converted->getSizeM()[1],     1e-3);
     EXPECT_NEAR(map->getSizeM()[2],         map_converted->getSizeM()[2],     1e-3);
 
-    for (int idx = 0 ; idx < static_cast<int>(map->getBundleSize()[0]) ; ++ idx) {
-        for (int idy = 0 ; idy < static_cast<int>(map->getBundleSize()[1]) ; ++ idy) {
-            for (int idz = 0 ; idz < static_cast<int>(map->getBundleSize()[2]) ; ++ idz) {
-                std::array<int, 3> bi({idx, idy, idz});
-                if (typename cslibs_ndt_3d::static_maps::OccupancyGridmap::distribution_bundle_t* b =
-                        map->getDistributionBundle(bi)) {
-                    typename cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_bundle_t* bb =
-                            map_converted->getDistributionBundle(bi);
-                    EXPECT_NE(bb, nullptr);
+    using index_t = std::array<int, 3>;
+    using map_t   = cslibs_ndt_3d::static_maps::OccupancyGridmap;
+    using db_t    = typename map_t::distribution_bundle_t;
+    auto check = [](const typename map_t::Ptr &m1, const typename map_t::Ptr &m2) {
+        m1->traverse([&m2](const index_t& bi, const db_t& b) {
+            const db_t* bb = m2->getDistributionBundle(bi);
+            EXPECT_NE(bb, nullptr);
 
-                    for (std::size_t i = 0 ; i < 8 ; ++ i) {
-                        EXPECT_NE(b->at(i),  nullptr);
-                        EXPECT_NE(bb->at(i), nullptr);
+            for (std::size_t i = 0 ; i < 8 ; ++ i) {
+                EXPECT_NE(b.at(i),  nullptr);
+                EXPECT_NE(bb->at(i), nullptr);
 
-                        EXPECT_EQ(b->at(i)->numFree(),     bb->at(i)->numFree());
-                        EXPECT_EQ(b->at(i)->numOccupied(), bb->at(i)->numOccupied());
+                EXPECT_EQ(b.at(i)->numFree(),     bb->at(i)->numFree());
+                EXPECT_EQ(b.at(i)->numOccupied(), bb->at(i)->numOccupied());
 
-                        const std::shared_ptr<cslibs_math::statistics::Distribution<3, 3>> d  = b->at(i)->getDistribution();
-                        const std::shared_ptr<cslibs_math::statistics::Distribution<3, 3>> dd = bb->at(i)->getDistribution();
-                        if (d) {
-                            EXPECT_NE(dd, nullptr);
-                            EXPECT_EQ(d->getN(), dd->getN());
+                const std::shared_ptr<cslibs_math::statistics::Distribution<3, 3>> d  = b.at(i)->getDistribution();
+                const std::shared_ptr<cslibs_math::statistics::Distribution<3, 3>> dd = bb->at(i)->getDistribution();
+                if (d) {
+                    EXPECT_NE(dd, nullptr);
+                    EXPECT_EQ(d->getN(), dd->getN());
 
-                            for (std::size_t j = 0 ; j < 3 ; ++ j) {
-                                EXPECT_NEAR(d->getMean()(j), dd->getMean()(j), 1e-3);
-                                for (std::size_t k = 0 ; k < 3 ; ++ k) {
-                                    EXPECT_NEAR(d->getCorrelated()(j, k), dd->getCorrelated()(j, k), 1e-3);
-                                    EXPECT_NEAR(d->getCovariance()(j, k), dd->getCovariance()(j, k), 1e-3);
-                                    EXPECT_NEAR(d->getInformationMatrix()(j, k), dd->getInformationMatrix()(j, k), 1e-3);
-                                }
-                            }
-                        } else
-                            EXPECT_EQ(dd, nullptr);
+                    for (std::size_t j = 0 ; j < 3 ; ++ j) {
+                        EXPECT_NEAR(d->getMean()(j), dd->getMean()(j), 1e-3);
+                        for (std::size_t k = 0 ; k < 3 ; ++ k) {
+                            EXPECT_NEAR(d->getCorrelated()(j, k), dd->getCorrelated()(j, k), 1e-3);
+                            EXPECT_NEAR(d->getCovariance()(j, k), dd->getCovariance()(j, k), 1e-3);
+                            EXPECT_NEAR(d->getInformationMatrix()(j, k), dd->getInformationMatrix()(j, k), 1e-3);
+                        }
                     }
                 } else
-                    EXPECT_EQ(map_converted->getDistributionBundle(bi), nullptr);
+                    EXPECT_EQ(dd, nullptr);
             }
-        }
-    }
+        });
+    };
+
+    check(map, map_converted);
+    check(map_converted, map);
 }
 
 cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr generateDynamicMap()
@@ -337,80 +328,17 @@ cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr generateDynamicOccMap()
     return map;
 }
 
-cslibs_ndt_3d::static_maps::Gridmap::Ptr generateStaticMap()
-{
-    using map_t = cslibs_ndt_3d::static_maps::Gridmap;
-    rng_t<1> rng_coord(-10.0, 10.0);
-    rng_t<1> rng_angle(-M_PI, M_PI);
-    rng_t<1> rng_size(10.0, 20.0);
-
-    // fill map
-    cslibs_math_3d::Transform3d origin(cslibs_math_3d::Vector3d(rng_coord.get(), rng_coord.get(), rng_coord.get()),
-                                       cslibs_math_3d::Quaternion(rng_angle.get(), rng_angle.get(), rng_angle.get()));
-    const double resolution = rng_t<1>(1.0, 5.0).get();
-    const std::size_t size_x = rng_size.get();
-    const std::size_t size_y = rng_size.get();
-    const std::size_t size_z = rng_size.get();
-    typename map_t::Ptr map(new map_t(origin, resolution, {{size_x, size_y, size_z}}, {{0,0,0}}));
-    const int num_samples = static_cast<int>(rng_t<1>(MIN_NUM_SAMPLES, MAX_NUM_SAMPLES).get());
-
-    const double max_coord_x = static_cast<double>(size_x) * resolution;
-    const double max_coord_y = static_cast<double>(size_y) * resolution;
-    const double max_coord_z = static_cast<double>(size_z) * resolution;
-    rng_t<1> rng_coord_x(0.0, max_coord_x);
-    rng_t<1> rng_coord_y(0.0, max_coord_y);
-    rng_t<1> rng_coord_z(0.0, max_coord_z);
-    for (int i = 0 ; i < num_samples ; ++ i) {
-        const cslibs_math_3d::Point3d p(rng_coord_x.get(), rng_coord_y.get(), rng_coord_z.get());
-        map->insert(origin * p);
-    }
-
-    return map;
-}
-
-cslibs_ndt_3d::static_maps::OccupancyGridmap::Ptr generateStaticOccMap()
-{
-    using map_t = cslibs_ndt_3d::static_maps::OccupancyGridmap;
-    rng_t<1> rng_coord(-10.0, 10.0);
-    rng_t<1> rng_angle(-M_PI, M_PI);
-    rng_t<1> rng_size(10.0, 20.0);
-
-    // fill map
-    cslibs_math_3d::Transform3d origin(cslibs_math_3d::Vector3d(rng_coord.get(), rng_coord.get(), rng_coord.get()),
-                                       cslibs_math_3d::Quaternion(rng_angle.get(), rng_angle.get(), rng_angle.get()));
-    const double resolution = rng_t<1>(1.0, 5.0).get();
-    const std::size_t size_x = rng_size.get();
-    const std::size_t size_y = rng_size.get();
-    const std::size_t size_z = rng_size.get();
-    typename map_t::Ptr map(new map_t(origin, resolution, {{size_x, size_y, size_z}}, {{0,0,0}}));
-    const int num_samples = static_cast<int>(rng_t<1>(MIN_NUM_SAMPLES, MAX_NUM_SAMPLES).get());
-
-    const double max_coord_x = static_cast<double>(size_x) * resolution;
-    const double max_coord_y = static_cast<double>(size_y) * resolution;
-    const double max_coord_z = static_cast<double>(size_z) * resolution;
-    rng_t<1> rng_coord_x(0.0, max_coord_x);
-    rng_t<1> rng_coord_y(0.0, max_coord_y);
-    rng_t<1> rng_coord_z(0.0, max_coord_z);
-    for (int i = 0 ; i < num_samples ; ++ i) {
-        const cslibs_math_3d::Point3d p(rng_coord_x.get(), rng_coord_y.get(), rng_coord_z.get());
-        const cslibs_math_3d::Point3d q(rng_coord_x.get(), rng_coord_y.get(), rng_coord_z.get());
-        map->insert(origin * p, origin * q);
-    }
-
-    return map;
-}
-
 TEST(Test_cslibs_ndt_3d, testDynamicGridmapConversion)
 {
     using map_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
     const typename map_t::Ptr map = generateDynamicMap();
+
     // conversion
-    auto  static_map = cslibs_ndt_3d::conversion::from(map);
     const typename map_t::Ptr & map_double_converted =
-            cslibs_ndt_3d::conversion::from(static_map);
+            cslibs_ndt_3d::conversion::from(cslibs_ndt_3d::conversion::from(map));
 
     EXPECT_NE(map_double_converted, nullptr);
-    // TODO: test
+    testDynamicMap(map, map_double_converted);
 }
 
 TEST(Test_cslibs_ndt_3d, testDynamicOccupancyGridmapConversion)
@@ -418,38 +346,44 @@ TEST(Test_cslibs_ndt_3d, testDynamicOccupancyGridmapConversion)
     using map_t = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap;
     const typename map_t::Ptr map = generateDynamicOccMap();
 
-    // converion
+    // conversion
     const typename map_t::Ptr & map_double_converted =
             cslibs_ndt_3d::conversion::from(cslibs_ndt_3d::conversion::from(map));
 
     EXPECT_NE(map_double_converted, nullptr);
-    // TODO: test
+    testDynamicOccMap(map, map_double_converted);
 }
 
 TEST(Test_cslibs_ndt_3d, testStaticGridmapConversion)
 {
+    using tmp_map_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
+    const typename tmp_map_t::Ptr tmp_map = generateDynamicMap();
+
     using map_t = cslibs_ndt_3d::static_maps::Gridmap;
-    const typename map_t::Ptr map = generateStaticMap();
+    const typename map_t::Ptr map = cslibs_ndt_3d::conversion::from(tmp_map);
 
     // conversion
     const typename map_t::Ptr & map_double_converted =
             cslibs_ndt_3d::conversion::from(cslibs_ndt_3d::conversion::from(map));
 
     EXPECT_NE(map_double_converted, nullptr);
-    // TODO: test
+    testStaticMap(map, map_double_converted);
 }
 
 TEST(Test_cslibs_ndt_3d, testStaticOccupancyGridmapConversion)
 {
+    using tmp_map_t = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap;
+    const typename tmp_map_t::Ptr tmp_map = generateDynamicOccMap();
+
     using map_t = cslibs_ndt_3d::static_maps::OccupancyGridmap;
-    const typename map_t::Ptr map = generateStaticOccMap();
+    const typename map_t::Ptr map = cslibs_ndt_3d::conversion::from(tmp_map);
 
     // conversion
     const typename map_t::Ptr & map_double_converted =
             cslibs_ndt_3d::conversion::from(cslibs_ndt_3d::conversion::from(map));
 
     EXPECT_NE(map_double_converted, nullptr);
-    // TODO: test
+    testStaticOccMap(map, map_double_converted);
 }
 
 TEST(Test_cslibs_ndt_3d, testDynamicGridmapFileBinarySerialization)
@@ -466,7 +400,7 @@ TEST(Test_cslibs_ndt_3d, testDynamicGridmapFileBinarySerialization)
 
     // tests
     EXPECT_TRUE(success);
-//    testDynamicMap(map, map_from_file);
+    testDynamicMap(map, map_from_file);
 }
 
 TEST(Test_cslibs_ndt_3d, testDynamicOccupancyGridmapFileBinarySerialization)
@@ -483,13 +417,13 @@ TEST(Test_cslibs_ndt_3d, testDynamicOccupancyGridmapFileBinarySerialization)
 
     // tests
     EXPECT_TRUE(success);
-//    testDynamicOccMap(map, map_from_file);
+    testDynamicOccMap(map, map_from_file);
 }
 
 TEST(Test_cslibs_ndt_3d, testStaticGridmapFileBinarySerialization)
 {
     using map_t = cslibs_ndt_3d::static_maps::Gridmap;
-    const typename map_t::Ptr map = generateStaticMap();
+    const typename map_t::Ptr map = cslibs_ndt_3d::conversion::from(generateDynamicMap());
 
     // to file
     cslibs_ndt_3d::static_maps::saveBinary(map, "/tmp/static_map_binary_3d");
@@ -500,13 +434,13 @@ TEST(Test_cslibs_ndt_3d, testStaticGridmapFileBinarySerialization)
 
     // tests
     EXPECT_TRUE(success);
-//    testStaticMap(map, map_from_file);
+    testStaticMap(map, map_from_file);
 }
 
 TEST(Test_cslibs_ndt_3d, testStaticOccupancyGridmapFileBinarySerialization)
 {
     using map_t = cslibs_ndt_3d::static_maps::OccupancyGridmap;
-    const typename map_t::Ptr map = generateStaticOccMap();
+    const typename map_t::Ptr map = cslibs_ndt_3d::conversion::from(generateDynamicOccMap());
 
     // to file
     cslibs_ndt_3d::static_maps::saveBinary(map, "/tmp/static_occ_map_binary_3d");
@@ -517,7 +451,7 @@ TEST(Test_cslibs_ndt_3d, testStaticOccupancyGridmapFileBinarySerialization)
 
     // tests
     EXPECT_TRUE(success);
-//    testStaticOccMap(map, map_from_file);
+    testStaticOccMap(map, map_from_file);
 }
 
 int main(int argc, char *argv[])

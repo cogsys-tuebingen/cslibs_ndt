@@ -46,9 +46,10 @@ inline bool saveBinary(const cslibs_ndt_2d::static_maps::Gridmap::Ptr &map,
         YAML::Node n;
         std::vector<index_t> indices;
         map->getBundleIndices(indices);
-        n["origin"]     = map->getOrigin();
+        n["origin"]     = map->getInitialOrigin();
         n["resolution"] = map->getResolution();
         n["size"]       = map->getSize();
+        n["min_index"]  = map->getMinBundleIndex();
         n["bundles"]    = indices;
         yaml << n;
     }
@@ -109,15 +110,19 @@ inline bool loadBinary(const std::string &path,
     const double                      resolution = n["resolution"].as<double>();
     const size_t                      size       = n["size"].as<size_t>();
     const std::vector<index_t>        indices    = n["bundles"].as<std::vector<index_t>>();
+    const index_t                     min_index  = n["min_index"].as<index_t>();
+
     bundles->template set<cslibs_indexed_storage::option::tags::array_size>(size[0] * 2, size[1] * 2);
+    bundles->template set<cslibs_indexed_storage::option::tags::array_offset>(min_index[0], min_index[1]);
 
     std::array<std::thread, 4> threads;
     std::atomic_bool success(true);
+    const index_t os = {{min_index[0] / 2, min_index[1] / 2}};
     for (std::size_t i = 0 ; i < 4 ; ++ i) {
-        const int off   = (i > 1) ? 1 : 0;
-        const size_t sz = {{size[0] + off, size[1] + off}};
-        threads[i] = std::thread([&storages, &paths, i, &sz, &success](){
-            success = success && binary_t::load(paths[i], storages[i], sz);
+        const int off    = (i > 1) ? 1 : 0;
+        const size_t  sz = {{size[0] + off, size[1] + off}};
+        threads[i] = std::thread([&storages, &paths, i, &sz, &os, &success](){
+            success = success && binary_t::load(paths[i], storages[i], sz, os);
         });
     }
     for (std::size_t i = 0 ; i < 4 ; ++ i)
@@ -151,7 +156,8 @@ inline bool loadBinary(const std::string &path,
                                                       resolution,
                                                       size,
                                                       bundles,
-                                                      storages));
+                                                      storages,
+                                                      min_index));
 
     return true;
 }

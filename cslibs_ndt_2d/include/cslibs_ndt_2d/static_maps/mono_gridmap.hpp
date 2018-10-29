@@ -244,6 +244,11 @@ public:
         return size_;
     }
 
+    inline index_t getMinBundleIndex() const
+    {
+        return min_bundle_index_;
+    }
+
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {

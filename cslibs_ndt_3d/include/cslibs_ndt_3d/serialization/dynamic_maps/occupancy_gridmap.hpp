@@ -53,7 +53,7 @@ inline bool saveBinary(const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr 
         n["origin"]     = map->getInitialOrigin();
         n["resolution"] = map->getResolution();
         n["min_index"]  = map->getMinBundleIndex();
-        n["max_index"]  = map->getMaxDistributionIndex();
+        n["max_index"]  = map->getMaxBundleIndex();
         n["bundles"]    = indices;
         yaml << n;
     }

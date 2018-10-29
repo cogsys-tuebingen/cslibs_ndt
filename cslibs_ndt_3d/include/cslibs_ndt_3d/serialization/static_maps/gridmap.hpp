@@ -50,7 +50,7 @@ inline bool saveBinary(const cslibs_ndt_3d::static_maps::Gridmap::Ptr &map,
         YAML::Node n;
         std::vector<index_t> indices;
         map->getBundleIndices(indices);
-        n["origin"]     = map->getOrigin();
+        n["origin"]     = map->getInitialOrigin();
         n["resolution"] = map->getResolution();
         n["size"]       = map->getSize();
         n["bundles"]    = indices;
@@ -130,11 +130,12 @@ inline bool loadBinary(const std::string &path,
 
     std::array<std::thread, 8> threads;
     std::atomic_bool success(true);
+    const index_t os = {{min_index[0] / 2, min_index[1] / 2, min_index[2] / 2}};
     for (std::size_t i = 0 ; i < 8 ; ++ i) {
         const std::size_t off   = (i > 1ul) ? 1ul : 0ul;
         const size_t sz = {{size[0] + off, size[1] + off, size[2] + off}};
-        threads[i] = std::thread([&storages, &paths, i, &sz, &success](){
-            success = success && binary_t::load(paths[i], storages[i], sz);
+        threads[i] = std::thread([&storages, &paths, i, &sz, &os, &success](){
+            success = success && binary_t::load(paths[i], storages[i], sz, os);
         });
     }
     for (std::size_t i = 0 ; i < 8 ; ++ i)

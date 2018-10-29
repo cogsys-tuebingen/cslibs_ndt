@@ -57,17 +57,16 @@ public:
                    const size_t &size,
                    const index_t &min_bundle_index) :
         resolution_(resolution),
-        resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
         size_(size),
         size_m_{{(size[0] + 1) * resolution,
-        (size[1] + 1) * resolution}},
+                 (size[1] + 1) * resolution}},
         min_bundle_index_(min_bundle_index),
-        max_bundle_index_{{min_bundle_index[0] + static_cast<int>(size[0] * 2),
-        min_bundle_index[1] + static_cast<int>(size[1] * 2)}},
+        max_bundle_index_{{min_bundle_index[0] + static_cast<int>(size[0] * 2) - 1,
+                           min_bundle_index[1] + static_cast<int>(size[1] * 2) - 1}},
         storage_{{distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t),
@@ -75,17 +74,14 @@ public:
         bundle_storage_(new distribution_bundle_storage_t)
     {
         storage_[0]->template set<cis::option::tags::array_size>(size[0], size[1]);
-        storage_[0]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2,
-                min_bundle_index[1] / 2);
+        storage_[0]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2, min_bundle_index[1] / 2);
         for(std::size_t i = 1 ; i < 4 ; ++ i) {
             storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1, size[1] + 1);
-            storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2,
-                    min_bundle_index[1] / 2);
+            storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2, min_bundle_index[1] / 2);
         }
 
         bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2, size[1] * 2);
-        bundle_storage_->template set<cis::option::tags::array_offset>(min_bundle_index[0],
-                min_bundle_index[1]);
+        bundle_storage_->template set<cis::option::tags::array_offset>(min_bundle_index[0], min_bundle_index[1]);
     }
 
     inline Gridmap(const double &origin_x,
@@ -95,17 +91,16 @@ public:
                    const size_t &size,
                    const index_t &min_bundle_index) :
         resolution_(resolution),
-        resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin_x, origin_y, origin_phi),
         m_T_w_(w_T_m_.inverse()),
         size_(size),
-        size_m_{{(size[0]) * resolution,
-        (size[1]) * resolution}},
+        size_m_{{(size[0] + 1) * resolution,
+                 (size[1] + 1) * resolution}},
         min_bundle_index_(min_bundle_index),
-        max_bundle_index_{{min_bundle_index[0] + static_cast<int>(size[0] * 2),
-        min_bundle_index[1] + static_cast<int>(size[1] * 2)}},
+        max_bundle_index_{{min_bundle_index[0] + static_cast<int>(size[0] * 2) - 1,
+                           min_bundle_index[1] + static_cast<int>(size[1] * 2) - 1}},
         storage_{{distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t),
                  distribution_storage_ptr_t(new distribution_storage_t),
@@ -113,17 +108,14 @@ public:
         bundle_storage_(new distribution_bundle_storage_t)
     {
         storage_[0]->template set<cis::option::tags::array_size>(size[0], size[1]);
-        storage_[0]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2,
-                min_bundle_index[1] / 2);
+        storage_[0]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2, min_bundle_index[1] / 2);
         for(std::size_t i = 1 ; i < 4 ; ++ i) {
             storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1, size[1] + 1);
-            storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2,
-                    min_bundle_index[1] / 2);
+            storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2, min_bundle_index[1] / 2);
         }
 
         bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2, size[1] * 2);
-        bundle_storage_->template set<cis::option::tags::array_offset>(min_bundle_index[0],
-                min_bundle_index[1]);
+        bundle_storage_->template set<cis::option::tags::array_offset>(min_bundle_index[0], min_bundle_index[1]);
     }
 
     inline Gridmap(const pose_t &origin,
@@ -133,17 +125,16 @@ public:
                    const distribution_storage_array_t                   &storage,
                    const index_t &min_bundle_index) :
         resolution_(resolution),
-        resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
         size_(size),
         size_m_{{(size[0] + 1) * resolution,
-        (size[1] + 1) * resolution}},
+                 (size[1] + 1) * resolution}},
         min_bundle_index_(min_bundle_index),
-        max_bundle_index_{{min_bundle_index[0] + static_cast<int>(size[0] * 2),
-        min_bundle_index[1] + static_cast<int>(size[1] * 2)}},
+        max_bundle_index_{{min_bundle_index[0] + static_cast<int>(size[0] * 2) - 1,
+                           min_bundle_index[1] + static_cast<int>(size[1] * 2) - 1}},
         storage_(storage),
         bundle_storage_(bundles)
     {
@@ -151,7 +142,6 @@ public:
 
     inline Gridmap(const Gridmap &other) :
         resolution_(other.resolution_),
-        resolution_inv_(other.resolution_inv_),
         bundle_resolution_(other.bundle_resolution_),
         bundle_resolution_inv_(other.bundle_resolution_inv_),
         w_T_m_(other.w_T_m_),
@@ -170,7 +160,6 @@ public:
 
     inline Gridmap(Gridmap &&other) :
         resolution_(other.resolution_),
-        resolution_inv_(other.resolution_inv_),
         bundle_resolution_(other.bundle_resolution_),
         bundle_resolution_inv_(other.bundle_resolution_inv_),
         w_T_m_(std::move(other.w_T_m_)),
@@ -191,7 +180,7 @@ public:
     inline point_t getMin() const
     {
         return point_t(min_bundle_index_[0] * bundle_resolution_,
-                min_bundle_index_[1] * bundle_resolution_);
+                       min_bundle_index_[1] * bundle_resolution_);
     }
 
     /**
@@ -201,7 +190,7 @@ public:
     inline point_t getMax() const
     {
         return point_t((max_bundle_index_[0] + 1) * bundle_resolution_,
-                (max_bundle_index_[1] + 1) * bundle_resolution_);
+                       (max_bundle_index_[1] + 1) * bundle_resolution_);
     }
 
     /**
@@ -243,7 +232,7 @@ public:
         distribution_storage_t storage;
         storage.template set<cis::option::tags::array_size>(size_[0] * 2, size_[1] * 2);
         storage.template set<cis::option::tags::array_offset>(min_bundle_index_[0],
-                min_bundle_index_[1]);
+                                                              min_bundle_index_[1]);
         for (const auto &p : *points) {
             const point_t pm = points_origin * p;
             if (pm.isNormal()) {
@@ -352,6 +341,16 @@ public:
         return storage_;
     }
 
+    inline index_t getMinBundleIndex() const
+    {
+        return min_bundle_index_;
+    }
+
+    inline index_t getMaxBundleIndex() const
+    {
+        return max_bundle_index_;
+    }
+
     template <typename Fn>
     inline void traverse(const Fn& function) const
     {
@@ -382,9 +381,8 @@ public:
         const point_t min = getMin();
         const point_t max = getMax();
         return p_m(0) >= min(0) && p_m(0) < min(0) &&
-                p_m(1) >= min(1) && p_m(1) < max(1);
+               p_m(1) >= min(1) && p_m(1) < max(1);
     }
-
 
     inline void allocatePartiallyAllocatedBundles()
     {
@@ -414,7 +412,6 @@ public:
 
 protected:
     const double                                    resolution_;
-    const double                                    resolution_inv_;
     const double                                    bundle_resolution_;
     const double                                    bundle_resolution_inv_;
     const transform_t                               w_T_m_;
@@ -466,24 +463,24 @@ protected:
     inline index_t toBundleIndex(const point_t &p_w) const
     {
         const point_t p_m = m_T_w_ * p_w;
-        return {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
-                        static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
+        return {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
+                 static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
     }
 
     inline bool toBundleIndex(const point_t &p_w,
                               index_t &index) const
     {
         const point_t p_m = m_T_w_ * p_w;
-        index = {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
-                  static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
-        return (index[0] >= min_bundle_index_[0] && index[0] <= max_bundle_index_[0] ) &&
-                (index[1] >= min_bundle_index_[1] && index[1] <= max_bundle_index_[1] );
+        index = {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
+                  static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
+        return (index[0] >= min_bundle_index_[0] && index[0] <= max_bundle_index_[0]) &&
+               (index[1] >= min_bundle_index_[1] && index[1] <= max_bundle_index_[1]);
     }
 
     inline bool valid(const index_t &bi) const
     {
-        return (bi[0] >= min_bundle_index_[0] && bi[0] <= max_bundle_index_[0] ) &&
-                (bi[1] >= min_bundle_index_[1] && bi[1] <= max_bundle_index_[1] );
+        return (bi[0] >= min_bundle_index_[0] && bi[0] <= max_bundle_index_[0]) &&
+               (bi[1] >= min_bundle_index_[1] && bi[1] <= max_bundle_index_[1]);
     }
 
 };

@@ -59,7 +59,6 @@ public:
     inline Gridmap(const pose_t &origin,
                    const double &resolution) :
         resolution_(resolution),
-        resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin),
@@ -81,7 +80,6 @@ public:
                    const std::shared_ptr<distribution_bundle_storage_t> &bundles,
                    const distribution_storage_array_t                   &storage) :
         resolution_(resolution),
-        resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin),
@@ -98,7 +96,6 @@ public:
                    const double &origin_phi,
                    const double &resolution) :
         resolution_(resolution),
-        resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin_x, origin_y, origin_phi),
@@ -115,7 +112,6 @@ public:
 
     inline Gridmap(const Gridmap &other) :
         resolution_(other.resolution_),
-        resolution_inv_(other.resolution_inv_),
         bundle_resolution_(other.bundle_resolution_),
         bundle_resolution_inv_(other.bundle_resolution_inv_),
         w_T_m_(other.w_T_m_),
@@ -132,7 +128,6 @@ public:
 
     inline Gridmap(Gridmap &&other) :
         resolution_(other.resolution_),
-        resolution_inv_(other.resolution_inv_),
         bundle_resolution_(other.bundle_resolution_),
         bundle_resolution_inv_(other.bundle_resolution_inv_),
         w_T_m_(std::move(other.w_T_m_)),
@@ -156,7 +151,7 @@ public:
     inline point_t getMin() const
     {
         return point_t(min_bundle_index_[0] * bundle_resolution_,
-                min_bundle_index_[1] * bundle_resolution_);
+                       min_bundle_index_[1] * bundle_resolution_);
     }
 
     /**
@@ -166,7 +161,7 @@ public:
     inline point_t getMax() const
     {
         return point_t((max_bundle_index_[0] + 1) * bundle_resolution_,
-                (max_bundle_index_[1] + 1) * bundle_resolution_);
+                       (max_bundle_index_[1] + 1) * bundle_resolution_);
     }
 
     /**
@@ -177,7 +172,7 @@ public:
     {
         pose_t origin = w_T_m_;
         origin.translation() += point_t(min_bundle_index_[0] * bundle_resolution_,
-                min_bundle_index_[1] * bundle_resolution_);
+                                        min_bundle_index_[1] * bundle_resolution_);
         return origin;
     }
 
@@ -371,7 +366,6 @@ public:
 
 protected:
     const double                                    resolution_;
-    const double                                    resolution_inv_;
     const double                                    bundle_resolution_;
     const double                                    bundle_resolution_inv_;
     const transform_t                               w_T_m_;
@@ -430,7 +424,7 @@ protected:
     {
         const point_t p_m = m_T_w_ * p_w;
         return {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
-                        static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
+                 static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
     }
 };
 }

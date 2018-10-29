@@ -63,7 +63,6 @@ public:
                             const size_t &size,
                             const index_t &min_bundle_index) :
         resolution_(resolution),
-        resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin),
@@ -101,7 +100,6 @@ public:
                             const size_t &size,
                             const index_t &min_bundle_index) :
         resolution_(resolution),
-        resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin_x, origin_y, origin_phi),
@@ -139,7 +137,6 @@ public:
                             const distribution_storage_array_t                   &storage,
                             const index_t &min_bundle_index) :
         resolution_(resolution),
-        resolution_inv_(1.0 / resolution_),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin),
@@ -157,7 +154,6 @@ public:
 
     inline OccupancyGridmap(const OccupancyGridmap &other) :
         resolution_(other.resolution_),
-        resolution_inv_(other.resolution_inv_),
         bundle_resolution_(other.bundle_resolution_),
         bundle_resolution_inv_(other.bundle_resolution_inv_),
         w_T_m_(other.w_T_m_),
@@ -176,7 +172,6 @@ public:
 
     inline OccupancyGridmap(OccupancyGridmap &&other) :
         resolution_(other.resolution_),
-        resolution_inv_(other.resolution_inv_),
         bundle_resolution_(other.bundle_resolution_),
         bundle_resolution_inv_(other.bundle_resolution_inv_),
         w_T_m_(std::move(other.w_T_m_)),
@@ -456,6 +451,16 @@ public:
         return {{size_[0] * 2, size_[1] * 2}};
     }
 
+    inline index_t getMinBundleIndex() const
+    {
+        return min_bundle_index_;
+    }
+
+    inline index_t getMaxBundleIndex() const
+    {
+        return max_bundle_index_;
+    }
+
     inline distribution_storage_array_t const & getStorages() const
     {
         return storage_;
@@ -528,7 +533,6 @@ public:
 
 protected:
     const double                                    resolution_;
-    const double                                    resolution_inv_;
     const double                                    bundle_resolution_;
     const double                                    bundle_resolution_inv_;
     const transform_t                               w_T_m_;
@@ -631,31 +635,30 @@ protected:
     inline index_t toBundleIndex(const point_t &p_w) const
     {
         const point_t p_m = m_T_w_ * p_w;
-        return {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
-                        static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
+        return {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
+                 static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
     }
 
     inline bool toBundleIndex(const point_t &p_w,
                               index_t &index) const
     {
         const point_t p_m = m_T_w_ * p_w;
-        index = {{static_cast<int>(std::floor(p_m(0) * resolution_inv_)),
-                  static_cast<int>(std::floor(p_m(1) * resolution_inv_))}};
+        index = {{static_cast<int>(std::floor(p_m(0) * bundle_resolution_inv_)),
+                  static_cast<int>(std::floor(p_m(1) * bundle_resolution_inv_))}};
         return (index[0] >= min_bundle_index_[0] && index[0] <= max_bundle_index_[0] ) &&
-                (index[1] >= min_bundle_index_[1] && index[1] <= max_bundle_index_[1] );
+               (index[1] >= min_bundle_index_[1] && index[1] <= max_bundle_index_[1] );
     }
 
     inline bool valid(const index_t &bi) const
     {
         return (bi[0] >= min_bundle_index_[0] && bi[0] <= max_bundle_index_[0] ) &&
-                (bi[1] >= min_bundle_index_[1] && bi[1] <= max_bundle_index_[1] );
+               (bi[1] >= min_bundle_index_[1] && bi[1] <= max_bundle_index_[1] );
     }
 
     inline void fromIndex(const index_t &i,
                           point_t &p_w) const
     {
-        p_w = w_T_m_ * point_t(i[0] * resolution_,
-                i[1] * resolution_);
+        p_w = w_T_m_ * point_t(i[0] * resolution_, i[1] * resolution_);
     }
 };
 }

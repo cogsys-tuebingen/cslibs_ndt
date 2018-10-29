@@ -246,7 +246,7 @@ public:
 
     inline index_t getMinBundleIndex() const
     {
-        return min_bundle_index_;
+        return min_index_;
     }
 
     template <typename Fn>

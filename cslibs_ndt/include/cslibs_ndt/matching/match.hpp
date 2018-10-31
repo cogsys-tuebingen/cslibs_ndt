@@ -109,13 +109,13 @@ auto match(const iterator_t& points_begin,
         if (score > max_score)
         {
             max_score = score;
-            lambda /= param.alpha();
+            lambda = std::max(1.0, lambda / param.alpha());
             step_adjustments = 0;
         }
 
         /// limit H
-        cslibs_math::statistics::LimitEigenValuesByZero<DIMS>::apply(h);
-        gradient_t dp = -h.fullPivLu().solve(g);
+        // cslibs_math::statistics::LimitEigenValuesByZero<DIMS>::apply(h);
+        gradient_t dp = h.fullPivLu().solve(g);
         dp *= lambda;
 
         linear_old = linear;

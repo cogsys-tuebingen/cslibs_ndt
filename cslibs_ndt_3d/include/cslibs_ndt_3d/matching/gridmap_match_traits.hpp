@@ -65,18 +65,18 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
             // this part should be vectorized, may also remove common factors...
             for (std::size_t i = 0; i < LINEAR_DIMS + ANGULAR_DIMS; ++i)
             {
-                const auto J_iq = J.get(i, q);
-                const auto J_info = (J_iq.transpose() * info).eval();
+                const auto J_iq     = J.get(i, q);
+                const auto J_info   = (info * J_iq).eval();
 
                 g(i) += s * q_info * J_iq;
 
                 for (std::size_t j = 0; j < LINEAR_DIMS + ANGULAR_DIMS; ++j)
                 {
-                    h(i, j) += s * q_info * H.get(i, j, q) +
-                               s * static_cast<double>(J_info * J.get(j, q));
+                    h(i, j) -= s * q_info * H.get(i, j, q) +
+                               s * static_cast<double>((J.get(j, q).transpose()).eval() * J_info) -
+                               s * (q_info * J_iq) * (-q_info * J.get(j, q)) ;
                 }
             }
-
             score += s;
         }
     }

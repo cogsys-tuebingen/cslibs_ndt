@@ -70,6 +70,11 @@ public:
         return angular_data_;
     }
 
+    inline const matrix_t& rotation() const
+    {
+        return rotation_;
+    }
+
     //  inline static void get(const std::array<double, 3> &angular, /// linear components not required because the derivation is always the same
     inline static void get(const Eigen::Vector3d &angular, /// linear components not required because the derivation is always the same
                            Jacobian &j)                          /// roll pitch yaw / alpha beta gamma

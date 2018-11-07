@@ -15,15 +15,17 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     inline Jacobian() :
-        linear_data_{{Eigen::Vector3d(1.,0.,0.),
-                     Eigen::Vector3d(0.,1.,0.),
-                     Eigen::Vector3d(0.,0.,1.)}},
-        angular_data_{{Eigen::Matrix3d::Zero(),
-                      Eigen::Matrix3d::Zero(),
-                      Eigen::Matrix3d::Zero()}},
-        angular_transposed_data_{{Eigen::Matrix3d::Zero(),
-                                 Eigen::Matrix3d::Zero(),
-                                 Eigen::Matrix3d::Zero()}}
+        linear_data_{{point_t(1.,0.,0.),
+                     point_t(0.,1.,0.),
+                     point_t(0.,0.,1.)}},
+        angular_data_{{matrix_t::Zero(),
+                      matrix_t::Zero(),
+                      matrix_t::Zero()}},
+        angular_transposed_data_{{matrix_t::Zero(),
+                                 matrix_t::Zero(),
+                                 matrix_t::Zero()}},
+        linear_rotation_derivative_(matrix_t::Zero()),
+        rotation_(matrix_t::Zero())
     {
     }
 
@@ -43,21 +45,19 @@ public:
     }
 
 
-    inline const matrix_t get(const Partial  pi,
-                              const matrix_t &R,
-                              const matrix_t &C) const
+    inline matrix_t get(const Partial  pi,
+                        const matrix_t &C) const
     {
-        return pi < 3 ? matrix_t::Zeros() : angular_transposed_data_[pi - 3] * C * R +
-                                            R * C * angular_data_[pi - 3];
+        return pi < 3 ? linear_rotation_derivative_ : (angular_transposed_data_[pi - 3] * C * rotation_).eval() +
+                                                      (rotation_ * C * angular_data_[pi - 3]).eval();
     }
 
-    inline const matrix_t get(const std::size_t pi,
-                              const matrix_t &R,
-                              const matrix_t &C) const
+    inline matrix_t get(const std::size_t pi,
+                        const matrix_t &C) const
     {
         assert(pi < 6);
-        return pi < 3 ? matrix_t::Zeros() : angular_transposed_data_[pi - 3] * C * R +
-                                            R * C * angular_data_[pi - 3];
+        return pi < 3 ? linear_rotation_derivative_ : (angular_transposed_data_[pi - 3] * C * rotation_).eval() +
+                                                      (rotation_ * C * angular_data_[pi - 3]).eval();
     }
 
     inline const angular_jacobian_t & angular() const
@@ -85,8 +85,9 @@ public:
         const double cb = std::cos(beta);
         const double cg = std::cos(gamma);
 
-        std::array<Eigen::Matrix3d, 3> &data = j.angular_data_;
-        std::array<Eigen::Matrix3d, 3> &data_transposed = j.angular_transposed_data_;
+        angular_jacobian_t &data            = j.angular_data_;
+        angular_jacobian_t &data_transposed = j.angular_transposed_data_;
+        matrix_t           &R               = j.rotation_;
 
         data[0](0,1) =  sa*sg  + sb*ca*cg;
         data[0](0,2) = -sa*sb*cg + sg*ca;
@@ -115,12 +116,24 @@ public:
         data_transposed[0] = (data[0].transpose()).eval();
         data_transposed[1] = (data[1].transpose()).eval();
         data_transposed[2] = (data[2].transpose()).eval();
+
+        R(0,0) =  cb*cg;
+        R(0,1) =  sa*sb*cg - sg*ca;
+        R(0,2) =  sa*sg + sb*ca*cg;
+        R(1,0) =  sg*cb;
+        R(1,1) =  sa*sb*sg + ca*cg;
+        R(1,2) = -sa*cg + sb*sg*ca;
+        R(2,0) = -sb;
+        R(2,1) =  sa*cb;
+        R(2,2) =  ca*cb;
     }
 
 private:
     linear_jacobian_t   linear_data_;
     angular_jacobian_t  angular_data_;
     angular_jacobian_t  angular_transposed_data_;
+    matrix_t            linear_rotation_derivative_;
+    matrix_t            rotation_;
 } ;
 }
 }

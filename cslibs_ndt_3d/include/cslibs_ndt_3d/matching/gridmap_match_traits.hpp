@@ -135,11 +135,11 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
 
         /// II.     : get a bundle from the map
 
-        auto* bundle_map = map.getDistributionBundle(mean);
-        if (!bundle)
+        auto* bundle_map = map.getDistributionBundle(cslibs_math_3d::Point3d(mean));
+        if (!bundle_map)
             return;
 
-        computeGradient(bundle_map, bundle,
+        computeGradient(*bundle_map, bundle,
                         J, H, t,
                         score, g, h);
     }
@@ -191,7 +191,7 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
                 const auto q_info_Z_i = q_info * Z_i;
 
 
-                g(i) += s * (q_info * J_iq - q_info_Z_i * Bq);
+                g(i) += s * ((q_info * J_iq).value() - (q_info_Z_i * Bq).value());
 
                 for (std::size_t j = 0; j < LINEAR_DIMS + ANGULAR_DIMS; ++j)
                 {
@@ -199,12 +199,12 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
                     const auto Z_ij = H.get(i,j,cov_rot);
                     const auto Z_j  = J.get(j,cov_rot);
 
-                    h(i, j) -= s * (J_iq.transpose() * B * J_iq -
-                                    2.0 * q_info_Z_i * J_iq +
-                                    q_info * H_ij -
-                                    q_info_Z_i * B * Z_j * Bq -
-                                    0.5 * q_info * Z_ij * Bq -
-                                    0.25 * e);
+                    h(i, j) -= s * ((J_iq.transpose() * B * J_iq).value() -
+                                    (2.0 * q_info_Z_i * J_iq).value() +
+                                    (q_info * H_ij).value() -
+                                    (q_info_Z_i * B * Z_j * Bq).value() -
+                                    (0.5 * q_info * Z_ij * Bq).value() -
+                                    (0.25 * e));
                 }
             }
             score += s;

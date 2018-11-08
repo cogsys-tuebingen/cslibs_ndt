@@ -135,7 +135,7 @@ auto match(const iterator_t& points_begin,
     return terminate(Termination::MAX_ITERATIONS);
 }
 
-template<typename iterator_t, typename ndt_t, typename traits_t = MatchTraits<ndt_t>>
+template<typename ndt_t, typename traits_t = MatchTraits<ndt_t>>
 auto match(const ndt_t& src,
            const ndt_t& dst,
            const Parameter& param,
@@ -159,7 +159,7 @@ auto match(const ndt_t& src,
     double max_score        = std::numeric_limits<double>::lowest();
     std::size_t iteration   = 0;
 
-    linear_t  linear    = initial_transform.translation();
+    linear_t  linear    = initial_transform.translation().data();
     angular_t angular   = initial_transform.euler();
 
     // initialize state

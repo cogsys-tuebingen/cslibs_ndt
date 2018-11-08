@@ -12,7 +12,7 @@ template<typename iterator_t, typename ndt_t, typename traits_t = MatchTraits<nd
 auto match(const iterator_t& points_begin,
            const iterator_t& points_end,
            const ndt_t& map,
-           const Parameter& param,
+           const typename traits_t::parameter_t& param,
            const typename ndt_t::transform_t& initial_transform)
 -> Result<typename ndt_t::transform_t>
 {
@@ -94,7 +94,7 @@ auto match(const iterator_t& points_begin,
         for (const point_t& point_prime : points_prime)
         {
             const point_t point = t * point_prime;
-            traits_t::computeGradient(map, point, J, H, score, g, h);
+            traits_t::computeGradient(map, point, J, H, param, score, g, h);
         }
 
         if (score < max_score)

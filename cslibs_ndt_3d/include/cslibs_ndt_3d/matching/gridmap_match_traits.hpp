@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cslibs_ndt/matching/match_traits.hpp>
+#include <cslibs_ndt/matching/parameter.hpp>
 #include <cslibs_ndt_3d/static_maps/gridmap.hpp>
 #include <cslibs_ndt_3d/dynamic_maps/gridmap.hpp>
 #include <cslibs_ndt_3d/static_maps/gridmap.hpp>
@@ -27,6 +28,7 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
 
     using point_t               = cslibs_math_3d::Point3d;
     using transform_t           = cslibs_math_3d::Transform3d;
+    using parameter_t           = cslibs_ndt::matching::Parameter;
     using distribution_bundle_t = typename MapT::distribution_bundle_t;
 
     static transform_t makeTransform(const Eigen::Vector3d& linear,
@@ -41,6 +43,7 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
                                 const point_t& point,
                                 const Jacobian& J,
                                 const Hessian& H,
+                                const parameter_t& param,
                                 double& score,
                                 gradient_t& g,
                                 hessian_t& h)

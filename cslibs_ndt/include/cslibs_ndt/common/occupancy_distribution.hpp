@@ -108,10 +108,15 @@ public:
         if (!inverse_model)
             throw std::runtime_error("inverse model not set!");
 
-        if (inverse_model == inverse_model_)
+        return getOccupancy(*inverse_model);
+    }
+
+    inline double getOccupancy(const cslibs_gridmaps::utility::InverseModel &inverse_model) const
+    {
+        if (&inverse_model == inverse_model_)
             return occupancy_;
 
-        inverse_model_ = inverse_model;
+        inverse_model_ = &inverse_model;
         occupancy_ = distribution_ ?
                     cslibs_math::common::LogOdds::from(
                         num_free_ * inverse_model_->getLogOddsFree() +
@@ -148,8 +153,8 @@ private:
     std::size_t        num_free_;
     distribution_ptr_t distribution_;
 
-    mutable double                                      occupancy_;
-    mutable cslibs_gridmaps::utility::InverseModel::Ptr inverse_model_;
+    mutable double                                        occupancy_ = 0;
+    mutable const cslibs_gridmaps::utility::InverseModel* inverse_model_ = nullptr; // may point to invalid memory!
 };
 }
 

@@ -49,7 +49,7 @@ protected:
 }
 
 namespace std {
-std::string to_string(const cslibs_ndt::matching::Termination& termination)
+inline std::string to_string(const cslibs_ndt::matching::Termination& termination)
 {
     using namespace cslibs_ndt::matching;
     switch (termination)
@@ -63,7 +63,7 @@ std::string to_string(const cslibs_ndt::matching::Termination& termination)
 }
 
 template<typename transform_t>
-std::string to_string(const cslibs_ndt::matching::Result<transform_t>& result)
+inline std::string to_string(const cslibs_ndt::matching::Result<transform_t>& result)
 {
     std::string s;
     s += "score      : " + std::to_string(result.score()) + "\n";

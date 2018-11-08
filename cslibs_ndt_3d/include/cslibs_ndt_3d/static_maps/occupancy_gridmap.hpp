@@ -474,6 +474,15 @@ public:
         return valid(bi) ? getAllocate(bi) : nullptr;
     }
 
+    inline const distribution_bundle_t* getDistributionBundle(const point_t &p) const
+    {
+        index_t bi;
+        if(!toBundleIndex(p, bi))
+            return nullptr;
+
+        return getAllocate(bi);
+    }
+
     inline double getBundleResolution() const
     {
         return bundle_resolution_;

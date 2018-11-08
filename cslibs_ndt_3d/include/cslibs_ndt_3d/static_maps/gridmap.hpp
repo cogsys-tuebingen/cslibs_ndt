@@ -21,6 +21,7 @@
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/array/array.hpp>
+#include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
 #include <cslibs_indexed_storage/operations/clustering/grid_neighborhood.hpp>
 
 namespace cis = cslibs_indexed_storage;
@@ -48,6 +49,7 @@ public:
     using lock_t                            = std::unique_lock<mutex_t>;
     using distribution_t                    = cslibs_ndt::Distribution<3>;
     using distribution_storage_t            = cis::Storage<distribution_t, index_t, cis::backend::array::Array>;
+    using distribution_insert_storage_t     = cis::Storage<distribution_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;
     using distribution_storage_array_t      = std::array<distribution_storage_ptr_t, 8>;
     using distribution_bundle_t             = cslibs_ndt::Bundle<distribution_t*, 8>;
@@ -280,13 +282,17 @@ public:
     inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::ConstPtr &points,
                        const pose_t &points_origin = pose_t())
     {
-        distribution_storage_t storage;
-        storage.template set<cis::option::tags::array_size>(size_[0] * 2, size_[1] * 2, size_[2] * 2);
-        storage.template set<cis::option::tags::array_offset>(min_bundle_index_[0],
-                min_bundle_index_[1],
-                min_bundle_index_[2]);
-        for (const auto &p : *points) {
-            const point_t pm = points_origin * p;
+        insert(points->begin(), points->end(), points_origin);
+    }
+
+    template<typename iterator_t>
+    inline void insert(const iterator_t &points_begin,
+                       const iterator_t &points_end,
+                       const pose_t &points_origin = pose_t())
+    {
+        distribution_insert_storage_t storage;
+        for (auto itr = points_begin; itr != points_end; ++itr) {
+            const point_t pm = points_origin * *itr;
             if (pm.isNormal()) {
                 index_t bi;
                 if(toBundleIndex(pm, bi)) {

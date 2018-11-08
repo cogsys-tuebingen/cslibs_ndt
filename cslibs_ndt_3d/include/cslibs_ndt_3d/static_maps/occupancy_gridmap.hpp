@@ -20,6 +20,7 @@
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/array/array.hpp>
+#include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
 #include <cslibs_indexed_storage/operations/clustering/grid_neighborhood.hpp>
 
 #include <cslibs_math_3d/algorithms/bresenham.hpp>
@@ -49,6 +50,7 @@ public:
     using lock_t                            = std::unique_lock<mutex_t>;
     using distribution_t                    = cslibs_ndt::OccupancyDistribution<3>;
     using distribution_storage_t            = cis::Storage<distribution_t, index_t, cis::backend::array::Array>;
+    using distribution_insert_storage_t     = cis::Storage<distribution_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;
     using distribution_storage_array_t      = std::array<distribution_storage_ptr_t, 8>;
     using distribution_bundle_t             = cslibs_ndt::Bundle<distribution_t*, 8>;
@@ -281,14 +283,17 @@ public:
     inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::ConstPtr &points,
                        const pose_t &points_origin = pose_t())
     {
-        distribution_storage_t storage;
-        storage.template set<cis::option::tags::array_size>(size_[0] * 2, size_[1] * 2, size_[2] * 2);
-        storage.template set<cis::option::tags::array_offset>(min_bundle_index_[0],
-                min_bundle_index_[1],
-                min_bundle_index_[2]);
+        insert<line_iterator_t>(points->begin(), points->end(), points_origin);
+    }
 
-        for (const auto &p : *points) {
-            const point_t pm = points_origin * p;
+    template <typename line_iterator_t = simple_iterator_t, typename iterator_t>
+    inline void insert(const iterator_t &points_begin,
+                       const iterator_t &points_end,
+                       const pose_t &points_origin = pose_t())
+    {
+        distribution_insert_storage_t storage;
+        for (auto itr = points_begin; itr != points_end; ++itr) {
+            const point_t pm = points_origin * *itr;
             if (pm.isNormal()) {
                 index_t bi;
                 if(toBundleIndex(pm,bi)) {
@@ -319,9 +324,19 @@ public:
                               const inverse_sensor_model_t::Ptr &ivm,
                               const inverse_sensor_model_t::Ptr &ivm_visibility)
     {
+        insertVisible<line_iterator_t>(origin, points->begin(), points->end(), ivm, ivm_visibility);
+    }
+
+    template <typename line_iterator_t = simple_iterator_t, typename iterator_t>
+    inline void insertVisible(const pose_t &origin,
+                              const iterator_t &points_begin,
+                              const iterator_t &points_end,
+                              const inverse_sensor_model_t::Ptr &ivm,
+                              const inverse_sensor_model_t::Ptr &ivm_visibility)
+    {
         if (!ivm || !ivm_visibility) {
             std::cout << "[OccupancyGridmap3D]: Cannot evaluate visibility, using model-free update rule instead!" << std::endl;
-            return insert(points, origin);
+            return insert<line_iterator_t>(points_begin, points_end, origin);
         }
 
         const index_t start_bi = toBundleIndex(origin.translation());
@@ -345,13 +360,9 @@ public:
                     ivm_visibility->getProbOccupied() * (1.0 - occlusion_prob);
         };
 
-        distribution_storage_t storage;
-        storage.template set<cis::option::tags::array_size>(size_[0] * 2, size_[1] * 2, size_[2] * 2);
-        storage.template set<cis::option::tags::array_offset>(min_bundle_index_[0],
-                min_bundle_index_[1],
-                min_bundle_index_[2]);
-        for (const auto &p : *points) {
-            const point_t pm = origin * p;
+        distribution_insert_storage_t storage;
+        for (auto itr = points_begin; itr != points_end; ++itr) {
+            const point_t pm = origin * *itr;
             if (pm.isNormal()) {
                 index_t bi;
                 if(toBundleIndex(pm,bi)) {

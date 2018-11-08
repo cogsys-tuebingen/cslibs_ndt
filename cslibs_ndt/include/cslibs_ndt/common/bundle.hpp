@@ -18,6 +18,11 @@ public:
 
     inline virtual ~Bundle() = default;
 
+    inline static std::size_t size()
+    {
+        return Size;
+    }
+
     inline Bundle(const Bundle &other) :
         data_(other.data_),
         id_(n_ ++)

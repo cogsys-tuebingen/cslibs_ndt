@@ -86,6 +86,7 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
                                              const distribution_bundle_t& bundle,
                                              const Jacobian& J,
                                              const Hessian& H,
+                                             const transform_t &t,
                                              double& score,
                                              gradient_t& g,
                                              hessian_t& h)
@@ -104,14 +105,15 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
             }
         }
         computeGradient(bundle_map, bundle->data(),
-                        J, H, score,
-                        g, h);
+                        J, H, t,
+                        score, g, h);
     }
 
     static void computeGradient(const MapT& map,
                                 const distribution_bundle_t& bundle,
                                 const Jacobian& J,
                                 const Hessian& H,
+                                const transform_t &t,
                                 double& score,
                                 gradient_t& g,
                                 hessian_t& h)
@@ -135,14 +137,15 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
             return;
 
         computeGradient(bundle_map, bundle,
-                        J, H, score,
-                        g, h);
+                        J, H, t,
+                        score, g, h);
     }
 
     static void computeGradient(const distribution_bundle_t& bundle_map,
                                 const distribution_bundle_t& bundle,
                                 const Jacobian& J,
                                 const Hessian& H,
+                                const transform_t &t,
                                 double& score,
                                 gradient_t& g,
                                 hessian_t& h)
@@ -161,7 +164,7 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
             if (!d.valid() || d_map.valid())
                 continue;
 
-            const auto mean      = d.getMean();
+            const auto mean      = t * d.getMean();
             const auto mean_map  = d_map.getMean();
             const auto cov       = d.getCovariance();
             const auto cov_map   = d_map.getCovariance();

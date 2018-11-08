@@ -45,19 +45,19 @@ public:
     }
 
 
-    inline matrix_t get(const Partial  pi,
-                        const matrix_t &C) const
+    inline const matrix_t get(const Partial  pi,
+                              const matrix_t &C) const
     {
         return pi < 3 ? linear_rotation_derivative_ : (angular_transposed_data_[pi - 3] * C * rotation_).eval() +
-                                                      (rotation_ * C * angular_data_[pi - 3]).eval();
+                (rotation_ * C * angular_data_[pi - 3]).eval();
     }
 
-    inline matrix_t get(const std::size_t pi,
-                        const matrix_t &C) const
+    inline const matrix_t get(const std::size_t pi,
+                              const matrix_t &C) const
     {
         assert(pi < 6);
         return pi < 3 ? linear_rotation_derivative_ : (angular_transposed_data_[pi - 3] * C * rotation_).eval() +
-                                                      (rotation_ * C * angular_data_[pi - 3]).eval();
+                (rotation_ * C * angular_data_[pi - 3]).eval();
     }
 
     inline const angular_jacobian_t & angular() const

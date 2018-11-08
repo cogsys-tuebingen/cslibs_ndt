@@ -74,7 +74,7 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
                 {
                     h(i, j) -= s * q_info * H.get(i, j, q) +
                                s * static_cast<double>((J.get(j, q).transpose()).eval() * J_info) -
-                               s * (q_info * J_iq) * (-q_info * J.get(j, q)) ;
+                               s * (q_info * J_iq).eval() * (-q_info * J.get(j, q)).eval();
                 }
             }
             score += s;

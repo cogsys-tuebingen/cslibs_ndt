@@ -143,7 +143,6 @@ auto match(const ndt_t& src,
 -> Result<typename ndt_t::transform_t>
 {
     static constexpr int DIMS = traits_t::LINEAR_DIMS + traits_t::ANGULAR_DIMS;
-    using point_t             = typename ndt_t::point_t;
     using transform_t         = typename ndt_t::transform_t;
     using result_t            = Result<transform_t>;
 
@@ -225,6 +224,11 @@ auto match(const ndt_t& src,
             ++step_adjustments;
             continue;
         }
+
+        std::cout << "linear: " << linear << "\n";
+        std::cout << "angular:" << angular << "\n";
+        std::cout << "score:  " << score << "\n";
+        std::cout << "lambda: " << lambda << "\n";
 
         if (score > max_score)
         {

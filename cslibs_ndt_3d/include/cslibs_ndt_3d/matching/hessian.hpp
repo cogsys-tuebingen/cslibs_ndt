@@ -63,9 +63,9 @@ public:
         assert(pj < 6);
         auto eval = [this, pi, pj, &C]()
         {
-            const matrix_t &h = data_[pi-3][pj-3];
+            const matrix_t &h   = data_[pi-3][pj-3];
             const matrix_t &h_t = data_transposed_[pi-3][pj-3];
-            return static_cast<matrix_t>((h_t * C * rotation_).eval() + (rotation_ * C * h).eval());
+            return static_cast<matrix_t>((h_t * C * rotation_).eval() + (rotation_transposed_* C * h).eval());
         };
 
         return (pi < 3 || pj < 3) ? matrix_t::Zero() : eval();
@@ -107,8 +107,11 @@ public:
         const double cb = std::cos(beta);
         const double cg = std::cos(gamma);
 
-        hessian_t &data = h.data_;
-        matrix_t  &R    = h.rotation_;
+        hessian_t &data             = h.data_;
+        hessian_t &data_transposed  = h.data_transposed_;
+        matrix_t  &R                = h.rotation_;
+        matrix_t  &R_transposed     = h.rotation_transposed_;
+
 
         data[0][0](0,1) = -sa*sb*cg + sg*ca;
         data[0][0](0,2) = -sa*sg - sb*ca*cg;
@@ -116,6 +119,7 @@ public:
         data[0][0](1,2) =  sa*cg - sb*sg*ca;
         data[0][0](2,1) = -sa*cb;
         data[0][0](2,2) = -ca*cb;
+        data_transposed[0][0] = data[0][0].transpose();
 
         data[0][1](0,1) =  ca*cb*cg;
         data[0][1](0,2) = -sa*cb*cg;
@@ -123,11 +127,13 @@ public:
         data[0][1](1,2) = -sa*sg*cb;
         data[0][1](2,1) = -sb*ca;
         data[0][1](2,2) =  sa*sb;
+        data_transposed[0][1] = data[0][1].transpose();
 
         data[0][2](0,1) =  sa*cg - sb*sg*ca;
         data[0][2](0,2) =  sa*sb*sg + ca*cg;
         data[0][2](1,1) =  sa*sg + sb*ca*cg;
         data[0][2](1,2) = -sa*sb*cg + sg*ca;
+        data_transposed[0][2] = data[0][2].transpose();
 
         data[1][0](0,1) =  ca*cb*cg;
         data[1][0](0,2) = -sa*cb*cg;
@@ -135,6 +141,7 @@ public:
         data[1][0](1,2) = -sa*sg*cb;
         data[1][0](2,1) = -sb*ca;
         data[1][0](2,2) =  sa*sb;
+        data_transposed[1][0] = data[1][0].transpose();
 
         data[1][1](0,0) = -cb*cg;
         data[1][1](0,1) = -sa*sb*cg;
@@ -145,6 +152,7 @@ public:
         data[1][1](2,0) =  sb;
         data[1][1](2,1) = -sa*cb;
         data[1][1](2,2) = -ca*cb;
+        data_transposed[1][1] = data[1][1].transpose();
 
         data[1][2](0,0) =  sb*sg;
         data[1][2](0,1) = -sa*sg*cb;
@@ -152,11 +160,13 @@ public:
         data[1][2](1,0) = -sb*cg;
         data[1][2](1,1) =  sa*cb*cg;
         data[1][2](1,2) =  ca*cb*cg;
+        data_transposed[1][2] = data[1][2].transpose();
 
         data[2][0](0,1) = sa*cg - sb*sg*ca;
         data[2][0](0,2) = sa*sb*sg + ca*cg;
         data[2][0](1,1) = sa*sg + sb*ca*cg;
         data[2][0](1,2) = -sa*sb*cg + sg*ca;
+        data_transposed[2][0] = data[2][0].transpose();
 
         data[2][1](0,0) =  sb*sg;
         data[2][1](0,1) = -sa*sg*cb;
@@ -164,6 +174,7 @@ public:
         data[2][1](1,0) = -sb*cg;
         data[2][1](1,1) =  sa*cb*cg;
         data[2][1](1,2) =  ca*cb*cg;
+        data_transposed[2][1] = data[2][1].transpose();
 
         data[2][2](0,0) = -cb*cg;
         data[2][2](0,1) = -sa*sb*cg + sg*ca;
@@ -171,6 +182,7 @@ public:
         data[2][2](1,0) = -sg*cb;
         data[2][2](1,1) = -sa*sb*sg - ca*cg;
         data[2][2](1,2) =  sa*cg - sb*sg*ca;
+        data_transposed[2][2] = data[2][2].transpose();
 
         R(0,0) =  cb*cg;
         R(0,1) =  sa*sb*cg - sg*ca;
@@ -181,6 +193,8 @@ public:
         R(2,0) = -sb;
         R(2,1) =  sa*cb;
         R(2,2) =  ca*cb;
+
+        R_transposed = R.transpose();
     }
 
 
@@ -188,6 +202,7 @@ private:
     hessian_t data_;
     hessian_t data_transposed_;
     matrix_t  rotation_;
+    matrix_t  rotation_transposed_;
 };
 
 

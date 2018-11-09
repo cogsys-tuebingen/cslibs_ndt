@@ -56,8 +56,9 @@ public:
                               const matrix_t &C) const
     {
         assert(pi < 6);
-        return pi < 3 ? linear_rotation_derivative_ : (angular_transposed_data_[pi - 3] * C * rotation_).eval() +
-                (rotation_ * C * angular_data_[pi - 3]).eval();
+        return pi < 3 ? linear_rotation_derivative_ :
+                        (angular_transposed_data_[pi - 3] * C * rotation_).eval() +
+                        (rotation_transposed_ * C * angular_data_[pi - 3]).eval();
     }
 
     inline const angular_jacobian_t & angular() const
@@ -93,6 +94,7 @@ public:
         angular_jacobian_t &data            = j.angular_data_;
         angular_jacobian_t &data_transposed = j.angular_transposed_data_;
         matrix_t           &R               = j.rotation_;
+        matrix_t           &R_transposed    = j.rotation_transposed_;
 
         data[0](0,1) =  sa*sg  + sb*ca*cg;
         data[0](0,2) = -sa*sb*cg + sg*ca;
@@ -131,6 +133,8 @@ public:
         R(2,0) = -sb;
         R(2,1) =  sa*cb;
         R(2,2) =  ca*cb;
+
+        R_transposed = R.transpose();
     }
 
 private:
@@ -139,6 +143,7 @@ private:
     angular_jacobian_t  angular_transposed_data_;
     matrix_t            linear_rotation_derivative_;
     matrix_t            rotation_;
+    matrix_t            rotation_transposed_;
 } ;
 }
 }

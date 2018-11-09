@@ -30,6 +30,7 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
     using transform_t           = cslibs_math_3d::Transform3d;
     using parameter_t           = cslibs_ndt::matching::Parameter;
     using distribution_bundle_t = typename MapT::distribution_bundle_t;
+    using index_t               = typename MapT::index_t;
 
     static transform_t makeTransform(const Eigen::Vector3d& linear,
                                      const Eigen::Vector3d& angular)
@@ -81,18 +82,37 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
                             s * (q_info * J_iq).eval() * (-q_info * J.get(j, q)).eval();
                 }
             }
+            std::cout << "hessian  : " << h << "\n";
+            std::cout << "sub score: " << s << "\n";
+
             score += s;
         }
     }
 
-    static void compuateGradientLayerByLayer(const MapT& map,
-                                             const distribution_bundle_t& bundle,
-                                             const Jacobian& J,
-                                             const Hessian& H,
-                                             const transform_t &t,
-                                             double& score,
-                                             gradient_t& g,
-                                             hessian_t& h)
+    static void computeGradientComplete(const MapT& map,
+                                        const distribution_bundle_t& bundle,
+                                        const Jacobian& J,
+                                        const Hessian& H,
+                                        const transform_t &t,
+                                        double& score,
+                                        gradient_t& g,
+                                        hessian_t& h)
+    {
+        auto process_bundle = [&bundle, &J, &H, &t, &score, &g, &h](const index_t &, const distribution_bundle_t &b)
+        {
+            computeGradient(b.data(), bundle.data(), J, H, t, score, g, h);
+        };
+        map.traverse(process_bundle);
+    }
+
+    static void computeGradientLayerByLayer(const MapT& map,
+                                            const distribution_bundle_t& bundle,
+                                            const Jacobian& J,
+                                            const Hessian& H,
+                                            const transform_t &t,
+                                            double& score,
+                                            gradient_t& g,
+                                            hessian_t& h)
     {
         /// I.      : get the different distributions from the layers
         const std::size_t size = distribution_bundle_t::size();
@@ -100,14 +120,14 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
 
         for(std::size_t i = 0 ; i < size ; ++i) {
             const auto &d = bundle[i]->data();
-            auto* bm = map.getDistributionBundle(d.getMean());
+            auto* bm = map.getDistributionBundle(cslibs_math_3d::Point3d(d.getMean()));
             if(!bm) {
                 bundle_map[i] = nullptr;
             } else {
-                bundle_map[i] = *bm[i];
+                bundle_map[i] = (*bm)[i];
             }
         }
-        computeGradient(bundle_map, bundle->data(),
+        computeGradient(bundle_map, bundle.data(),
                         J, H, t,
                         score, g, h);
     }
@@ -139,13 +159,13 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
         if (!bundle_map)
             return;
 
-        computeGradient(*bundle_map, bundle,
+        computeGradient(bundle_map->data(), bundle.data(),
                         J, H, t,
                         score, g, h);
     }
 
-    static void computeGradient(const distribution_bundle_t& bundle_map,
-                                const distribution_bundle_t& bundle,
+    static void computeGradient(const typename distribution_bundle_t::data_t& bundle_map,
+                                const typename distribution_bundle_t::data_t& bundle,
                                 const Jacobian& J,
                                 const Hessian& H,
                                 const transform_t &t,
@@ -164,7 +184,7 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
             auto& d = bundle[i]->data();
             auto& d_map = bundle_map[i]->data();
 
-            if (!d.valid() || d_map.valid())
+            if (!d.valid() || !d_map.valid())
                 continue;
 
             const auto mean      = t * d.getMean();
@@ -172,12 +192,17 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
             const auto cov       = d.getCovariance();
             const auto cov_map   = d_map.getCovariance();
             const auto cov_rot   = (R.transpose() * cov * R).eval();
-            const auto B         = (cov_rot + cov_map).inverse();
+            const auto B_inv     = (cov_rot + cov_map);
 
+            if(B_inv.determinant() == 0.0)
+                continue;
+
+            const auto B = B_inv.inverse();
             const auto q = (mean - mean_map).eval();
             const auto q_info = (q.transpose() * B).eval();
             const auto e = static_cast<double>(q_info * q);
-            const auto s = std::exp(-0.5 * e);
+            const auto d2 = 1.0; // 0.05;
+            const auto s = std::exp(-0.5 * d2 * e);
             const auto Bq = (B * q).eval();
 
             if (!std::isnormal(s) || s <= 1e-5)
@@ -190,8 +215,7 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
                 const auto Z_i        = J.get(i, cov_rot);
                 const auto q_info_Z_i = q_info * Z_i;
 
-
-                g(i) += s * ((q_info * J_iq).value() - (q_info_Z_i * Bq).value());
+                g(i) += s * d2 * 0.5 * ((q_info * J_iq).value() - (q_info_Z_i * Bq).value());
 
                 for (std::size_t j = 0; j < LINEAR_DIMS + ANGULAR_DIMS; ++j)
                 {
@@ -199,14 +223,18 @@ struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>
                     const auto Z_ij = H.get(i,j,cov_rot);
                     const auto Z_j  = J.get(j,cov_rot);
 
-                    h(i, j) -= s * ((J_iq.transpose() * B * J_iq).value() -
-                                    (2.0 * q_info_Z_i * J_iq).value() +
-                                    (q_info * H_ij).value() -
-                                    (q_info_Z_i * B * Z_j * Bq).value() -
-                                    (0.5 * q_info * Z_ij * Bq).value() -
-                                    (0.25 * e));
+                    h(i, j) -= s * d2 * ((J_iq.transpose() * B * J_iq).value() -
+                                         (2.0 * q_info_Z_i * J_iq).value() +
+                                         (q_info * H_ij).value() -
+                                         (q_info_Z_i * B * Z_j * Bq).value() -
+                                         (0.5 * q_info * Z_ij * Bq).value() -
+                                         (d2 * 0.25 * e * e));
                 }
             }
+
+            std::cout << "hessian  : " << h << "\n";
+            std::cout << "sub score: " << s << "\n";
+
             score += s;
         }
     }

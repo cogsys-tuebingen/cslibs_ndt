@@ -25,6 +25,22 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
     r = cslibs_ndt::matching::match(src->begin(), src->end(), ndt, params, initial_transform);
 }
 
+inline void matchD2D(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
+                     const cslibs_math_3d::Pointcloud3d::ConstPtr &dst,
+                     const cslibs_ndt::matching::Parameter        &params,
+                     double                                        resolution,
+                     const cslibs_math_3d::Transform3d            &initial_transform,
+                     cslibs_ndt::matching::Result<cslibs_math_3d::Transform3d> &r)
+{
+    using ndt_t = cslibs_ndt_3d::dynamic_maps::Gridmap;
+    ndt_t ndt_dst(ndt_t::pose_t(), resolution);
+    ndt_dst.insert(dst);
+    ndt_t ndt_src(ndt_t::pose_t(), resolution);
+    ndt_src.insert(src);
+
+    r = cslibs_ndt::matching::match(ndt_src, ndt_dst, params, initial_transform);
+}
+
 inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr          &src,
                   const cslibs_math_3d::Pointcloud3d::ConstPtr          &dst,
                   const cslibs_ndt_3d::matching::ParametersWithICP      &params,
@@ -56,7 +72,7 @@ inline void match(const cslibs_math_3d::Pointcloud3d::ConstPtr          &src,
         cslibs_math_3d::Pointcloud3d::Ptr voxeled_cloud(new cslibs_math_3d::Pointcloud3d);
         auto traverse = [&voxeled_cloud](const voxel_t::index_t, voxel_t &voxel )
         {
-                voxeled_cloud->insert(voxel.mean());
+            voxeled_cloud->insert(voxel.mean());
         };
         voxel_grid->traverse(traverse);
         return voxeled_cloud;

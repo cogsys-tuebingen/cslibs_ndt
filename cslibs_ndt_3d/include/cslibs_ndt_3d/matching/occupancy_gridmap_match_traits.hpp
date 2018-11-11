@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cslibs_ndt/matching/match_traits.hpp>
+#include <cslibs_ndt/matching/occupancy_parameter.hpp>
 #include <cslibs_ndt_3d/dynamic_maps/occupancy_gridmap.hpp>
 #include <cslibs_ndt_3d/static_maps/occupancy_gridmap.hpp>
 #include <cslibs_ndt_3d/matching/jacobian.hpp>
@@ -26,6 +27,7 @@ struct MatchTraits<MapT, typename std::enable_if<IsOccupancyGridmap<MapT>::value
 
     using point_t = cslibs_math_3d::Point3d;
     using transform_t = cslibs_math_3d::Transform3d;
+    using parameter_t = cslibs_ndt::matching::OccupancyParameter;
 
     static transform_t makeTransform(const Eigen::Vector3d& linear,
                                      const Eigen::Vector3d& angular)
@@ -40,17 +42,29 @@ struct MatchTraits<MapT, typename std::enable_if<IsOccupancyGridmap<MapT>::value
                                 const point_t& point,
                                 const Jacobian& J,
                                 const Hessian& H,
+                                const parameter_t& param,
                                 double& score,
                                 gradient_t& g,
                                 hessian_t& h)
     {
         static constexpr double d1 = 0.95;
         static constexpr double d2 = 1 - d1;
-        static const auto model = std::make_shared<cslibs_gridmaps::utility::InverseModel>(0.5, 0.45, 0.65);
 
         auto* bundle = map.getDistributionBundle(point);
         if (!bundle)
             return;
+
+        // check occupancy value
+        if (param.occupancyThreshold() > 0.0)
+        {
+            double occupancy = 0.0;
+            for (auto* distribution_wrapper : *bundle)
+                occupancy += distribution_wrapper->getOccupancy(param.inverseModel());
+            occupancy /= 8.0;
+
+            if (occupancy < param.occupancyThreshold())
+                return;
+        }
 
         for (auto* distribution_wrapper : *bundle)
         {
@@ -61,7 +75,7 @@ struct MatchTraits<MapT, typename std::enable_if<IsOccupancyGridmap<MapT>::value
             const auto info   = d->getInformationMatrix();
             const auto q      = (point.data() - d->getMean()).eval();
             const auto q_info = (q.transpose() * info).eval();
-            const auto p_occ  = distribution_wrapper->getOccupancy(model);
+            const auto p_occ  = distribution_wrapper->getOccupancy(param.inverseModel()); // no recompute: this uses a cached value
             const auto e      = -0.5 * double(q_info * q) * (d2 * (1 - p_occ));
             const auto s      = d1 * p_occ * std::exp(e);
             if (!std::isnormal(s) || s <= 1e-5)
@@ -79,7 +93,7 @@ struct MatchTraits<MapT, typename std::enable_if<IsOccupancyGridmap<MapT>::value
                 {
                     h(i, j) -= s * q_info * H.get(i, j, q) +
                                s * static_cast<double>((J.get(j, q).transpose()).eval() * J_info) -
-                               s * (q_info * J_iq) * (-q_info * J.get(j, q));
+                               s * (q_info * J_iq).value() * (-q_info * J.get(j, q)).value();
                 }
             }
 

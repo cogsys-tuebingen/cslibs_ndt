@@ -74,6 +74,7 @@ inline static void apply(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
         }
         src_mean /= static_cast<double>(src_size);
 
+        S = Eigen::Matrix3d::Zero();
         for(std::size_t s = 0 ; s < src_size ; ++s) {
             const cslibs_math_3d::Point3d &sp = src_points_transformed[s];
             const std::size_t           index = indices[s];

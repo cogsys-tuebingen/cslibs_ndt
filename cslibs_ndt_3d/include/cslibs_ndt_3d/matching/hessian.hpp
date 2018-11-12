@@ -49,7 +49,7 @@ public:
         {
             const matrix_t &h = data_[pi-3][pj-3];
             const matrix_t &h_t = data_transposed_[pi-3][pj-3];
-            return static_cast<matrix_t>((h_t * C * rotation_).eval() + (rotation_ * C * h).eval());
+            return static_cast<matrix_t>((h_t * C * rotation_).eval() + (rotation_transposed_ * C * h).eval());
         };
 
         return (pi < 3 || pj < 3) ? matrix_t::Zero() : eval();

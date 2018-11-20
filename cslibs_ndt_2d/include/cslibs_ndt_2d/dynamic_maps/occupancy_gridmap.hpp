@@ -153,7 +153,7 @@ public:
     inline point_t getMin() const
     {
         return point_t(min_index_[0] * bundle_resolution_,
-                min_index_[1] * bundle_resolution_);
+                       min_index_[1] * bundle_resolution_);
     }
 
     /**
@@ -163,7 +163,7 @@ public:
     inline point_t getMax() const
     {
         return point_t((max_index_[0] + 1) * bundle_resolution_,
-                (max_index_[1] + 1) * bundle_resolution_);
+                       (max_index_[1] + 1) * bundle_resolution_);
     }
 
     /**
@@ -174,7 +174,7 @@ public:
     {
         pose_t origin = w_T_m_;
         origin.translation() += point_t(min_index_[0] * bundle_resolution_,
-                min_index_[1] * bundle_resolution_);
+                                        min_index_[1] * bundle_resolution_);
         return origin;
     }
 

@@ -224,6 +224,11 @@ public:
         return bundle_storage_->get(bi);
     }
 
+    inline const distribution_bundle_t* get(const index_t &bi) const
+    {
+        return bundle_storage_->get(bi);
+    }
+
     inline double sample(const point_t &p) const
     {
         const index_t bi = toBundleIndex(p);

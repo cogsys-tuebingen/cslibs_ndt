@@ -325,6 +325,11 @@ public:
         return (start_p - end_p).length();
     }
 
+    inline const distribution_bundle_t* get(const index_t &bi) const
+    {
+        return bundle_storage_->get(bi);
+    }
+
     inline double sample(const point_t &p,
                          const inverse_sensor_model_t::Ptr &ivm) const
     {

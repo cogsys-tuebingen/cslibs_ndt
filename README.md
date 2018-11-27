@@ -35,4 +35,16 @@ Exemplary usage of these maps can be found in [cslibs\_mapping](https://github.c
 [Contribution guidelines for this project](CONTRIBUTING.md)
 
 ## Citing
-A paper about this work is currently under review. A *BibTeX* entry will appear here later in case of acceptance.
+If you use our implementation in your research, please cite our IROS 2018 paper:
+```
+@inproceedings{SchulzIROS2018,
+    title = {Efficient Map Representations for Multi-Dimensional Normal Distributions Transforms},
+    author = {Cornelia Schulz and Richard Hanten and Andreas Zell},
+    booktitle = {2018 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+    pages = {2679--2686},
+    address = {Madrid, Spain},
+    year = {2018},
+    month = {October},
+    note = {Software available at \url{https://github.com/cogsys-tuebingen/cslibs_ndt}}
+}
+```

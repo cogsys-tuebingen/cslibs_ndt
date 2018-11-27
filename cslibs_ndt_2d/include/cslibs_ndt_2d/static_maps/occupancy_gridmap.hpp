@@ -80,17 +80,17 @@ public:
         bundle_storage_(new distribution_bundle_storage_t)
     {
         storage_[0]->template set<cis::option::tags::array_size>(size[0], size[1]);
-        storage_[0]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2,
-                min_bundle_index[1] / 2);
+        storage_[0]->template set<cis::option::tags::array_offset>(cslibs_math::common::div<int>(min_bundle_index[0], 2),
+                                                                   cslibs_math::common::div<int>(min_bundle_index[1], 2));
         for(std::size_t i = 1 ; i < 4 ; ++ i) {
             storage_[i]->template set<cis::option::tags::array_size>(size[0] + 1, size[1] + 1);
-            storage_[i]->template set<cis::option::tags::array_offset>(min_bundle_index[0] / 2,
-                    min_bundle_index[1] / 2);
+            storage_[i]->template set<cis::option::tags::array_offset>(cslibs_math::common::div<int>(min_bundle_index[0], 2),
+                                                                       cslibs_math::common::div<int>(min_bundle_index[1], 2));
         }
 
         bundle_storage_->template set<cis::option::tags::array_size>(size[0] * 2, size[1] * 2);
         bundle_storage_->template set<cis::option::tags::array_offset>(min_bundle_index[0],
-                min_bundle_index[1]);
+                                                                       min_bundle_index[1]);
     }
 
     inline OccupancyGridmap(const double &origin_x,

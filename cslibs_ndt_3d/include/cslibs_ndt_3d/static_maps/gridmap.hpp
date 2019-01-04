@@ -31,9 +31,7 @@ namespace static_maps {
 class EIGEN_ALIGN16 Gridmap
 {
 public:
-
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     using allocator_t = Eigen::aligned_allocator<Gridmap>;
 
     using Ptr                               = std::shared_ptr<Gridmap>;
@@ -45,8 +43,6 @@ public:
     using index_t                           = std::array<int, 3>;
     using size_t                            = std::array<std::size_t, 3>;
     using size_m_t                          = std::array<double, 3>;
-    using mutex_t                           = std::mutex;
-    using lock_t                            = std::unique_lock<mutex_t>;
     using distribution_t                    = cslibs_ndt::Distribution<3>;
     using distribution_storage_t            = cis::Storage<distribution_t, index_t, cis::backend::array::Array>;
     using distribution_insert_storage_t     = cis::Storage<distribution_t, index_t, cis::backend::kdtree::KDTree>;

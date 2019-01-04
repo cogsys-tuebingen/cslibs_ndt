@@ -13,10 +13,9 @@ template<std::size_t Dim>
 class EIGEN_ALIGN16 Distribution
 {
 public:
-
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     using allocator_t              = Eigen::aligned_allocator<Distribution>;
+
     using distribution_container_t = Distribution<Dim>;
     using distribution_t           = cslibs_math::statistics::Distribution<Dim, 3>;
 

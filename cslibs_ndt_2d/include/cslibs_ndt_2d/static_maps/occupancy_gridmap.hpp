@@ -32,10 +32,8 @@ namespace static_maps {
 class EIGEN_ALIGN16 OccupancyGridmap
 {
 public:
-
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-    using allocator_t = Eigen::aligned_allocator<Gridmap>;
+    using allocator_t = Eigen::aligned_allocator<OccupancyGridmap>;
 
     using ConstPtr                          = std::shared_ptr<const OccupancyGridmap>;
     using Ptr                               = std::shared_ptr<OccupancyGridmap>;
@@ -45,8 +43,6 @@ public:
     using index_t                           = std::array<int, 2>;
     using size_t                            = std::array<std::size_t, 2>;
     using size_m_t                          = std::array<double, 2>;
-    using mutex_t                           = std::mutex;
-    using lock_t                            = std::unique_lock<mutex_t>;
     using distribution_t                    = cslibs_ndt::OccupancyDistribution<2>;
     using distribution_storage_t            = cis::Storage<distribution_t, index_t, cis::backend::array::Array>;
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;

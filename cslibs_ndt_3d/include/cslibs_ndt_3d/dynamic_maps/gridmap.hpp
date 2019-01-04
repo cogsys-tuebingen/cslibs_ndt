@@ -30,9 +30,7 @@ namespace dynamic_maps {
 class EIGEN_ALIGN16 Gridmap
 {
 public:
-
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     using allocator_t = Eigen::aligned_allocator<Gridmap>;
 
     using Ptr                               = std::shared_ptr<Gridmap>;
@@ -42,8 +40,6 @@ public:
     using transform_t                       = cslibs_math_3d::Transform3d;
     using point_t                           = cslibs_math_3d::Point3d;
     using index_t                           = std::array<int, 3>;
-    using mutex_t                           = std::mutex;
-    using lock_t                            = std::unique_lock<mutex_t>;
     using distribution_t                    = cslibs_ndt::Distribution<3>;
     using distribution_storage_t            = cis::Storage<distribution_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;

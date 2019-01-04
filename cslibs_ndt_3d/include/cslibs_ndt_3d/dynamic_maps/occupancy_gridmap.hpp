@@ -35,9 +35,7 @@ namespace dynamic_maps {
 class EIGEN_ALIGN16 OccupancyGridmap
 {
 public:
-
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     using allocator_t = Eigen::aligned_allocator<OccupancyGridmap>;
 
     using Ptr                               = std::shared_ptr<OccupancyGridmap>;
@@ -48,8 +46,6 @@ public:
     using point_t                           = cslibs_math_3d::Point3d;
     using index_t                           = std::array<int, 3>;
     using size_m_t                          = std::array<double, 3>;
-    using mutex_t                           = std::mutex;
-    using lock_t                            = std::unique_lock<mutex_t>;
     using distribution_t                    = cslibs_ndt::OccupancyDistribution<3>;
     using distribution_storage_t            = cis::Storage<distribution_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;

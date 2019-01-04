@@ -13,18 +13,14 @@ template<std::size_t Dim>
 class EIGEN_ALIGN16 OccupancyDistribution
 {
 public:
-
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     using allocator_t               = Eigen::aligned_allocator<OccupancyDistribution>;
+
     using Ptr                       = std::shared_ptr<OccupancyDistribution<Dim>>;
     using distribution_container_t  = OccupancyDistribution<Dim>;
     using distribution_t            = cslibs_math::statistics::Distribution<Dim, 3>;
     using distribution_ptr_t        = typename distribution_t::Ptr;
     using point_t                   = typename distribution_t::sample_t;
-
-    using mutex_t                   = std::mutex;
-    using lock_t                    = std::unique_lock<mutex_t>;
 
     inline OccupancyDistribution() :
         num_free_(0)
@@ -148,8 +144,6 @@ public:
     }
 
 private:
-    mutable mutex_t data_mutex_;
-
     std::size_t        num_free_;
     distribution_ptr_t distribution_;
 

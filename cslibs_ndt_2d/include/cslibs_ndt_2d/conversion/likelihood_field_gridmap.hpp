@@ -18,7 +18,7 @@ inline void from(
         const double &sampling_resolution,
         const double &maximum_distance = 2.0,
         const double &sigma_hit        = 0.5,
-        const double &threshold        = 0.169)
+        const double &threshold        = 0.196)
 {
     if (!src)
         return;
@@ -77,7 +77,7 @@ inline void from(
         const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model,
         const double &maximum_distance = 2.0,
         const double &sigma_hit        = 0.5,
-        const double &threshold        = 0.169)
+        const double &threshold        = 0.196)
 {
     if (!src || !inverse_model)
         return;

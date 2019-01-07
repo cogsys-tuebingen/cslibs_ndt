@@ -74,7 +74,7 @@ inline void from(
         const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr &src,
         cslibs_ndt_3d::DistributionArray::Ptr &dst,
         const cslibs_gridmaps::utility::InverseModel::Ptr &ivm,
-        const double &threshold = 0.169)
+        const double &threshold = 0.196)
 {
     if (!src)
         return;

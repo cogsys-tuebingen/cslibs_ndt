@@ -104,7 +104,7 @@ inline void from(
         ndt_t &src,
         sensor_msgs::PointCloud2 &dst,
         const cslibs_gridmaps::utility::InverseModel::Ptr &ivm,
-        const double &threshold = 0.196)
+        const double &threshold = 0.169)
 {
     src.allocatePartiallyAllocatedBundles();
 
@@ -161,7 +161,7 @@ inline void from(
         const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr &src,
         sensor_msgs::PointCloud2 &dst,
         const cslibs_gridmaps::utility::InverseModel::Ptr &ivm,
-        const double &threshold = 0.196)
+        const double &threshold = 0.169)
 {
     if (!src)
         return;

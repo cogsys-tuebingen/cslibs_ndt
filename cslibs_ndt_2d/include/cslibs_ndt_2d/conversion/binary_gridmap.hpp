@@ -16,7 +16,7 @@ inline void from(
         const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &src,
         cslibs_gridmaps::static_maps::BinaryGridmap::Ptr &dst,
         const double &sampling_resolution,
-        const double &threshold = 0.196)
+        const double &threshold = 0.169)
 {
     if (!src)
         return;
@@ -62,7 +62,7 @@ inline void from(
         cslibs_gridmaps::static_maps::BinaryGridmap::Ptr &dst,
         const double &sampling_resolution,
         const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model,
-        const double &threshold = 0.196)
+        const double &threshold = 0.169)
 {
     if (!src || !inverse_model)
         return;

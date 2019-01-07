@@ -7,10 +7,12 @@
 
 #include <cslibs_ndt/common/distribution.hpp>
 #include <cslibs_ndt/common/occupancy_distribution.hpp>
+#include <cslibs_ndt/common/weighted_occupancy_distribution.hpp>
 #include <cslibs_ndt/serialization/filesystem.hpp>
 
 #include <cslibs_math/serialization/array.hpp>
 #include <cslibs_math/serialization/distribution.hpp>
+#include <cslibs_math/serialization/weighted_distribution.hpp>
 
 #include <fstream>
 #include <yaml-cpp/yaml.h>
@@ -49,6 +51,28 @@ std::size_t read(std::ifstream &in, OccupancyDistribution<Size> &d)
     std::size_t r = cslibs_math::serialization::distribution::binary<Size, 3>::read(in,tmp);
     if (tmp.getN() != 0)
         d.getDistribution().reset(new typename OccupancyDistribution<Size>::distribution_t(tmp));
+    return sizeof(std::size_t) + r;
+}
+
+template<std::size_t Size>
+void write(const WeightedOccupancyDistribution<Size> &d, std::ofstream &out)
+{
+    cslibs_math::serialization::io<double>::write(d.weightFree(), out);
+    if (!d.getDistribution())
+        cslibs_math::serialization::weighted_distribution::binary<Size, 3>::write(out);
+    else
+        cslibs_math::serialization::weighted_distribution::binary<Size, 3>::write(*(d.getDistribution()), out);
+}
+
+template<std::size_t Size>
+std::size_t read(std::ifstream &in, WeightedOccupancyDistribution<Size> &d)
+{
+    double f = cslibs_math::serialization::io<double>::read(in);
+    d = WeightedOccupancyDistribution<Size>(f);
+    typename WeightedOccupancyDistribution<Size>::distribution_t tmp;
+    std::size_t r = cslibs_math::serialization::weighted_distribution::binary<Size, 3>::read(in,tmp);
+    if (tmp.getWeight() != 0.0)
+        d.getDistribution().reset(new typename WeightedOccupancyDistribution<Size>::distribution_t(tmp));
     return sizeof(std::size_t) + r;
 }
 

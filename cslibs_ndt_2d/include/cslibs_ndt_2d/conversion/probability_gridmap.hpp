@@ -3,6 +3,7 @@
 
 #include <cslibs_ndt_2d/dynamic_maps/gridmap.hpp>
 #include <cslibs_ndt_2d/dynamic_maps/occupancy_gridmap.hpp>
+#include <cslibs_ndt_2d/dynamic_maps/weighted_occupancy_gridmap.hpp>
 #include <cslibs_ndt_2d/static_maps/mono_gridmap.hpp>
 
 #include <cslibs_ndt_2d/conversion/gridmap.hpp>
@@ -105,6 +106,57 @@ inline void from(
     src->allocatePartiallyAllocatedBundles();
 
     using src_map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap;
+    using dst_map_t = cslibs_gridmaps::static_maps::ProbabilityGridmap;
+    dst.reset(new dst_map_t(src->getOrigin(),
+                            sampling_resolution,
+                            std::ceil(src->getHeight() / sampling_resolution),
+                            std::ceil(src->getWidth()  / sampling_resolution)));
+    std::fill(dst->getData().begin(), dst->getData().end(), 0);
+
+    const double bundle_resolution = src->getBundleResolution();
+    const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
+
+    auto sample = [&inverse_model](const cslibs_math_2d::Point2d &p, const src_map_t::distribution_bundle_t &bundle) {
+        auto sample = [&p, &inverse_model](const src_map_t::distribution_t *d) {
+            auto do_sample = [&p, &inverse_model, &d]() {
+                const auto &handle = d;
+                return handle->getDistribution() ?
+                            handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(inverse_model) : 0.0;
+            };
+            return d ? do_sample() : 0.0;
+        };
+        return 0.25 * (sample(bundle.at(0)) +
+                       sample(bundle.at(1)) +
+                       sample(bundle.at(2)) +
+                       sample(bundle.at(3)));
+    };
+
+    using index_t = std::array<int, 2>;
+    const index_t min_bi = src->getMinBundleIndex();
+
+    src->traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
+                  (const index_t &bi, const src_map_t::distribution_bundle_t &b){
+        for (int k = 0 ; k < chunk_step ; ++ k) {
+            for (int l = 0 ; l < chunk_step ; ++ l) {
+                const cslibs_math_2d::Point2d p(bi[0] * bundle_resolution + k * sampling_resolution,
+                                                bi[1] * bundle_resolution + l * sampling_resolution);
+                dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
+            }
+        }
+    });
+}
+
+inline void from(
+        const cslibs_ndt_2d::dynamic_maps::WeightedOccupancyGridmap::Ptr &src,
+        cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr &dst,
+        const double sampling_resolution,
+        const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model)
+{
+    if (!src || !inverse_model)
+        return;
+    src->allocatePartiallyAllocatedBundles();
+
+    using src_map_t = cslibs_ndt_2d::dynamic_maps::WeightedOccupancyGridmap;
     using dst_map_t = cslibs_gridmaps::static_maps::ProbabilityGridmap;
     dst.reset(new dst_map_t(src->getOrigin(),
                             sampling_resolution,

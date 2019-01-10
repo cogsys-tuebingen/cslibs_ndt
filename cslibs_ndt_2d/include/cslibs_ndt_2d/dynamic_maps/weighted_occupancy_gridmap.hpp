@@ -220,7 +220,7 @@ public:
             line_iterator_t it(start_p, m_T_w_ * point_t(d.getDistribution()->getMean()), bundle_resolution_);
             const double w = d.weightOccupied();
             while (!it.done()) {
-                updateFree({{it.x(), it.y()}}, w);
+                updateFree({{it.x(), it.y()}}, 1, w); // TODO
                 ++ it;
             }
         });
@@ -278,7 +278,7 @@ public:
                 if ((visibility *= current_visibility(bit)) < ivm_visibility->getProbPrior())
                     return;
 
-                updateFree(bit, ww);
+                updateFree(bit, 1, ww);  // TODO!
                 ++ it;
             }
 
@@ -559,14 +559,15 @@ protected:
         bundle->at(3)->updateFree();
     }
 
-    inline void updateFree(const index_t &bi,
-                           const double  &w) const
+    inline void updateFree(const index_t     &bi,
+                           const std::size_t &n,
+                           const double      &w) const
     {
         distribution_bundle_t *bundle = getAllocate(bi);
-        bundle->at(0)->updateFree(w);
-        bundle->at(1)->updateFree(w);
-        bundle->at(2)->updateFree(w);
-        bundle->at(3)->updateFree(w);
+        bundle->at(0)->updateFree(n ,w);
+        bundle->at(1)->updateFree(n, w);
+        bundle->at(2)->updateFree(n, w);
+        bundle->at(3)->updateFree(n, w);
     }
 
     inline void updateOccupied(const index_t &bi,

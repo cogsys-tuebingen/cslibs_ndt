@@ -57,6 +57,7 @@ std::size_t read(std::ifstream &in, OccupancyDistribution<Size> &d)
 template<std::size_t Size>
 void write(const WeightedOccupancyDistribution<Size> &d, std::ofstream &out)
 {
+    cslibs_math::serialization::io<std::size_t>::write(d.numFree(), out);
     cslibs_math::serialization::io<double>::write(d.weightFree(), out);
     if (!d.getDistribution())
         cslibs_math::serialization::weighted_distribution::binary<Size, 3>::write(out);
@@ -67,13 +68,14 @@ void write(const WeightedOccupancyDistribution<Size> &d, std::ofstream &out)
 template<std::size_t Size>
 std::size_t read(std::ifstream &in, WeightedOccupancyDistribution<Size> &d)
 {
+    std::size_t n = cslibs_math::serialization::io<std::size_t>::read(in);
     double f = cslibs_math::serialization::io<double>::read(in);
-    d = WeightedOccupancyDistribution<Size>(f);
+    d = WeightedOccupancyDistribution<Size>(n, f);
     typename WeightedOccupancyDistribution<Size>::distribution_t tmp;
     std::size_t r = cslibs_math::serialization::weighted_distribution::binary<Size, 3>::read(in,tmp);
     if (tmp.getWeight() != 0.0)
         d.getDistribution().reset(new typename WeightedOccupancyDistribution<Size>::distribution_t(tmp));
-    return sizeof(std::size_t) + r;
+    return sizeof(std::size_t) + sizeof(double) + r;
 }
 
 template <template <std::size_t> class T, std::size_t Size, std::size_t Dim>

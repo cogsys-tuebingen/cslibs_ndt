@@ -23,23 +23,29 @@ public:
     using point_t                   = typename distribution_t::sample_t;
 
     inline WeightedOccupancyDistribution() :
+        num_free_(0),
         weight_free_(0)
     {
     }
 
-    inline WeightedOccupancyDistribution(const double weight_free) :
+    inline WeightedOccupancyDistribution(const std::size_t num_free,
+                                         const double      weight_free) :
+        num_free_(num_free),
         weight_free_(weight_free)
     {
     }
 
-    inline WeightedOccupancyDistribution(const double    weight_free,
+    inline WeightedOccupancyDistribution(const std::size_t    num_free,
+                                         const double         weight_free,
                                          const distribution_t data) :
+        num_free_(num_free),
         weight_free_(weight_free),
         distribution_(new distribution_t(data))
     {
     }
 
     inline WeightedOccupancyDistribution(const WeightedOccupancyDistribution &other) :
+        num_free_(other.num_free_),
         weight_free_(other.weight_free_),
         distribution_(other.distribution_),
         occupancy_(other.occupancy_),
@@ -49,6 +55,7 @@ public:
 
     inline WeightedOccupancyDistribution& operator = (const WeightedOccupancyDistribution &other)
     {
+        num_free_      = other.num_free_;
         weight_free_   = other.weight_free_;
         distribution_  = other.distribution_;
         occupancy_     = other.occupancy_;
@@ -56,8 +63,9 @@ public:
         return *this;
     }
 
-    inline void updateFree(const double &weight_free = 1.0)
+    inline void updateFree(const std::size_t& num_free = 1.0, const double &weight_free = 1.0)
     {
+        num_free_     += num_free;
         weight_free_  += weight_free;
         inverse_model_ = nullptr;
     }
@@ -88,6 +96,11 @@ public:
         return weight_free_;
     }
 
+    inline std::size_t numFree() const
+    {
+        return num_free_;
+    }
+
     inline double weightOccupied() const
     {
         return distribution_ ? distribution_->getWeight() : 0.0;
@@ -111,10 +124,10 @@ public:
                     cslibs_math::common::LogOdds::from(
                         weight_free_ * inverse_model_->getLogOddsFree() +
                         distribution_->getWeight() * inverse_model_->getLogOddsOccupied() -
-                        (weight_free_ + distribution_->getWeight()) * inverse_model_->getLogOddsPrior()) :
+                        static_cast<double>(num_free_ + distribution_->getSampleCount()) * inverse_model_->getLogOddsPrior()) :
                     cslibs_math::common::LogOdds::from(
                         weight_free_ * inverse_model_->getLogOddsFree() -
-                        weight_free_ * inverse_model_->getLogOddsPrior());
+                        static_cast<double>(num_free_) * inverse_model_->getLogOddsPrior());
         return occupancy_;
     }
 
@@ -138,6 +151,7 @@ public:
     }
 
 private:
+    std::size_t        num_free_;
     double             weight_free_;
     distribution_ptr_t distribution_;
 

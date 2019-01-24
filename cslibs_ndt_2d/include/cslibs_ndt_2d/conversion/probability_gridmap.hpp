@@ -13,6 +13,13 @@
 
 namespace cslibs_ndt_2d {
 namespace conversion {
+inline double validate(const double& val)
+{
+    if (val < 0.0 || val > 1.0 || !std::isnormal(val))
+        return 0.0;
+    return val;
+}
+
 inline void from(
         const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &src,
         cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr &dst,
@@ -34,10 +41,10 @@ inline void from(
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
     auto sample = [](const cslibs_math_2d::Point2d &p, const src_map_t::distribution_bundle_t &bundle) {
-        return 0.25 * (bundle.at(0)->data().sampleNonNormalized(p) +
-                       bundle.at(1)->data().sampleNonNormalized(p) +
-                       bundle.at(2)->data().sampleNonNormalized(p) +
-                       bundle.at(3)->data().sampleNonNormalized(p));
+        return 0.25 * (validate(bundle.at(0)->data().sampleNonNormalized(p)) +
+                       validate(bundle.at(1)->data().sampleNonNormalized(p)) +
+                       validate(bundle.at(2)->data().sampleNonNormalized(p)) +
+                       validate(bundle.at(3)->data().sampleNonNormalized(p)));
     };
 
     using index_t = std::array<int, 2>;
@@ -86,7 +93,7 @@ inline void from(
             const cslibs_ndt_2d::static_maps::mono::Gridmap::index_t idx = {{min_index[0] + static_cast<int>(p(0) / src->getResolution()),
                                                                              min_index[1] + static_cast<int>(p(1) / src->getResolution())}};
 
-            const double v = src->sampleNonNormalized(src->getOrigin() * p,idx);
+            const double v = validate(src->sampleNonNormalized(src->getOrigin() * p,idx));
             if(v >= 0.0) {
                 dst->at(j,i) = v;
             }
@@ -119,9 +126,9 @@ inline void from(
     auto sample = [&inverse_model](const cslibs_math_2d::Point2d &p, const src_map_t::distribution_bundle_t &bundle) {
         auto sample = [&p, &inverse_model](const src_map_t::distribution_t *d) {
             auto do_sample = [&p, &inverse_model, &d]() {
-                const auto &handle = d;
-                return handle->getDistribution() ?
-                            handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(inverse_model) : 0.0;
+                return (d->getDistribution() && d->getDistribution()->valid()) ?
+                            validate(d->getDistribution()->sampleNonNormalized(p)) *
+                            validate(d->getOccupancy(inverse_model)) : 0.0;
             };
             return d ? do_sample() : 0.0;
         };
@@ -170,9 +177,9 @@ inline void from(
     auto sample = [&inverse_model](const cslibs_math_2d::Point2d &p, const src_map_t::distribution_bundle_t &bundle) {
         auto sample = [&p, &inverse_model](const src_map_t::distribution_t *d) {
             auto do_sample = [&p, &inverse_model, &d]() {
-                const auto &handle = d;
-                return handle->getDistribution() ?
-                            handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(inverse_model) : 0.0;
+                return (d->getDistribution() && d->getDistribution()->valid()) ?
+                            validate(d->getDistribution()->sampleNonNormalized(p)) *
+                            validate(d->getOccupancy(inverse_model)) : 0.0;
             };
             return d ? do_sample() : 0.0;
         };

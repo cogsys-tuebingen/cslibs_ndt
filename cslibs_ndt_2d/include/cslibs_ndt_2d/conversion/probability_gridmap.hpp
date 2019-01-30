@@ -23,11 +23,13 @@ inline double validate(const double& val)
 inline void from(
         const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &src,
         cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr &dst,
-        const double sampling_resolution)
+        const double sampling_resolution,
+        const bool allocate_all = true)
 {
     if (!src)
         return;
-    src->allocatePartiallyAllocatedBundles();
+    if (allocate_all)
+        src->allocatePartiallyAllocatedBundles();
 
     using src_map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
     using dst_map_t = cslibs_gridmaps::static_maps::ProbabilityGridmap;
@@ -106,11 +108,13 @@ inline void from(
         const cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr &src,
         cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr &dst,
         const double sampling_resolution,
-        const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model)
+        const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model,
+        const bool allocate_all = true)
 {
     if (!src || !inverse_model)
         return;
-    src->allocatePartiallyAllocatedBundles();
+    if (allocate_all)
+        src->allocatePartiallyAllocatedBundles();
 
     using src_map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap;
     using dst_map_t = cslibs_gridmaps::static_maps::ProbabilityGridmap;
@@ -157,11 +161,13 @@ inline void from(
         const cslibs_ndt_2d::dynamic_maps::WeightedOccupancyGridmap::Ptr &src,
         cslibs_gridmaps::static_maps::ProbabilityGridmap::Ptr &dst,
         const double sampling_resolution,
-        const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model)
+        const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model,
+        const bool allocate_all = true)
 {
     if (!src || !inverse_model)
         return;
-    src->allocatePartiallyAllocatedBundles();
+    if (allocate_all)
+        src->allocatePartiallyAllocatedBundles();
 
     using src_map_t = cslibs_ndt_2d::dynamic_maps::WeightedOccupancyGridmap;
     using dst_map_t = cslibs_gridmaps::static_maps::ProbabilityGridmap;

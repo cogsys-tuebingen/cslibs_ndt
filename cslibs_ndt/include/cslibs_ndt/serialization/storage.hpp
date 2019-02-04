@@ -70,11 +70,12 @@ std::size_t read(std::ifstream &in, WeightedOccupancyDistribution<Size> &d)
 {
     std::size_t n = cslibs_math::serialization::io<std::size_t>::read(in);
     double f = cslibs_math::serialization::io<double>::read(in);
-    d = WeightedOccupancyDistribution<Size>(n, f);
-    typename WeightedOccupancyDistribution<Size>::distribution_t tmp;
+    using distr_t = typename cslibs_math::statistics::WeightedDistribution<Size, 3>;
+    distr_t tmp;
     std::size_t r = cslibs_math::serialization::weighted_distribution::binary<Size, 3>::read(in,tmp);
-    if (tmp.getWeight() != 0.0)
-        d.getDistribution().reset(new typename WeightedOccupancyDistribution<Size>::distribution_t(tmp));
+    d = WeightedOccupancyDistribution<Size>(n, f);
+    if (tmp.getSampleCount() > 0)
+        d.getDistribution().reset(new distr_t(tmp));
     return sizeof(std::size_t) + sizeof(double) + r;
 }
 

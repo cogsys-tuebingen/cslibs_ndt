@@ -21,6 +21,7 @@ public:
     using distribution_t            = cslibs_math::statistics::WeightedDistribution<T,Dim,3>;
     using distribution_ptr_t        = typename distribution_t::Ptr;
     using point_t                   = typename distribution_t::sample_t;
+    using ivm_t                     = cslibs_gridmaps::utility::InverseModel<T>;
 
     inline WeightedOccupancyDistribution() :
         num_free_(0),
@@ -29,14 +30,14 @@ public:
     }
 
     inline WeightedOccupancyDistribution(const std::size_t num_free,
-                                         const double      weight_free) :
+                                         const T           weight_free) :
         num_free_(num_free),
         weight_free_(weight_free)
     {
     }
 
     inline WeightedOccupancyDistribution(const std::size_t    num_free,
-                                         const double         weight_free,
+                                         const T              weight_free,
                                          const distribution_t data) :
         num_free_(num_free),
         weight_free_(weight_free),
@@ -63,14 +64,14 @@ public:
         return *this;
     }
 
-    inline void updateFree(const std::size_t& num_free = 1.0, const double &weight_free = 1.0)
+    inline void updateFree(const std::size_t& num_free = 1.0, const T& weight_free = 1.0)
     {
         num_free_     += num_free;
         weight_free_  += weight_free;
         inverse_model_ = nullptr;
     }
 
-    inline void updateOccupied(const point_t & p, const double& w = 1.0)
+    inline void updateOccupied(const point_t& p, const T& w = 1.0)
     {
         if (!distribution_)
             distribution_.reset(new distribution_t());
@@ -91,7 +92,7 @@ public:
         inverse_model_ = nullptr;
     }
 
-    inline double weightFree() const
+    inline T weightFree() const
     {
         return weight_free_;
     }
@@ -101,12 +102,12 @@ public:
         return num_free_;
     }
 
-    inline double weightOccupied() const
+    inline T weightOccupied() const
     {
         return distribution_ ? distribution_->getWeight() : 0.0;
     }
 
-    inline double getOccupancy(const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model) const
+    inline T getOccupancy(const typename ivm_t::Ptr &inverse_model) const
     {
         if (!inverse_model)
             throw std::runtime_error("inverse model not set!");
@@ -114,20 +115,20 @@ public:
         return getOccupancy(*inverse_model);
     }
 
-    inline double getOccupancy(const cslibs_gridmaps::utility::InverseModel &inverse_model) const
+    inline T getOccupancy(const ivm_t &inverse_model) const
     {
         if (&inverse_model == inverse_model_)
             return occupancy_;
 
         inverse_model_ = &inverse_model;
         occupancy_ = distribution_ ?
-                    cslibs_math::common::LogOdds::from(
+                    cslibs_math::common::LogOdds<T>::from(
                         weight_free_ * inverse_model_->getLogOddsFree() +
                         distribution_->getWeight() * inverse_model_->getLogOddsOccupied() -
-                        static_cast<double>(num_free_ + distribution_->getSampleCount()) * inverse_model_->getLogOddsPrior()) :
-                    cslibs_math::common::LogOdds::from(
+                        static_cast<T>(num_free_ + distribution_->getSampleCount()) * inverse_model_->getLogOddsPrior()) :
+                    cslibs_math::common::LogOdds<T>::from(
                         weight_free_ * inverse_model_->getLogOddsFree() -
-                        static_cast<double>(num_free_) * inverse_model_->getLogOddsPrior());
+                        static_cast<T>(num_free_) * inverse_model_->getLogOddsPrior());
         return occupancy_;
     }
 
@@ -152,11 +153,11 @@ public:
 
 private:
     std::size_t        num_free_;
-    double             weight_free_;
+    T                  weight_free_;
     distribution_ptr_t distribution_;
 
-    mutable double                                        occupancy_ = 0;
-    mutable const cslibs_gridmaps::utility::InverseModel* inverse_model_ = nullptr; // may point to invalid memory!
+    mutable T            occupancy_     = 0;
+    mutable const ivm_t* inverse_model_ = nullptr; // may point to invalid memory!
 };
 }
 

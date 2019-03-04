@@ -21,6 +21,7 @@ public:
     using distribution_t            = cslibs_math::statistics::Distribution<T,Dim,3>;
     using distribution_ptr_t        = typename distribution_t::Ptr;
     using point_t                   = typename distribution_t::sample_t;
+    using ivm_t                     = cslibs_gridmaps::utility::InverseModel<T>;
 
     inline OccupancyDistribution() :
         num_free_(0)
@@ -99,7 +100,7 @@ public:
         return distribution_ ? distribution_->getN() : 0ul;
     }
 
-    inline double getOccupancy(const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model) const
+    inline T getOccupancy(const typename ivm_t::Ptr &inverse_model) const
     {
         if (!inverse_model)
             throw std::runtime_error("inverse model not set!");
@@ -107,20 +108,20 @@ public:
         return getOccupancy(*inverse_model);
     }
 
-    inline double getOccupancy(const cslibs_gridmaps::utility::InverseModel &inverse_model) const
+    inline T getOccupancy(const ivm_t &inverse_model) const
     {
         if (&inverse_model == inverse_model_)
             return occupancy_;
 
         inverse_model_ = &inverse_model;
         occupancy_ = distribution_ ?
-                    cslibs_math::common::LogOdds::from(
-                        num_free_ * inverse_model_->getLogOddsFree() +
+                    cslibs_math::common::LogOdds<T>::from(
+                        static_cast<T>(num_free_) * inverse_model_->getLogOddsFree() +
                         distribution_->getN() * inverse_model_->getLogOddsOccupied() -
-                        (num_free_ + distribution_->getN()) * inverse_model_->getLogOddsPrior()) :
-                    cslibs_math::common::LogOdds::from(
-                        num_free_ * inverse_model_->getLogOddsFree() -
-                        num_free_ * inverse_model_->getLogOddsPrior());
+                        static_cast<T>(num_free_ + distribution_->getN()) * inverse_model_->getLogOddsPrior()) :
+                    cslibs_math::common::LogOdds<T>::from(
+                        static_cast<T>(num_free_) * inverse_model_->getLogOddsFree() -
+                        static_cast<T>(num_free_) * inverse_model_->getLogOddsPrior());
         return occupancy_;
     }
 
@@ -147,8 +148,8 @@ private:
     std::size_t        num_free_;
     distribution_ptr_t distribution_;
 
-    mutable double                                        occupancy_ = 0;
-    mutable const cslibs_gridmaps::utility::InverseModel* inverse_model_ = nullptr; // may point to invalid memory!
+    mutable T            occupancy_     = 0;
+    mutable const ivm_t* inverse_model_ = nullptr; // may point to invalid memory!
 };
 }
 

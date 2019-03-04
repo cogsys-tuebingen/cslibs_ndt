@@ -23,7 +23,7 @@ inline bool saveBinary(const typename cslibs_ndt_2d::dynamic_maps::OccupancyGrid
 {
     using path_t     = boost::filesystem::path;
     using paths_t    = std::array<path_t, 4>;
-    using map_t      = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap;
+    using map_t      = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<T>;
     using binary_t   = cslibs_ndt::binary<cslibs_ndt::OccupancyDistribution, T, 2, 2>;
     using index_t    = typename map_t::index_t;
     using storages_t = typename map_t::distribution_storage_array_t;
@@ -81,7 +81,7 @@ inline bool loadBinary(const std::string &path,
     using path_t           = boost::filesystem::path;
     using paths_t          = std::array<path_t, 4>;
     using map_t            = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<T>;
-    using binary_t         = cslibs_ndt::binary<cslibs_ndt::OccupancyDistribution, 2, 2>;
+    using binary_t         = cslibs_ndt::binary<cslibs_ndt::OccupancyDistribution, T, 2, 2>;
     using index_t          = typename map_t::index_t;
     using pose_t           = typename map_t::pose_t;
     using bundle_storage_t = typename map_t::distribution_bundle_storage_t;

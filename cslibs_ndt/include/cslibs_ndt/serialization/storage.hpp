@@ -20,63 +20,63 @@
 namespace cis = cslibs_indexed_storage;
 
 namespace cslibs_ndt {
-template <template <std::size_t> class T, std::size_t Size>
-void write(const T<Size> &d, std::ofstream &out)
+template <typename Tp, template <typename,std::size_t> class T, std::size_t Size>
+void write(const T<Tp,Size> &d, std::ofstream &out)
 {
-    cslibs_math::serialization::distribution::binary<Size, 3>::write(d.data(), out);
+    cslibs_math::serialization::distribution::binary<Tp,Size,3>::write(d.data(), out);
 }
 
-template <template <std::size_t> class T, std::size_t Size>
-std::size_t read(std::ifstream &in, T<Size> &d)
+template <typename Tp, template <typename,std::size_t> class T, std::size_t Size>
+std::size_t read(std::ifstream &in, T<Tp,Size> &d)
 {
-    return cslibs_math::serialization::distribution::binary<Size, 3>::read(in, d.data());
+    return cslibs_math::serialization::distribution::binary<Tp,Size,3>::read(in, d.data());
 }
 
-template<std::size_t Size>
-void write(const OccupancyDistribution<Size> &d, std::ofstream &out)
+template<typename Tp, std::size_t Size>
+void write(const OccupancyDistribution<Tp,Size> &d, std::ofstream &out)
 {
     cslibs_math::serialization::io<std::size_t>::write(d.numFree(), out);
     if (!d.getDistribution())
-        cslibs_math::serialization::distribution::binary<Size, 3>::write(out);
+        cslibs_math::serialization::distribution::binary<Tp,Size,3>::write(out);
     else
-        cslibs_math::serialization::distribution::binary<Size, 3>::write(*(d.getDistribution()), out);
+        cslibs_math::serialization::distribution::binary<Tp,Size,3>::write(*(d.getDistribution()), out);
 }
 
-template<std::size_t Size>
-std::size_t read(std::ifstream &in, OccupancyDistribution<Size> &d)
+template<typename Tp, std::size_t Size>
+std::size_t read(std::ifstream &in, OccupancyDistribution<Tp,Size> &d)
 {
     std::size_t f = cslibs_math::serialization::io<std::size_t>::read(in);
-    d = OccupancyDistribution<Size>(f);
-    typename OccupancyDistribution<Size>::distribution_t tmp;
-    std::size_t r = cslibs_math::serialization::distribution::binary<Size, 3>::read(in,tmp);
+    d = OccupancyDistribution<Tp,Size>(f);
+    typename OccupancyDistribution<Tp,Size>::distribution_t tmp;
+    std::size_t r = cslibs_math::serialization::distribution::binary<Tp,Size,3>::read(in,tmp);
     if (tmp.getN() != 0)
-        d.getDistribution().reset(new typename OccupancyDistribution<Size>::distribution_t(tmp));
+        d.getDistribution().reset(new typename OccupancyDistribution<Tp,Size>::distribution_t(tmp));
     return sizeof(std::size_t) + r;
 }
 
-template<std::size_t Size>
-void write(const WeightedOccupancyDistribution<Size> &d, std::ofstream &out)
+template<typename Tp, std::size_t Size>
+void write(const WeightedOccupancyDistribution<Tp,Size> &d, std::ofstream &out)
 {
     cslibs_math::serialization::io<std::size_t>::write(d.numFree(), out);
-    cslibs_math::serialization::io<double>::write(d.weightFree(), out);
+    cslibs_math::serialization::io<Tp>::write(d.weightFree(), out);
     if (!d.getDistribution())
-        cslibs_math::serialization::weighted_distribution::binary<Size, 3>::write(out);
+        cslibs_math::serialization::weighted_distribution::binary<Tp,Size,3>::write(out);
     else
-        cslibs_math::serialization::weighted_distribution::binary<Size, 3>::write(*(d.getDistribution()), out);
+        cslibs_math::serialization::weighted_distribution::binary<Tp,Size,3>::write(*(d.getDistribution()), out);
 }
 
-template<std::size_t Size>
-std::size_t read(std::ifstream &in, WeightedOccupancyDistribution<Size> &d)
+template<typename Tp, std::size_t Size>
+std::size_t read(std::ifstream &in, WeightedOccupancyDistribution<Tp,Size> &d)
 {
     std::size_t n = cslibs_math::serialization::io<std::size_t>::read(in);
-    double f = cslibs_math::serialization::io<double>::read(in);
-    using distr_t = typename cslibs_math::statistics::WeightedDistribution<Size, 3>;
+    Tp f = cslibs_math::serialization::io<Tp>::read(in);
+    using distr_t = typename cslibs_math::statistics::WeightedDistribution<Tp,Size,3>;
     distr_t tmp;
-    std::size_t r = cslibs_math::serialization::weighted_distribution::binary<Size, 3>::read(in,tmp);
-    d = WeightedOccupancyDistribution<Size>(n, f);
+    std::size_t r = cslibs_math::serialization::weighted_distribution::binary<Tp,Size,3>::read(in,tmp);
+    d = WeightedOccupancyDistribution<Tp,Size>(n, f);
     if (tmp.getSampleCount() > 0)
         d.getDistribution().reset(new distr_t(tmp));
-    return sizeof(std::size_t) + sizeof(double) + r;
+    return sizeof(std::size_t) + sizeof(Tp) + r;
 }
 
 template <template <std::size_t> class T, std::size_t Size, std::size_t Dim>

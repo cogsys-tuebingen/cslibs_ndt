@@ -9,16 +9,16 @@
 #include <cslibs_indexed_storage/storage.hpp>
 
 namespace cslibs_ndt {
-template<std::size_t Dim>
+template<typename T, std::size_t Dim>
 class EIGEN_ALIGN16 WeightedOccupancyDistribution
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t               = Eigen::aligned_allocator<WeightedOccupancyDistribution>;
+    using allocator_t               = Eigen::aligned_allocator<WeightedOccupancyDistribution<T,Dim>>;
 
-    using Ptr                       = std::shared_ptr<WeightedOccupancyDistribution<Dim>>;
-    using distribution_container_t  = WeightedOccupancyDistribution<Dim>;
-    using distribution_t            = cslibs_math::statistics::WeightedDistribution<Dim, 3>;
+    using Ptr                       = std::shared_ptr<WeightedOccupancyDistribution<T,Dim>>;
+    using distribution_container_t  = WeightedOccupancyDistribution<T,Dim>;
+    using distribution_t            = cslibs_math::statistics::WeightedDistribution<T,Dim,3>;
     using distribution_ptr_t        = typename distribution_t::Ptr;
     using point_t                   = typename distribution_t::sample_t;
 

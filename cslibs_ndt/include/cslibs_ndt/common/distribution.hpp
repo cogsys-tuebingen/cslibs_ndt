@@ -9,15 +9,15 @@
 #include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
 
 namespace cslibs_ndt {
-template<std::size_t Dim>
+template<typename T, std::size_t Dim>
 class EIGEN_ALIGN16 Distribution
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t              = Eigen::aligned_allocator<Distribution>;
+    using allocator_t              = Eigen::aligned_allocator<Distribution<T,Dim>>;
 
-    using distribution_container_t = Distribution<Dim>;
-    using distribution_t           = cslibs_math::statistics::Distribution<Dim, 3>;
+    using distribution_container_t = Distribution<T,Dim>;
+    using distribution_t           = cslibs_math::statistics::Distribution<T,Dim,3>;
 
     inline Distribution()
     {

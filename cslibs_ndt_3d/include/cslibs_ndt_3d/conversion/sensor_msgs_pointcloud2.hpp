@@ -40,9 +40,10 @@ inline void from(
     memcpy(&dst.data[0], &tmp[0], data_size);
 }
 
-template<typename ndt_t,
-         typename = typename std::enable_if<std::is_same<ndt_t, cslibs_ndt_3d::dynamic_maps::Gridmap>::value
-                                            || std::is_same<ndt_t, cslibs_ndt_3d::static_maps::Gridmap>::value>::type>
+template<typename T,
+         typename ndt_t,
+         typename = typename std::enable_if<std::is_same<ndt_t, cslibs_ndt_3d::dynamic_maps::Gridmap<T>>::value
+                                            || std::is_same<ndt_t, cslibs_ndt_3d::static_maps::Gridmap<T>>::value>::type>
 inline void from(
         ndt_t &src,
         sensor_msgs::PointCloud2 &dst)
@@ -50,15 +51,15 @@ inline void from(
     src.allocatePartiallyAllocatedBundles();
 
     using index_t = std::array<int, 3>;
-    using point_t = cslibs_math_3d::Point3d;
+    using point_t = typename ndt_t::point_t;
     using distribution_t = typename ndt_t::distribution_t;
     using distribution_bundle_t = typename ndt_t::distribution_bundle_t;
     auto sample = [](const distribution_t *d,
-                     const point_t &p) -> double {
+                     const point_t &p) -> T {
         return d ? d->data().sampleNonNormalized(p) : 0.0;
     };
     auto sample_bundle = [&sample](const distribution_bundle_t &b,
-                                   const point_t &p) -> double {
+                                   const point_t &p) -> T {
         return 0.125 * (sample(b.at(0), p) +
                         sample(b.at(1), p) +
                         sample(b.at(2), p) +
@@ -71,13 +72,13 @@ inline void from(
 
     std::vector<float> tmp;
     auto process_bundle = [&src, &tmp, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
-        cslibs_math::statistics::Distribution<3, 3> d;
+        cslibs_math::statistics::Distribution<T, 3, 3> d;
         for (std::size_t i = 0 ; i < 8 ; ++i)
             d += b.at(i)->data();
         if (d.getN() == 0)
             return;
 
-        cslibs_math_3d::Point3d mean(d.getMean());
+        cslibs_math_3d::Point3d<T> mean(d.getMean());
         tmp.emplace_back(static_cast<float>(mean(0)));
         tmp.emplace_back(static_cast<float>(mean(1)));
         tmp.emplace_back(static_cast<float>(mean(2)));
@@ -87,8 +88,9 @@ inline void from(
     from(tmp, dst);
 }
 
+template <typename T>
 inline void from(
-        const cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr &src,
+        const typename cslibs_ndt_3d::dynamic_maps::Gridmap<T>::Ptr &src,
         sensor_msgs::PointCloud2 &dst)
 {
     if (!src)
@@ -97,23 +99,24 @@ inline void from(
     from(*src, dst);
 }
 
-template<typename ndt_t,
-        typename = typename std::enable_if<std::is_same<ndt_t, cslibs_ndt_3d::dynamic_maps::OccupancyGridmap>::value
-                                           || std::is_same<ndt_t, cslibs_ndt_3d::static_maps::OccupancyGridmap>::value>::type>
+template<typename T,
+         typename ndt_t,
+         typename = typename std::enable_if<std::is_same<ndt_t, cslibs_ndt_3d::dynamic_maps::OccupancyGridmap<T>>::value
+                                            || std::is_same<ndt_t, cslibs_ndt_3d::static_maps::OccupancyGridmap<T>>::value>::type>
 inline void from(
         ndt_t &src,
         sensor_msgs::PointCloud2 &dst,
-        const cslibs_gridmaps::utility::InverseModel::Ptr &ivm,
+        const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
         const double &threshold = 0.169)
 {
     src.allocatePartiallyAllocatedBundles();
 
     using index_t = std::array<int, 3>;
-    using point_t = cslibs_math_3d::Point3d;
+    using point_t = typename ndt_t::point_t;
     using distribution_t = typename ndt_t::distribution_t;
     using distribution_bundle_t = typename ndt_t::distribution_bundle_t;
     auto sample = [&ivm](const distribution_t *d,
-                         const point_t &p) -> double {
+                         const point_t &p) -> T {
         auto evaluate = [&ivm, d, p] {
             const auto &handle = d;
             return d && handle->getDistribution() ?
@@ -122,7 +125,7 @@ inline void from(
         return d ? evaluate() : 0.0;
     };
     auto sample_bundle = [&sample](const distribution_bundle_t &b,
-                                   const point_t &p) -> double {
+                                   const point_t &p) -> T {
         return 0.125 * (sample(b.at(0), p) +
                         sample(b.at(1), p) +
                         sample(b.at(2), p) +
@@ -135,8 +138,8 @@ inline void from(
 
     std::vector<float> tmp;
     auto process_bundle = [&src, &tmp, &ivm, &threshold, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
-        cslibs_math::statistics::Distribution<3, 3> d;
-        double occupancy = 0.0;
+        cslibs_math::statistics::Distribution<T, 3, 3> d;
+        T occupancy = 0.0;
 
         for (std::size_t i = 0 ; i < 8 ; ++i) {
             const auto &handle = b.at(i);
@@ -147,7 +150,7 @@ inline void from(
         if (d.getN() == 0 || occupancy < threshold)
             return;
 
-        cslibs_math_3d::Point3d mean(d.getMean());
+        cslibs_math_3d::Point3d<T> mean(d.getMean());
         tmp.emplace_back(static_cast<float>(mean(0)));
         tmp.emplace_back(static_cast<float>(mean(1)));
         tmp.emplace_back(static_cast<float>(mean(2)));
@@ -157,11 +160,12 @@ inline void from(
     from(tmp, dst);
 }
 
+template <typename T>
 inline void from(
-        const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr &src,
+        const typename cslibs_ndt_3d::dynamic_maps::OccupancyGridmap<T>::Ptr &src,
         sensor_msgs::PointCloud2 &dst,
-        const cslibs_gridmaps::utility::InverseModel::Ptr &ivm,
-        const double &threshold = 0.169)
+        const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
+        const T &threshold = 0.169)
 {
     if (!src)
         return;

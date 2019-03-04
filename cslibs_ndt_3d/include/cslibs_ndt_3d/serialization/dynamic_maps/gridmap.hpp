@@ -17,14 +17,16 @@
 
 namespace cslibs_ndt_3d {
 namespace dynamic_maps {
-inline bool saveBinary(const cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr &map,
+template <typename T>
+inline bool saveBinary(const typename cslibs_ndt_3d::dynamic_maps::Gridmap<T>::Ptr &map,
                        const std::string &path)
 {
     using path_t     = boost::filesystem::path;
     using paths_t    = std::array<path_t, 8>;
-    using index_t    = cslibs_ndt_3d::dynamic_maps::Gridmap::index_t;
-    using storages_t = cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_storage_array_t;
-    using binary_t   = cslibs_ndt::binary<cslibs_ndt::Distribution, 3, 3>;
+    using map_t      = cslibs_ndt_3d::dynamic_maps::Gridmap<T>;
+    using binary_t   = cslibs_ndt::binary<cslibs_ndt::Distribution, T, 3, 3>;
+    using index_t    = typename map_t::index_t;
+    using storages_t = typename map_t::distribution_storage_array_t;
 
     /// step one: check if the root diretory exists
     path_t path_root(path);
@@ -80,15 +82,18 @@ inline bool saveBinary(const cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr &map,
     return success;
 }
 
+template <typename T>
 inline bool loadBinary(const std::string &path,
-                       cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr &map)
+                       typename cslibs_ndt_3d::dynamic_maps::Gridmap<T>::Ptr &map)
 {
     using path_t           = boost::filesystem::path;
     using paths_t          = std::array<path_t, 8>;
-    using index_t          = cslibs_ndt_3d::dynamic_maps::Gridmap::index_t;
-    using binary_t         = cslibs_ndt::binary<cslibs_ndt::Distribution, 3, 3>;
-    using bundle_storage_t = cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_storage_t;
-    using storages_t       = cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_storage_array_t;
+    using map_t            = cslibs_ndt_3d::dynamic_maps::Gridmap<T>;
+    using binary_t         = cslibs_ndt::binary<cslibs_ndt::Distribution, T, 3, 3>;
+    using index_t          = typename map_t::index_t;
+    using pose_t           = typename map_t::pose_t;
+    using bundle_storage_t = typename map_t::distribution_bundle_storage_t;
+    using storages_t       = typename map_t::distribution_storage_array_t;
 
     /// step one: check if the root diretory exists
     path_t path_root(path);
@@ -117,11 +122,11 @@ inline bool loadBinary(const std::string &path,
     storages_t storages;
 
     YAML::Node n = YAML::LoadFile((path_root / path_file).string());
-    const cslibs_math_3d::Transform3d origin     = n["origin"].as<cslibs_math_3d::Transform3d>();
-    const double                      resolution = n["resolution"].as<double>();
-    const index_t                     min_index  = n["min_index"].as<index_t>();
-    const index_t                     max_index  = n["max_index"].as<index_t>();
-    const std::vector<index_t>        indices    = n["bundles"].as<std::vector<index_t>>();
+    const pose_t               origin     = n["origin"].as<pose_t>();
+    const T                    resolution = n["resolution"].as<T>();
+    const index_t              min_index  = n["min_index"].as<index_t>();
+    const index_t              max_index  = n["max_index"].as<index_t>();
+    const std::vector<index_t> indices    = n["bundles"].as<std::vector<index_t>>();
 
     std::array<std::thread, 8> threads;
     std::atomic_bool success(true);
@@ -136,7 +141,7 @@ inline bool loadBinary(const std::string &path,
         return false;
 
     auto allocate_bundle = [&storages, &bundles](const index_t &bi) {
-        cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t b;
+        typename map_t::distribution_bundle_t b;
         const int divx = cslibs_math::common::div<int>(bi[0], 2);
         const int divy = cslibs_math::common::div<int>(bi[1], 2);
         const int divz = cslibs_math::common::div<int>(bi[2], 2);
@@ -166,12 +171,12 @@ inline bool loadBinary(const std::string &path,
     for (const index_t &index : indices)
         allocate_bundle(index);
 
-    map.reset(new cslibs_ndt_3d::dynamic_maps::Gridmap(origin,
-                                                       resolution,
-                                                       min_index,
-                                                       max_index,
-                                                       bundles,
-                                                       storages));
+    map.reset(new map_t(origin,
+                        resolution,
+                        min_index,
+                        max_index,
+                        bundles,
+                        storages));
 
     return true;
 }

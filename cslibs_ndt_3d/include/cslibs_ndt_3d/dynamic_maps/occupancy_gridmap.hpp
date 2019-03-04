@@ -32,21 +32,22 @@ namespace cis = cslibs_indexed_storage;
 
 namespace cslibs_ndt_3d {
 namespace dynamic_maps {
+template <typename T>
 class EIGEN_ALIGN16 OccupancyGridmap
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t = Eigen::aligned_allocator<OccupancyGridmap>;
+    using allocator_t = Eigen::aligned_allocator<OccupancyGridmap<T>>;
 
-    using Ptr                               = std::shared_ptr<OccupancyGridmap>;
-    using ConstPtr                          = std::shared_ptr<const OccupancyGridmap>;
-    using pose_2d_t                         = cslibs_math_2d::Pose2d;
-    using pose_t                            = cslibs_math_3d::Pose3d;
-    using transform_t                       = cslibs_math_3d::Transform3d;
-    using point_t                           = cslibs_math_3d::Point3d;
+    using Ptr                               = std::shared_ptr<OccupancyGridmap<T>>;
+    using ConstPtr                          = std::shared_ptr<const OccupancyGridmap<T>>;
+    using pose_2d_t                         = cslibs_math_2d::Pose2d<T>;
+    using pose_t                            = cslibs_math_3d::Pose3d<T>;
+    using transform_t                       = cslibs_math_3d::Transform3d<T>;
+    using point_t                           = cslibs_math_3d::Point3d<T>;
     using index_t                           = std::array<int, 3>;
-    using size_m_t                          = std::array<double, 3>;
-    using distribution_t                    = cslibs_ndt::OccupancyDistribution<3>;
+    using size_m_t                          = std::array<T, 3>;
+    using distribution_t                    = cslibs_ndt::OccupancyDistribution<T,3>;
     using distribution_storage_t            = cis::Storage<distribution_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;
     using distribution_storage_array_t      = std::array<distribution_storage_ptr_t, 8>;
@@ -54,11 +55,11 @@ public:
     using distribution_const_bundle_t       = cslibs_ndt::Bundle<const distribution_t*, 8>;
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
-    using simple_iterator_t                 = cslibs_math_3d::algorithms::SimpleIterator;
-    using inverse_sensor_model_t            = cslibs_gridmaps::utility::InverseModel;
+    using simple_iterator_t                 = cslibs_math_3d::algorithms::SimpleIterator<T>;
+    using inverse_sensor_model_t            = cslibs_gridmaps::utility::InverseModel<T>;
 
     inline OccupancyGridmap(const pose_t &origin,
-                            const double  resolution) :
+                            const T       resolution) :
         resolution_(resolution),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
@@ -79,7 +80,7 @@ public:
     }
 
     inline OccupancyGridmap(const pose_t &origin,
-                            const double resolution,
+                            const T       resolution,
                             const index_t &min_index,
                             const index_t &max_index,
                             const std::shared_ptr<distribution_bundle_storage_t> &bundles,
@@ -267,7 +268,7 @@ public:
                             bundle->at(7)->getOccupancy(ivm));
         };
         auto current_visibility = [this, &start_bi, &ivm_visibility, &occupancy](const index_t &bi) {
-            const double occlusion_prob =
+            const T occlusion_prob =
                     std::min(occupancy({{bi[0] + ((bi[0] > start_bi[0]) ? -1 : 1), bi[1], bi[2]}}),
                              std::min(occupancy({{bi[0], bi[1] + ((bi[1] > start_bi[1]) ? -1 : 1), bi[2]}}),
                                       occupancy({{bi[0], bi[1], bi[2] + ((bi[2] > start_bi[2]) ? -1 : 1)}})));
@@ -294,7 +295,7 @@ public:
             line_iterator_t it(start_p, end_p, bundle_resolution_);
 
             const std::size_t n = d.numOccupied();
-            double visibility = 1.0;
+            T visibility = 1.0;
             while (!it.done()) {
                 const index_t bit = {{it.x(), it.y(), it.z()}};
                 if ((visibility *= current_visibility(bit)) < ivm_visibility->getProbPrior())
@@ -309,8 +310,8 @@ public:
         });
     }
 
-    inline double sample(const point_t &p,
-                         const inverse_sensor_model_t::Ptr &ivm) const
+    inline T sample(const point_t &p,
+                    const typename inverse_sensor_model_t::Ptr &ivm) const
     {
         if (!ivm)
             throw std::runtime_error("[OccupancyGridMap]: inverse model not set");
@@ -340,8 +341,8 @@ public:
         return bundle ? evaluate() : 0.0;
     }
 
-    inline double sampleNonNormalized(const point_t &p,
-                                      const inverse_sensor_model_t::Ptr &ivm) const
+    inline T sampleNonNormalized(const point_t &p,
+                                 const typename inverse_sensor_model_t::Ptr &ivm) const
     {
         if (!ivm)
             throw std::runtime_error("[OccupancyGridMap]: inverse model not set");
@@ -397,12 +398,12 @@ public:
         return getAllocate(bi);
     }
 
-    inline double getBundleResolution() const
+    inline T getBundleResolution() const
     {
         return bundle_resolution_;
     }
 
-    inline double getResolution() const
+    inline T getResolution() const
     {
         return resolution_;
     }
@@ -506,17 +507,17 @@ public:
     }
 
 private:
-    const double                                    resolution_;
-    const double                                    bundle_resolution_;
-    const double                                    bundle_resolution_inv_;
-    const transform_t                               w_T_m_;
-    const transform_t                               m_T_w_;
+    const T                                    resolution_;
+    const T                                    bundle_resolution_;
+    const T                                    bundle_resolution_inv_;
+    const transform_t                          w_T_m_;
+    const transform_t                          m_T_w_;
 
-    mutable index_t                                 min_index_;
-    mutable index_t                                 max_index_;
+    mutable index_t                            min_index_;
+    mutable index_t                            max_index_;
 
-    mutable distribution_storage_array_t            storage_;
-    mutable distribution_bundle_storage_ptr_t       bundle_storage_;
+    mutable distribution_storage_array_t       storage_;
+    mutable distribution_bundle_storage_ptr_t  bundle_storage_;
 
     inline distribution_t* getAllocate(const distribution_storage_ptr_t &s,
                                        const index_t &i) const

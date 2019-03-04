@@ -8,7 +8,8 @@
 
 namespace cslibs_ndt_3d {
 namespace conversion {
-inline Distribution from(const cslibs_math::statistics::Distribution<3, 3> &d,
+template <typename T>
+inline Distribution from(const cslibs_math::statistics::Distribution<T, 3, 3> &d,
                          const int &id,
                          const double &prob)
 {
@@ -26,26 +27,28 @@ inline Distribution from(const cslibs_math::statistics::Distribution<3, 3> &d,
     return distr;
 }
 
+template <typename T>
 inline void from(
-        const cslibs_ndt_3d::dynamic_maps::Gridmap::Ptr &src,
+        const typename cslibs_ndt_3d::dynamic_maps::Gridmap<T>::Ptr &src,
         cslibs_ndt_3d::DistributionArray::Ptr &dst)
 {
     if (!src)
         return;
     src->allocatePartiallyAllocatedBundles();
 
-    using point_t   = cslibs_math_3d::Point3d;
+    using src_map_t = cslibs_ndt_3d::dynamic_maps::Gridmap<T>;
     using dst_map_t = cslibs_ndt_3d::DistributionArray;
     dst.reset(new dst_map_t());
 
-    using distribution_t = cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_t;
-    using distribution_bundle_t = cslibs_ndt_3d::dynamic_maps::Gridmap::distribution_bundle_t;
+    using point_t               = typename src_map_t::point_t;
+    using distribution_t        = typename src_map_t::distribution_t;
+    using distribution_bundle_t = typename src_map_t::distribution_bundle_t;
     auto sample = [](const distribution_t *d,
-                     const point_t &p) -> double {
+                     const point_t &p) -> T {
         return d ? d->data().sampleNonNormalized(p) : 0.0;
     };
     auto sample_bundle = [&sample](const distribution_bundle_t &b,
-                                   const point_t &p) -> double {
+                                   const point_t &p) -> T {
         return 0.125 * (sample(b.at(0), p) +
                         sample(b.at(1), p) +
                         sample(b.at(2), p) +
@@ -70,24 +73,26 @@ inline void from(
     src->traverse(process_bundle);
 }
 
+template <typename T>
 inline void from(
-        const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::Ptr &src,
+        const typename cslibs_ndt_3d::dynamic_maps::OccupancyGridmap<T>::Ptr &src,
         cslibs_ndt_3d::DistributionArray::Ptr &dst,
-        const cslibs_gridmaps::utility::InverseModel::Ptr &ivm,
-        const double &threshold = 0.169)
+        const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
+        const T &threshold = 0.169)
 {
     if (!src)
         return;
     src->allocatePartiallyAllocatedBundles();
 
-    using point_t   = cslibs_math_3d::Point3d;
+    using src_map_t = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap<T>;
     using dst_map_t = cslibs_ndt_3d::DistributionArray;
     dst.reset(new dst_map_t());
 
-    using distribution_t = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_t;
-    using distribution_bundle_t = cslibs_ndt_3d::dynamic_maps::OccupancyGridmap::distribution_bundle_t;
+    using point_t               = typename src_map_t::point_t;
+    using distribution_t        = typename src_map_t::distribution_t;
+    using distribution_bundle_t = typename src_map_t::distribution_bundle_t;
     auto sample = [&ivm](const distribution_t *d,
-                         const point_t &p) -> double {
+                         const point_t &p) -> T {
         auto evaluate = [&ivm, d, p] {
             const auto &handle = d;
             return d && handle->getDistribution() ?
@@ -96,7 +101,7 @@ inline void from(
         return d ? evaluate() : 0.0;
     };
     auto sample_bundle = [&sample](const distribution_bundle_t &b,
-                                   const point_t &p) -> double {
+                                   const point_t &p) -> T {
         return 0.125 * (sample(b.at(0), p) +
                         sample(b.at(1), p) +
                         sample(b.at(2), p) +
@@ -110,7 +115,7 @@ inline void from(
     using index_t = std::array<int, 3>;
     auto process_bundle = [&dst, &ivm, &threshold, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
         distribution_t::distribution_t d;
-        double occupancy = 0.0;
+        T occupancy = 0.0;
 
         for (std::size_t i = 0 ; i < 8 ; ++i) {
             const auto &handle = b.at(i);

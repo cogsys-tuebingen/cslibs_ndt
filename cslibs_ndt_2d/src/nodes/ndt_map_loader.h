@@ -26,11 +26,10 @@ public:
     {
     }
 
-    template <typename T>
     void run()
     {
         std::cerr << "Starting to set up." << std::endl;
-        if (!setup<T>()) {
+        if (!setup<double>() && !setup<float>()) {
             std::cerr << "Cannot setup the map loader node." << std::endl;
             ros::shutdown();
         }

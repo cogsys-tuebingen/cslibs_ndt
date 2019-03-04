@@ -246,8 +246,8 @@ public:
 
     template <typename line_iterator_t = simple_iterator_t>
     inline void insertVisible(const typename cslibs_math::linear::Pointcloud<point_t>::ConstPtr &points,
-                              const inverse_sensor_model_t::Ptr &ivm,
-                              const inverse_sensor_model_t::Ptr &ivm_visibility,
+                              const typename inverse_sensor_model_t::Ptr &ivm,
+                              const typename inverse_sensor_model_t::Ptr &ivm_visibility,
                               const pose_t &points_origin = pose_t())
     {
         if (!ivm || !ivm_visibility) {
@@ -608,7 +608,7 @@ private:
     }
 
     inline void updateOccupied(const index_t &bi,
-                               const distribution_t::distribution_ptr_t &d) const
+                               const typename distribution_t::distribution_ptr_t &d) const
     {
         distribution_bundle_t *bundle = getAllocate(bi);
         bundle->at(0)->updateOccupied(d);

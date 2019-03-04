@@ -79,11 +79,11 @@ std::size_t read(std::ifstream &in, WeightedOccupancyDistribution<Tp,Size> &d)
     return sizeof(std::size_t) + sizeof(Tp) + r;
 }
 
-template <template <std::size_t> class T, std::size_t Size, std::size_t Dim>
+template <template <typename,std::size_t> class T, typename Tp, std::size_t Size, std::size_t Dim>
 struct binary {
     using index_t      = std::array<int, Dim>;
     using size_t       = std::array<std::size_t, Dim>;
-    using data_t       = T<Size>;
+    using data_t       = T<Tp,Size>;
     template <template <typename, typename, typename...> class be>
     using storage_t    = cis::Storage<data_t, index_t, be>;
     using kd_storage_t = storage_t<cis::backend::kdtree::KDTree>;

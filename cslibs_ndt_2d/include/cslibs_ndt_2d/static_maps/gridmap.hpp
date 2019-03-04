@@ -25,21 +25,22 @@ namespace cis = cslibs_indexed_storage;
 
 namespace cslibs_ndt_2d {
 namespace static_maps {
+template <typename T>
 class EIGEN_ALIGN16 Gridmap
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t = Eigen::aligned_allocator<Gridmap>;
+    using allocator_t = Eigen::aligned_allocator<Gridmap<T>>;
 
-    using ConstPtr                          = std::shared_ptr<const Gridmap>;
-    using Ptr                               = std::shared_ptr<Gridmap>;
-    using pose_t                            = cslibs_math_2d::Pose2d;
-    using transform_t                       = cslibs_math_2d::Transform2d;
-    using point_t                           = cslibs_math_2d::Point2d;
+    using ConstPtr                          = std::shared_ptr<const Gridmap<T>>;
+    using Ptr                               = std::shared_ptr<Gridmap<T>>;
+    using pose_t                            = cslibs_math_2d::Pose2d<T>;
+    using transform_t                       = cslibs_math_2d::Transform2d<T>;
+    using point_t                           = cslibs_math_2d::Point2d<T>;
     using index_t                           = std::array<int, 2>;
     using size_t                            = std::array<std::size_t, 2>;
-    using size_m_t                          = std::array<double, 2>;
-    using distribution_t                    = cslibs_ndt::Distribution<2>;
+    using size_m_t                          = std::array<T, 2>;
+    using distribution_t                    = cslibs_ndt::Distribution<T,2>;
     using distribution_storage_t            = cis::Storage<distribution_t, index_t, cis::backend::array::Array>;
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;
     using distribution_storage_array_t      = std::array<distribution_storage_ptr_t, 4>;
@@ -49,7 +50,7 @@ public:
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
 
     inline Gridmap(const pose_t &origin,
-                   const double &resolution,
+                   const T      &resolution,
                    const size_t &size,
                    const index_t &min_bundle_index) :
         resolution_(resolution),
@@ -80,10 +81,10 @@ public:
         bundle_storage_->template set<cis::option::tags::array_offset>(min_bundle_index[0], min_bundle_index[1]);
     }
 
-    inline Gridmap(const double &origin_x,
-                   const double &origin_y,
-                   const double &origin_phi,
-                   const double &resolution,
+    inline Gridmap(const T &origin_x,
+                   const T &origin_y,
+                   const T &origin_phi,
+                   const T &resolution,
                    const size_t &size,
                    const index_t &min_bundle_index) :
         resolution_(resolution),
@@ -117,7 +118,7 @@ public:
     }
 
     inline Gridmap(const pose_t &origin,
-                   const double &resolution,
+                   const T      &resolution,
                    const size_t &size,
                    const std::shared_ptr<distribution_bundle_storage_t> &bundles,
                    const distribution_storage_array_t                   &storage,
@@ -197,7 +198,7 @@ public:
      */
     inline pose_t getOrigin() const
     {
-        cslibs_math_2d::Transform2d origin = w_T_m_;
+        pose_t origin = w_T_m_;
         origin.translation() += getMin();
         return origin;
     }
@@ -251,13 +252,13 @@ public:
         });
     }
 
-    inline double sample(const point_t &p) const
+    inline T sample(const point_t &p) const
     {
         return sample(p, toBundleIndex(p));
     }
 
-    inline double sample(const point_t &p,
-                         const index_t &bi) const
+    inline T sample(const point_t &p,
+                    const index_t &bi) const
     {
         if(!valid(bi))
             return 0.0;
@@ -272,13 +273,13 @@ public:
         return bundle ? evaluate() : 0.0;
     }
 
-    inline double sampleNonNormalized(const point_t &p) const
+    inline T sampleNonNormalized(const point_t &p) const
     {
         return sampleNonNormalized(p, toBundleIndex(p));
     }
 
-    inline double sampleNonNormalized(const point_t &p,
-                                      const index_t &bi) const
+    inline T sampleNonNormalized(const point_t &p,
+                                 const index_t &bi) const
     {
         if(!valid(bi))
             return 0.0;
@@ -304,22 +305,22 @@ public:
         return valid(bi) ? getAllocate(bi) : nullptr;
     }
 
-    inline double getBundleResolution() const
+    inline T getBundleResolution() const
     {
         return bundle_resolution_;
     }
 
-    inline double getResolution() const
+    inline T getResolution() const
     {
         return resolution_;
     }
 
-    inline double getHeight() const
+    inline T getHeight() const
     {
         return size_m_[1];
     }
 
-    inline double getWidth() const
+    inline T getWidth() const
     {
         return size_m_[0];
     }
@@ -409,18 +410,18 @@ public:
     }
 
 protected:
-    const double                                    resolution_;
-    const double                                    bundle_resolution_;
-    const double                                    bundle_resolution_inv_;
-    const transform_t                               w_T_m_;
-    const transform_t                               m_T_w_;
-    const size_t                                    size_;
-    const size_m_t                                  size_m_;
-    const index_t                                   min_bundle_index_;
-    const index_t                                   max_bundle_index_;
+    const T                                    resolution_;
+    const T                                    bundle_resolution_;
+    const T                                    bundle_resolution_inv_;
+    const transform_t                          w_T_m_;
+    const transform_t                          m_T_w_;
+    const size_t                               size_;
+    const size_m_t                             size_m_;
+    const index_t                              min_bundle_index_;
+    const index_t                              max_bundle_index_;
 
-    mutable distribution_storage_array_t            storage_;
-    mutable distribution_bundle_storage_ptr_t       bundle_storage_;
+    mutable distribution_storage_array_t       storage_;
+    mutable distribution_bundle_storage_ptr_t  bundle_storage_;
 
     inline distribution_t* getAllocate(const distribution_storage_ptr_t &s,
                                        const index_t &i) const
@@ -480,7 +481,6 @@ protected:
         return (bi[0] >= min_bundle_index_[0] && bi[0] <= max_bundle_index_[0]) &&
                (bi[1] >= min_bundle_index_[1] && bi[1] <= max_bundle_index_[1]);
     }
-
 };
 }
 }

@@ -25,27 +25,28 @@ namespace cis = cslibs_indexed_storage;
 namespace cslibs_ndt_2d {
 namespace static_maps {
 namespace mono {
+template <typename T>
 class EIGEN_ALIGN16 Gridmap
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t = Eigen::aligned_allocator<Gridmap>;
+    using allocator_t = Eigen::aligned_allocator<Gridmap<T>>;
 
-    using ConstPtr                          = std::shared_ptr<const Gridmap>;
-    using Ptr                               = std::shared_ptr<Gridmap>;
-    using pose_t                            = cslibs_math_2d::Pose2d;
-    using transform_t                       = cslibs_math_2d::Transform2d;
-    using point_t                           = cslibs_math_2d::Point2d;
+    using ConstPtr                          = std::shared_ptr<const Gridmap<T>>;
+    using Ptr                               = std::shared_ptr<Gridmap<T>>;
+    using pose_t                            = cslibs_math_2d::Pose2d<T>;
+    using transform_t                       = cslibs_math_2d::Transform2d<T>;
+    using point_t                           = cslibs_math_2d::Point2d<T>;
     using index_t                           = std::array<int, 2>;
     using size_t                            = std::array<std::size_t, 2>;
-    using size_m_t                          = std::array<double, 2>;
-    using distribution_t                    = cslibs_ndt::Distribution<2>;
+    using size_m_t                          = std::array<T, 2>;
+    using distribution_t                    = cslibs_ndt::Distribution<T,2>;
     using distribution_storage_t            = cis::Storage<distribution_t, index_t, cis::backend::array::Array>;
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;
     using distribution_storage_const_ptr_t  = std::shared_ptr<distribution_storage_t const>;
 
     inline Gridmap(const pose_t  &origin,
-                   const double  &resolution,
+                   const T       &resolution,
                    const size_t  &size,
                    const index_t &min_index) :
         resolution_(resolution),
@@ -64,10 +65,10 @@ public:
         storage_->template set<cis::option::tags::array_offset>(min_index[0], min_index[1]);
     }
 
-    inline Gridmap(const double &origin_x,
-                   const double &origin_y,
-                   const double &origin_phi,
-                   const double &resolution,
+    inline Gridmap(const T &origin_x,
+                   const T &origin_y,
+                   const T &origin_phi,
+                   const T &resolution,
                    const size_t &size,
                    const index_t &min_index) :
         resolution_(resolution),
@@ -138,7 +139,7 @@ public:
      */
     inline pose_t getOrigin() const
     {
-        cslibs_math_2d::Transform2d origin = w_T_m_;
+        transform_t origin = w_T_m_;
         origin.translation() += getMin();
         return origin;
     }
@@ -172,14 +173,14 @@ public:
         distribution->data().add(p);
     }
 
-    inline double sample(const point_t &p) const
+    inline T sample(const point_t &p) const
     {
         index_t i;
         return toIndex(p, i) ? sample(p, i) : 0.0;
     }
 
-    inline double sample(const point_t &p,
-                         const index_t &i) const
+    inline T sample(const point_t &p,
+                    const index_t &i) const
     {
         distribution_t *distribution;
         distribution = storage_->get(i);
@@ -187,14 +188,14 @@ public:
         return distribution ? distribution->data().sample(p) : 0.0;
     }
 
-    inline double sampleNonNormalized(const point_t &p) const
+    inline T sampleNonNormalized(const point_t &p) const
     {
         index_t i;
         return toIndex(p, i) ? sampleNonNormalized(p, i) : 0.0;
     }
 
-    inline double sampleNonNormalized(const point_t &p,
-                                      const index_t &i) const
+    inline T sampleNonNormalized(const point_t &p,
+                                 const index_t &i) const
     {
         distribution_t *distribution  = storage_->get(i);
         return distribution ? distribution->data().sampleNonNormalized(p) : 0.0;
@@ -209,7 +210,6 @@ public:
         return storage_->get(i);
     }
 
-
     inline const distribution_t* getDistribution(const index_t &i) const
     {
         return getAllocate(i);
@@ -220,17 +220,17 @@ public:
         return getAllocate(i);
     }
 
-    inline double getResolution() const
+    inline T getResolution() const
     {
         return resolution_;
     }
 
-    inline double getHeight() const
+    inline T getHeight() const
     {
         return size_[1] * resolution_;
     }
 
-    inline double getWidth() const
+    inline T getWidth() const
     {
         return size_[0] * resolution_;
     }
@@ -275,16 +275,16 @@ public:
     }
 
 protected:
-    const double                                    resolution_;
-    const double                                    resolution_inv_;
-    const transform_t                               w_T_m_;
-    const transform_t                               m_T_w_;
-    const size_t                                    size_;
-    const size_m_t                                  size_m_;
-    const index_t                                   min_index_;
-    const index_t                                   max_index_;
+    const T                                    resolution_;
+    const T                                    resolution_inv_;
+    const transform_t                          w_T_m_;
+    const transform_t                          m_T_w_;
+    const size_t                               size_;
+    const size_m_t                             size_m_;
+    const index_t                              min_index_;
+    const index_t                              max_index_;
 
-    mutable distribution_storage_ptr_t              storage_;
+    mutable distribution_storage_ptr_t         storage_;
 
     inline distribution_t *getAllocate(const index_t &i) const
     {

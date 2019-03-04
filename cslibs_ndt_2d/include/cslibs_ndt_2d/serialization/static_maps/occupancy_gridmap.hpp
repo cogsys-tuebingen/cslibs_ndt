@@ -17,14 +17,16 @@
 
 namespace cslibs_ndt_2d {
 namespace static_maps {
-inline bool saveBinary(const cslibs_ndt_2d::static_maps::OccupancyGridmap::Ptr &map,
+template <typename T>
+inline bool saveBinary(const cslibs_ndt_2d::static_maps::OccupancyGridmap<T>::Ptr &map,
                        const std::string &path)
 {
     using path_t     = boost::filesystem::path;
     using paths_t    = std::array<path_t, 4>;
-    using index_t    = cslibs_ndt_2d::static_maps::OccupancyGridmap::index_t;
-    using storages_t = cslibs_ndt_2d::static_maps::OccupancyGridmap::distribution_storage_array_t;
-    using binary_t   = cslibs_ndt::binary<cslibs_ndt::OccupancyDistribution, 2, 2>;
+    using map_t      = cslibs_ndt_2d::static_maps::OccupancyGridmap<T>;
+    using binary_t   = cslibs_ndt::binary<cslibs_ndt::OccupancyDistribution, T, 2, 2>;
+    using index_t    = typename map_t::index_t;
+    using storages_t = typename map_t::distribution_storage_array_t;
 
     /// step one: check if the root diretory exists
     path_t path_root(path);
@@ -72,16 +74,19 @@ inline bool saveBinary(const cslibs_ndt_2d::static_maps::OccupancyGridmap::Ptr &
     return success;
 }
 
+template <typename T>
 inline bool loadBinary(const std::string &path,
-                       cslibs_ndt_2d::static_maps::OccupancyGridmap::Ptr &map)
+                       typename cslibs_ndt_2d::static_maps::OccupancyGridmap<T>::Ptr &map)
 {
     using path_t           = boost::filesystem::path;
     using paths_t          = std::array<path_t, 4>;
-    using index_t          = cslibs_ndt_2d::static_maps::OccupancyGridmap::index_t;
-    using size_t           = cslibs_ndt_2d::static_maps::OccupancyGridmap::size_t;
-    using binary_t         = cslibs_ndt::binary<cslibs_ndt::OccupancyDistribution, 2, 2>;
-    using bundle_storage_t = cslibs_ndt_2d::static_maps::OccupancyGridmap::distribution_bundle_storage_t;
-    using storages_t       = cslibs_ndt_2d::static_maps::OccupancyGridmap::distribution_storage_array_t;
+    using map_t            = cslibs_ndt_2d::static_maps::OccupancyGridmap<T>;
+    using binary_t         = cslibs_ndt::binary<cslibs_ndt::OccupancyDistribution, T, 2, 2>;
+    using index_t          = typename map_t::index_t;
+    using pose_t           = typename map_t::pose_t;
+    using size_t           = typename map_t::size_t;
+    using bundle_storage_t = typename map_t::distribution_bundle_storage_t;
+    using storages_t       = typename map_t::distribution_storage_array_t;
 
     /// step one: check if the root diretory exists
     path_t path_root(path);
@@ -106,11 +111,11 @@ inline bool loadBinary(const std::string &path,
     storages_t storages;
 
     YAML::Node n = YAML::LoadFile((path_root / path_file).string());
-    const cslibs_math_2d::Transform2d origin     = n["origin"].as<cslibs_math_2d::Transform2d>();
-    const double                      resolution = n["resolution"].as<double>();
-    const size_t                      size       = n["size"].as<size_t>();
-    const std::vector<index_t>        indices    = n["bundles"].as<std::vector<index_t>>();
-    const index_t                     min_index  = n["min_index"].as<index_t>();
+    const pose_t               origin     = n["origin"].as<pose_t>();
+    const T                    resolution = n["resolution"].as<T>();
+    const size_t               size       = n["size"].as<size_t>();
+    const std::vector<index_t> indices    = n["bundles"].as<std::vector<index_t>>();
+    const index_t              min_index  = n["min_index"].as<index_t>();
 
     bundles->template set<cslibs_indexed_storage::option::tags::array_size>(size[0] * 2, size[1] * 2);
     bundles->template set<cslibs_indexed_storage::option::tags::array_offset>(min_index[0], min_index[1]);
@@ -132,7 +137,7 @@ inline bool loadBinary(const std::string &path,
         return false;
 
     auto allocate_bundle = [&storages, &bundles](const index_t &bi) {
-        cslibs_ndt_2d::static_maps::OccupancyGridmap::distribution_bundle_t b;
+        typename map_t::distribution_bundle_t b;
         const int divx = cslibs_math::common::div<int>(bi[0], 2);
         const int divy = cslibs_math::common::div<int>(bi[1], 2);
         const int modx = cslibs_math::common::mod<int>(bi[0], 2);
@@ -152,12 +157,12 @@ inline bool loadBinary(const std::string &path,
     for(const index_t &index : indices)
         allocate_bundle(index);
 
-    map.reset(new cslibs_ndt_2d::static_maps::OccupancyGridmap(origin,
-                                                               resolution,
-                                                               size,
-                                                               bundles,
-                                                               storages,
-                                                               min_index));
+    map.reset(new map_t(origin,
+                        resolution,
+                        size,
+                        bundles,
+                        storages,
+                        min_index));
 
     return true;
 }

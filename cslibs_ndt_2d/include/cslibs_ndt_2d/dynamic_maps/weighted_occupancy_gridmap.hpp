@@ -31,19 +31,20 @@ namespace cis = cslibs_indexed_storage;
 
 namespace cslibs_ndt_2d {
 namespace dynamic_maps {
+template <typename T>
 class EIGEN_ALIGN16 WeightedOccupancyGridmap
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t = Eigen::aligned_allocator<WeightedOccupancyGridmap>;
+    using allocator_t = Eigen::aligned_allocator<WeightedOccupancyGridmap<T>>;
 
-    using ConstPtr                          = std::shared_ptr<const WeightedOccupancyGridmap>;
-    using Ptr                               = std::shared_ptr<WeightedOccupancyGridmap>;
-    using pose_t                            = cslibs_math_2d::Pose2d;
-    using transform_t                       = cslibs_math_2d::Transform2d;
-    using point_t                           = cslibs_math_2d::Point2d;
+    using ConstPtr                          = std::shared_ptr<const WeightedOccupancyGridmap<T>>;
+    using Ptr                               = std::shared_ptr<WeightedOccupancyGridmap<T>>;
+    using pose_t                            = cslibs_math_2d::Pose2d<T>;
+    using transform_t                       = cslibs_math_2d::Transform2d<T>;
+    using point_t                           = cslibs_math_2d::Point2d<T>;
     using index_t                           = std::array<int, 2>;
-    using distribution_t                    = cslibs_ndt::WeightedOccupancyDistribution<2>;
+    using distribution_t                    = cslibs_ndt::WeightedOccupancyDistribution<T,2>;
     using distribution_storage_t            = cis::Storage<distribution_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;
     using distribution_storage_array_t      = std::array<distribution_storage_ptr_t, 4>;
@@ -51,11 +52,11 @@ public:
     using distribution_const_bundle_t       = cslibs_ndt::Bundle<const distribution_t*, 4>;
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, cis::backend::kdtree::KDTree>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
-    using simple_iterator_t                 = cslibs_math_2d::algorithms::SimpleIterator;
-    using inverse_sensor_model_t            = cslibs_gridmaps::utility::InverseModel;
+    using simple_iterator_t                 = cslibs_math_2d::algorithms::SimpleIterator<T>;
+    using inverse_sensor_model_t            = cslibs_gridmaps::utility::InverseModel<T>;
 
     inline WeightedOccupancyGridmap(const pose_t &origin,
-                                    const double &resolution) :
+                                    const T      &resolution) :
         resolution_(resolution),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
@@ -72,7 +73,7 @@ public:
     }
 
     inline WeightedOccupancyGridmap(const pose_t &origin,
-                                    const double &resolution,
+                                    const T      &resolution,
                                     const index_t &min_index,
                                     const index_t &max_index,
                                     const std::shared_ptr<distribution_bundle_storage_t> &bundles,
@@ -89,10 +90,10 @@ public:
     {
     }
 
-    inline WeightedOccupancyGridmap(const double &origin_x,
-                                    const double &origin_y,
-                                    const double &origin_phi,
-                                    const double &resolution) :
+    inline WeightedOccupancyGridmap(const T &origin_x,
+                                    const T &origin_y,
+                                    const T &origin_phi,
+                                    const T &resolution) :
         resolution_(resolution),
         bundle_resolution_(0.5 * resolution_),
         bundle_resolution_inv_(1.0 / bundle_resolution_),
@@ -218,7 +219,7 @@ public:
             updateOccupied(bi, d.getDistribution());
 
             line_iterator_t it(start_p, m_T_w_ * point_t(d.getDistribution()->getMean()), bundle_resolution_);
-            const double w = d.weightOccupied();
+            const T w = d.weightOccupied();
             while (!it.done()) {
                 updateFree({{it.x(), it.y()}}, 1, w); // TODO
                 ++ it;
@@ -229,8 +230,8 @@ public:
     template <typename line_iterator_t = simple_iterator_t>
     inline void insertVisible(const pose_t &origin,
                               const typename cslibs_math::linear::Pointcloud<point_t>::ConstPtr &points,
-                              const inverse_sensor_model_t::Ptr &ivm,
-                              const inverse_sensor_model_t::Ptr &ivm_visibility)
+                              const typename inverse_sensor_model_t::Ptr &ivm,
+                              const typename inverse_sensor_model_t::Ptr &ivm_visibility)
     {
         if (!ivm || !ivm_visibility) {
             std::cout << "[WeightedOccupancyGridmap2D]: Cannot evaluate visibility, using model-free update rule instead!" << std::endl;
@@ -246,7 +247,7 @@ public:
                            bundle->at(3)->getOccupancy(ivm));
         };
         auto current_visibility = [this, &start_bi, &ivm_visibility, &occupancy](const index_t &bi) {
-            const double occlusion_prob =
+            const T occlusion_prob =
                     std::min(occupancy({{bi[0] + ((bi[0] > start_bi[0]) ? -1 : 1), bi[1]}}),
                              occupancy({{bi[0], bi[1] + ((bi[1] > start_bi[1]) ? -1 : 1)}}));
             return ivm_visibility->getProbFree() * occlusion_prob +
@@ -271,8 +272,8 @@ public:
             const point_t end_p = m_T_w_ * point_t(d.getDistribution()->getMean());
             line_iterator_t it(start_p, end_p, bundle_resolution_);
 
-            const double ww = d.weightOccupied();
-            double visibility = 1.0;
+            const T ww = d.weightOccupied();
+            T visibility = 1.0;
             while (!it.done()) {
                 const index_t bit = {{it.x(), it.y()}};
                 if ((visibility *= current_visibility(bit)) < ivm_visibility->getProbPrior())
@@ -288,10 +289,10 @@ public:
     }
 
     template <typename line_iterator_t = simple_iterator_t>
-    inline double getRange(const point_t &start_p,
-                           const point_t &end_p,
-                           const inverse_sensor_model_t::Ptr &ivm,
-                           const double &occupied_threshold) const
+    inline T getRange(const point_t &start_p,
+                      const point_t &end_p,
+                      const typename inverse_sensor_model_t::Ptr &ivm,
+                      const T &occupied_threshold) const
     {
         if (!ivm)
             throw std::runtime_error("[WeightedOccupancyGridmap]: inverse model not set");
@@ -326,15 +327,15 @@ public:
         return bundle_storage_->get(bi);
     }
 
-    inline double sample(const point_t &p,
-                         const inverse_sensor_model_t::Ptr &ivm) const
+    inline T sample(const point_t &p,
+                    const typename inverse_sensor_model_t::Ptr &ivm) const
     {
         return sample(p, toBundleIndex(p), ivm);
     }
 
-    inline double sample(const point_t &p,
-                         const index_t &bi,
-                         const inverse_sensor_model_t::Ptr &ivm) const
+    inline T sample(const point_t &p,
+                    const index_t &bi,
+                    const typename inverse_sensor_model_t::Ptr &ivm) const
     {
         if (!ivm)
             throw std::runtime_error("[WeightedOccupancyGridmap]: inverse model not set");
@@ -358,15 +359,15 @@ public:
         return bundle ? evaluate() : 0.0;
     }
 
-    inline double sampleNonNormalized(const point_t &p,
-                                      const inverse_sensor_model_t::Ptr &ivm) const
+    inline T sampleNonNormalized(const point_t &p,
+                                 const typename inverse_sensor_model_t::Ptr &ivm) const
     {
         return sampleNonNormalized(p, toBundleIndex(p), ivm);
     }
 
-    inline double sampleNonNormalized(const point_t &p,
-                                      const index_t &bi,
-                                      const inverse_sensor_model_t::Ptr &ivm) const
+    inline T sampleNonNormalized(const point_t &p,
+                                 const index_t &bi,
+                                 const typename inverse_sensor_model_t::Ptr &ivm) const
     {
         if (!ivm)
             throw std::runtime_error("[WeightedOccupancyGridmap]: inverse model not set");
@@ -410,22 +411,22 @@ public:
         return getAllocate(bi);
     }
 
-    inline double getBundleResolution() const
+    inline T getBundleResolution() const
     {
         return bundle_resolution_;
     }
 
-    inline double getResolution() const
+    inline T getResolution() const
     {
         return resolution_;
     }
 
-    inline double getHeight() const
+    inline T getHeight() const
     {
         return (max_index_[1] - min_index_[1] + 1) * bundle_resolution_;
     }
 
-    inline double getWidth() const
+    inline T getWidth() const
     {
         return (max_index_[0] - min_index_[0] + 1) * bundle_resolution_;
     }
@@ -501,16 +502,16 @@ public:
     }
 
 protected:
-    const double                                    resolution_;
-    const double                                    bundle_resolution_;
-    const double                                    bundle_resolution_inv_;
-    const transform_t                               w_T_m_;
-    const transform_t                               m_T_w_;
+    const T                                    resolution_;
+    const T                                    bundle_resolution_;
+    const T                                    bundle_resolution_inv_;
+    const transform_t                          w_T_m_;
+    const transform_t                          m_T_w_;
 
-    mutable index_t                                 min_index_;
-    mutable index_t                                 max_index_;
-    mutable distribution_storage_array_t            storage_;
-    mutable distribution_bundle_storage_ptr_t       bundle_storage_;
+    mutable index_t                            min_index_;
+    mutable index_t                            max_index_;
+    mutable distribution_storage_array_t       storage_;
+    mutable distribution_bundle_storage_ptr_t  bundle_storage_;
 
     inline distribution_t* getAllocate(const distribution_storage_ptr_t &s,
                                        const index_t &i) const
@@ -561,7 +562,7 @@ protected:
 
     inline void updateFree(const index_t     &bi,
                            const std::size_t &n,
-                           const double      &w) const
+                           const T           &w) const
     {
         distribution_bundle_t *bundle = getAllocate(bi);
         bundle->at(0)->updateFree(n ,w);
@@ -572,7 +573,7 @@ protected:
 
     inline void updateOccupied(const index_t &bi,
                                const point_t &p,
-                               const double  &w = 1.0) const
+                               const T       &w = 1.0) const
     {
         distribution_bundle_t *bundle = getAllocate(bi);
         bundle->at(0)->updateOccupied(p, w);
@@ -582,7 +583,7 @@ protected:
     }
 
     inline void updateOccupied(const index_t &bi,
-                               const distribution_t::distribution_ptr_t &d) const
+                               const typename distribution_t::distribution_ptr_t &d) const
     {
         distribution_bundle_t *bundle = getAllocate(bi);
         bundle->at(0)->updateOccupied(d);

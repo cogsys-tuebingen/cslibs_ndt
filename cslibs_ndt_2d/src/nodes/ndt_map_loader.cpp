@@ -5,7 +5,7 @@ int main(int argc, char *argv[])
     ros::init(argc, argv, "NDTMapLoader");
 
     cslibs_ndt_2d::NDTMapLoader ml;
-    ml.run;
+    ml.run();
 
     return 0;
 }

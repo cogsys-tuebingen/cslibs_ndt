@@ -6,8 +6,9 @@
 
 namespace cslibs_ndt_2d {
 namespace conversion {
-inline cslibs_ndt_2d::static_maps::mono::Gridmap::Ptr merge(
-        const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr& src)
+template <typename T>
+inline typename cslibs_ndt_2d::static_maps::mono::Gridmap<T>::Ptr merge(
+        const typename cslibs_ndt_2d::dynamic_maps::Gridmap<T>::Ptr& src)
 {
     if (!src)
         return nullptr;
@@ -19,18 +20,18 @@ inline cslibs_ndt_2d::static_maps::mono::Gridmap::Ptr merge(
     const std::array<std::size_t, 2> size = {{static_cast<std::size_t>(max_distribution_index[0] - min_distribution_index[0] + 1),
                                               static_cast<std::size_t>(max_distribution_index[1] - min_distribution_index[1] + 1)}};
 
-    using src_map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
-    using dst_map_t = cslibs_ndt_2d::static_maps::mono::Gridmap;
+    using src_map_t = cslibs_ndt_2d::dynamic_maps::Gridmap<T>;
+    using dst_map_t = cslibs_ndt_2d::static_maps::mono::Gridmap<T>;
 
     typename dst_map_t::Ptr dst(new dst_map_t(src->getInitialOrigin(),
                                               src->getBundleResolution(),
                                               size,
                                               min_distribution_index));
 
-    auto traverse = [&min_distribution_index, &dst](const index_t &i, const src_map_t::distribution_bundle_t &b)
+    auto traverse = [&min_distribution_index, &dst](const index_t &i, const typename src_map_t::distribution_bundle_t &b)
     {
-        dst_map_t::distribution_t* dst_d = dst->getDistribution(i);
-        for(const src_map_t::distribution_t *src_d : b) {
+        typename dst_map_t::distribution_t* dst_d = dst->getDistribution(i);
+        for(const typename src_map_t::distribution_t *src_d : b) {
             dst_d->data() += src_d->data();
         }
     };
@@ -40,6 +41,5 @@ inline cslibs_ndt_2d::static_maps::mono::Gridmap::Ptr merge(
 }
 }
 }
-
 
 #endif // CSLIBS_NDT_2D_FLATTEN_HPP

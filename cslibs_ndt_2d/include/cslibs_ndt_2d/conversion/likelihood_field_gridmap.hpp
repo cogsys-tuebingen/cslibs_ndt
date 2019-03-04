@@ -13,12 +13,12 @@
 namespace cslibs_ndt_2d {
 namespace conversion {
 inline void from(
-        const cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr &src,
-        cslibs_gridmaps::static_maps::LikelihoodFieldGridmap::Ptr &dst,
-        const double &sampling_resolution,
-        const double &maximum_distance = 2.0,
-        const double &sigma_hit        = 0.5,
-        const double &threshold        = 0.169)
+        const typename cslibs_ndt_2d::dynamic_maps::Gridmap<T>::Ptr &src,
+        typename cslibs_gridmaps::static_maps::LikelihoodFieldGridmap<T,T>::Ptr &dst,
+        const T &sampling_resolution,
+        const T &maximum_distance = 2.0,
+        const T &sigma_hit        = 0.5,
+        const T &threshold        = 0.169)
 {
     if (!src)
         return;
@@ -26,20 +26,20 @@ inline void from(
 
     assert(threshold <= 1.0);
     assert(threshold >= 0.0);
-    const double exp_factor_hit = (0.5 * 1.0 / (sigma_hit * sigma_hit));
+    const T exp_factor_hit = (0.5 * 1.0 / (sigma_hit * sigma_hit));
 
-    using src_map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
-    using dst_map_t = cslibs_gridmaps::static_maps::ProbabilityGridmap;
+    using src_map_t = cslibs_ndt_2d::dynamic_maps::Gridmap<T>;
+    using dst_map_t = cslibs_gridmaps::static_maps::LikelihoodFieldGridmap<T,T>;
     dst.reset(new dst_map_t(src->getOrigin(),
                             sampling_resolution,
                             std::ceil(src->getHeight() / sampling_resolution),
                             std::ceil(src->getWidth()  / sampling_resolution)));
     std::fill(dst->getData().begin(), dst->getData().end(), 0);
 
-    const double bundle_resolution = src->getBundleResolution();
+    const T bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
-    auto sample = [](const cslibs_math_2d::Point2d &p, const src_map_t::distribution_bundle_t &bundle) {
+    auto sample = [](const cslibs_math_2d::Point2d<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
         return 0.25 * (bundle.at(0)->data().sampleNonNormalized(p) +
                        bundle.at(1)->data().sampleNonNormalized(p) +
                        bundle.at(2)->data().sampleNonNormalized(p) +
@@ -50,34 +50,35 @@ inline void from(
     const index_t min_bi = src->getMinBundleIndex();
 
     src->traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
-                  (const index_t &bi, const src_map_t::distribution_bundle_t &b){
+                  (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
-                const cslibs_math_2d::Point2d p(bi[0] * bundle_resolution + k * sampling_resolution,
-                                                bi[1] * bundle_resolution + l * sampling_resolution);
+                const cslibs_math_2d::Point2d<T> p(bi[0] * bundle_resolution + k * sampling_resolution,
+                                                   bi[1] * bundle_resolution + l * sampling_resolution);
                 dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
             }
         }
     });
 
-    std::vector<double> occ = dst->getData();
-    cslibs_gridmaps::static_maps::algorithms::DistanceTransform<double> distance_transform(
+    std::vector<T> occ = dst->getData();
+    cslibs_gridmaps::static_maps::algorithms::DistanceTransform<T,T,T> distance_transform(
                 sampling_resolution, maximum_distance, threshold);
     distance_transform.apply(occ, dst->getWidth(), dst->getData());
 
     std::for_each(dst->getData().begin(),
                   dst->getData().end(),
-                  [&exp_factor_hit] (double &z) {z = std::exp(-z * z * exp_factor_hit);});
+                  [&exp_factor_hit] (T &z) {z = std::exp(-z * z * exp_factor_hit);});
 }
 
+template <typename T>
 inline void from(
-        const cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr &src,
-        cslibs_gridmaps::static_maps::LikelihoodFieldGridmap::Ptr &dst,
-        const double &sampling_resolution,
-        const cslibs_gridmaps::utility::InverseModel::Ptr &inverse_model,
-        const double &maximum_distance = 2.0,
-        const double &sigma_hit        = 0.5,
-        const double &threshold        = 0.169)
+        const typename cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<T>::Ptr &src,
+        typename cslibs_gridmaps::static_maps::LikelihoodFieldGridmap<T,T>::Ptr &dst,
+        const T &sampling_resolution,
+        const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &inverse_model,
+        const T &maximum_distance = 2.0,
+        const T &sigma_hit        = 0.5,
+        const T &threshold        = 0.169)
 {
     if (!src || !inverse_model)
         return;
@@ -85,21 +86,21 @@ inline void from(
 
     assert(threshold <= 1.0);
     assert(threshold >= 0.0);
-    const double exp_factor_hit = (0.5 * 1.0 / (sigma_hit * sigma_hit));
+    const T exp_factor_hit = (0.5 * 1.0 / (sigma_hit * sigma_hit));
 
-    using src_map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap;
-    using dst_map_t = cslibs_gridmaps::static_maps::ProbabilityGridmap;
+    using src_map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<T>;
+    using dst_map_t = cslibs_gridmaps::static_maps::LikelihoodFieldGridmap<T>;
     dst.reset(new dst_map_t(src->getOrigin(),
                             sampling_resolution,
                             std::ceil(src->getHeight() / sampling_resolution),
                             std::ceil(src->getWidth()  / sampling_resolution)));
     std::fill(dst->getData().begin(), dst->getData().end(), 0);
 
-    const double bundle_resolution = src->getBundleResolution();
+    const T bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
-    auto sample = [&inverse_model](const cslibs_math_2d::Point2d &p, const src_map_t::distribution_bundle_t &bundle) {
-        auto sample = [&p, &inverse_model](const src_map_t::distribution_t *d) {
+    auto sample = [&inverse_model](const cslibs_math_2d::Point2d<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
+        auto sample = [&p, &inverse_model](const typename src_map_t::distribution_t *d) {
             auto do_sample = [&p, &inverse_model, &d]() {
                 const auto &handle = d;
                 return handle->getDistribution() ?
@@ -117,24 +118,24 @@ inline void from(
     const index_t min_bi = src->getMinBundleIndex();
 
     src->traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
-                  (const index_t &bi, const src_map_t::distribution_bundle_t &b){
+                  (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
-                const cslibs_math_2d::Point2d p(bi[0] * bundle_resolution + k * sampling_resolution,
-                                                bi[1] * bundle_resolution + l * sampling_resolution);
+                const cslibs_math_2d::Point2d<T> p(bi[0] * bundle_resolution + k * sampling_resolution,
+                                                   bi[1] * bundle_resolution + l * sampling_resolution);
                 dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
             }
         }
     });
 
-    std::vector<double> occ = dst->getData();
-    cslibs_gridmaps::static_maps::algorithms::DistanceTransform<double> distance_transform(
+    std::vector<T> occ = dst->getData();
+    cslibs_gridmaps::static_maps::algorithms::DistanceTransform<T,T,T> distance_transform(
                 sampling_resolution, maximum_distance, threshold);
     distance_transform.apply(occ, dst->getWidth(), dst->getData());
 
     std::for_each(dst->getData().begin(),
                   dst->getData().end(),
-                  [&exp_factor_hit] (double &z) {z = std::exp(-z * z * exp_factor_hit);});
+                  [&exp_factor_hit] (T &z) {z = std::exp(-z * z * exp_factor_hit);});
 }
 }
 }

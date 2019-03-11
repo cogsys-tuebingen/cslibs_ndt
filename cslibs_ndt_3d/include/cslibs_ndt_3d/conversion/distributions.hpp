@@ -61,7 +61,7 @@ inline void from(
 
     using index_t = std::array<int, 3>;
     auto process_bundle = [&dst, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
-        distribution_t::distribution_t d;
+        typename distribution_t::distribution_t d;
         for (std::size_t i = 0; i < 8; ++ i)
             d += b.at(i)->data();
         if (d.getN() == 0)
@@ -114,7 +114,7 @@ inline void from(
 
     using index_t = std::array<int, 3>;
     auto process_bundle = [&dst, &ivm, &threshold, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
-        distribution_t::distribution_t d;
+        typename distribution_t::distribution_t d;
         T occupancy = 0.0;
 
         for (std::size_t i = 0 ; i < 8 ; ++i) {

@@ -96,7 +96,7 @@ inline void from(
     if (!src)
         return;
 
-    from(*src, dst);
+    from<T>(*src, dst);
 }
 
 template<typename T,
@@ -170,7 +170,7 @@ inline void from(
     if (!src)
         return;
 
-    from(*src, dst, ivm, threshold);
+    from<T>(*src, dst, ivm, threshold);
 }
 
 }

@@ -16,15 +16,21 @@ namespace cslibs_ndt {
 namespace map {
 
 namespace tags {
-struct option {};
+enum option { static_map, dynamic_map };
 
-struct static_map : option {
+template <option o>
+struct default_types;
+
+template <>
+struct default_types<option::static_map> {
     template<typename data_interface_t_, typename index_interface_t_, typename... options_ts_>
     using default_backend_t         = cis::backend::array::Array<data_interface_t_, index_interface_t_, options_ts_...>;
     template<typename data_interface_t_, typename index_interface_t_, typename... options_ts_>
     using default_dynamic_backend_t = cis::backend::kdtree::KDTree<data_interface_t_, index_interface_t_, options_ts_...>;
 };
-struct dynamic_map : option {
+
+template <>
+struct default_types<option::dynamic_map> {
     template<typename data_interface_t_, typename index_interface_t_, typename... options_ts_>
     using default_backend_t         = cis::backend::kdtree::KDTree<data_interface_t_, index_interface_t_, options_ts_...>;
     template<typename data_interface_t_, typename index_interface_t_, typename... options_ts_>

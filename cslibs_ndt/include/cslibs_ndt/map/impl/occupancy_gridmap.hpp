@@ -116,7 +116,7 @@ public:
                     occlusion_prob = std::min(occlusion_prob, occupancy(test_index));
             }
             return ivm_visibility->getProbFree() * occlusion_prob +
-                    ivm_visibility->getProbOccupied() * (1.0 - occlusion_prob);
+                   ivm_visibility->getProbOccupied() * (1.0 - occlusion_prob);
         };
 
         distribution_storage_t storage;
@@ -279,7 +279,7 @@ protected:
             bundle->at(i)->updateFree();
     }
 
-    inline void updateFree(const index_t &bi,
+    inline void updateFree(const index_t     &bi,
                            const std::size_t &n) const
     {
         distribution_bundle_t *bundle = this->getAllocate(bi);

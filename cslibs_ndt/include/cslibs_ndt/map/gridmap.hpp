@@ -8,6 +8,7 @@
 
 #include <cslibs_ndt/map/utility.hpp>
 #include <cslibs_indexed_storage/storage.hpp>
+#include <cslibs_indexed_storage/operations/clustering.hpp>
 namespace cis = cslibs_indexed_storage;
 
 namespace cslibs_ndt {
@@ -44,6 +45,26 @@ public:
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, backend_t>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
 
+    using neighborhood_t = cis::operations::clustering::GridNeighborhoodStatic<std::tuple_size<index_t>::value, Dim>;
+
+    inline void allocatePartiallyAllocatedBundles()
+    {
+        std::vector<index_t> bis;
+        getBundleIndices(bis);
+
+        static constexpr neighborhood_t grid{};
+
+        for (const index_t &bi : bis) {
+            const distribution_bundle_t *bundle = bundle_storage_->get(bi);
+            bool do_expand = expandBundle(bundle);
+            if (do_expand) {
+                grid.visit([this, &bi](neighborhood_t::offset_t o) {
+                    getAllocate(add(bi,o));
+                });
+            }
+        }
+    }
+
 protected:
     const T                                    resolution_;
     const T                                    bundle_resolution_;
@@ -56,8 +77,8 @@ protected:
     mutable distribution_storage_array_t       storage_;
     mutable distribution_bundle_storage_ptr_t  bundle_storage_;
 
-    inline distribution_t* getAllocate(const distribution_storage_ptr_t &s,
-                                       const index_t &i) const
+    inline static distribution_t* getAllocate(const distribution_storage_ptr_t &s,
+                                              const index_t &i) const
     {
         distribution_t *d = s->get(i);
         return d ? d : &(s->insert(i, distribution_t()));
@@ -92,21 +113,50 @@ protected:
         // dynamic maps have to update min and max index
     }
 
-    inline int toBundleIndex(const point_t &p_m, const std::size_t &counter)
-    {
-        return static_cast<int>(std::floor(p_m(counter) * bundle_resolution_inv_));
-    }
-
     template <typename std::size_t... counter>
     inline index_t toBundleIndex(const point_t &p_m, detail::integer_sequence<std::size_t,counter...>)
     {
-        return {toBundleIndex(p_m,counter)...};
+        auto to_bundle_index = [&p_m](const std::size_t &c) {
+            return static_cast<int>(std::floor(p_m(c) * bundle_resolution_inv_));
+        };
+        return {to_bundle_index(counter)...};
     }
 
     inline index_t toBundleIndex(const point_t &p_w) const
     {
         const point_t p_m = m_T_w_ * p_w;
         return toBundleIndex(p_m, detail::make_integer_sequence<std::size_t,std::tuple_size<index_t>::value>{});
+    }
+
+protected:
+    static inline bool expandDistribution(const distribution_t* d) const;
+
+    template <typename std::size_t... counter>
+    static inline bool expandBundle(const distribution_bundle_t *bundle, detail::integer_sequence<std::size_t,counter...>) const
+    {
+        auto expand_bundle = [&bundle](const std::size_t &c) {
+            return expandDistribution(bundle->at(c));
+        };
+        return detail::merge<detail::bool_or>(expand_bundle(counter)...);
+    }
+
+    static inline bool expandBundle(const distribution_bundle_t *bundle) const
+    {
+        return bundle && expandBundle(bundle, detail::make_integer_sequence<std::size_t,bin_count>{});
+    }
+
+    template <typename std::size_t... counter>
+    static inline index_t add(const index_t &bi, const neighborhood_t::offset_t &o, detail::integer_sequence<std::size_t,counter...>)
+    {
+        auto add = [&bi,&o](const std::size_t &c) {
+            return bi[c] + o[c];
+        };
+        return {add(counter)...};
+    }
+
+    static inline index_t add(const index_t &bi, const neighborhood_t::offset_t &o) const
+    {
+        return add(bi, o, detail::make_integer_sequence<std::size_t,std::tuple_size<index_t>::value>{});
     }
 };
 
@@ -124,15 +174,13 @@ protected:
     const size_t    size_;
     const size_m_t  size_m_;
 
-    inline bool valid(const index_t &index, const std::size_t &counter)
-    {
-        return index[counter] >= min_bundle_index_[counter] && index[counter] <= max_bundle_index_[counter];
-    }
-
     template <std::size_t... counter>
     inline bool valid(const index_t &index, detail::integer_sequence<std::size_t,counter...> counts)
     {
-        return detail::merge_and(valid(index, counter)...);
+        auto valid = [&index](const std::size_t &c) {
+            return index[c] >= min_bundle_index_[c] && index[c] <= max_bundle_index_[c];
+        };
+        return detail::merge<detail::bool_and>(valid(counter)...);
     }
 
     inline bool valid(const index_t &index) const

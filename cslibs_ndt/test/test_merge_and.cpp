@@ -14,7 +14,7 @@ template <std::size_t... counter>
 inline bool valid(const std::array<bool,7>& values,
                   cslibs_ndt::map::detail::integer_sequence<std::size_t,counter...> counts)
 {
-    return cslibs_ndt::map::detail::merge_and(get(values,counter)...);
+    return cslibs_ndt::map::detail::merge<cslibs_ndt::map::detail::bool_and>(get(values,counter)...);
 }
 
 TEST(Test_cslibs_ndt, testMergeAnd)

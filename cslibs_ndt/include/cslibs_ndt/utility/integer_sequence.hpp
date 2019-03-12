@@ -1,9 +1,8 @@
-#ifndef CSLIBS_NDT_MAP_INTEGER_SEQUENCE_HPP
-#define CSLIBS_NDT_MAP_INTEGER_SEQUENCE_HPP
+#ifndef CSLIBS_NDT_UTILITY_INTEGER_SEQUENCE_HPP
+#define CSLIBS_NDT_UTILITY_INTEGER_SEQUENCE_HPP
 
 namespace cslibs_ndt {
-namespace map {
-namespace detail {
+namespace utility {
 
 template <typename T, T... I>
 struct integer_sequence
@@ -23,7 +22,7 @@ struct merge_and_renumber<integer_sequence<T, I1...>, integer_sequence<T, I2...>
 
 template <typename T, std::size_t N>
 struct integer_sequence_maker
-        : detail::merge_and_renumber<typename integer_sequence_maker<T, N/2>::type,
+        : merge_and_renumber<typename integer_sequence_maker<T, N/2>::type,
                 typename integer_sequence_maker<T, N - N/2>::type>
 {};
 
@@ -32,8 +31,8 @@ template<typename T> struct integer_sequence_maker<T,1> : integer_sequence<T,0> 
 
 template<typename T, std::size_t N>
 using make_integer_sequence = typename integer_sequence_maker<T,N>::type;
-}
+
 }
 }
 
-#endif // CSLIBS_NDT_MAP_INTEGER_SEQUENCE_HPP
+#endif // CSLIBS_NDT_UTILITY_INTEGER_SEQUENCE_HPP

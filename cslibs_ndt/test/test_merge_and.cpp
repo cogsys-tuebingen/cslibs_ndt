@@ -1,26 +1,25 @@
 #include <gtest/gtest.h>
 
-#include <cslibs_ndt/map/utility.hpp>
+#include <cslibs_ndt/utility/utility.hpp>
 #include <cslibs_math/random/random.hpp>
 
 const std::size_t NUM_SAMPLES = 1000;
 using rng_t = cslibs_math::random::Uniform<double,1>;
 
-inline bool get(const std::array<bool,7>& values, const std::size_t &counter)
+using bool_list_t = std::array<bool,7>;
+inline bool get(const bool_list_t& values, const std::size_t &counter)
 {
     return values[counter];
 }
 template <std::size_t... counter>
 inline bool valid(const std::array<bool,7>& values,
-                  cslibs_ndt::map::detail::integer_sequence<std::size_t,counter...> counts)
+                  cslibs_ndt::utility::integer_sequence<std::size_t,counter...> counts)
 {
-    return cslibs_ndt::map::detail::merge<cslibs_ndt::map::detail::bool_and>(get(values,counter)...);
+    return cslibs_ndt::utility::merge<cslibs_ndt::utility::operations::bool_and>(get(values,counter)...);
 }
 
 TEST(Test_cslibs_ndt, testMergeAnd)
 {
-    using bool_list_t = std::array<bool,7>;
-
     rng_t rng(-100.0, +100.0);
     for (std::size_t i=0; i<NUM_SAMPLES; ++i) {
         const bool_list_t values = {{
@@ -43,7 +42,7 @@ TEST(Test_cslibs_ndt, testMergeAnd)
                 values[6];
 
         auto is_valid = [&values]() {
-            return valid(values,cslibs_ndt::map::detail::make_integer_sequence<std::size_t,std::tuple_size<bool_list_t>::value>{});
+            return valid(values,cslibs_ndt::utility::make_integer_sequence<std::size_t,std::tuple_size<bool_list_t>::value>{});
         };
         const bool merge_and_value = is_valid();
         EXPECT_EQ(merge_and_value, ground_truth);

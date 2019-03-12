@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <cslibs_ndt/map/utility.hpp>
+#include <cslibs_ndt/utility/utility.hpp>
 #include <cslibs_math/random/random.hpp>
 
 const std::size_t NUM_SAMPLES = 1000;
@@ -27,7 +27,7 @@ TEST(Test_cslibs_ndt, testGenerateIndices2d)
             {divx + modx,  divy + mody}
         }};
 
-        const index_list_t generated_list = cslibs_ndt::map::detail::generate_indices<index_list_t,2>(bi);
+        const index_list_t generated_list = cslibs_ndt::utility::generate_indices<index_list_t,2>(bi);
         for (std::size_t i=0; i<4; ++i)
             EXPECT_EQ(ground_truth_list[i], generated_list[i]);
     }
@@ -60,7 +60,7 @@ TEST(Test_cslibs_ndt, testGenerateIndices3d)
             {divx + modx,  divy + mody,    divz + modz}
         }};
 
-        const index_list_t generated_list = cslibs_ndt::map::detail::generate_indices<index_list_t,3>(bi);
+        const index_list_t generated_list = cslibs_ndt::utility::generate_indices<index_list_t,3>(bi);
         for (std::size_t i=0; i<8; ++i)
             EXPECT_EQ(ground_truth_list[i], generated_list[i]);
     }

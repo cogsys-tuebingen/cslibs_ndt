@@ -85,7 +85,7 @@ public:
         auto evaluate = [this, &p, &bundle]() {
             T retval = 0.0;
             for (std::size_t i=0; i<this->bin_count; ++i)
-                retval += 0.25 * bundle->at(i)->data().sample(p);
+                retval += this->div_count * bundle->at(i)->data().sample(p);
             return retval;
         };
         return bundle ? evaluate() : 0.0;
@@ -106,7 +106,7 @@ public:
         auto evaluate = [this, &p, &bundle]() {
             T retval = 0.0;
             for (std::size_t i=0; i<this->bin_count; ++i)
-                retval += 0.25 * bundle->at(i)->data().sampleNonNormalized(p);
+                retval += this->div_count * bundle->at(i)->data().sampleNonNormalized(p);
             return retval;
         };
         return bundle ? evaluate() : 0.0;
@@ -115,7 +115,7 @@ public:
 protected:
     virtual inline bool expandDistribution(const distribution_t* d) const override
     {
-        return d->data().getN() >= 3;
+        return d && d->data().getN() >= 3;
     }
 };
 }

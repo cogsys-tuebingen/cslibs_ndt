@@ -41,6 +41,7 @@ public:
     using index_t       = std::array<int,Dim>;
 
     static constexpr std::size_t bin_count  = utility::two_pow(Dim);
+    static constexpr T div_count = T(1.0) / static_cast<T>(bin_count);
 
     using index_list_t                      = std::array<index_t, bin_count>;
     using distribution_t                    = data_t<T,Dim>;

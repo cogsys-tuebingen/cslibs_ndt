@@ -52,23 +52,23 @@ public:
                       const index_t &min_bundle_index) :
         base_t(origin, resolution,
                min_bundle_index,
-               (min_bundle_index + size * 2 - 1)),
+               (min_bundle_index + cslibs_math::common::cast<int>(size * 2ul) - 1)),
         size_(size),
-        size_m_((size + 1) * resolution)
+        size_m_(cslibs_math::common::cast<T>(size + 1ul) * resolution)
     {
         index_t offset;
         for (std::size_t i=0; i<Dim; ++i)
             offset[i] = cslibs_math::common::div<int>(min_bundle_index[i], 2);
-        this->storage_[0]->template set<cis::option::tags::array_size>(std::forward(size));
-        this->storage_[0]->template set<cis::option::tags::array_offset>(std::forward(offset));
+        this->storage_[0]->template set<cis::option::tags::array_size>(size);
+        this->storage_[0]->template set<cis::option::tags::array_offset>(offset);
 
         for(std::size_t i=1 ; i<Dim; ++i) {
-            this->storage_[i]->template set<cis::option::tags::array_size>(std::forward(size+1));
+            this->storage_[i]->template set<cis::option::tags::array_size>(size + 1ul);
             this->storage_[i]->template set<cis::option::tags::array_offset>(offset);
         }
 
-        this->bundle_storage_->template set<cis::option::tags::array_size>(std::forward(size*2));
-        this->bundle_storage_->template set<cis::option::tags::array_offset>(std::forward(min_bundle_index));
+        this->bundle_storage_->template set<cis::option::tags::array_size>(size * 2ul);
+        this->bundle_storage_->template set<cis::option::tags::array_offset>(min_bundle_index);
     }
 
     inline GenericMap(const pose_t &origin,
@@ -169,8 +169,8 @@ protected:
 
     virtual inline void allocateStorage(distribution_storage_t& storage) const override
     {
-        storage.template set<cis::option::tags::array_size>(std::forward(this->size_ * 2));
-        storage.template set<cis::option::tags::array_offset>(std::forward(this->min_bundle_index_));
+        storage.template set<cis::option::tags::array_size>(this->size_ * 2ul);
+        storage.template set<cis::option::tags::array_offset>(this->min_bundle_index_);
     }
 };
 

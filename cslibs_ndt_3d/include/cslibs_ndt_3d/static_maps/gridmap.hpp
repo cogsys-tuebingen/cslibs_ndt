@@ -1,7 +1,6 @@
 #ifndef CSLIBS_NDT_3D_STATIC_MAPS_GRIDMAP_HPP
 #define CSLIBS_NDT_3D_STATIC_MAPS_GRIDMAP_HPP
 
-
 #include <cslibs_ndt/map/impl/gridmap.hpp>
 
 namespace cslibs_ndt_3d {

@@ -11,23 +11,27 @@ template <tags::option option_t,
           std::size_t Dim,
           template <typename,std::size_t> class data_t,
           typename T,
-          template <typename, typename, typename...> class backend_t = tags::default_types<option_t>::template default_backend_t>
-class EIGEN_ALIGN16 GenericMap : public AbstractMap<option_t, Dim, data_t, T, backend_t> {};
+          template <typename, typename, typename...> class backend_t = tags::default_types<option_t>::template default_backend_t,
+          template <typename, typename, typename...> class dynamic_backend_t = tags::default_types<option_t>::template default_dynamic_backend_t>
+class EIGEN_ALIGN16 GenericMap :
+        public AbstractMap<option_t, Dim, data_t, T, backend_t, dynamic_backend_t> {};
 
 template <std::size_t Dim,
           template <typename,std::size_t> class data_t,
           typename T,
-          template <typename, typename, typename...> class backend_t>
-class EIGEN_ALIGN16 GenericMap<tags::static_map, Dim, data_t, T, backend_t> : public AbstractMap<tags::static_map, Dim, data_t, T, backend_t>
+          template <typename, typename, typename...> class backend_t,
+          template <typename, typename, typename...> class dynamic_backend_t>
+class EIGEN_ALIGN16 GenericMap<tags::static_map, Dim, data_t, T, backend_t, dynamic_backend_t> :
+        public AbstractMap<tags::static_map, Dim, data_t, T, backend_t, dynamic_backend_t>
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t   = Eigen::aligned_allocator<GenericMap<tags::static_map, Dim, data_t, T, backend_t>>;
+    using allocator_t   = Eigen::aligned_allocator<GenericMap<tags::static_map, Dim, data_t, T, backend_t, dynamic_backend_t>>;
 
-    using ConstPtr      = std::shared_ptr<const GenericMap<tags::static_map, Dim, data_t, T, backend_t>>;
-    using Ptr           = std::shared_ptr<GenericMap<tags::static_map, Dim, data_t, T, backend_t>>;
+    using ConstPtr      = std::shared_ptr<const GenericMap<tags::static_map, Dim, data_t, T, backend_t, dynamic_backend_t>>;
+    using Ptr           = std::shared_ptr<GenericMap<tags::static_map, Dim, data_t, T, backend_t, dynamic_backend_t>>;
 
-    using base_t = AbstractMap<tags::static_map, Dim, data_t, T, backend_t>;
+    using base_t = AbstractMap<tags::static_map, Dim, data_t, T, backend_t, dynamic_backend_t>;
     using typename base_t::pose_t;
     using typename base_t::transform_t;
     using typename base_t::point_t;
@@ -42,6 +46,7 @@ public:
     using typename base_t::distribution_const_bundle_t;
     using typename base_t::distribution_bundle_storage_t;
     using typename base_t::distribution_bundle_storage_ptr_t;
+    using typename base_t::dynamic_distribution_storage_t;
 
     using size_t        = std::array<std::size_t,Dim>;
     using size_m_t      = std::array<T,Dim>;
@@ -62,7 +67,7 @@ public:
         this->storage_[0]->template set<cis::option::tags::array_size>(size);
         this->storage_[0]->template set<cis::option::tags::array_offset>(offset);
 
-        for(std::size_t i=1 ; i<Dim; ++i) {
+        for(std::size_t i=1 ; i<this->bin_count; ++i) {
             this->storage_[i]->template set<cis::option::tags::array_size>(size + 1ul);
             this->storage_[i]->template set<cis::option::tags::array_offset>(offset);
         }
@@ -79,10 +84,10 @@ public:
                       const index_t                           &min_bundle_index) :
         base_t(origin, resolution,
                min_bundle_index,
-               (min_bundle_index + size * 2 - 1),
+               (min_bundle_index + cslibs_math::common::cast<int>(size * 2ul) - 1),
                bundles, storage),
         size_(size),
-        size_m_((size + 1) * resolution)
+        size_m_(cslibs_math::common::cast<T>(size + 1ul) * resolution)
     {
     }
 
@@ -145,7 +150,7 @@ public:
 
     inline size_t getBundleSize() const
     {
-        return size_ * 2;
+        return size_ * 2ul;
     }
 
 protected:
@@ -167,27 +172,28 @@ protected:
         return true;
     }
 
-    virtual inline void allocateStorage(distribution_storage_t& storage) const override
+    virtual inline bool expandDistribution(const distribution_t* d) const override
     {
-        storage.template set<cis::option::tags::array_size>(this->size_ * 2ul);
-        storage.template set<cis::option::tags::array_offset>(this->min_bundle_index_);
+        return d;
     }
 };
 
 template <std::size_t Dim,
           template <typename,std::size_t> class data_t,
           typename T,
-          template <typename, typename, typename...> class backend_t>
-class EIGEN_ALIGN16 GenericMap<tags::dynamic_map, Dim, data_t, T, backend_t> : public AbstractMap<tags::dynamic_map, Dim, data_t, T, backend_t>
+          template <typename, typename, typename...> class backend_t,
+          template <typename, typename, typename...> class dynamic_backend_t>
+class EIGEN_ALIGN16 GenericMap<tags::dynamic_map, Dim, data_t, T, backend_t, dynamic_backend_t> :
+        public AbstractMap<tags::dynamic_map, Dim, data_t, T, backend_t, dynamic_backend_t>
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t   = Eigen::aligned_allocator<GenericMap<tags::dynamic_map, Dim, data_t, T, backend_t>>;
+    using allocator_t   = Eigen::aligned_allocator<GenericMap<tags::dynamic_map, Dim, data_t, T, backend_t, dynamic_backend_t>>;
 
-    using ConstPtr      = std::shared_ptr<const GenericMap<tags::dynamic_map, Dim, data_t, T, backend_t>>;
-    using Ptr           = std::shared_ptr<GenericMap<tags::dynamic_map, Dim, data_t, T, backend_t>>;
+    using ConstPtr      = std::shared_ptr<const GenericMap<tags::dynamic_map, Dim, data_t, T, backend_t, dynamic_backend_t>>;
+    using Ptr           = std::shared_ptr<GenericMap<tags::dynamic_map, Dim, data_t, T, backend_t, dynamic_backend_t>>;
 
-    using base_t = AbstractMap<tags::dynamic_map, Dim, data_t, T, backend_t>;
+    using base_t = AbstractMap<tags::dynamic_map, Dim, data_t, T, backend_t, dynamic_backend_t>;
     using typename base_t::pose_t;
     using typename base_t::transform_t;
     using typename base_t::point_t;
@@ -202,6 +208,7 @@ public:
     using typename base_t::distribution_const_bundle_t;
     using typename base_t::distribution_bundle_storage_t;
     using typename base_t::distribution_bundle_storage_ptr_t;
+    using typename base_t::dynamic_distribution_storage_t;
 
     inline GenericMap(const T resolution) :
         GenericMap(pose_t::identity(), resolution)
@@ -225,6 +232,9 @@ public:
         base_t(origin, resolution, min_index, max_index, bundles, storage)
     {
     }
+
+    inline GenericMap(const GenericMap &other) : base_t(other) { }
+    inline GenericMap(GenericMap &&other) : base_t(other) { }
 
     inline bool empty() const
     {
@@ -270,8 +280,9 @@ protected:
         return true;
     }
 
-    virtual inline void allocateStorage(distribution_storage_t& storage) const override
+    virtual inline bool expandDistribution(const distribution_t* d) const override
     {
+        return d;
     }
 };
 }

@@ -9,17 +9,19 @@ namespace map {
 template <tags::option option_t,
           std::size_t Dim,
           typename T,
-          template <typename, typename, typename...> class backend_t = tags::default_types<option_t>::template default_backend_t>
-class EIGEN_ALIGN16 Gridmap : public GenericMap<option_t,Dim,Distribution,T,backend_t>
+          template <typename, typename, typename...> class backend_t = tags::default_types<option_t>::template default_backend_t,
+          template <typename, typename, typename...> class dynamic_backend_t = tags::default_types<option_t>::template default_dynamic_backend_t>
+class EIGEN_ALIGN16 Gridmap :
+        public GenericMap<option_t,Dim,Distribution,T,backend_t,dynamic_backend_t>
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t = Eigen::aligned_allocator<Gridmap<option_t,Dim,T,backend_t>>;
+    using allocator_t = Eigen::aligned_allocator<Gridmap<option_t,Dim,T,backend_t,dynamic_backend_t>>;
 
-    using ConstPtr = std::shared_ptr<const Gridmap<option_t,Dim,T,backend_t>>;
-    using Ptr      = std::shared_ptr<Gridmap<option_t,Dim,T,backend_t>>;
+    using ConstPtr = std::shared_ptr<const Gridmap<option_t,Dim,T,backend_t,dynamic_backend_t>>;
+    using Ptr      = std::shared_ptr<Gridmap<option_t,Dim,T,backend_t,dynamic_backend_t>>;
 
-    using base_t = GenericMap<option_t,Dim,Distribution,T,backend_t>;
+    using base_t = GenericMap<option_t,Dim,Distribution,T,backend_t,dynamic_backend_t>;
     using typename base_t::pose_t;
     using typename base_t::transform_t;
     using typename base_t::point_t;
@@ -34,16 +36,19 @@ public:
     using typename base_t::distribution_const_bundle_t;
     using typename base_t::distribution_bundle_storage_t;
     using typename base_t::distribution_bundle_storage_ptr_t;
+    using typename base_t::dynamic_distribution_storage_t;
 
     using base_t::GenericMap;
+    inline Gridmap(const base_t &other) : base_t(other) { }
+    inline Gridmap(base_t &&other) : base_t(other) { }
 
     inline void insert(const point_t &p)
     {
         index_t bi;
-        if (!toBundleIndex(p, bi))
+        if (!this->toBundleIndex(p, bi))
             return;
 
-        distribution_bundle_t *bundle = getAllocate(bi);
+        distribution_bundle_t *bundle = this->getAllocate(bi);
         for (std::size_t i=0; i<this->bin_count; ++i)
             bundle->at(i)->data().add(p);
     }
@@ -51,9 +56,7 @@ public:
     inline void insert(const typename pointcloud_t::ConstPtr &points,
                        const pose_t &points_origin = pose_t())
     {
-        distribution_storage_t storage;
-        this->allocateStorage(storage);
-
+        dynamic_distribution_storage_t storage;
         for (const auto &p : *points) {
             const point_t pm = points_origin * p;
             if (pm.isNormal()) {

@@ -104,7 +104,7 @@ public:
         max_bundle_index_(other.max_bundle_index_),
         storage_(utility::create<distribution_storage_t,bin_count>(other.storage_)),
         bundle_storage_(new distribution_bundle_storage_t(*other.bundle_storage_))
-    {std::cout << "abstract copy used" << std::endl;
+    {
     }
 
     inline AbstractMap(AbstractMap &&other) :
@@ -117,7 +117,7 @@ public:
         max_bundle_index_(other.max_bundle_index_),
         storage_(other.storage_),
         bundle_storage_(other.bundle_storage_)
-    {std::cout << "abstract move used" << std::endl;
+    {
     }
 
     /**
@@ -279,12 +279,15 @@ protected:
             distribution_bundle_t *bundle = bundle_storage_->get(bi);
 
             auto allocate_bundle = [this, &bi]() {
-                static const index_list_t indices = utility::generate_indices<index_list_t,Dim>(bi);
+                const index_list_t indices = utility::generate_indices<index_list_t,Dim>(bi);
+                std::cout << bi << " -> \n";
+                for (auto &index : indices)
+                    std::cout << index << ", ";
+                std::cout << std::endl;
 
                 distribution_bundle_t b;
                 std::size_t id = 0;
                 for (const auto& index : indices) {
-                    std::cout << index << std::endl;
                     b[id] = getAllocate(storage_[id], index);
                     ++id;
                 }

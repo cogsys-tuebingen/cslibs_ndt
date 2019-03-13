@@ -1,7 +1,7 @@
 #ifndef CSLIBS_NDT_SERIALIZATION_LOADER_HPP
 #define CSLIBS_NDT_SERIALIZATION_LOADER_HPP
 
-#include <cslibs_ndt/map/generic_map.hpp>
+#include <cslibs_ndt/map/map.hpp>
 
 #include <cslibs_ndt/serialization/filesystem.hpp>
 #include <cslibs_ndt/serialization/storage.hpp>
@@ -26,7 +26,7 @@ template <std::size_t Dim,
           template <typename, typename, typename...> class backend_t,
           template <typename, typename, typename...> class dynamic_backend_t>
 struct loader<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_backend_t> {
-    using map_t             = cslibs_ndt::map::GenericMap<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_backend_t>;
+    using map_t             = cslibs_ndt::map::Map<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_backend_t>;
     using index_t           = typename map_t::index_t;
     using pose_t            = typename map_t::pose_t;
     using size_t            = typename map_t::size_t;
@@ -97,7 +97,7 @@ template <std::size_t Dim,
           template <typename, typename, typename...> class backend_t,
           template <typename, typename, typename...> class dynamic_backend_t>
 struct loader<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_backend_t> {
-    using map_t             = cslibs_ndt::map::GenericMap<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_backend_t>;
+    using map_t             = cslibs_ndt::map::Map<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_backend_t>;
     using index_t           = typename map_t::index_t;
     using pose_t            = typename map_t::pose_t;
     using bundle_storage_t  = typename map_t::distribution_bundle_storage_t;
@@ -169,7 +169,7 @@ template <std::size_t Dim,
           template <typename, typename, typename...> class backend_t,
           template <typename, typename, typename...> class dynamic_backend_t>
 struct header<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_backend_t> {
-    using map_t    = cslibs_ndt::map::GenericMap<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_backend_t>;
+    using map_t    = cslibs_ndt::map::Map<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_backend_t>;
     using index_t  = typename map_t::index_t;
     using pose_t   = typename map_t::pose_t;
     using size_t   = typename map_t::size_t;
@@ -203,7 +203,7 @@ template <std::size_t Dim,
           template <typename, typename, typename...> class backend_t,
           template <typename, typename, typename...> class dynamic_backend_t>
 struct header<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_backend_t> {
-    using map_t    = cslibs_ndt::map::GenericMap<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_backend_t>;
+    using map_t    = cslibs_ndt::map::Map<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_backend_t>;
     using index_t  = typename map_t::index_t;
     using pose_t   = typename map_t::pose_t;
     using loader_t = loader<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_backend_t>;

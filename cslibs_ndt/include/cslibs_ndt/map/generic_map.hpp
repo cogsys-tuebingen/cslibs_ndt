@@ -172,10 +172,7 @@ protected:
         return true;
     }
 
-    virtual inline bool expandDistribution(const distribution_t* d) const override
-    {
-        return d;
-    }
+    virtual inline bool expandDistribution(const distribution_t* d) const = 0;
 };
 
 template <std::size_t Dim,
@@ -280,10 +277,7 @@ protected:
         return true;
     }
 
-    virtual inline bool expandDistribution(const distribution_t* d) const override
-    {
-        return d;
-    }
+    virtual inline bool expandDistribution(const distribution_t* d) const = 0;
 };
 }
 }

@@ -63,10 +63,7 @@ void testDynamicMap(const typename cslibs_ndt_3d::dynamic_maps::Gridmap<double>:
             EXPECT_NE(bb, nullptr);
 
             for (std::size_t i = 0 ; i < 8 ; ++ i) {
-                if (!b.at(i)) {
-                    EXPECT_EQ(bb->at(i), nullptr);
-                    continue;
-                }
+                EXPECT_NE(b.at(i),  nullptr);
                 EXPECT_NE(bb->at(i), nullptr);
 
                 const cslibs_math::statistics::Distribution<double, 3, 3> & d  = b.at(i)->data();
@@ -124,10 +121,7 @@ void testStaticMap(const typename cslibs_ndt_3d::static_maps::Gridmap<double>::P
             EXPECT_NE(bb, nullptr);
 
             for (std::size_t i = 0 ; i < 8 ; ++ i) {
-                if (!b.at(i)) {
-                    EXPECT_EQ(bb->at(i), nullptr);
-                    continue;
-                }
+                EXPECT_NE(b.at(i),  nullptr);
                 EXPECT_NE(bb->at(i), nullptr);
 
                 const cslibs_math::statistics::Distribution<double, 3, 3> & d  = b.at(i)->data();
@@ -195,10 +189,7 @@ void testDynamicOccMap(const typename cslibs_ndt_3d::dynamic_maps::OccupancyGrid
             EXPECT_NE(bb, nullptr);
 
             for (std::size_t i = 0 ; i < 8 ; ++ i) {
-                if (!b.at(i)) {
-                    EXPECT_EQ(bb->at(i), nullptr);
-                    continue;
-                }
+                EXPECT_NE(b.at(i),  nullptr);
                 EXPECT_NE(bb->at(i), nullptr);
 
                 EXPECT_EQ(b.at(i)->numFree(), bb->at(i)->numFree());
@@ -263,10 +254,7 @@ void testStaticOccMap(const typename cslibs_ndt_3d::static_maps::OccupancyGridma
             EXPECT_NE(bb, nullptr);
 
             for (std::size_t i = 0 ; i < 8 ; ++ i) {
-                if (!b.at(i)) {
-                    EXPECT_EQ(bb->at(i), nullptr);
-                    continue;
-                }
+                EXPECT_NE(b.at(i),  nullptr);
                 EXPECT_NE(bb->at(i), nullptr);
 
                 EXPECT_EQ(b.at(i)->numFree(),     bb->at(i)->numFree());

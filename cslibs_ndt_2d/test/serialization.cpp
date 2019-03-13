@@ -15,10 +15,10 @@ const std::size_t MIN_NUM_SAMPLES = 10;
 const std::size_t MAX_NUM_SAMPLES = 100;
 
 template <std::size_t Dim>
-using rng_t = typename cslibs_math::random::Uniform<Dim>;
+using rng_t = typename cslibs_math::random::Uniform<double, Dim>;
 
-void testDynamicMap(const typename cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr & map,
-                    const typename cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr & map_converted)
+void testDynamicMap(const typename cslibs_ndt_2d::dynamic_maps::Gridmap<double>::Ptr & map,
+                    const typename cslibs_ndt_2d::dynamic_maps::Gridmap<double>::Ptr & map_converted)
 {
     EXPECT_NE(map_converted, nullptr);
 
@@ -42,7 +42,7 @@ void testDynamicMap(const typename cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr & m
     EXPECT_NEAR(map->getMax()(1),              map_converted->getMax()(1),              1e-3);
 
     using index_t = std::array<int, 2>;
-    using map_t   = cslibs_ndt_2d::dynamic_maps::Gridmap;
+    using map_t   = cslibs_ndt_2d::dynamic_maps::Gridmap<double>;
     using db_t    = typename map_t::distribution_bundle_t;
     auto check = [](const typename map_t::Ptr &m1, const typename map_t::Ptr &m2) {
         m1->traverse([&m2](const index_t& bi, const db_t& b) {
@@ -53,8 +53,8 @@ void testDynamicMap(const typename cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr & m
                 EXPECT_NE(b.at(i),  nullptr);
                 EXPECT_NE(bb->at(i), nullptr);
 
-                const cslibs_math::statistics::Distribution<2, 3> & d  = b.at(i)->data();
-                const cslibs_math::statistics::Distribution<2, 3> & dd = bb->at(i)->data();
+                const cslibs_math::statistics::Distribution<double, 2, 3> & d  = b.at(i)->data();
+                const cslibs_math::statistics::Distribution<double, 2, 3> & dd = bb->at(i)->data();
                 EXPECT_EQ(d.getN(), dd.getN());
 
                 for (std::size_t j = 0 ; j < 2 ; ++ j) {
@@ -73,8 +73,8 @@ void testDynamicMap(const typename cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr & m
     check(map_converted, map);
 }
 
-void testStaticMap(const typename cslibs_ndt_2d::static_maps::Gridmap::Ptr & map,
-                   const typename cslibs_ndt_2d::static_maps::Gridmap::Ptr & map_converted)
+void testStaticMap(const typename cslibs_ndt_2d::static_maps::Gridmap<double>::Ptr & map,
+                   const typename cslibs_ndt_2d::static_maps::Gridmap<double>::Ptr & map_converted)
 {
     EXPECT_NE(map_converted, nullptr);
 
@@ -94,7 +94,7 @@ void testStaticMap(const typename cslibs_ndt_2d::static_maps::Gridmap::Ptr & map
     EXPECT_NEAR(map->getOrigin().yaw(), map_converted->getOrigin().yaw(), 1e-3);
 
     using index_t = std::array<int, 2>;
-    using map_t   = cslibs_ndt_2d::static_maps::Gridmap;
+    using map_t   = cslibs_ndt_2d::static_maps::Gridmap<double>;
     using db_t    = typename map_t::distribution_bundle_t;
     auto check = [](const typename map_t::Ptr &m1, const typename map_t::Ptr &m2) {
         m1->traverse([&m2](const index_t& bi, const db_t& b) {
@@ -105,8 +105,8 @@ void testStaticMap(const typename cslibs_ndt_2d::static_maps::Gridmap::Ptr & map
                 EXPECT_NE(b.at(i),  nullptr);
                 EXPECT_NE(bb->at(i), nullptr);
 
-                const cslibs_math::statistics::Distribution<2, 3> & d  = b.at(i)->data();
-                const cslibs_math::statistics::Distribution<2, 3> & dd = bb->at(i)->data();
+                const cslibs_math::statistics::Distribution<double, 2, 3> & d  = b.at(i)->data();
+                const cslibs_math::statistics::Distribution<double, 2, 3> & dd = bb->at(i)->data();
                 EXPECT_EQ(d.getN(), dd.getN());
 
                 for (std::size_t j = 0 ; j < 2 ; ++ j) {
@@ -125,8 +125,8 @@ void testStaticMap(const typename cslibs_ndt_2d::static_maps::Gridmap::Ptr & map
     check(map_converted, map);
 }
 
-void testDynamicOccMap(const typename cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr & map,
-                       const typename cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr & map_converted)
+void testDynamicOccMap(const typename cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<double>::Ptr & map,
+                       const typename cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<double>::Ptr & map_converted)
 {
     EXPECT_NE(map_converted, nullptr);
 
@@ -150,7 +150,7 @@ void testDynamicOccMap(const typename cslibs_ndt_2d::dynamic_maps::OccupancyGrid
     EXPECT_NEAR(map->getMax()(1),              map_converted->getMax()(1),              1e-3);
 
     using index_t = std::array<int, 2>;
-    using map_t   = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap;
+    using map_t   = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<double>;
     using db_t    = typename map_t::distribution_bundle_t;
     auto check = [](const typename map_t::Ptr &m1, const typename map_t::Ptr &m2) {
         m1->traverse([&m2](const index_t& bi, const db_t& b) {
@@ -164,8 +164,8 @@ void testDynamicOccMap(const typename cslibs_ndt_2d::dynamic_maps::OccupancyGrid
                 EXPECT_EQ(b.at(i)->numFree(), bb->at(i)->numFree());
                 EXPECT_EQ(b.at(i)->numOccupied(), bb->at(i)->numOccupied());
 
-                const std::shared_ptr<cslibs_math::statistics::Distribution<2, 3>> d  = b.at(i)->getDistribution();
-                const std::shared_ptr<cslibs_math::statistics::Distribution<2, 3>> dd = bb->at(i)->getDistribution();
+                const std::shared_ptr<cslibs_math::statistics::Distribution<double, 2, 3>> d  = b.at(i)->getDistribution();
+                const std::shared_ptr<cslibs_math::statistics::Distribution<double, 2, 3>> dd = bb->at(i)->getDistribution();
                 if (d) {
                     EXPECT_NE(dd, nullptr);
                     EXPECT_EQ(d->getN(), dd->getN());
@@ -188,8 +188,8 @@ void testDynamicOccMap(const typename cslibs_ndt_2d::dynamic_maps::OccupancyGrid
     check(map_converted, map);
 }
 
-void testStaticOccMap(const typename cslibs_ndt_2d::static_maps::OccupancyGridmap::Ptr & map,
-                      const typename cslibs_ndt_2d::static_maps::OccupancyGridmap::Ptr & map_converted)
+void testStaticOccMap(const typename cslibs_ndt_2d::static_maps::OccupancyGridmap<double>::Ptr & map,
+                      const typename cslibs_ndt_2d::static_maps::OccupancyGridmap<double>::Ptr & map_converted)
 {
     EXPECT_NE(map_converted, nullptr);
 
@@ -209,7 +209,7 @@ void testStaticOccMap(const typename cslibs_ndt_2d::static_maps::OccupancyGridma
     EXPECT_NEAR(map->getOrigin().yaw(), map_converted->getOrigin().yaw(), 1e-3);
 
     using index_t = std::array<int, 2>;
-    using map_t   = cslibs_ndt_2d::static_maps::OccupancyGridmap;
+    using map_t   = cslibs_ndt_2d::static_maps::OccupancyGridmap<double>;
     using db_t    = typename map_t::distribution_bundle_t;
     auto check = [](const typename map_t::Ptr &m1, const typename map_t::Ptr &m2) {
         m1->traverse([&m2](const index_t& bi, const db_t& b) {
@@ -223,8 +223,8 @@ void testStaticOccMap(const typename cslibs_ndt_2d::static_maps::OccupancyGridma
                 EXPECT_EQ(b.at(i)->numFree(), bb->at(i)->numFree());
                 EXPECT_EQ(b.at(i)->numOccupied(), bb->at(i)->numOccupied());
 
-                const std::shared_ptr<cslibs_math::statistics::Distribution<2, 3>> d  = b.at(i)->getDistribution();
-                const std::shared_ptr<cslibs_math::statistics::Distribution<2, 3>> dd = bb->at(i)->getDistribution();
+                const std::shared_ptr<cslibs_math::statistics::Distribution<double, 2, 3>> d  = b.at(i)->getDistribution();
+                const std::shared_ptr<cslibs_math::statistics::Distribution<double, 2, 3>> dd = bb->at(i)->getDistribution();
                 if (d) {
                     EXPECT_NE(dd, nullptr);
                     EXPECT_EQ(d->getN(), dd->getN());
@@ -247,37 +247,37 @@ void testStaticOccMap(const typename cslibs_ndt_2d::static_maps::OccupancyGridma
     check(map_converted, map);
 }
 
-cslibs_ndt_2d::dynamic_maps::Gridmap::Ptr generateDynamicMap()
+cslibs_ndt_2d::dynamic_maps::Gridmap<double>::Ptr generateDynamicMap()
 {
-    using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
+    using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap<double>;
     rng_t<1> rng_coord(-100.0, 100.0);
 
     // fill map
-    cslibs_math_2d::Transform2d origin(rng_coord.get(), rng_coord.get(), rng_t<1>(-M_PI, M_PI).get());
+    cslibs_math_2d::Transform2d<double> origin(rng_coord.get(), rng_coord.get(), rng_t<1>(-M_PI, M_PI).get());
     const double resolution = rng_t<1>(1.0, 5.0).get();
     typename map_t::Ptr map(new map_t(origin, resolution));
     const int num_samples = static_cast<int>(rng_t<1>(MIN_NUM_SAMPLES, MAX_NUM_SAMPLES).get());
     for (int i = 0 ; i < num_samples ; ++ i) {
-        const cslibs_math_2d::Point2d p(rng_coord.get(), rng_coord.get());
+        const cslibs_math_2d::Point2d<double> p(rng_coord.get(), rng_coord.get());
         map->insert(p);
     }
 
     return map;
 }
 
-cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr generateDynamicOccMap()
+cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<double>::Ptr generateDynamicOccMap()
 {
-    using map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap;
+    using map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<double>;
     rng_t<1> rng_coord(-10.0, 10.0);
 
     // fill map
-    cslibs_math_2d::Transform2d origin(rng_coord.get(), rng_coord.get(), rng_t<1>(-M_PI, M_PI).get());
+    cslibs_math_2d::Transform2d<double> origin(rng_coord.get(), rng_coord.get(), rng_t<1>(-M_PI, M_PI).get());
     const double resolution = rng_t<1>(1.0, 5.0).get();
     typename map_t::Ptr map(new map_t(origin, resolution));
     const int num_samples = static_cast<int>(rng_t<1>(MIN_NUM_SAMPLES, MAX_NUM_SAMPLES).get());
     for (int i = 0 ; i < num_samples ; ++ i) {
-        const cslibs_math_2d::Point2d p(rng_coord.get(), rng_coord.get());
-        const cslibs_math_2d::Point2d q(rng_coord.get(), rng_coord.get());
+        const cslibs_math_2d::Point2d<double> p(rng_coord.get(), rng_coord.get());
+        const cslibs_math_2d::Point2d<double> q(rng_coord.get(), rng_coord.get());
         map->insert(p, q);
     }
 
@@ -286,12 +286,12 @@ cslibs_ndt_2d::dynamic_maps::OccupancyGridmap::Ptr generateDynamicOccMap()
 
 TEST(Test_cslibs_ndt_2d, testDynamicGridmapConversion)
 {
-    using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
+    using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap<double>;
     const typename map_t::Ptr map = generateDynamicMap();
 
     // conversion
     const typename map_t::Ptr & map_double_converted =
-            cslibs_ndt_2d::conversion::from(cslibs_ndt_2d::conversion::from(map));
+            cslibs_ndt_2d::conversion::from<double>(cslibs_ndt_2d::conversion::from<double>(map));
 
     EXPECT_NE(map_double_converted, nullptr);
     testDynamicMap(map, map_double_converted);
@@ -299,12 +299,12 @@ TEST(Test_cslibs_ndt_2d, testDynamicGridmapConversion)
 
 TEST(Test_cslibs_ndt_2d, testDynamicOccupancyGridmapConversion)
 {
-    using map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap;
+    using map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<double>;
     const typename map_t::Ptr map = generateDynamicOccMap();
 
     // conversion
     const typename map_t::Ptr & map_double_converted =
-            cslibs_ndt_2d::conversion::from(cslibs_ndt_2d::conversion::from(map));
+            cslibs_ndt_2d::conversion::from<double>(cslibs_ndt_2d::conversion::from<double>(map));
 
     EXPECT_NE(map_double_converted, nullptr);
     testDynamicOccMap(map, map_double_converted);
@@ -312,15 +312,15 @@ TEST(Test_cslibs_ndt_2d, testDynamicOccupancyGridmapConversion)
 
 TEST(Test_cslibs_ndt_2d, testStaticGridmapConversion)
 {
-    using tmp_map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
+    using tmp_map_t = cslibs_ndt_2d::dynamic_maps::Gridmap<double>;
     const typename tmp_map_t::Ptr tmp_map = generateDynamicMap();
 
-    using map_t = cslibs_ndt_2d::static_maps::Gridmap;
-    const typename map_t::Ptr map = cslibs_ndt_2d::conversion::from(tmp_map);
+    using map_t = cslibs_ndt_2d::static_maps::Gridmap<double>;
+    const typename map_t::Ptr map = cslibs_ndt_2d::conversion::from<double>(tmp_map);
 
     // conversion
     const typename map_t::Ptr & map_double_converted =
-            cslibs_ndt_2d::conversion::from(cslibs_ndt_2d::conversion::from(map));
+            cslibs_ndt_2d::conversion::from<double>(cslibs_ndt_2d::conversion::from<double>(map));
 
     EXPECT_NE(map_double_converted, nullptr);
     testStaticMap(map, map_double_converted);
@@ -328,15 +328,15 @@ TEST(Test_cslibs_ndt_2d, testStaticGridmapConversion)
 
 TEST(Test_cslibs_ndt_2d, testStaticOccupancyGridmapConversion)
 {
-    using tmp_map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap;
+    using tmp_map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<double>;
     const typename tmp_map_t::Ptr tmp_map = generateDynamicOccMap();
 
-    using map_t = cslibs_ndt_2d::static_maps::OccupancyGridmap;
-    const typename map_t::Ptr map = cslibs_ndt_2d::conversion::from(tmp_map);
+    using map_t = cslibs_ndt_2d::static_maps::OccupancyGridmap<double>;
+    const typename map_t::Ptr map = cslibs_ndt_2d::conversion::from<double>(tmp_map);
 
     // conversion
     const typename map_t::Ptr & map_double_converted =
-            cslibs_ndt_2d::conversion::from(cslibs_ndt_2d::conversion::from(map));
+            cslibs_ndt_2d::conversion::from<double>(cslibs_ndt_2d::conversion::from<double>(map));
 
     EXPECT_NE(map_double_converted, nullptr);
     testStaticOccMap(map, map_double_converted);
@@ -344,15 +344,15 @@ TEST(Test_cslibs_ndt_2d, testStaticOccupancyGridmapConversion)
 
 TEST(Test_cslibs_ndt_2d, testDynamicGridmapFileBinarySerialization)
 {
-    using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap;
+    using map_t = cslibs_ndt_2d::dynamic_maps::Gridmap<double>;
     const typename map_t::Ptr map = generateDynamicMap();
 
     // to file
-    cslibs_ndt_2d::dynamic_maps::saveBinary(map, "/tmp/dynamic_map_binary_2d");
+    cslibs_ndt_2d::dynamic_maps::saveBinary<double>(map, "/tmp/dynamic_map_binary_2d");
 
     // from file
     typename map_t::Ptr map_from_file;
-    const bool success = cslibs_ndt_2d::dynamic_maps::loadBinary("/tmp/dynamic_map_binary_2d", map_from_file);
+    const bool success = cslibs_ndt_2d::dynamic_maps::loadBinary<double>("/tmp/dynamic_map_binary_2d", map_from_file);
 
     // tests
     EXPECT_TRUE(success);
@@ -361,15 +361,15 @@ TEST(Test_cslibs_ndt_2d, testDynamicGridmapFileBinarySerialization)
 
 TEST(Test_cslibs_ndt_2d, testDynamicOccupancyGridmapFileBinarySerialization)
 {
-    using map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap;
+    using map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<double>;
     const typename map_t::Ptr map = generateDynamicOccMap();
 
     // to file
-    cslibs_ndt_2d::dynamic_maps::saveBinary(map, "/tmp/dynamic_occ_map_binary_2d");
+    cslibs_ndt_2d::dynamic_maps::saveBinary<double>(map, "/tmp/dynamic_occ_map_binary_2d");
 
     // from file
     typename map_t::Ptr map_from_file;
-    const bool success = cslibs_ndt_2d::dynamic_maps::loadBinary("/tmp/dynamic_occ_map_binary_2d", map_from_file);
+    const bool success = cslibs_ndt_2d::dynamic_maps::loadBinary<double>("/tmp/dynamic_occ_map_binary_2d", map_from_file);
 
     // tests
     EXPECT_TRUE(success);
@@ -378,15 +378,15 @@ TEST(Test_cslibs_ndt_2d, testDynamicOccupancyGridmapFileBinarySerialization)
 
 TEST(Test_cslibs_ndt_2d, testStaticGridmapFileBinarySerialization)
 {
-    using map_t = cslibs_ndt_2d::static_maps::Gridmap;
-    const typename map_t::Ptr map = cslibs_ndt_2d::conversion::from(generateDynamicMap());
+    using map_t = cslibs_ndt_2d::static_maps::Gridmap<double>;
+    const typename map_t::Ptr map = cslibs_ndt_2d::conversion::from<double>(generateDynamicMap());
 
     // to file
-    cslibs_ndt_2d::static_maps::saveBinary(map, "/tmp/static_map_binary_2d");
+    cslibs_ndt_2d::static_maps::saveBinary<double>(map, "/tmp/static_map_binary_2d");
 
     // from file
     typename map_t::Ptr map_from_file;
-    const bool success = cslibs_ndt_2d::static_maps::loadBinary("/tmp/static_map_binary_2d", map_from_file);
+    const bool success = cslibs_ndt_2d::static_maps::loadBinary<double>("/tmp/static_map_binary_2d", map_from_file);
 
     // tests
     EXPECT_TRUE(success);
@@ -395,15 +395,15 @@ TEST(Test_cslibs_ndt_2d, testStaticGridmapFileBinarySerialization)
 
 TEST(Test_cslibs_ndt_2d, testStaticOccupancyGridmapFileBinarySerialization)
 {
-    using map_t = cslibs_ndt_2d::static_maps::OccupancyGridmap;
-    const typename map_t::Ptr map = cslibs_ndt_2d::conversion::from(generateDynamicOccMap());
+    using map_t = cslibs_ndt_2d::static_maps::OccupancyGridmap<double>;
+    const typename map_t::Ptr map = cslibs_ndt_2d::conversion::from<double>(generateDynamicOccMap());
 
     // to file
-    cslibs_ndt_2d::static_maps::saveBinary(map, "/tmp/static_occ_map_binary_2d");
+    cslibs_ndt_2d::static_maps::saveBinary<double>(map, "/tmp/static_occ_map_binary_2d");
 
     // from file
     typename map_t::Ptr map_from_file;
-    const bool success = cslibs_ndt_2d::static_maps::loadBinary("/tmp/static_occ_map_binary_2d", map_from_file);
+    const bool success = cslibs_ndt_2d::static_maps::loadBinary<double>("/tmp/static_occ_map_binary_2d", map_from_file);
 
     // tests
     EXPECT_TRUE(success);

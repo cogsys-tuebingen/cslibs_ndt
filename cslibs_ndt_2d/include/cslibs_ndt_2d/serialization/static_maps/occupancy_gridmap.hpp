@@ -2,7 +2,8 @@
 #define CSLIBS_NDT_2D_SERIALIZATION_STATIC_MAPS_OCCUPANCY_GRIDMAP_HPP
 
 #include <cslibs_ndt_2d/static_maps/occupancy_gridmap.hpp>
-
+#include <cslibs_ndt/serialization/generic_map.hpp>
+/*
 #include <cslibs_ndt/serialization/filesystem.hpp>
 #include <cslibs_ndt/serialization/storage.hpp>
 
@@ -13,14 +14,17 @@
 
 #include <fstream>
 #include <thread>
-#include <atomic>
+#include <atomic>*/
 
 namespace cslibs_ndt_2d {
 namespace static_maps {
+
 template <typename T>
-inline bool saveBinary(const cslibs_ndt_2d::static_maps::OccupancyGridmap<T>::Ptr &map,
+inline bool saveBinary(const typename cslibs_ndt_2d::static_maps::OccupancyGridmap<T>::Ptr &map,
                        const std::string &path)
 {
+    return cslibs_ndt::serialization::saveBinary<cslibs_ndt::map::tags::static_map,2,cslibs_ndt::OccupancyDistribution,T>(map, path);
+/*
     using path_t     = boost::filesystem::path;
     using paths_t    = std::array<path_t, 4>;
     using map_t      = cslibs_ndt_2d::static_maps::OccupancyGridmap<T>;
@@ -71,13 +75,20 @@ inline bool saveBinary(const cslibs_ndt_2d::static_maps::OccupancyGridmap<T>::Pt
     for (std::size_t i = 0 ; i < 4 ; ++i)
         threads[i].join();
 
-    return success;
+    return success;*/
 }
 
 template <typename T>
 inline bool loadBinary(const std::string &path,
                        typename cslibs_ndt_2d::static_maps::OccupancyGridmap<T>::Ptr &map)
 {
+    using target_ptr_t = typename cslibs_ndt::map::GenericMap<cslibs_ndt::map::tags::static_map,2,cslibs_ndt::OccupancyDistribution,T,
+    cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::static_map>::template default_backend_t,
+    cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::static_map>::template default_dynamic_backend_t>::Ptr;
+    target_ptr_t &m = reinterpret_cast<target_ptr_t&>(map);
+    return cslibs_ndt::serialization::loadBinary<cslibs_ndt::map::tags::static_map,2,cslibs_ndt::OccupancyDistribution,T>(path, m);
+
+    /*
     using path_t           = boost::filesystem::path;
     using paths_t          = std::array<path_t, 4>;
     using map_t            = cslibs_ndt_2d::static_maps::OccupancyGridmap<T>;
@@ -164,8 +175,9 @@ inline bool loadBinary(const std::string &path,
                         storages,
                         min_index));
 
-    return true;
+    return true;*/
 }
+
 }
 }
 

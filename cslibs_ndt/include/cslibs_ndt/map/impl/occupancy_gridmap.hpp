@@ -1,7 +1,7 @@
 #ifndef CSLIBS_NDT_MAP_OCCUPANCY_GRIDMAP_HPP
 #define CSLIBS_NDT_MAP_OCCUPANCY_GRIDMAP_HPP
 
-#include <cslibs_ndt/map/generic_map.hpp>
+//#include <cslibs_ndt/map/generic_map.hpp>
 #include <cslibs_ndt/common/occupancy_distribution.hpp>
 
 namespace cslibs_ndt {
@@ -9,17 +9,17 @@ namespace map {
 template <tags::option option_t,
           std::size_t Dim,
           typename T,
-          template <typename, typename, typename...> class backend_t = tags::default_types<option_t>::template default_backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t = tags::default_types<option_t>::template default_dynamic_backend_t>
-class EIGEN_ALIGN16 OccupancyGridmap :
+          template <typename, typename, typename...> class backend_t,
+          template <typename, typename, typename...> class dynamic_backend_t>
+class EIGEN_ALIGN16 Map<option_t,Dim,OccupancyDistribution,T,backend_t,dynamic_backend_t> :
         public GenericMap<option_t,Dim,OccupancyDistribution,T,backend_t,dynamic_backend_t>
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t = Eigen::aligned_allocator<OccupancyGridmap<option_t,Dim,T,backend_t,dynamic_backend_t>>;
+    using allocator_t = Eigen::aligned_allocator<Map<option_t,Dim,OccupancyDistribution,T,backend_t,dynamic_backend_t>>;
 
-    using ConstPtr = std::shared_ptr<const OccupancyGridmap<option_t,Dim,T,backend_t,dynamic_backend_t>>;
-    using Ptr      = std::shared_ptr<OccupancyGridmap<option_t,Dim,T,backend_t,dynamic_backend_t>>;
+    using ConstPtr = std::shared_ptr<const Map<option_t,Dim,OccupancyDistribution,T,backend_t,dynamic_backend_t>>;
+    using Ptr      = std::shared_ptr<Map<option_t,Dim,OccupancyDistribution,T,backend_t,dynamic_backend_t>>;
 
     using base_t = GenericMap<option_t,Dim,OccupancyDistribution,T,backend_t,dynamic_backend_t>;
     using typename base_t::pose_t;
@@ -42,8 +42,8 @@ public:
     using default_iterator_t     = typename map::traits<Dim,T>::default_iterator_t;
 
     using base_t::GenericMap;
-    inline OccupancyGridmap(const base_t &other) : base_t(other) { }
-    inline OccupancyGridmap(base_t &&other) : base_t(other) { }
+    inline Map(const base_t &other) : base_t(other) { }
+    inline Map(base_t &&other) : base_t(other) { }
 
     template <typename line_iterator_t = default_iterator_t>
     inline void insert(const point_t &start_p,

@@ -9,17 +9,17 @@ namespace map {
 template <tags::option option_t,
           std::size_t Dim,
           typename T,
-          template <typename, typename, typename...> class backend_t = tags::default_types<option_t>::template default_backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t = tags::default_types<option_t>::template default_dynamic_backend_t>
-class EIGEN_ALIGN16 Gridmap :
+          template <typename, typename, typename...> class backend_t,
+          template <typename, typename, typename...> class dynamic_backend_t>
+class EIGEN_ALIGN16 Map<option_t,Dim,Distribution,T,backend_t,dynamic_backend_t> :
         public GenericMap<option_t,Dim,Distribution,T,backend_t,dynamic_backend_t>
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t = Eigen::aligned_allocator<Gridmap<option_t,Dim,T,backend_t,dynamic_backend_t>>;
+    using allocator_t = Eigen::aligned_allocator<Map<option_t,Dim,Distribution,T,backend_t,dynamic_backend_t>>;
 
-    using ConstPtr = std::shared_ptr<const Gridmap<option_t,Dim,T,backend_t,dynamic_backend_t>>;
-    using Ptr      = std::shared_ptr<Gridmap<option_t,Dim,T,backend_t,dynamic_backend_t>>;
+    using ConstPtr = std::shared_ptr<const Map<option_t,Dim,Distribution,T,backend_t,dynamic_backend_t>>;
+    using Ptr      = std::shared_ptr<Map<option_t,Dim,Distribution,T,backend_t,dynamic_backend_t>>;
 
     using base_t = GenericMap<option_t,Dim,Distribution,T,backend_t,dynamic_backend_t>;
     using typename base_t::pose_t;
@@ -39,8 +39,8 @@ public:
     using typename base_t::dynamic_distribution_storage_t;
 
     using base_t::GenericMap;
-    inline Gridmap(const base_t &other) : base_t(other) { }
-    inline Gridmap(base_t &&other) : base_t(other) { }
+    inline Map(const base_t &other) : base_t(other) { }
+    inline Map(base_t &&other) : base_t(other) { }
 
     inline void insert(const point_t &p)
     {

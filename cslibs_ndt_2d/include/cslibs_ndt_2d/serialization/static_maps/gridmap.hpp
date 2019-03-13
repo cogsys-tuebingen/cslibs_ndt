@@ -2,7 +2,7 @@
 #define CSLIBS_NDT_2D_SERIALIZATION_STATIC_MAPS_GRIDMAP_HPP
 
 #include <cslibs_ndt_2d/static_maps/gridmap.hpp>
-#include <cslibs_ndt/serialization/generic_map.hpp>
+#include <cslibs_ndt/serialization/map.hpp>
 
 namespace cslibs_ndt_2d {
 namespace static_maps {
@@ -18,11 +18,7 @@ template <typename T>
 inline bool loadBinary(const std::string &path,
                        typename cslibs_ndt_2d::static_maps::Gridmap<T>::Ptr &map)
 {
-    using target_ptr_t = typename cslibs_ndt::map::GenericMap<cslibs_ndt::map::tags::static_map,2,cslibs_ndt::Distribution,T,
-    cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::static_map>::template default_backend_t,
-    cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::static_map>::template default_dynamic_backend_t>::Ptr;
-    target_ptr_t &m = reinterpret_cast<target_ptr_t&>(map);
-    return cslibs_ndt::serialization::loadBinary<cslibs_ndt::map::tags::static_map,2,cslibs_ndt::Distribution,T>(path, m);
+    return cslibs_ndt::serialization::loadBinary<cslibs_ndt::map::tags::static_map,2,cslibs_ndt::Distribution,T>(path, map);
 }
 
 }

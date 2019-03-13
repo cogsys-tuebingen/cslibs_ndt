@@ -34,9 +34,9 @@ public:
 
     using ConstPtr                          = std::shared_ptr<const Gridmap<T>>;
     using Ptr                               = std::shared_ptr<Gridmap<T>>;
-    using pose_t                            = cslibs_math_2d::Pose2d<T>;
-    using transform_t                       = cslibs_math_2d::Transform2d<T>;
-    using point_t                           = cslibs_math_2d::Point2d<T>;
+    using pose_t                            = cslibs_math_2d::Pose2<T>;
+    using transform_t                       = cslibs_math_2d::Transform2<T>;
+    using point_t                           = cslibs_math_2d::Point2<T>;
     using index_t                           = std::array<int, 2>;
     using size_t                            = std::array<std::size_t, 2>;
     using size_m_t                          = std::array<T, 2>;

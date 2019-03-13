@@ -89,7 +89,7 @@ inline static void apply(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
         Eigen::Matrix3d R =(svd.matrixU() * svd.matrixV().transpose()).transpose();
         Eigen::Quaterniond qe(R);
 
-        cslibs_math_3d::Quaternion   q(qe.x(), qe.y(), qe.z(), qe.w());
+        cslibs_math_3d::Quaterniond   q(qe.x(), qe.y(), qe.z(), qe.w());
         cslibs_math_3d::Transform3d  dt(dst_mean - q * src_mean,
                         q);
         transform *= dt;

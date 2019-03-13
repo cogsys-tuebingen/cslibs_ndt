@@ -44,22 +44,22 @@ struct traits {};
 template <typename T>
 struct traits<2,T>
 {
-    using pose_2d_t             = cslibs_math_2d::Pose2d<T>;
-    using pose_t                = cslibs_math_2d::Pose2d<T>;
-    using transform_t           = cslibs_math_2d::Transform2d<T>;
-    using point_t               = cslibs_math_2d::Point2d<T>;
-    using pointcloud_t          = cslibs_math_2d::Pointcloud2d<T>;
+    using pose_2d_t             = cslibs_math_2d::Pose2<T>;
+    using pose_t                = cslibs_math_2d::Pose2<T>;
+    using transform_t           = cslibs_math_2d::Transform2<T>;
+    using point_t               = cslibs_math_2d::Point2<T>;
+    using pointcloud_t          = cslibs_math_2d::Pointcloud2<T>;
     using default_iterator_t    = cslibs_math_2d::algorithms::SimpleIterator<T>;
 };
 
 template <typename T>
 struct traits<3,T>
 {
-    using pose_2d_t             = cslibs_math_2d::Pose2d<T>;
-    using pose_t                = cslibs_math_3d::Pose3d<T>;
-    using transform_t           = cslibs_math_3d::Transform3d<T>;
-    using point_t               = cslibs_math_3d::Point3d<T>;
-    using pointcloud_t          = cslibs_math_3d::Pointcloud3d<T>;
+    using pose_2d_t             = cslibs_math_2d::Pose2<T>;
+    using pose_t                = cslibs_math_3d::Pose3<T>;
+    using transform_t           = cslibs_math_3d::Transform3<T>;
+    using point_t               = cslibs_math_3d::Point3<T>;
+    using pointcloud_t          = cslibs_math_3d::Pointcloud3<T>;
     using default_iterator_t    = cslibs_math_3d::algorithms::SimpleIterator<T>;
 };
 

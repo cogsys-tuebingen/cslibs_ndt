@@ -78,7 +78,7 @@ inline void from(
         if (d.getN() == 0)
             return;
 
-        cslibs_math_3d::Point3d<T> mean(d.getMean());
+        cslibs_math_3d::Point3<T> mean(d.getMean());
         tmp.emplace_back(static_cast<float>(mean(0)));
         tmp.emplace_back(static_cast<float>(mean(1)));
         tmp.emplace_back(static_cast<float>(mean(2)));
@@ -150,7 +150,7 @@ inline void from(
         if (d.getN() == 0 || occupancy < threshold)
             return;
 
-        cslibs_math_3d::Point3d<T> mean(d.getMean());
+        cslibs_math_3d::Point3<T> mean(d.getMean());
         tmp.emplace_back(static_cast<float>(mean(0)));
         tmp.emplace_back(static_cast<float>(mean(1)));
         tmp.emplace_back(static_cast<float>(mean(2)));

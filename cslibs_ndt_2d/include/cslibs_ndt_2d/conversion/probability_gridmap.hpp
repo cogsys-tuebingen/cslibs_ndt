@@ -44,7 +44,7 @@ inline void from(
     const T bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
-    auto sample = [](const cslibs_math_2d::Point2d<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
+    auto sample = [](const cslibs_math_2d::Point2<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
         return 0.25 * (validate(bundle.at(0)->data().sampleNonNormalized(p)) +
                        validate(bundle.at(1)->data().sampleNonNormalized(p)) +
                        validate(bundle.at(2)->data().sampleNonNormalized(p)) +
@@ -58,7 +58,7 @@ inline void from(
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
-                const cslibs_math_2d::Point2d<T> p(bi[0] * bundle_resolution + k * sampling_resolution,
+                const cslibs_math_2d::Point2<T> p(bi[0] * bundle_resolution + k * sampling_resolution,
                                                    bi[1] * bundle_resolution + l * sampling_resolution);
                 dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
             }
@@ -93,7 +93,7 @@ inline void from(
 
     for(std::size_t i = 0 ; i < height ; ++i) {
         for(std::size_t j = 0 ; j < width ; ++j) {
-            const cslibs_math_2d::Point2d<T> p(j * sampling_resolution,
+            const cslibs_math_2d::Point2<T> p(j * sampling_resolution,
                                                i * sampling_resolution);
 
             const typename src_map_t::index_t idx = {{min_index[0] + static_cast<int>(p(0) / src->getResolution()),
@@ -132,7 +132,7 @@ inline void from(
     const T bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
-    auto sample = [&inverse_model](const cslibs_math_2d::Point2d<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
+    auto sample = [&inverse_model](const cslibs_math_2d::Point2<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
         auto sample = [&p, &inverse_model](const typename src_map_t::distribution_t *d) {
             auto do_sample = [&p, &inverse_model, &d]() {
                 return (d->getDistribution() && d->getDistribution()->valid()) ?
@@ -154,7 +154,7 @@ inline void from(
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
-                const cslibs_math_2d::Point2d<T> p(bi[0] * bundle_resolution + k * sampling_resolution,
+                const cslibs_math_2d::Point2<T> p(bi[0] * bundle_resolution + k * sampling_resolution,
                                                    bi[1] * bundle_resolution + l * sampling_resolution);
                 dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
             }
@@ -186,7 +186,7 @@ inline void from(
     const T bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
-    auto sample = [&inverse_model](const cslibs_math_2d::Point2d<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
+    auto sample = [&inverse_model](const cslibs_math_2d::Point2<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
         auto sample = [&p, &inverse_model](const typename src_map_t::distribution_t *d) {
             auto do_sample = [&p, &inverse_model, &d]() {
                 return (d->getDistribution() && d->getDistribution()->valid()) ?
@@ -208,7 +208,7 @@ inline void from(
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
-                const cslibs_math_2d::Point2d<T> p(bi[0] * bundle_resolution + k * sampling_resolution,
+                const cslibs_math_2d::Point2<T> p(bi[0] * bundle_resolution + k * sampling_resolution,
                                                    bi[1] * bundle_resolution + l * sampling_resolution);
                 dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
             }

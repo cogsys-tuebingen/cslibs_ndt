@@ -291,14 +291,14 @@ cslibs_ndt_3d::dynamic_maps::Gridmap<double>::Ptr generateDynamicMap()
     rng_t<1> rng_angle(-M_PI, M_PI);
 
     // fill map
-    cslibs_math_3d::Transform3d<double> origin(
-                cslibs_math_3d::Vector3d<double>(rng_coord.get(), rng_coord.get(), rng_coord.get()),
+    cslibs_math_3d::Transform3d origin(
+                cslibs_math_3d::Vector3d(rng_coord.get(), rng_coord.get(), rng_coord.get()),
                 cslibs_math_3d::Quaternion<double>(rng_angle.get(), rng_angle.get(), rng_angle.get()));
     const double resolution = rng_t<1>(1.0, 5.0).get();
     typename map_t::Ptr map(new map_t(origin, resolution));
     const int num_samples = static_cast<int>(rng_t<1>(MIN_NUM_SAMPLES, MAX_NUM_SAMPLES).get());
     for (int i = 0 ; i < num_samples ; ++ i) {
-        const cslibs_math_3d::Point3d<double> p(rng_coord.get(), rng_coord.get(), rng_coord.get());
+        const cslibs_math_3d::Point3d p(rng_coord.get(), rng_coord.get(), rng_coord.get());
         map->insert(p);
     }
 
@@ -312,15 +312,15 @@ cslibs_ndt_3d::dynamic_maps::OccupancyGridmap<double>::Ptr generateDynamicOccMap
     rng_t<1> rng_angle(-M_PI, M_PI);
 
     // fill map
-    cslibs_math_3d::Transform3d<double> origin(
-                cslibs_math_3d::Vector3d<double>(rng_coord.get(), rng_coord.get(), rng_coord.get()),
+    cslibs_math_3d::Transform3d origin(
+                cslibs_math_3d::Vector3d(rng_coord.get(), rng_coord.get(), rng_coord.get()),
                 cslibs_math_3d::Quaternion<double>(rng_angle.get(), rng_angle.get(), rng_angle.get()));
     const double resolution = rng_t<1>(1.0, 5.0).get();
     typename map_t::Ptr map(new map_t(origin, resolution));
     const int num_samples = static_cast<int>(rng_t<1>(MIN_NUM_SAMPLES, MAX_NUM_SAMPLES).get());
     for (int i = 0 ; i < num_samples ; ++ i) {
-        const cslibs_math_3d::Point3d<double> p(rng_coord.get(), rng_coord.get(), rng_coord.get());
-        const cslibs_math_3d::Point3d<double> q(rng_coord.get(), rng_coord.get(), rng_coord.get());
+        const cslibs_math_3d::Point3d p(rng_coord.get(), rng_coord.get(), rng_coord.get());
+        const cslibs_math_3d::Point3d q(rng_coord.get(), rng_coord.get(), rng_coord.get());
         map->insert(p, q);
     }
 

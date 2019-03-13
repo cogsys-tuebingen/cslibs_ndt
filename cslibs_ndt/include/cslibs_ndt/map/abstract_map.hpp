@@ -280,10 +280,6 @@ protected:
 
             auto allocate_bundle = [this, &bi]() {
                 const index_list_t indices = utility::generate_indices<index_list_t,Dim>(bi);
-                std::cout << bi << " -> \n";
-                for (auto &index : indices)
-                    std::cout << index << ", ";
-                std::cout << std::endl;
 
                 distribution_bundle_t b;
                 std::size_t id = 0;

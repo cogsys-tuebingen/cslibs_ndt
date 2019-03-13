@@ -57,13 +57,10 @@ inline bool saveBinary(const typename cslibs_ndt::map::GenericMap<option_t,Dim,d
     }
 
     /// step four: write out the storages
-    storages_t storages;
-    for (std::size_t i = 0 ; i < map_t::bin_count ; ++i)
-        storages[i] = map->getStorages()[i];
+    storages_t storages = map->getStorages();
 
     std::array<std::thread, map_t::bin_count> threads;
     std::atomic_bool success(true);
-    std::cout << "Size: " << map->getByteSize() << std::endl;
     for (std::size_t i = 0 ; i < map_t::bin_count; ++i)
         threads[i] = std::thread([&storages, &paths, i, &success](){
             success = success && binary_t::save(storages[i], paths[i]);
@@ -119,9 +116,8 @@ inline bool loadBinary(const std::string &path,
     std::atomic_bool success(true);
     for (std::size_t i = 0 ; i < map_t::bin_count ; ++i) {
         const path_t path = paths[i];
-        auto& storage = storages[i];
-        threads[i] = std::thread([&l, &storage, path, i, &success](){
-            success = success && l.load(i, path, storage);
+        threads[i] = std::thread([&l, &storages, path, i, &success](){
+            success = success && l.load(i, path, storages[i]);
         });
     }
     for (std::size_t i = 0 ; i < map_t::bin_count ; ++i)
@@ -130,9 +126,8 @@ inline bool loadBinary(const std::string &path,
     if (!success)
         return false;
 
-    l.allocateBundles(bundles, storages);std::cout << "setting map." << std::endl;
+    l.allocateBundles(bundles, storages);
     l.setMap(map, bundles, storages);
-    std::cout << "Size: " << map->getByteSize() << std::endl;
     return true;
 }
 

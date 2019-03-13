@@ -132,7 +132,7 @@ private:
             std::cerr << "Could not open '" << path.string() << std::endl;
             return false;
         }
-std::cout << "could open..." << std::endl;
+
         try {
             in.seekg (0, std::ios::end);
             const std::size_t size = in.tellg();

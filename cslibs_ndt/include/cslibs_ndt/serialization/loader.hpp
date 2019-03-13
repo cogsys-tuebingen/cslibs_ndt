@@ -48,30 +48,11 @@ struct loader<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_b
 
     inline bool load(const std::size_t i, const path_t path, storage_t &storage) const
     {
-        std::cout << "argh" << std::endl;
         const std::size_t off = (i > 1ul) ? 1ul : 0ul;
-        const size_t sz = size_ + off;
-        const index_t os(min_index_ / 2);
-        std::cout << "bla" << std::endl;
-        return binary_t::load(path, storage, sz, os);
-    }
-
-    inline void load(const paths_t &paths, storages_t &storages, std::atomic_bool& success) const
-    {
-        std::array<std::thread, map_t::bin_count> threads;
-        const index_t os(min_index_ / 2);
-        for (std::size_t i = 0 ; i < map_t::bin_count ; ++i) {
-            const std::size_t off = (i > 1ul) ? 1ul : 0ul;
-            const size_t sz = size_ + off;
-            const path_t path = paths[i];
-            storage_t& storage = storages[i];
-            threads[i] = std::thread([&storage, path, sz, os, &success](){
-                success = success && binary_t::load(path, storage, sz, os);
-            });
-        }
-        for (std::size_t i = 0 ; i < map_t::bin_count ; ++i)
-            if (threads[i].joinable())
-                threads[i].join();
+        index_t offset;
+        for (std::size_t i=0; i<Dim; ++i)
+            offset[i] = cslibs_math::common::div<int>(min_index_[i], 2);
+        return binary_t::load(path, storage, size_ + off, offset);
     }
 
     inline void allocateBundles(const std::shared_ptr<bundle_storage_t>& bundles,
@@ -82,7 +63,7 @@ struct loader<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_b
 
         auto allocate_bundle = [&storages, &bundles](const index_t &bi) {
             typename map_t::distribution_bundle_t b;
-            static const typename map_t::index_list_t indices =
+            const typename map_t::index_list_t indices =
                     utility::generate_indices<typename map_t::index_list_t,Dim>(bi);
             for (std::size_t i = 0 ; i < map_t::bin_count ; ++i)
                 b[i] = storages[i]->get(indices[i]);
@@ -137,26 +118,7 @@ struct loader<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_
 
     inline bool load(const std::size_t i, const path_t path, storage_t &storage) const
     {
-        std::cout << path << std::endl;
         return binary_t::load(path, storage);
-    }
-
-    inline void load(const paths_t &paths, storages_t &storages, std::atomic_bool& success) const
-    {
-        std::array<std::thread, map_t::bin_count> threads;
-        for (std::size_t i = 0 ; i < map_t::bin_count ; ++i) {
-            const path_t path = paths[i];
-            storage_t& storage = storages[i];
-            threads[i] = std::thread([&storage, path, &success](){
-                std::cout << "start" << std::endl;
-                success = success && binary_t::load(path, storage);
-                std::cout << "fin" << std::endl;
-            });
-        }
-        std::cout << "joining..." << std::endl;
-        for (std::size_t i = 0 ; i < map_t::bin_count ; ++i)
-            if (threads[i].joinable())
-                threads[i].join();
     }
 
     inline void allocateBundles(const std::shared_ptr<bundle_storage_t>& bundles,
@@ -164,7 +126,7 @@ struct loader<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_
     {
         auto allocate_bundle = [&storages, &bundles](const index_t &bi) {
             typename map_t::distribution_bundle_t b;
-            static const typename map_t::index_list_t indices =
+            const typename map_t::index_list_t indices =
                     utility::generate_indices<typename map_t::index_list_t,Dim>(bi);
             for (std::size_t i = 0 ; i < map_t::bin_count ; ++i)
                 b[i] = storages[i]->get(indices[i]);
@@ -183,7 +145,6 @@ struct loader<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_
                             max_index_,
                             bundles,
                             storages));
-        std::cout << "Size: " << map->getByteSize() << std::endl;
     }
 
     const pose_t pose_;

@@ -37,20 +37,19 @@ inline typename cslibs_ndt_3d::static_maps::Gridmap<T>::Ptr from(
         return nullptr;
 
     using index_t = std::array<int, 3>;
-    const index_t min_distribution_index =
-            cslibs_math::common::cast<int>(std::floor(cslibs_math::common::cast<T>(src->getMinBundleIndex()) / 2.0) * 2.0);
-    const index_t max_distribution_index =
+    const index_t min_bundle_index =
+                cslibs_math::common::cast<int>(std::floor(cslibs_math::common::cast<T>(src->getMinBundleIndex()) / 2.0) * 2.0);
+    const index_t max_bundle_index =
             cslibs_math::common::cast<int>( std::ceil(cslibs_math::common::cast<T>(src->getMaxBundleIndex()) / 2.0) * 2.0 + 1.0);
-
     const std::array<std::size_t, 3> size =
-            cslibs_math::common::cast<std::size_t>(std::ceil(cslibs_math::common::cast<T>(max_distribution_index - min_distribution_index) / 2.0));
+            cslibs_math::common::cast<std::size_t>(std::ceil(cslibs_math::common::cast<T>(max_bundle_index - min_bundle_index) / 2.0));
 
     using src_map_t = cslibs_ndt_3d::dynamic_maps::Gridmap<T>;
     using dst_map_t = cslibs_ndt_3d::static_maps::Gridmap<T>;
     typename dst_map_t::Ptr dst(new dst_map_t(src->getInitialOrigin(),
                                               src->getResolution(),
                                               size,
-                                              min_distribution_index));
+                                              min_bundle_index));
 
     src->traverse([&dst](const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         if (const typename dst_map_t::distribution_bundle_t* b_dst = dst->getDistributionBundle(bi)) {

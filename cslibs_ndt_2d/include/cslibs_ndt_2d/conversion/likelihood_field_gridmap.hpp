@@ -53,9 +53,11 @@ inline void from(
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
-                const cslibs_math_2d::Point2<T> p(bi[0] * bundle_resolution + k * sampling_resolution,
-                                                   bi[1] * bundle_resolution + l * sampling_resolution);
-                dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
+                const cslibs_math_2d::Point2<T> p(static_cast<T>(bi[0]) * bundle_resolution + static_cast<T>(k) * sampling_resolution,
+                                                  static_cast<T>(bi[1]) * bundle_resolution + static_cast<T>(l) * sampling_resolution);
+                const std::size_t u = (bi[0] - min_bi[0]) * chunk_step + k;
+                const std::size_t v = (bi[1] - min_bi[1]) * chunk_step + l;
+                dst->at(u,v) = sample(p, b);
             }
         }
     });
@@ -121,9 +123,11 @@ inline void from(
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
-                const cslibs_math_2d::Point2<T> p(bi[0] * bundle_resolution + k * sampling_resolution,
-                                                   bi[1] * bundle_resolution + l * sampling_resolution);
-                dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
+                const cslibs_math_2d::Point2<T> p(static_cast<T>(bi[0]) * bundle_resolution + static_cast<T>(k) * sampling_resolution,
+                                                  static_cast<T>(bi[1]) * bundle_resolution + static_cast<T>(l) * sampling_resolution);
+                const std::size_t u = (bi[0] - min_bi[0]) * chunk_step + k;
+                const std::size_t v = (bi[1] - min_bi[1]) * chunk_step + l;
+                dst->at(u,v) = sample(p, b);
             }
         }
     });

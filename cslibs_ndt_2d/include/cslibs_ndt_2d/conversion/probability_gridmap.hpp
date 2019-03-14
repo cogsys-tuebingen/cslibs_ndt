@@ -16,8 +16,8 @@ namespace conversion {
 template <typename T>
 inline T validate(const T& val)
 {
-    if (val < 0.0 || val > 1.0 || !std::isnormal(val))
-        return 0.0;
+    if (val < T() || val > cslibs_math::utility::traits<T>::One || !std::isnormal(val))
+        return T();
     return val;
 }
 
@@ -58,9 +58,11 @@ inline void from(
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
-                const cslibs_math_2d::Point2<T> p(bi[0] * bundle_resolution + k * sampling_resolution,
-                                                   bi[1] * bundle_resolution + l * sampling_resolution);
-                dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
+                const cslibs_math_2d::Point2<T> p(static_cast<T>(bi[0]) * bundle_resolution + static_cast<T>(k) * sampling_resolution,
+                                                  static_cast<T>(bi[1]) * bundle_resolution + static_cast<T>(l) * sampling_resolution);
+                const std::size_t u = (bi[0] - min_bi[0]) * chunk_step + k;
+                const std::size_t v = (bi[1] - min_bi[1]) * chunk_step + l;
+                dst->at(u,v) = sample(p, b);
             }
         }
     });
@@ -94,7 +96,7 @@ inline void from(
     for(std::size_t i = 0 ; i < height ; ++i) {
         for(std::size_t j = 0 ; j < width ; ++j) {
             const cslibs_math_2d::Point2<T> p(j * sampling_resolution,
-                                               i * sampling_resolution);
+                                              i * sampling_resolution);
 
             const typename src_map_t::index_t idx = {{min_index[0] + static_cast<int>(p(0) / src->getResolution()),
                                                       min_index[1] + static_cast<int>(p(1) / src->getResolution())}};
@@ -154,9 +156,11 @@ inline void from(
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
-                const cslibs_math_2d::Point2<T> p(bi[0] * bundle_resolution + k * sampling_resolution,
-                                                   bi[1] * bundle_resolution + l * sampling_resolution);
-                dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
+                const cslibs_math_2d::Point2<T> p(static_cast<T>(bi[0]) * bundle_resolution + static_cast<T>(k) * sampling_resolution,
+                                                  static_cast<T>(bi[1]) * bundle_resolution + static_cast<T>(l) * sampling_resolution);
+                const std::size_t u = (bi[0] - min_bi[0]) * chunk_step + k;
+                const std::size_t v = (bi[1] - min_bi[1]) * chunk_step + l;
+                dst->at(u,v) = sample(p, b);
             }
         }
     });
@@ -208,9 +212,11 @@ inline void from(
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
-                const cslibs_math_2d::Point2<T> p(bi[0] * bundle_resolution + k * sampling_resolution,
-                                                   bi[1] * bundle_resolution + l * sampling_resolution);
-                dst->at((bi[0] - min_bi[0]) * chunk_step + k, (bi[1] - min_bi[1]) * chunk_step + l) = sample(p, b);
+                const cslibs_math_2d::Point2<T> p(static_cast<T>(bi[0]) * bundle_resolution + static_cast<T>(k) * sampling_resolution,
+                                                  static_cast<T>(bi[1]) * bundle_resolution + static_cast<T>(l) * sampling_resolution);
+                const std::size_t u = (bi[0] - min_bi[0]) * chunk_step + k;
+                const std::size_t v = (bi[1] - min_bi[1]) * chunk_step + l;
+                dst->at(u,v) = sample(p, b);
             }
         }
     });

@@ -102,13 +102,13 @@ public:
         const index_t start_bi = toBundleIndex(origin.translation());
         auto occupancy = [this, &ivm](const index_t &bi) {
             distribution_bundle_t *bundle = this->getAllocate(bi);
-            T retval = 0.0;
+            T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)
                 retval += this->div_count * bundle->at(i)->getOccupancy(ivm);
             return retval;
         };
         auto current_visibility = [this, &start_bi, &ivm_visibility, &occupancy](const index_t &bi) {
-            T occlusion_prob = 1.0;
+            T occlusion_prob = cslibs_math::utility::traits<T>::One;
             auto generate_occlusion_index = [&bi,&start_bi](const std::size_t& counter) {
                 index_t retval = bi;
                 retval[counter] += ((bi[counter] > start_bi[counter]) ? -1 : 1);
@@ -121,7 +121,7 @@ public:
                     occlusion_prob = std::min(occlusion_prob, occupancy(test_index));
             }
             return ivm_visibility->getProbFree() * occlusion_prob +
-                   ivm_visibility->getProbOccupied() * (1.0 - occlusion_prob);
+                   ivm_visibility->getProbOccupied() * (cslibs_math::utility::traits<T>::One - occlusion_prob);
         };
 
         dynamic_distribution_storage_t storage;
@@ -143,7 +143,7 @@ public:
             line_iterator_t it(start_p, end_p, this->bundle_resolution_);
 
             const T ww = d.weightOccupied();
-            T visibility = 1.0;
+            T visibility = cslibs_math::utility::traits<T>::One;
             while (!it.done()) {
                 const index_t bit = it();
                 if ((visibility *= current_visibility(bit)) < ivm_visibility->getProbPrior())
@@ -180,7 +180,7 @@ public:
         auto occupied = [this, &ivm, &occupied_threshold](const index_t &bi) {
             distribution_bundle_t *bundle = this->bundle_storage_->get(bi);
             auto occupancy = [this, &bundle, &ivm]() {
-                T retval = 0.0;
+                T retval = T();
                 for (std::size_t i=0; i<this->bin_count; ++i)
                     retval += this->div_count * bundle->at(i)->getOccupancy(ivm);
                 return retval;
@@ -224,17 +224,17 @@ public:
             auto do_sample = [&p, &ivm, &d]() {
                 const auto &handle = d;
                 return handle->getDistribution() ?
-                            handle->getDistribution()->sample(p) * handle->getOccupancy(ivm) : 0.0;
+                            handle->getDistribution()->sample(p) * handle->getOccupancy(ivm) : T();
             };
-            return d ? do_sample() : 0.0;
+            return d ? do_sample() : T();
         };
         auto evaluate = [this, &p, &bundle, &sample]() {
-            T retval = 0.0;
+            T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)
                 retval += this->div_count * sample(bundle->at(i));
             return retval;
         };
-        return bundle ? evaluate() : 0.0;
+        return bundle ? evaluate() : T();
     }
 
     inline T sampleNonNormalized(const point_t &p,
@@ -256,17 +256,17 @@ public:
             auto do_sample = [&p, &ivm, &d]() {
                 const auto &handle = d;
                 return handle->getDistribution() ?
-                            handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(ivm) : 0.0;
+                            handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(ivm) : T();
             };
-            return d ? do_sample() : 0.0;
+            return d ? do_sample() : T();
         };
         auto evaluate = [this, &p, &bundle, &sample]() {
-            T retval = 0.0;
+            T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)
                 retval += this->div_count * sample(bundle->at(i));
             return retval;
         };
-        return bundle ? evaluate() : 0.0;
+        return bundle ? evaluate() : T();
     }
 
 protected:
@@ -293,7 +293,7 @@ protected:
 
     inline void updateOccupied(const index_t &bi,
                                const point_t &p,
-                               const T       &w = 1.0) const
+                               const T       &w = cslibs_math::utility::traits<T>::One) const
     {
         distribution_bundle_t *bundle = this->getAllocate(bi);
         for (std::size_t i=0; i<Dim; ++i)

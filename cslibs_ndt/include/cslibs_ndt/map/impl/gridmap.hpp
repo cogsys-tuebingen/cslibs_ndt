@@ -68,8 +68,9 @@ public:
 
         storage.traverse([this](const index_t& bi, const distribution_t &d) {
             distribution_bundle_t *bundle = this->getAllocate(bi);
+            const typename distribution_t::distribution_t &dist = d.data();
             for (std::size_t i=0; i<this->bin_count; ++i)
-                bundle->at(i)->data() += d.data();
+                bundle->at(i)->data() += dist;
         });
     }
 
@@ -82,16 +83,16 @@ public:
                     const index_t &bi) const
     {
         if (!this->valid(bi))
-            return 0.0;
+            return T();
 
         distribution_bundle_t *bundle  = this->bundle_storage_->get(bi);
         auto evaluate = [this, &p, &bundle]() {
-            T retval = 0.0;
+            T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)
                 retval += this->div_count * bundle->at(i)->data().sample(p);
             return retval;
         };
-        return bundle ? evaluate() : 0.0;
+        return bundle ? evaluate() : T();
     }
 
     inline T sampleNonNormalized(const point_t &p) const
@@ -103,16 +104,16 @@ public:
                                  const index_t &bi) const
     {
         if (!valid(bi))
-            return 0.0;
+            return T();
 
         distribution_bundle_t *bundle = this->bundle_storage_->get(bi);
         auto evaluate = [this, &p, &bundle]() {
-            T retval = 0.0;
+            T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)
                 retval += this->div_count * bundle->at(i)->data().sampleNonNormalized(p);
             return retval;
         };
-        return bundle ? evaluate() : 0.0;
+        return bundle ? evaluate() : T();
     }
 
 protected:

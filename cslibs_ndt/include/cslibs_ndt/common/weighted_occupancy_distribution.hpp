@@ -64,14 +64,14 @@ public:
         return *this;
     }
 
-    inline void updateFree(const std::size_t& num_free = 1.0, const T& weight_free = 1.0)
+    inline void updateFree(const std::size_t& num_free = 1, const T& weight_free = 1.0)
     {
         num_free_     += num_free;
         weight_free_  += weight_free;
         inverse_model_ = nullptr;
     }
 
-    inline void updateOccupied(const point_t& p, const T& w = 1.0)
+    inline void updateOccupied(const point_t& p, const T& w = cslibs_math::utility::traits<T>::One)
     {
         if (!distribution_)
             distribution_.reset(new distribution_t());
@@ -88,7 +88,7 @@ public:
         if (!distribution_)
             distribution_.reset(new distribution_t());
 
-        *distribution_ += *d;
+        distribution_->add(*d);
         inverse_model_ = nullptr;
     }
 
@@ -104,7 +104,7 @@ public:
 
     inline T weightOccupied() const
     {
-        return distribution_ ? distribution_->getWeight() : 0.0;
+        return distribution_ ? distribution_->getWeight() : T();
     }
 
     inline T getOccupancy(const typename ivm_t::Ptr &inverse_model) const

@@ -11,7 +11,7 @@ namespace conversion {
 template <typename T>
 inline Distribution from(const cslibs_math::statistics::Distribution<T, 3, 3> &d,
                          const int &id,
-                         const double &prob)
+                         const T &prob)
 {
     Distribution distr;
     distr.id.data = id;

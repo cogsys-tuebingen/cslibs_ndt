@@ -16,9 +16,9 @@ template <typename T>
 inline void from(
         const typename cslibs_ndt_2d::dynamic_maps::Gridmap<T>::Ptr &src,
         typename cslibs_gridmaps::static_maps::DistanceGridmap<T,T>::Ptr &dst,
-        const double &sampling_resolution,
-        const double &maximum_distance = 2.0,
-        const double &threshold        = 0.169)
+        const T &sampling_resolution,
+        const T &maximum_distance = 2.0,
+        const T &threshold        = 0.169)
 {
     if (!src)
         return;
@@ -32,7 +32,7 @@ inline void from(
                             std::ceil(src->getWidth()  / sampling_resolution)));
     std::fill(dst->getData().begin(), dst->getData().end(), 0);
 
-    const double bundle_resolution = src->getBundleResolution();
+    const T bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
     auto sample = [](const cslibs_math_2d::Point2<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
@@ -56,7 +56,7 @@ inline void from(
         }
     });
 
-    std::vector<double> occ = dst->getData();
+    std::vector<T> occ = dst->getData();
     cslibs_gridmaps::static_maps::algorithms::DistanceTransform<T,T,T> distance_transform(
                 sampling_resolution, maximum_distance, threshold);
     distance_transform.apply(occ, dst->getWidth(), dst->getData());

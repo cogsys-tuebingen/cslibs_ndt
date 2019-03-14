@@ -107,7 +107,7 @@ inline void from(
         ndt_t &src,
         sensor_msgs::PointCloud2 &dst,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
-        const double &threshold = 0.169)
+        const T &threshold = 0.169)
 {
     src.allocatePartiallyAllocatedBundles();
 

@@ -78,7 +78,7 @@ inline void from(
                             std::ceil(src->getWidth()  / sampling_resolution)));
     std::fill(dst->getData().begin(), dst->getData().end(), 0);
 
-    const double bundle_resolution = src->getBundleResolution();
+    const T bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
     auto sample = [&inverse_model](const cslibs_math_2d::Point2<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {

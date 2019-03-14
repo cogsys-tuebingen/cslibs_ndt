@@ -88,7 +88,7 @@ public:
         if (!distribution_)
             distribution_.reset(new distribution_t());
 
-        distribution_->add(*d);
+        *distribution_ += *d;
         inverse_model_ = nullptr;
     }
 

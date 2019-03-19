@@ -103,7 +103,7 @@ public:
     inline T sampleNonNormalized(const point_t &p,
                                  const index_t &bi) const
     {
-        if (!valid(bi))
+        if (!this->valid(bi))
             return T();
 
         distribution_bundle_t *bundle = this->bundle_storage_->get(bi);

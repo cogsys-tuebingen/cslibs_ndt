@@ -218,6 +218,9 @@ public:
         if (!ivm)
             throw std::runtime_error("[WeightedOccupancyGridmap]: inverse model not set");
 
+        if (!this->valid(bi))
+            return T();
+
         distribution_bundle_t *bundle = this->bundle_storage_->get(bi);
 
         auto sample = [&p, &ivm] (const distribution_t *d) {
@@ -249,6 +252,9 @@ public:
     {
         if (!ivm)
             throw std::runtime_error("[WeightedOccupancyGridmap]: inverse model not set");
+
+        if (!this->valid(bi))
+            return T();
 
         distribution_bundle_t *bundle = this->bundle_storage_->get(bi);
 

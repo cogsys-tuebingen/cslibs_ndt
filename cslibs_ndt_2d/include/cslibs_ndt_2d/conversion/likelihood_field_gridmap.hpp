@@ -26,7 +26,7 @@ inline void from(
 
     assert(threshold <= 1.0);
     assert(threshold >= 0.0);
-    const T exp_factor_hit = (0.5 * 1.0 / (sigma_hit * sigma_hit));
+    const T exp_factor_hit = (cslibs_math::utility::traits<T>::Half / (sigma_hit * sigma_hit));
 
     using src_map_t = cslibs_ndt_2d::dynamic_maps::Gridmap<T>;
     using dst_map_t = cslibs_gridmaps::static_maps::LikelihoodFieldGridmap<T,T>;
@@ -34,16 +34,16 @@ inline void from(
                             sampling_resolution,
                             std::ceil(src->getHeight() / sampling_resolution),
                             std::ceil(src->getWidth()  / sampling_resolution)));
-    std::fill(dst->getData().begin(), dst->getData().end(), 0);
+    std::fill(dst->getData().begin(), dst->getData().end(), T());
 
     const T bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
     auto sample = [](const cslibs_math_2d::Point2<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
-        return 0.25 * (bundle.at(0)->data().sampleNonNormalized(p) +
-                       bundle.at(1)->data().sampleNonNormalized(p) +
-                       bundle.at(2)->data().sampleNonNormalized(p) +
-                       bundle.at(3)->data().sampleNonNormalized(p));
+        return src_map_t::div_count * (bundle.at(0)->data().sampleNonNormalized(p) +
+                                       bundle.at(1)->data().sampleNonNormalized(p) +
+                                       bundle.at(2)->data().sampleNonNormalized(p) +
+                                       bundle.at(3)->data().sampleNonNormalized(p));
     };
 
     using index_t = std::array<int, 2>;
@@ -88,7 +88,7 @@ inline void from(
 
     assert(threshold <= 1.0);
     assert(threshold >= 0.0);
-    const T exp_factor_hit = (0.5 * 1.0 / (sigma_hit * sigma_hit));
+    const T exp_factor_hit = (cslibs_math::utility::traits<T>::Half / (sigma_hit * sigma_hit));
 
     using src_map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<T>;
     using dst_map_t = cslibs_gridmaps::static_maps::LikelihoodFieldGridmap<T>;
@@ -96,7 +96,7 @@ inline void from(
                             sampling_resolution,
                             std::ceil(src->getHeight() / sampling_resolution),
                             std::ceil(src->getWidth()  / sampling_resolution)));
-    std::fill(dst->getData().begin(), dst->getData().end(), 0);
+    std::fill(dst->getData().begin(), dst->getData().end(), T());
 
     const T bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
@@ -106,14 +106,14 @@ inline void from(
             auto do_sample = [&p, &inverse_model, &d]() {
                 const auto &handle = d;
                 return handle->getDistribution() ?
-                            handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(inverse_model) : 0.0;
+                            handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(inverse_model) : T();
             };
-            return d ? do_sample() : 0.0;
+            return d ? do_sample() : T();
         };
-        return 0.25 * (sample(bundle.at(0)) +
-                       sample(bundle.at(1)) +
-                       sample(bundle.at(2)) +
-                       sample(bundle.at(3)));
+        return src_map_t::div_count * (sample(bundle.at(0)) +
+                                       sample(bundle.at(1)) +
+                                       sample(bundle.at(2)) +
+                                       sample(bundle.at(3)));
     };
 
     using index_t = std::array<int, 2>;

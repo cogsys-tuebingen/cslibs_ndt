@@ -16,7 +16,7 @@ namespace conversion {
 template <typename T>
 inline T validate(const T& val)
 {
-    if (val < T() || val > cslibs_math::utility::traits<T>::One || !std::isnormal(val))
+    if (val < 0 || val > cslibs_math::utility::traits<T>::One || !std::isnormal(val))
         return T();
     return val;
 }
@@ -39,22 +39,22 @@ inline void from(
                             sampling_resolution,
                             std::ceil(src->getHeight() / sampling_resolution),
                             std::ceil(src->getWidth()  / sampling_resolution)));
-    std::fill(dst->getData().begin(), dst->getData().end(), 0);
+    std::fill(dst->getData().begin(), dst->getData().end(), T());
 
     const T bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
     auto sample = [](const cslibs_math_2d::Point2<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
-        return 0.25 * (validate(bundle.at(0)->data().sampleNonNormalized(p)) +
-                       validate(bundle.at(1)->data().sampleNonNormalized(p)) +
-                       validate(bundle.at(2)->data().sampleNonNormalized(p)) +
-                       validate(bundle.at(3)->data().sampleNonNormalized(p)));
+        return src_map_t::div_count * (validate(bundle.at(0)->data().sampleNonNormalized(p)) +
+                                       validate(bundle.at(1)->data().sampleNonNormalized(p)) +
+                                       validate(bundle.at(2)->data().sampleNonNormalized(p)) +
+                                       validate(bundle.at(3)->data().sampleNonNormalized(p)));
     };
 
     using index_t = std::array<int, 2>;
     const index_t min_bi = src->getMinBundleIndex();
 
-    src->traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
+    src->traverse([&src, &dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -83,7 +83,7 @@ inline void from(
                             sampling_resolution,
                             std::ceil(src->getHeight() / sampling_resolution),
                             std::ceil(src->getWidth()  / sampling_resolution)));
-    std::fill(dst->getData().begin(), dst->getData().end(), 0);
+    std::fill(dst->getData().begin(), dst->getData().end(), T());
 
     const std::size_t height = dst->getHeight();
     const std::size_t width  = dst->getWidth();
@@ -102,7 +102,7 @@ inline void from(
                                                       min_index[1] + static_cast<int>(p(1) / src->getResolution())}};
 
             const T v = validate(src->sampleNonNormalized(src->getOrigin() * p,idx));
-            if(v >= 0.0) {
+            if (v >= 0.0) {
                 dst->at(j,i) = v;
             }
         }
@@ -129,7 +129,7 @@ inline void from(
                             sampling_resolution,
                             std::ceil(src->getHeight() / sampling_resolution),
                             std::ceil(src->getWidth()  / sampling_resolution)));
-    std::fill(dst->getData().begin(), dst->getData().end(), 0);
+    std::fill(dst->getData().begin(), dst->getData().end(), T());
 
     const T bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
@@ -139,14 +139,14 @@ inline void from(
             auto do_sample = [&p, &inverse_model, &d]() {
                 return (d->getDistribution() && d->getDistribution()->valid()) ?
                             validate(d->getDistribution()->sampleNonNormalized(p)) *
-                            validate(d->getOccupancy(inverse_model)) : 0.0;
+                            validate(d->getOccupancy(inverse_model)) : T();
             };
-            return d ? do_sample() : 0.0;
+            return d ? do_sample() : T();
         };
-        return 0.25 * (sample(bundle.at(0)) +
-                       sample(bundle.at(1)) +
-                       sample(bundle.at(2)) +
-                       sample(bundle.at(3)));
+        return src_map_t::div_count * (sample(bundle.at(0)) +
+                                       sample(bundle.at(1)) +
+                                       sample(bundle.at(2)) +
+                                       sample(bundle.at(3)));
     };
 
     using index_t = std::array<int, 2>;
@@ -185,7 +185,7 @@ inline void from(
                             sampling_resolution,
                             std::ceil(src->getHeight() / sampling_resolution),
                             std::ceil(src->getWidth()  / sampling_resolution)));
-    std::fill(dst->getData().begin(), dst->getData().end(), 0);
+    std::fill(dst->getData().begin(), dst->getData().end(), T());
 
     const T bundle_resolution = src->getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
@@ -195,14 +195,14 @@ inline void from(
             auto do_sample = [&p, &inverse_model, &d]() {
                 return (d->getDistribution() && d->getDistribution()->valid()) ?
                             validate(d->getDistribution()->sampleNonNormalized(p)) *
-                            validate(d->getOccupancy(inverse_model)) : 0.0;
+                            validate(d->getOccupancy(inverse_model)) : T();
             };
-            return d ? do_sample() : 0.0;
+            return d ? do_sample() : T();
         };
-        return 0.25 * (sample(bundle.at(0)) +
-                       sample(bundle.at(1)) +
-                       sample(bundle.at(2)) +
-                       sample(bundle.at(3)));
+        return src_map_t::div_count * (sample(bundle.at(0)) +
+                                       sample(bundle.at(1)) +
+                                       sample(bundle.at(2)) +
+                                       sample(bundle.at(3)));
     };
 
     using index_t = std::array<int, 2>;

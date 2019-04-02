@@ -284,7 +284,7 @@ protected:
     inline void updateFree(const index_t &bi) const
     {
         distribution_bundle_t *bundle = this->getAllocate(bi);
-        for (std::size_t i=0; i<Dim; ++i)
+        for (std::size_t i=0; i<this->bin_count; ++i)
             bundle->at(i)->updateFree();
     }
 
@@ -293,7 +293,7 @@ protected:
                            const T           &w) const
     {
         distribution_bundle_t *bundle = this->getAllocate(bi);
-        for (std::size_t i=0; i<Dim; ++i)
+        for (std::size_t i=0; i<this->bin_count; ++i)
             bundle->at(i)->updateFree(n, w);
     }
 
@@ -302,7 +302,7 @@ protected:
                                const T       &w = cslibs_math::utility::traits<T>::One) const
     {
         distribution_bundle_t *bundle = this->getAllocate(bi);
-        for (std::size_t i=0; i<Dim; ++i)
+        for (std::size_t i=0; i<this->bin_count; ++i)
             bundle->at(i)->updateOccupied(p, w);
     }
 
@@ -310,7 +310,7 @@ protected:
                                const typename distribution_t::distribution_ptr_t &d) const
     {
         distribution_bundle_t *bundle = this->getAllocate(bi);
-        for (std::size_t i=0; i<Dim; ++i)
+        for (std::size_t i=0; i<this->bin_count; ++i)
             bundle->at(i)->updateOccupied(d);
     }
 };

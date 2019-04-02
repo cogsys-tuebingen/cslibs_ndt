@@ -286,7 +286,7 @@ protected:
     inline void updateFree(const index_t &bi) const
     {
         distribution_bundle_t *bundle = this->getAllocate(bi);
-        for (std::size_t i=0; i<Dim; ++i)
+        for (std::size_t i=0; i<this->bin_count; ++i)
             bundle->at(i)->updateFree();
     }
 
@@ -294,7 +294,7 @@ protected:
                            const std::size_t &n) const
     {
         distribution_bundle_t *bundle = this->getAllocate(bi);
-        for (std::size_t i=0; i<Dim; ++i)
+        for (std::size_t i=0; i<this->bin_count; ++i)
             bundle->at(i)->updateFree(n);
     }
 
@@ -302,7 +302,7 @@ protected:
                                const point_t &p) const
     {
         distribution_bundle_t *bundle = this->getAllocate(bi);
-        for (std::size_t i=0; i<Dim; ++i)
+        for (std::size_t i=0; i<this->bin_count; ++i)
             bundle->at(i)->updateOccupied(p);
     }
 
@@ -310,7 +310,7 @@ protected:
                                const typename distribution_t::distribution_ptr_t &d) const
     {
         distribution_bundle_t *bundle = this->getAllocate(bi);
-        for (std::size_t i=0; i<Dim; ++i)
+        for (std::size_t i=0; i<this->bin_count; ++i)
             bundle->at(i)->updateOccupied(d);
     }
 };

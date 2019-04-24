@@ -63,9 +63,17 @@ public:
     inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::ConstPtr &points,
                        const pose_t &points_origin = pose_t())
     {
+        return insert(points->begin(), points->end(), points_origin);
+    }
+
+    template <typename line_iterator_t = default_iterator_t, typename iterator_t>
+    inline void insert(const iterator_t& points_begin,
+                       const iterator_t& points_end,
+                       const pose_t &points_origin = pose_t())
+    {
         dynamic_distribution_storage_t storage;
-        for (const auto &p : *points) {
-            const point_t pm = points_origin * p;
+        for (auto p = points_begin; p != points_end; ++p) {
+            const point_t pm = points_origin * *p;
             if (pm.isNormal()) {
                 const index_t &bi = this->toBundleIndex(pm);
                 distribution_t *d = storage.get(bi);
@@ -89,17 +97,27 @@ public:
     }
 
     template <typename line_iterator_t = default_iterator_t>
-    inline void insertVisible(const pose_t &origin,
-                              const typename cslibs_math::linear::Pointcloud<point_t>::ConstPtr &points,
+    inline void insertVisible(const typename cslibs_math::linear::Pointcloud<point_t>::ConstPtr &points,
+                              const pose_t &points_origin,
+                              const typename inverse_sensor_model_t::Ptr &ivm,
+                              const typename inverse_sensor_model_t::Ptr &ivm_visibility)
+    {
+        return insertVisible<line_iterator_t>(points->begin(), points->end(), points_origin, ivm, ivm_visibility);
+    }
+
+    template <typename line_iterator_t = default_iterator_t, typename iterator_t>
+    inline void insertVisible(const iterator_t &points_begin,
+                              const iterator_t &points_end,
+                              const pose_t &points_origin,
                               const typename inverse_sensor_model_t::Ptr &ivm,
                               const typename inverse_sensor_model_t::Ptr &ivm_visibility)
     {
         if (!ivm || !ivm_visibility) {
             std::cout << "[WeightedOccupancyGridmap2D]: Cannot evaluate visibility, using model-free update rule instead!" << std::endl;
-            return insert(points, origin);
+            return insert(points_begin, points_end, points_origin);
         }
 
-        const index_t start_bi = toBundleIndex(origin.translation());
+        const index_t start_bi = this->toBundleIndex(points_origin.translation());
         auto occupancy = [this, &ivm](const index_t &bi) {
             distribution_bundle_t *bundle = this->getAllocate(bi);
             T retval = T();
@@ -125,8 +143,8 @@ public:
         };
 
         dynamic_distribution_storage_t storage;
-        for (const auto &p : *points) {
-            const point_t pm = origin * p;
+        for (auto p = points_begin; p != points_end; ++p) {
+            const point_t pm = points_origin * *p;
             if (pm.isNormal()) {
                 const index_t &bi = this->toBundleIndex(pm);
                 distribution_t *d = storage.get(bi);
@@ -134,7 +152,7 @@ public:
             }
         }
 
-        const point_t start_p = this->m_T_w_ * origin.translation();
+        const point_t start_p = this->m_T_w_ * points_origin.translation();
         storage.traverse([this, &ivm_visibility, &start_p, &current_visibility](const index_t& bi, const distribution_t &d) {
             if (!d.getDistribution())
                 return;

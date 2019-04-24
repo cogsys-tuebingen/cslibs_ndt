@@ -56,9 +56,17 @@ public:
     inline void insert(const typename pointcloud_t::ConstPtr &points,
                        const pose_t &points_origin = pose_t())
     {
+        return insert(points->begin(), points->end(), points_origin);
+    }
+
+    template<typename iterator_t>
+    inline void insert(const iterator_t &points_begin,
+                       const iterator_t &points_end,
+                       const pose_t &points_origin = pose_t())
+    {
         dynamic_distribution_storage_t storage;
-        for (const auto &p : *points) {
-            const point_t pm = points_origin * p;
+        for (auto p = points_begin; p != points_end; ++p) {
+            const point_t pm = points_origin * *p;
             if (pm.isNormal()) {
                 const index_t &bi = this->toBundleIndex(pm);
                 distribution_t *d = storage.get(bi);

@@ -33,7 +33,8 @@ inline void rgbFrom(
         sensor_msgs::PointCloud2 &dst,
         const T sampling_resolution,
         const T& threshold = 0.196,
-        const bool& allocate_all = false)
+        const bool& allocate_all = false,
+        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
     if (allocate_all)
         src.allocatePartiallyAllocatedBundles();
@@ -62,7 +63,7 @@ inline void rgbFrom(
     const T bundle_resolution = src.getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
-    auto process_bundle = [&src, &cloud, &sample_bundle, &chunk_step, &bundle_resolution, &sampling_resolution, &threshold](
+    auto process_bundle = [&src, &cloud, &transform, &sample_bundle, &chunk_step, &bundle_resolution, &sampling_resolution, &threshold](
             const index_t &bi, const distribution_bundle_t &b) {
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -71,7 +72,7 @@ inline void rgbFrom(
                                                       static_cast<T>(bi[1]) * bundle_resolution + (static_cast<T>(l)+0.5) * sampling_resolution,
                                                       static_cast<T>(bi[2]) * bundle_resolution + (static_cast<T>(m)+0.5) * sampling_resolution);
                     if (sample_bundle(b, p) >= threshold)
-                        cloud->insert(cslibs_math_3d::PointRGB3<T>(p));
+                        cloud->insert(cslibs_math_3d::PointRGB3<T>(transform * p));
                 }
             }
         }
@@ -90,12 +91,13 @@ inline void rgbFrom(
         sensor_msgs::PointCloud2 &dst,
         const T sampling_resolution,
         const T& threshold = 0.196,
-        const bool& allocate_all = false)
+        const bool& allocate_all = false,
+        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
     if (!src)
         return;
 
-    rgbFrom<T>(*src, dst, sampling_resolution, threshold, allocate_all);
+    rgbFrom<T>(*src, dst, sampling_resolution, threshold, allocate_all, transform);
 }
 
 template<typename T,
@@ -108,7 +110,8 @@ inline void rgbFrom(
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
         const T sampling_resolution,
         const T& threshold = 0.196,
-        const bool& allocate_all = false)
+        const bool& allocate_all = false,
+        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
     if (allocate_all)
         src.allocatePartiallyAllocatedBundles();
@@ -143,7 +146,7 @@ inline void rgbFrom(
     const T bundle_resolution = src.getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
-    auto process_bundle = [&src, &cloud, &sample_bundle, &chunk_step, &bundle_resolution, &sampling_resolution, &threshold](
+    auto process_bundle = [&src, &cloud, &transform, &sample_bundle, &chunk_step, &bundle_resolution, &sampling_resolution, &threshold](
             const index_t &bi, const distribution_bundle_t &b) {
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -152,7 +155,7 @@ inline void rgbFrom(
                                                       static_cast<T>(bi[1]) * bundle_resolution + (static_cast<T>(l)+0.5) * sampling_resolution,
                                                       static_cast<T>(bi[2]) * bundle_resolution + (static_cast<T>(m)+0.5) * sampling_resolution);
                     if (sample_bundle(b, p) >= threshold)
-                        cloud->insert(cslibs_math_3d::PointRGB3<T>(p));
+                        cloud->insert(cslibs_math_3d::PointRGB3<T>(transform * p));
                 }
             }
         }
@@ -172,12 +175,13 @@ inline void rgbFrom(
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
         const T sampling_resolution,
         const T& threshold = 0.196,
-        const bool& allocate_all = false)
+        const bool& allocate_all = false,
+        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
     if (!src)
         return;
 
-    rgbFrom<T>(*src, dst, ivm, sampling_resolution, threshold, allocate_all);
+    rgbFrom<T>(*src, dst, ivm, sampling_resolution, threshold, allocate_all, transform);
 }
 
 }

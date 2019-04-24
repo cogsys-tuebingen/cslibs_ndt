@@ -46,7 +46,8 @@ template<typename T,
                                             || std::is_same<ndt_t, cslibs_ndt_3d::static_maps::Gridmap<T>>::value>::type>
 inline void from(
         ndt_t &src,
-        sensor_msgs::PointCloud2 &dst)
+        sensor_msgs::PointCloud2 &dst,
+        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
     src.allocatePartiallyAllocatedBundles();
 
@@ -71,7 +72,7 @@ inline void from(
     };
 
     std::vector<float> tmp;
-    auto process_bundle = [&src, &tmp, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
+    auto process_bundle = [&src, &tmp, &transform, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
         cslibs_math::statistics::Distribution<T, 3, 3> d;
         for (std::size_t i = 0 ; i < 8 ; ++i)
             d += b.at(i)->data();
@@ -79,9 +80,10 @@ inline void from(
             return;
 
         cslibs_math_3d::Point3<T> mean(d.getMean());
-        tmp.emplace_back(static_cast<float>(mean(0)));
-        tmp.emplace_back(static_cast<float>(mean(1)));
-        tmp.emplace_back(static_cast<float>(mean(2)));
+        cslibs_math_3d::Point3<T> p = transform * mean;
+        tmp.emplace_back(static_cast<float>(p(0)));
+        tmp.emplace_back(static_cast<float>(p(1)));
+        tmp.emplace_back(static_cast<float>(p(2)));
         tmp.emplace_back(static_cast<float>(sample_bundle(b, mean)));
     };
     src.traverse(process_bundle);
@@ -91,12 +93,13 @@ inline void from(
 template <typename T>
 inline void from(
         const typename cslibs_ndt_3d::dynamic_maps::Gridmap<T>::Ptr &src,
-        sensor_msgs::PointCloud2 &dst)
+        sensor_msgs::PointCloud2 &dst,
+        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
     if (!src)
         return;
 
-    from<T>(*src, dst);
+    from<T>(*src, dst, transform);
 }
 
 template<typename T,
@@ -107,7 +110,8 @@ inline void from(
         ndt_t &src,
         sensor_msgs::PointCloud2 &dst,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
-        const T &threshold = 0.169)
+        const T &threshold = 0.169,
+        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
     src.allocatePartiallyAllocatedBundles();
 
@@ -137,7 +141,7 @@ inline void from(
     };
 
     std::vector<float> tmp;
-    auto process_bundle = [&src, &tmp, &ivm, &threshold, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
+    auto process_bundle = [&src, &tmp, &ivm, &threshold, &transform, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
         cslibs_math::statistics::Distribution<T, 3, 3> d;
         T occupancy = 0.0;
 
@@ -151,9 +155,10 @@ inline void from(
             return;
 
         cslibs_math_3d::Point3<T> mean(d.getMean());
-        tmp.emplace_back(static_cast<float>(mean(0)));
-        tmp.emplace_back(static_cast<float>(mean(1)));
-        tmp.emplace_back(static_cast<float>(mean(2)));
+        cslibs_math_3d::Point3<T> p = transform * mean;
+        tmp.emplace_back(static_cast<float>(p(0)));
+        tmp.emplace_back(static_cast<float>(p(1)));
+        tmp.emplace_back(static_cast<float>(p(2)));
         tmp.emplace_back(static_cast<float>(sample_bundle(b, mean)));
     };
     src.traverse(process_bundle);
@@ -165,12 +170,13 @@ inline void from(
         const typename cslibs_ndt_3d::dynamic_maps::OccupancyGridmap<T>::Ptr &src,
         sensor_msgs::PointCloud2 &dst,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
-        const T &threshold = 0.169)
+        const T &threshold = 0.169,
+        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
     if (!src)
         return;
 
-    from<T>(*src, dst, ivm, threshold);
+    from<T>(*src, dst, ivm, threshold, transform);
 }
 
 }

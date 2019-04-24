@@ -207,6 +207,8 @@ public:
     using typename base_t::distribution_bundle_storage_ptr_t;
     using typename base_t::dynamic_distribution_storage_t;
 
+    using size_m_t = std::array<T,Dim>;
+
     inline GenericMap(const T resolution) :
         GenericMap(pose_t::identity(), resolution)
     {
@@ -263,6 +265,14 @@ public:
     inline const distribution_bundle_t* get(const index_t &bi) const
     {
         return this->bundle_storage_->get(bi);
+    }    
+
+    inline size_m_t getSizeM() const
+    {
+        size_m_t result;
+        for (std::size_t i=0; i<Dim; ++i)
+            result[i] = (this->max_bundle_index_[i] - this->min_bundle_index_[i] + 1) * this->bundle_resolution_;
+        return result;
     }
 
 protected:

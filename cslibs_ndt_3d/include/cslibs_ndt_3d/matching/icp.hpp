@@ -95,7 +95,7 @@ inline static void apply(const cslibs_math_3d::Pointcloud3d::ConstPtr &src,
         transform *= dt;
 
         if(dt.translation().length2() < trans_eps ||
-                sq(q.angle(cslibs_math_3d::Quaternion())) < rot_eps) {
+                sq(q.angle(cslibs_math_3d::Quaterniond())) < rot_eps) {
             r.icpIterations()  = i;
             r.icpTermination() = ICPTermination::DELTA_EPS;
             return;

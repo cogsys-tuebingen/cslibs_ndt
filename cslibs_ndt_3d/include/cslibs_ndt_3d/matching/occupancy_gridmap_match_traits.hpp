@@ -11,8 +11,8 @@ namespace cslibs_ndt {
 namespace matching {
 
 template<typename MapT> struct IsOccupancyGridmap : std::false_type {};
-template<> struct IsOccupancyGridmap<cslibs_ndt_3d::dynamic_maps::OccupancyGridmap> : std::true_type {};
-template<> struct IsOccupancyGridmap<cslibs_ndt_3d::static_maps::OccupancyGridmap> : std::true_type {};
+template<> struct IsOccupancyGridmap<cslibs_ndt_3d::dynamic_maps::OccupancyGridmap<double>> : std::true_type {};
+template<> struct IsOccupancyGridmap<cslibs_ndt_3d::static_maps::OccupancyGridmap<double>> : std::true_type {};
 
 template<typename MapT>
 struct MatchTraits<MapT, typename std::enable_if<IsOccupancyGridmap<MapT>::value>::type>

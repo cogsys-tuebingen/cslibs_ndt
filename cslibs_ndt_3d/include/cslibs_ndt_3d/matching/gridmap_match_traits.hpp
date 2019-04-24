@@ -12,8 +12,8 @@ namespace cslibs_ndt {
 namespace matching {
 
 template<typename MapT> struct IsGridmap : std::false_type {};
-template<> struct IsGridmap<cslibs_ndt_3d::dynamic_maps::Gridmap> : std::true_type {};
-template<> struct IsGridmap<cslibs_ndt_3d::static_maps::Gridmap> : std::true_type {};
+template<> struct IsGridmap<cslibs_ndt_3d::dynamic_maps::Gridmap<double>> : std::true_type {};
+template<> struct IsGridmap<cslibs_ndt_3d::static_maps::Gridmap<double>> : std::true_type {};
 
 template<typename MapT>
 struct MatchTraits<MapT, typename std::enable_if<IsGridmap<MapT>::value>::type>

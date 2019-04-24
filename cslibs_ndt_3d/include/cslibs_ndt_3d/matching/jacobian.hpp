@@ -1,7 +1,7 @@
 #ifndef CSLIBS_NDT_3D_JACOBIAN_HPP
 #define CSLIBS_NDT_3D_JACOBIAN_HPP
 
-#include <Eigen/Eigen>
+#include <eigen3/Eigen/Eigen>
 
 namespace cslibs_ndt_3d {
 namespace matching {

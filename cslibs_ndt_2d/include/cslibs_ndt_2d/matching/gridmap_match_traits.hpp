@@ -2,42 +2,40 @@
 
 #include <cslibs_ndt/matching/match_traits.hpp>
 #include <cslibs_ndt/matching/parameter.hpp>
-#include <cslibs_ndt_3d/static_maps/gridmap.hpp>
-#include <cslibs_ndt_3d/dynamic_maps/gridmap.hpp>
-#include <cslibs_ndt_3d/static_maps/gridmap.hpp>
-#include <cslibs_ndt_3d/matching/jacobian.hpp>
-#include <cslibs_ndt_3d/matching/hessian.hpp>
+#include <cslibs_ndt_2d/static_maps/gridmap.hpp>
+#include <cslibs_ndt_2d/dynamic_maps/gridmap.hpp>
+#include <cslibs_ndt_2d/matching/jacobian.hpp>
+#include <cslibs_ndt_2d/matching/hessian.hpp>
 
 namespace cslibs_ndt {
 namespace matching {
 
-template<typename MapT> struct Is3dGridmap : std::false_type {};
-template<> struct Is3dGridmap<cslibs_ndt_3d::dynamic_maps::Gridmap<double>> : std::true_type {};
-template<> struct Is3dGridmap<cslibs_ndt_3d::static_maps::Gridmap<double>> : std::true_type {};
+template<typename MapT> struct Is2dGridmap : std::false_type {};
+template<> struct Is2dGridmap<cslibs_ndt_2d::dynamic_maps::Gridmap<double>> : std::true_type {};
+template<> struct Is2dGridmap<cslibs_ndt_2d::static_maps::Gridmap<double>> : std::true_type {};
 
 template<typename MapT>
-struct MatchTraits<MapT, typename std::enable_if<Is3dGridmap<MapT>::value>::type>
+struct MatchTraits<MapT, typename std::enable_if<Is2dGridmap<MapT>::value>::type>
 {
-    static constexpr int LINEAR_DIMS  = 3;
-    static constexpr int ANGULAR_DIMS = 3;
-    using Jacobian              = cslibs_ndt_3d::matching::Jacobian;
-    using Hessian               = cslibs_ndt_3d::matching::Hessian;
+    static constexpr int LINEAR_DIMS  = 2;
+    static constexpr int ANGULAR_DIMS = 1;
+    using Jacobian              = cslibs_ndt_2d::matching::Jacobian;
+    using Hessian               = cslibs_ndt_2d::matching::Hessian;
 
-    using gradient_t            = Eigen::Matrix<double, 6, 1>;
-    using hessian_t             = Eigen::Matrix<double, 6, 6>;
+    using gradient_t            = Eigen::Matrix<double, 3, 1>;
+    using hessian_t             = Eigen::Matrix<double, 3, 3>;
+    using angular_t  = Eigen::Matrix<double, 1, 1>;
 
-    using point_t               = cslibs_math_3d::Point3d;
-    using transform_t           = cslibs_math_3d::Transform3d;
+    using point_t               = cslibs_math_2d::Point2d;
+    using transform_t           = cslibs_math_2d::Transform2d;
     using parameter_t           = cslibs_ndt::matching::Parameter;
     using distribution_bundle_t = typename MapT::distribution_bundle_t;
     using index_t               = typename MapT::index_t;
 
-    static transform_t makeTransform(const Eigen::Vector3d& linear,
-                                     const Eigen::Vector3d& angular)
+    static transform_t makeTransform(const Eigen::Vector2d& linear,
+                                     const angular_t& angular)
     {
-        return transform_t{
-            linear.x(), linear.y(), linear.z(),
-                    angular.x(), angular.y(), angular.z()};
+        return transform_t{linear.x(), linear.y(), angular.value()};
     }
 
     static void computeGradient(const MapT& map,
@@ -56,7 +54,7 @@ struct MatchTraits<MapT, typename std::enable_if<Is3dGridmap<MapT>::value>::type
         for (auto* distribution_wrapper : *bundle)
         {
             auto& d = distribution_wrapper->data();
-            if (d.getN() < 4)
+            if (d.getN() < 3)
                 continue;
 
             const auto info   = d.getInformationMatrix();
@@ -120,7 +118,7 @@ struct MatchTraits<MapT, typename std::enable_if<Is3dGridmap<MapT>::value>::type
 
         for(std::size_t i = 0 ; i < size ; ++i) {
             const auto &d = bundle[i]->data();
-            auto* bm = map.getDistributionBundle(cslibs_math_3d::Point3d(d.getMean()));
+            auto* bm = map.getDistributionBundle(cslibs_math_2d::Point2d(d.getMean()));
             if(!bm) {
                 bundle_map[i] = nullptr;
             } else {
@@ -142,7 +140,7 @@ struct MatchTraits<MapT, typename std::enable_if<Is3dGridmap<MapT>::value>::type
                                 hessian_t& h)
     {
         /// I.      : get mean of dstributions
-        Eigen::Vector3d mean = Eigen::Vector3d::Zero();
+        Eigen::Vector2d mean = Eigen::Vector2d::Zero();
         std::size_t     valid = 0;
         for(const auto &dw : bundle) {
             const auto &d = dw->data();
@@ -155,7 +153,7 @@ struct MatchTraits<MapT, typename std::enable_if<Is3dGridmap<MapT>::value>::type
 
         /// II.     : get a bundle from the map
 
-        auto* bundle_map = map.getDistributionBundle(cslibs_math_3d::Point3d(mean));
+        auto* bundle_map = map.getDistributionBundle(cslibs_math_2d::Point2d(mean));
         if (!bundle_map)
             return;
 

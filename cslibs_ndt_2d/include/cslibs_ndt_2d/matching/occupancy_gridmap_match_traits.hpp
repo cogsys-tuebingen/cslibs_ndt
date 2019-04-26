@@ -2,39 +2,38 @@
 
 #include <cslibs_ndt/matching/match_traits.hpp>
 #include <cslibs_ndt/matching/occupancy_parameter.hpp>
-#include <cslibs_ndt_3d/dynamic_maps/occupancy_gridmap.hpp>
-#include <cslibs_ndt_3d/static_maps/occupancy_gridmap.hpp>
-#include <cslibs_ndt_3d/matching/jacobian.hpp>
-#include <cslibs_ndt_3d/matching/hessian.hpp>
+#include <cslibs_ndt_2d/static_maps/occupancy_gridmap.hpp>
+#include <cslibs_ndt_2d/dynamic_maps/occupancy_gridmap.hpp>
+#include <cslibs_ndt_2d/matching/jacobian.hpp>
+#include <cslibs_ndt_2d/matching/hessian.hpp>
 
 namespace cslibs_ndt {
 namespace matching {
 
-template<typename MapT> struct Is3dOccupancyGridmap : std::false_type {};
-template<> struct Is3dOccupancyGridmap<cslibs_ndt_3d::dynamic_maps::OccupancyGridmap<double>> : std::true_type {};
-template<> struct Is3dOccupancyGridmap<cslibs_ndt_3d::static_maps::OccupancyGridmap<double>> : std::true_type {};
+template<typename MapT> struct Is2dOccupancyGridmap : std::false_type {};
+template<> struct Is2dOccupancyGridmap<cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<double>> : std::true_type {};
+template<> struct Is2dOccupancyGridmap<cslibs_ndt_2d::static_maps::OccupancyGridmap<double>> : std::true_type {};
 
 template<typename MapT>
-struct MatchTraits<MapT, typename std::enable_if<Is3dOccupancyGridmap<MapT>::value>::type>
+struct MatchTraits<MapT, typename std::enable_if<Is2dOccupancyGridmap<MapT>::value>::type>
 {
-    static constexpr int LINEAR_DIMS  = 3;
-    static constexpr int ANGULAR_DIMS = 3;
-    using Jacobian  = cslibs_ndt_3d::matching::Jacobian;
-    using Hessian   = cslibs_ndt_3d::matching::Hessian;
+    static constexpr int LINEAR_DIMS  = 2;
+    static constexpr int ANGULAR_DIMS = 1;
+    using Jacobian  = cslibs_ndt_2d::matching::Jacobian;
+    using Hessian   = cslibs_ndt_2d::matching::Hessian;
 
-    using gradient_t = Eigen::Matrix<double, 6, 1>;
-    using hessian_t  = Eigen::Matrix<double, 6, 6>;
+    using gradient_t = Eigen::Matrix<double, 3, 1>;
+    using hessian_t  = Eigen::Matrix<double, 3, 3>;
+    using angular_t  = Eigen::Matrix<double, 1, 1>;
 
-    using point_t = cslibs_math_3d::Point3d;
-    using transform_t = cslibs_math_3d::Transform3d;
+    using point_t     = cslibs_math_2d::Point2d;
+    using transform_t = cslibs_math_2d::Transform2d;
     using parameter_t = cslibs_ndt::matching::OccupancyParameter;
 
-    static transform_t makeTransform(const Eigen::Vector3d& linear,
-                                     const Eigen::Vector3d& angular)
+    static transform_t makeTransform(const Eigen::Vector2d& linear,
+                                     const angular_t& angular)
     {
-        return transform_t{
-                linear.x(), linear.y(), linear.z(),
-                angular.x(), angular.y(), angular.z()};
+        return transform_t{linear.x(), linear.y(), angular.value()};
     }
 
     // todo: deduplicate code, make model configureable...
@@ -69,7 +68,7 @@ struct MatchTraits<MapT, typename std::enable_if<Is3dOccupancyGridmap<MapT>::val
         for (auto* distribution_wrapper : *bundle)
         {
             auto& d = distribution_wrapper->getDistribution();
-            if (!d || d->getN() < 4)
+            if (!d || d->getN() < 3)
                 continue;
 
             const auto info   = d->getInformationMatrix();

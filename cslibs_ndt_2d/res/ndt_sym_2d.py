@@ -11,7 +11,7 @@ t = Matrix([[tx],[ty]])
 
 v_prime = (R_z * v) + t
 
-d = Matrix([gamma])
+d = Matrix([tx,ty,gamma])
 J = v_prime.jacobian(d)
 
 init_printing()
@@ -24,6 +24,12 @@ print("-------------------------")
 print(latex(v_prime[1]))
 print("-------------------------")
 print(latex(J.col(0)))
-print("-------------------------")
-print(latex(J.jacobian(d)))
+#print("-------------------------")
+#print(latex(J.jacobian(d)))
 
+hessian = []
+for i in range(3):
+    print("-------------------------")
+    print(latex(J.col(i).jacobian(d)))
+    hessian.append(J.col(i).jacobian(d))
+pprint(hessian)

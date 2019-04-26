@@ -14,19 +14,22 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
     tf
     message_generation
+    std_msgs
 )
 find_package(Boost COMPONENTS filesystem)
 find_package(rviz QUIET)
 
 add_message_files(
+    DIRECTORY
+      msg
     FILES
-    Distribution.msg
-    DistributionArray.msg
+      Distribution.msg
+      DistributionArray.msg
 )
 generate_messages(
     DEPENDENCIES
-    std_msgs
-    LANGS gencpp
+      std_msgs
+    #LANGS gencpp
 )
 
 catkin_package(
@@ -94,7 +97,7 @@ if(rviz_FOUND)
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
     )
-    install(FILES plugin_description.xml
+    install(FILES plugins.xml
             DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
     install(DIRECTORY ogre_media
             DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

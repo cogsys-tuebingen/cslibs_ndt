@@ -41,6 +41,7 @@ for i in range(6):
     print("-------------------------")
     print(latex(J.col(i).jacobian(d)))
     hessian.append(J.col(i).jacobian(d))
+pprint(hessian)
 
 print("output is row major")
 [(c_name, c_code), (h_name, c_header)] = codegen([('jacobian', J.col(4))], 'C')

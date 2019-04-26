@@ -16,8 +16,8 @@ public:
 
     inline Jacobian() :
         linear_data_{{point_t(1.,0.,0.),
-                     point_t(0.,1.,0.),
-                     point_t(0.,0.,1.)}},
+                      point_t(0.,1.,0.),
+                      point_t(0.,0.,1.)}},
         angular_data_{{matrix_t::Zero(),
                       matrix_t::Zero(),
                       matrix_t::Zero()}},

@@ -226,7 +226,7 @@ public:
         return valid(toBundleIndex(p_w));
     }
 
-    inline void allocatePartiallyAllocatedBundles()
+    inline void allocatePartiallyAllocatedBundles() const
     {
         std::vector<index_t> bis;
         getBundleIndices(bis);

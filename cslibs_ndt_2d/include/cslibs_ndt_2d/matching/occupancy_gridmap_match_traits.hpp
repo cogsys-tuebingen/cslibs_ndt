@@ -59,7 +59,7 @@ struct MatchTraits<MapT, typename std::enable_if<Is2dOccupancyGridmap<MapT>::val
             double occupancy = 0.0;
             for (auto* distribution_wrapper : *bundle)
                 occupancy += distribution_wrapper->getOccupancy(param.inverseModel());
-            occupancy /= 8.0;
+            //occupancy /= 8.0;
 
             if (occupancy < param.occupancyThreshold())
                 return;
@@ -68,31 +68,35 @@ struct MatchTraits<MapT, typename std::enable_if<Is2dOccupancyGridmap<MapT>::val
         for (auto* distribution_wrapper : *bundle)
         {
             auto& d = distribution_wrapper->getDistribution();
-            if (!d || d->getN() < 3)
+            if (!d || !d->valid())// || d->getN() < 3)
                 continue;
 
             const auto info   = d->getInformationMatrix();
             const auto q      = (point.data() - d->getMean()).eval();
             const auto q_info = (q.transpose() * info).eval();
             const auto p_occ  = distribution_wrapper->getOccupancy(param.inverseModel()); // no recompute: this uses a cached value
-            const auto e      = -0.5 * double(q_info * q) * (d2 * (1 - p_occ));
-            const auto s      = d1 * p_occ * std::exp(e);
-            if (!std::isnormal(s) || s <= 1e-5)
+            const auto e      = -0.5 * double(q_info * q);// * (p_occ);// * (d2 * (1 - p_occ));
+            const auto s      = /*d1 */ p_occ * std::exp(e);
+            //std::cout << s << std::endl;
+            if (!std::isnormal(s) || s < 1e-12)// || s <= 1e-5)
                 continue;
 
             // this part should be vectorized, may also remove common factors...
             for (std::size_t i = 0; i < LINEAR_DIMS + ANGULAR_DIMS; ++i)
             {
                 const auto J_iq = J.get(i, q);
-                const auto J_info = (info * J_iq).eval();
+                const auto J_info = (info * J_iq);//.eval();
 
-                g(i) += s * q_info * J_iq;
+                g(i) += (1-s) * q_info * J_iq;
 
                 for (std::size_t j = 0; j < LINEAR_DIMS + ANGULAR_DIMS; ++j)
                 {
-                    h(i, j) -= s * q_info * H.get(i, j, q) +
-                               s * static_cast<double>((J.get(j, q).transpose()).eval() * J_info) -
-                               s * (q_info * J_iq).value() * (-q_info * J.get(j, q)).value();
+                    const auto J_jq = J.get(j, q);
+                    /*h(i, j) -= s * (q_info * H.get(i, j, q)).value() +
+                               s * (J_jq.transpose() * info * J_iq).value() -
+                               s * (q_info * J_iq).value() * (q_info * J_jq).value();/*/
+                    h(i,j) += (1-s) * (q_info * H.get(i, j, q) + J_jq.transpose() * info * J_iq - q_info * J_iq * q_info * J_jq).eval().value();
+                //*/
                 }
             }
 

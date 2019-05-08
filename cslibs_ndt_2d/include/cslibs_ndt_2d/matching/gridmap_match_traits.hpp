@@ -24,7 +24,7 @@ struct MatchTraits<MapT, typename std::enable_if<Is2dGridmap<MapT>::value>::type
 
     using gradient_t            = Eigen::Matrix<double, 3, 1>;
     using hessian_t             = Eigen::Matrix<double, 3, 3>;
-    using angular_t  = Eigen::Matrix<double, 1, 1>;
+    using angular_t             = Eigen::Matrix<double, 1, 1>;
 
     using point_t               = cslibs_math_2d::Point2d;
     using transform_t           = cslibs_math_2d::Transform2d;

@@ -99,7 +99,7 @@ auto match(const iterator_t& points_begin,
 
         if (score < max_score)
         {
-            lambda *= param.alpha();
+            lambda = -lambda;//std::max(1.0, lambda * param.alpha());
             linear = linear_old;
             angular = angular_old;
             ++step_adjustments;
@@ -109,7 +109,7 @@ auto match(const iterator_t& points_begin,
         if (score > max_score)
         {
             max_score = score;
-            lambda = std::max(1.0, lambda / param.alpha());
+            lambda = std::min(1.0, lambda / param.alpha());
             step_adjustments = 0;
         }
 
@@ -186,12 +186,12 @@ auto match(const ndt_t& src,
     const auto terminate = [&](Termination reason)
     {
         return result_t{
-            max_score,
+                    max_score,
                     iteration,
                     traits_t::makeTransform(linear, angular) * initial_transform,
                     reason };
     };
-
+    //src.allocatePartiallyAllocatedBundles();
 
     // iterations
     for (iteration = 0; iteration < param.maxIterations(); ++iteration)

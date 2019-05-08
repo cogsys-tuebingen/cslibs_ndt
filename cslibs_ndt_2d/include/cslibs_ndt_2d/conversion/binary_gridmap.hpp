@@ -1,37 +1,39 @@
 #ifndef CSLIBS_NDT_2D_CONVERSION_BINARY_GRIDMAP_HPP
 #define CSLIBS_NDT_2D_CONVERSION_BINARY_GRIDMAP_HPP
 
+#include <cslibs_ndt/map/map.hpp>
+
 #include <cslibs_ndt_2d/dynamic_maps/gridmap.hpp>
 #include <cslibs_ndt_2d/dynamic_maps/occupancy_gridmap.hpp>
-
-#include <cslibs_ndt_2d/conversion/gridmap.hpp>
-#include <cslibs_ndt_2d/conversion/occupancy_gridmap.hpp>
 
 #include <cslibs_gridmaps/static_maps/binary_gridmap.h>
 #include <cslibs_gridmaps/static_maps/algorithms/distance_transform.hpp>
 
 namespace cslibs_ndt_2d {
 namespace conversion {
-template <typename T>
+template <cslibs_ndt::map::tags::option option_t,
+          typename T,
+          template <typename, typename, typename...> class backend_t,
+          template <typename, typename, typename...> class dynamic_backend_t>
 inline void from(
-        const typename cslibs_ndt_2d::dynamic_maps::Gridmap<T>::Ptr &src,
+        const typename cslibs_ndt::map::Map<option_t,2,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t> &src,
         typename cslibs_gridmaps::static_maps::BinaryGridmap<T>::Ptr &dst,
         const T &sampling_resolution,
-        const T &threshold = 0.169)
+        const T &threshold      = 0.169,
+        const bool allocate_all = true)
 {
-    if (!src)
-        return;
-    src->allocatePartiallyAllocatedBundles();
+    if (allocate_all)
+        src.allocatePartiallyAllocatedBundles();
 
-    using src_map_t = cslibs_ndt_2d::dynamic_maps::Gridmap<T>;
+    using src_map_t = cslibs_ndt::map::Map<option_t,2,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t>;
     using dst_map_t = cslibs_gridmaps::static_maps::BinaryGridmap<T>;
-    dst.reset(new dst_map_t(src->getOrigin(),
+    dst.reset(new dst_map_t(src.getOrigin(),
                             sampling_resolution,
-                            std::ceil(src->getHeight() / sampling_resolution),
-                            std::ceil(src->getWidth()  / sampling_resolution)));
+                            std::ceil(src.getHeight() / sampling_resolution),
+                            std::ceil(src.getWidth()  / sampling_resolution)));
     std::fill(dst->getData().begin(), dst->getData().end(), T());
 
-    const T bundle_resolution = src->getBundleResolution();
+    const T bundle_resolution = src.getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
     auto sample = [](const cslibs_math_2d::Point2<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
@@ -42,9 +44,9 @@ inline void from(
     };
 
     using index_t = std::array<int, 2>;
-    const index_t min_bi = src->getMinBundleIndex();
+    const index_t min_bi = src.getMinBundleIndex();
 
-    src->traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
+    src.traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -60,27 +62,32 @@ inline void from(
     });
 }
 
-template <typename T>
+template <cslibs_ndt::map::tags::option option_t,
+          typename T,
+          template <typename, typename, typename...> class backend_t,
+          template <typename, typename, typename...> class dynamic_backend_t>
 inline void from(
-        const typename cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<T>::Ptr &src,
+        const typename cslibs_ndt::map::Map<option_t,2,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t> &src,
         typename cslibs_gridmaps::static_maps::BinaryGridmap<T>::Ptr &dst,
         const T &sampling_resolution,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &inverse_model,
-        const T &threshold = 0.169)
+        const T &threshold      = 0.169,
+        const bool allocate_all = true)
 {
-    if (!src || !inverse_model)
+    if (!inverse_model)
         return;
-    src->allocatePartiallyAllocatedBundles();
+    if (allocate_all)
+        src.allocatePartiallyAllocatedBundles();
 
-    using src_map_t = cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<T>;
+    using src_map_t = cslibs_ndt::map::Map<option_t,2,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t>;
     using dst_map_t = cslibs_gridmaps::static_maps::BinaryGridmap<T>;
-    dst.reset(new dst_map_t(src->getOrigin(),
+    dst.reset(new dst_map_t(src.getOrigin(),
                             sampling_resolution,
-                            std::ceil(src->getHeight() / sampling_resolution),
-                            std::ceil(src->getWidth()  / sampling_resolution)));
+                            std::ceil(src.getHeight() / sampling_resolution),
+                            std::ceil(src.getWidth()  / sampling_resolution)));
     std::fill(dst->getData().begin(), dst->getData().end(), T());
 
-    const T bundle_resolution = src->getBundleResolution();
+    const T bundle_resolution = src.getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
     auto sample = [&inverse_model](const cslibs_math_2d::Point2<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
@@ -99,9 +106,9 @@ inline void from(
     };
 
     using index_t = std::array<int, 2>;
-    const index_t min_bi = src->getMinBundleIndex();
+    const index_t min_bi = src.getMinBundleIndex();
 
-    src->traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
+    src.traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -115,6 +122,43 @@ inline void from(
             }
         }
     });
+}
+
+template <typename T>
+inline void from(
+        const typename cslibs_ndt_2d::dynamic_maps::Gridmap<T>::Ptr &src,
+        typename cslibs_gridmaps::static_maps::BinaryGridmap<T>::Ptr &dst,
+        const T &sampling_resolution,
+        const T &threshold        = 0.169,
+        const bool allocate_all   = true)
+{
+    if (!src)
+        return;
+    return from<
+            cslibs_ndt::map::tags::dynamic_map,
+            T,
+            cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_backend_t,
+            cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_dynamic_backend_t>(
+                *src, dst, sampling_resolution, threshold, allocate_all);
+}
+
+template <typename T>
+inline void from(
+        const typename cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<T>::Ptr &src,
+        typename cslibs_gridmaps::static_maps::BinaryGridmap<T>::Ptr &dst,
+        const T &sampling_resolution,
+        const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &inverse_model,
+        const T &threshold        = 0.169,
+        const bool allocate_all   = true)
+{
+    if (!src)
+        return;
+    return from<
+            cslibs_ndt::map::tags::dynamic_map,
+            T,
+            cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_backend_t,
+            cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_dynamic_backend_t>(
+                *src, dst, sampling_resolution, inverse_model, threshold, allocate_all);
 }
 }
 }

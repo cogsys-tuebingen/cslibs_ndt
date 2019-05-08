@@ -32,7 +32,7 @@ inline void from(
                             sampling_resolution,
                             std::ceil(src.getHeight() / sampling_resolution),
                             std::ceil(src.getWidth()  / sampling_resolution)));
-    std::fill(dst->getData().begin(), dst->getData().end(), T());
+    std::fill(dst->getData().begin(), dst->getData().end(), 0.5);//T());
 
     const T bundle_resolution = src.getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
@@ -47,7 +47,8 @@ inline void from(
     using index_t = std::array<int, 2>;
     const index_t min_bi = src.getMinBundleIndex();
 
-    src.traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
+    const auto& origin = src.getInitialOrigin();
+    src.traverse([&dst, &origin, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -55,7 +56,7 @@ inline void from(
                                                   static_cast<T>(bi[1]) * bundle_resolution + static_cast<T>(l) * sampling_resolution);
                 const std::size_t u = (bi[0] - min_bi[0]) * chunk_step + k;
                 const std::size_t v = (bi[1] - min_bi[1]) * chunk_step + l;
-                dst->at(u,v) = sample(p, b);
+                dst->at(u,v) = sample(origin * p, b);
             }
         }
     });
@@ -90,7 +91,7 @@ inline void from(
                             sampling_resolution,
                             std::ceil(src.getHeight() / sampling_resolution),
                             std::ceil(src.getWidth()  / sampling_resolution)));
-    std::fill(dst->getData().begin(), dst->getData().end(), T());
+    std::fill(dst->getData().begin(), dst->getData().end(), 0.5);//T());
 
     const T bundle_resolution = src.getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
@@ -113,7 +114,8 @@ inline void from(
     using index_t = std::array<int, 2>;
     const index_t min_bi = src.getMinBundleIndex();
 
-    src.traverse([&dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
+    const auto& origin = src.getInitialOrigin();
+    src.traverse([&dst, &origin, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -121,7 +123,7 @@ inline void from(
                                                   static_cast<T>(bi[1]) * bundle_resolution + static_cast<T>(l) * sampling_resolution);
                 const std::size_t u = (bi[0] - min_bi[0]) * chunk_step + k;
                 const std::size_t v = (bi[1] - min_bi[1]) * chunk_step + l;
-                dst->at(u,v) = sample(p, b);
+                dst->at(u,v) = sample(origin * p, b);
             }
         }
     });

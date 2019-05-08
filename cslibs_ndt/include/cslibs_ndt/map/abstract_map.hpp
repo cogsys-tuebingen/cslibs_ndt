@@ -241,7 +241,8 @@ public:
                     index_t ii;
                     for (std::size_t i=0; i<Dim; ++i)
                         ii[i] = bi[i] + o[i];
-                    getAllocate(ii);
+                    if (valid(ii))
+                        getAllocate(ii);
                 });
             }
         }

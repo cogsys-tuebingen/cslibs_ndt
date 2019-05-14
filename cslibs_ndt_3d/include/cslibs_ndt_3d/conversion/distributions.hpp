@@ -8,8 +8,8 @@
 
 namespace cslibs_ndt_3d {
 namespace conversion {
-template <typename T>
-inline Distribution from(const cslibs_math::statistics::Distribution<T, 3, 3> &d,
+template <template <typename, std::size_t, std::size_t> typename distribution_t, typename T>
+inline Distribution from(const distribution_t<T, 3, 3> &d,
                          const int &id,
                          const T &prob)
 {

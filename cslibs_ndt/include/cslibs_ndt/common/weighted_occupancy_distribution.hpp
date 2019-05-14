@@ -4,6 +4,7 @@
 #include <mutex>
 
 #include <cslibs_math/statistics/weighted_distribution.hpp>
+#include <cslibs_math/statistics/stable_weighted_distribution.hpp>
 #include <cslibs_gridmaps/utility/inverse_model.hpp>
 
 #include <cslibs_indexed_storage/storage.hpp>
@@ -18,7 +19,7 @@ public:
 
     using Ptr                       = std::shared_ptr<WeightedOccupancyDistribution<T,Dim>>;
     using distribution_container_t  = WeightedOccupancyDistribution<T,Dim>;
-    using distribution_t            = cslibs_math::statistics::WeightedDistribution<T,Dim,3>;
+    using distribution_t            = cslibs_math::statistics::StableWeightedDistribution<T,Dim,3>;
     using distribution_ptr_t        = typename distribution_t::Ptr;
     using point_t                   = typename distribution_t::sample_t;
     using ivm_t                     = cslibs_gridmaps::utility::InverseModel<T>;

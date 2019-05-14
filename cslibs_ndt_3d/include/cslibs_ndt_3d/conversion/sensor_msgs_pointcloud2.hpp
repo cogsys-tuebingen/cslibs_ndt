@@ -73,7 +73,7 @@ inline void from(
 
     std::vector<float> tmp;
     auto process_bundle = [&src, &tmp, &transform, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
-        cslibs_math::statistics::Distribution<T, 3, 3> d;
+        typename distribution_t::distribution_t d;
         for (std::size_t i = 0 ; i < 8 ; ++i)
             d += b.at(i)->data();
         if (d.getN() == 0)
@@ -142,7 +142,7 @@ inline void from(
 
     std::vector<float> tmp;
     auto process_bundle = [&src, &tmp, &ivm, &threshold, &transform, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
-        cslibs_math::statistics::Distribution<T, 3, 3> d;
+        typename distribution_t::distribution_t d;//cslibs_math::statistics::Distribution<T, 3, 3> d;
         T occupancy = 0.0;
 
         for (std::size_t i = 0 ; i < 8 ; ++i) {

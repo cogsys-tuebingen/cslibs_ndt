@@ -4,6 +4,7 @@
 #include <mutex>
 
 #include <cslibs_math/statistics/distribution.hpp>
+#include <cslibs_math/statistics/stable_distribution.hpp>
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/backend/kdtree/kdtree.hpp>
@@ -17,7 +18,7 @@ public:
     using allocator_t              = Eigen::aligned_allocator<Distribution<T,Dim>>;
 
     using distribution_container_t = Distribution<T,Dim>;
-    using distribution_t           = cslibs_math::statistics::Distribution<T,Dim,3>;
+    using distribution_t           = cslibs_math::statistics::StableDistribution<T,Dim,3>;
 
     inline Distribution()
     {

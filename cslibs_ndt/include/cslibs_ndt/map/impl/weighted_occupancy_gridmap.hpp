@@ -119,7 +119,7 @@ public:
 
         const index_t start_bi = this->toBundleIndex(points_origin.translation());
         auto occupancy = [this, &ivm](const index_t &bi) {
-            const distribution_bundle_t *bundle = this->get(bi);
+            const distribution_bundle_t *bundle = this->getAllocate(bi);
             T retval = T();
             if (bundle) {
                 for (std::size_t i=0; i<this->bin_count; ++i)

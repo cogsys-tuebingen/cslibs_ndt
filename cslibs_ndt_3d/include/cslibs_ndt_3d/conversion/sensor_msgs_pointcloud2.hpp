@@ -47,9 +47,11 @@ template<typename T,
 inline void from(
         ndt_t &src,
         sensor_msgs::PointCloud2 &dst,
+        const bool &allocate_all = true,
         const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
-    src.allocatePartiallyAllocatedBundles();
+    if (allocate_all)
+        src.allocatePartiallyAllocatedBundles();
 
     using index_t = std::array<int, 3>;
     using point_t = typename ndt_t::point_t;
@@ -94,12 +96,13 @@ template <typename T>
 inline void from(
         const typename cslibs_ndt_3d::dynamic_maps::Gridmap<T>::Ptr &src,
         sensor_msgs::PointCloud2 &dst,
+        const bool &allocate_all = true,
         const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
     if (!src)
         return;
 
-    from<T>(*src, dst, transform);
+    from<T>(*src, dst, allocate_all, transform);
 }
 
 template<typename T,
@@ -111,9 +114,11 @@ inline void from(
         sensor_msgs::PointCloud2 &dst,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
         const T &threshold = 0.169,
+        const bool &allocate_all = true,
         const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
-    src.allocatePartiallyAllocatedBundles();
+    if (allocate_all)
+        src.allocatePartiallyAllocatedBundles();
 
     using index_t = std::array<int, 3>;
     using point_t = typename ndt_t::point_t;
@@ -171,12 +176,13 @@ inline void from(
         sensor_msgs::PointCloud2 &dst,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
         const T &threshold = 0.169,
+        const bool &allocate_all = true,
         const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
     if (!src)
         return;
 
-    from<T>(*src, dst, ivm, threshold, transform);
+    from<T>(*src, dst, ivm, threshold, allocate_all, transform);
 }
 
 }

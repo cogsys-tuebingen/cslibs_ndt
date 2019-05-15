@@ -113,7 +113,7 @@ public:
                               const typename inverse_sensor_model_t::Ptr &ivm_visibility)
     {
         if (!ivm || !ivm_visibility) {
-            std::cout << "[WeightedOccupancyGridmap2D]: Cannot evaluate visibility, using model-free update rule instead!" << std::endl;
+            std::cout << "[WeightedOccupancyGridmap]: Cannot evaluate visibility, using model-free update rule instead!" << std::endl;
             return insert(points_begin, points_end, points_origin);
         }
 

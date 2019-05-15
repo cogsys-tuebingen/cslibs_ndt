@@ -1,7 +1,7 @@
 #ifndef CSLIBS_NDT_MAP_OCCUPANCY_GRIDMAP_HPP
 #define CSLIBS_NDT_MAP_OCCUPANCY_GRIDMAP_HPP
 
-//#include <cslibs_ndt/map/generic_map.hpp>
+#include <cslibs_ndt/map/generic_map.hpp>
 #include <cslibs_ndt/common/occupancy_distribution.hpp>
 
 namespace cslibs_ndt {
@@ -119,10 +119,12 @@ public:
 
         const index_t start_bi = this->toBundleIndex(points_origin.translation());
         auto occupancy = [this, &ivm](const index_t &bi) {
-            distribution_bundle_t *bundle = this->getAllocate(bi);
+            const distribution_bundle_t *bundle = this->get(bi);
             T retval = T();
-            for (std::size_t i=0; i<this->bin_count; ++i)
-                retval += this->div_count * bundle->at(i)->getOccupancy(ivm);
+            if (bundle) {
+                for (std::size_t i=0; i<this->bin_count; ++i)
+                    retval += this->div_count * bundle->at(i)->getOccupancy(ivm);
+            }
             return retval;
         };
         auto current_visibility = [this, &start_bi, &ivm_visibility, &occupancy](const index_t &bi) {

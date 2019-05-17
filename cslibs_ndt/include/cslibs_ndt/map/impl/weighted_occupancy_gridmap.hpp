@@ -242,6 +242,15 @@ public:
             return T();
 
         distribution_bundle_t *bundle = this->bundle_storage_->get(bi);
+        return sample(p, bundle, ivm);
+    }
+
+    inline T sample(const point_t &p,
+                    const distribution_bundle_t* bundle,
+                    const typename inverse_sensor_model_t::Ptr &ivm) const
+    {
+        if (!ivm)
+            throw std::runtime_error("[WeightedOccupancyGridmap]: inverse model not set");
 
         auto sample = [&p, &ivm] (const distribution_t *d) {
             auto do_sample = [&p, &ivm, &d]() {
@@ -277,6 +286,15 @@ public:
             return T();
 
         distribution_bundle_t *bundle = this->bundle_storage_->get(bi);
+        return sampleNonNormalized(p, bundle, ivm);
+    }
+
+    inline T sampleNonNormalized(const point_t &p,
+                                 const distribution_bundle_t* bundle,
+                                 const typename inverse_sensor_model_t::Ptr &ivm) const
+    {
+        if (!ivm)
+            throw std::runtime_error("[WeightedOccupancyGridmap]: inverse model not set");
 
         auto sample = [&p, &ivm] (const distribution_t *d) {
             auto do_sample = [&p, &ivm, &d]() {

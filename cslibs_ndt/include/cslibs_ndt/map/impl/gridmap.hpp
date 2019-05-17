@@ -94,6 +94,12 @@ public:
             return T();
 
         distribution_bundle_t *bundle  = this->bundle_storage_->get(bi);
+        return sample(p, bundle);
+    }
+
+    inline T sample(const point_t &p,
+                    const distribution_bundle_t *bundle) const
+    {
         auto evaluate = [this, &p, &bundle]() {
             T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)
@@ -115,6 +121,12 @@ public:
             return T();
 
         distribution_bundle_t *bundle = this->bundle_storage_->get(bi);
+        return sampleNonNormalized(p, bundle);
+    }
+
+    inline T sampleNonNormalized(const point_t &p,
+                                 const distribution_bundle_t *bundle) const
+    {
         auto evaluate = [this, &p, &bundle]() {
             T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)

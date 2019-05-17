@@ -329,7 +329,6 @@ protected:
         return false;
     }
 
-protected:
     template <std::size_t DD, typename std::size_t... counter>
     static inline point_t toPoint(vector_t<DD> p, utility::integer_sequence<std::size_t,counter...>)
     {

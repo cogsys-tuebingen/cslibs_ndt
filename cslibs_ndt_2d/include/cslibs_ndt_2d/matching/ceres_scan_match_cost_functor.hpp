@@ -46,7 +46,6 @@ public:
 template <typename ndt_t>  // enable if with test for occupancy gridmap
 class CeresDirectScanMatchCostFunctor
 {
-public:
     using ivm_t = typename ndt_t::inverse_sensor_model_t;
     using point_t = typename ndt_t::point_t;
     using bundle_t = typename ndt_t::distribution_bundle_t;
@@ -104,11 +103,13 @@ private:
 template <typename ndt_t>  // enable if with test for occupancy gridmap
 class CeresInterpolationScanMatchCostFunctor
 {
-public:
     static constexpr int DATA_DIMENSION = 1;
 
     using ivm_t = typename ndt_t::inverse_sensor_model_t;
     using point_t = typename ndt_t::point_t;
+
+    template <typename>
+    friend class ceres::BiCubicInterpolator;
 
 protected:
     explicit inline CeresInterpolationScanMatchCostFunctor(const ndt_t& map,
@@ -129,7 +130,7 @@ protected:
                                value);
     }
 
-public:
+private:
     inline void GetValue(const int row, const int column, double* const value) const
     {
         *value = 1.0 - map_.sampleNonNormalized(
@@ -138,13 +139,10 @@ public:
                     ivm_);
     }
 
-private:
     const ndt_t& map_;
     const typename ivm_t::Ptr& ivm_;
-    const ceres::BiCubicInterpolator<CeresInterpolationScanMatchCostFunctor> interpolator_;
-
-protected:
     const double sampling_resolution_;
+    const ceres::BiCubicInterpolator<CeresInterpolationScanMatchCostFunctor> interpolator_;
 };
 }
 }

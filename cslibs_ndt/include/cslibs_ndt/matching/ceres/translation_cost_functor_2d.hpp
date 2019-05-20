@@ -9,15 +9,16 @@
 
 namespace cslibs_ndt {
 namespace matching {
+namespace ceres {
 
-class CeresTranslationCostFunctor2d
+class TranslationCostFunctor2d
 {
 public:
-    static ceres::CostFunction* CreateAutoDiffCostFunction(double weight,
-                                                           const cslibs_math_2d::Vector2d& translation)
+    static ::ceres::CostFunction* CreateAutoDiffCostFunction(double weight,
+                                                             const cslibs_math_2d::Vector2d& translation)
     {
-        return new ceres::AutoDiffCostFunction<CeresTranslationCostFunctor2d, 2, 2>(
-                new CeresTranslationCostFunctor2d(weight, translation)
+        return new ::ceres::AutoDiffCostFunction<TranslationCostFunctor2d, 2, 2>(
+                new TranslationCostFunctor2d(weight, translation)
         );
     }
 
@@ -31,8 +32,8 @@ public:
     }
 
 private:
-    explicit CeresTranslationCostFunctor2d(double weight,
-                                           const cslibs_math_2d::Vector2d& translation) :
+    explicit TranslationCostFunctor2d(double weight,
+                                      const cslibs_math_2d::Vector2d& translation) :
         weight_(weight),
         translation_({
                 translation(0),
@@ -45,6 +46,7 @@ private:
     const std::array<double, 2> translation_;
 };
 
+}
 }
 }
 

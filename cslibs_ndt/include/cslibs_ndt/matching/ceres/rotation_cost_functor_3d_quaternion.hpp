@@ -1,5 +1,5 @@
-#ifndef CSLIBS_NDT_MATCHING_CERES_ROTATION_COST_FUNCTOR_3D_HPP
-#define CSLIBS_NDT_MATCHING_CERES_ROTATION_COST_FUNCTOR_3D_HPP
+#ifndef CSLIBS_NDT_MATCHING_CERES_ROTATION_COST_FUNCTOR_QUATERNION_3D_HPP
+#define CSLIBS_NDT_MATCHING_CERES_ROTATION_COST_FUNCTOR_QUATERNION_3D_HPP
 
 #include <cslibs_math_3d/linear/quaternion.hpp>
 
@@ -9,15 +9,16 @@
 
 namespace cslibs_ndt {
 namespace matching {
+namespace ceres {
 
-class CeresRotationCostFunctor3d
+class RotationCostFunctor3dQuaternion
 {
 public:
-    static ceres::CostFunction* CreateAutoDiffCostFunction(double weight,
-                                                           const cslibs_math_3d::Quaterniond& rotation)
+    static ::ceres::CostFunction* CreateAutoDiffCostFunction(double weight,
+                                                             const cslibs_math_3d::Quaterniond& rotation)
     {
-        return new ceres::AutoDiffCostFunction<CeresRotationCostFunctor3d, 4, 4>(
-                new CeresRotationCostFunctor3d(weight, rotation)
+        return new ::ceres::AutoDiffCostFunction<RotationCostFunctor3dQuaternion, 4, 4>(
+                new RotationCostFunctor3dQuaternion(weight, rotation)
         );
     }
 
@@ -44,8 +45,8 @@ private:
         zw[3] = z[0] * w[3] + z[1] * w[2] - z[2] * w[1] + z[3] * w[0];
     }
 
-    explicit CeresRotationCostFunctor3d(double weight,
-                                        const cslibs_math_3d::Quaterniond& rotation) :
+    explicit RotationCostFunctor3dQuaternion(double weight,
+                                             const cslibs_math_3d::Quaterniond& rotation) :
         weight_(weight),
         rotation_inverse_wxyz_({
             rotation.w(),
@@ -62,5 +63,6 @@ private:
 
 }
 }
+}
 
-#endif // CSLIBS_NDT_MATCHING_CERES_ROTATION_COST_FUNCTOR_3D_HPP
+#endif // CSLIBS_NDT_MATCHING_CERES_ROTATION_COST_FUNCTOR_3D_QUATERNION_HPP

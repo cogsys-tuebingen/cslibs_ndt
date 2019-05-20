@@ -55,13 +55,9 @@ private:
     const points_t points_;
 };
 
-template <typename ndt_t>
-using DirectScanMatchCostFunctor2d =
-ScanMatchCostFunctorCreator<ScanMatchCostFunctor2d, ScanMatchCostFunctor<ndt_t, Flag::DIRECT>>;
-
-template <typename ndt_t>
-using InterpolationScanMatchCostFunctor2d =
-ScanMatchCostFunctorCreator<ScanMatchCostFunctor2d, ScanMatchCostFunctor<ndt_t, Flag::INTERPOLATION>>;
+template <typename ndt_t, Flag flag_t>
+using ScanMatchCostFunctor2dCreator =
+ScanMatchCostFunctorCreator<ScanMatchCostFunctor2d, ScanMatchCostFunctor<ndt_t, flag_t>>;
 
 }
 }

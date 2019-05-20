@@ -1,7 +1,7 @@
-#ifndef CSLIBS_NDT_MATCHING_CERES_ROTATION_COST_FUNCTOR_QUATERNION_3D_HPP
-#define CSLIBS_NDT_MATCHING_CERES_ROTATION_COST_FUNCTOR_QUATERNION_3D_HPP
+#ifndef CSLIBS_NDT_MATCHING_CERES_ROTATION_COST_FUNCTOR_RPY_3D_HPP
+#define CSLIBS_NDT_MATCHING_CERES_ROTATION_COST_FUNCTOR_RPY_3D_HPP
 
-#include <cslibs_math_3d/linear/quaternion.hpp>
+#include <cslibs_math/linear/vector.hpp>
 
 #include <ceres/cost_function.h>
 #include <ceres/autodiff_cost_function.h>
@@ -15,12 +15,10 @@ class RotationCostFunctor3dRPY
 {
 public:
     static ::ceres::CostFunction* CreateAutoDiffCostFunction(double weight,
-                                                             const double& roll,
-                                                             const double& pitch,
-                                                             const double& yaw)
+                                                             const cslibs_math::linear::Vector<double,3>& rpy)
     {
         return new ::ceres::AutoDiffCostFunction<RotationCostFunctor3dRPY, 3, 3>(
-                new RotationCostFunctor3dRPY(weight, roll, pitch, yaw)
+                new RotationCostFunctor3dRPY(weight, rpy)
         );
     }
 
@@ -29,8 +27,8 @@ public:
     {
         for (std::size_t i=0; i<3; ++i) {
             T delta;
-            T r0(rpy_[i]);
-            AngleDifference(&r0, rotation_rpy[i], &delta);
+            T r0(rpy_(i));
+            AngleDifference(&r0, &(rotation_rpy[i]), &delta);
 
             residual[i] = weight_ * delta;
         }
@@ -43,7 +41,7 @@ private:
     {
         static const double _2_M_PI = 2.0 * M_PI;
         auto norm = [](const T* const r) {
-            return ::ceres::atan2(::ceres::sin(r[0]), ::ceres::cos(r[0]));
+            return ::ceres::atan2(::ceres::sin(*r), ::ceres::cos(*r));
         };
 
         const auto a = norm(r0);
@@ -55,21 +53,19 @@ private:
     }
 
     explicit RotationCostFunctor3dRPY(double weight,
-                                      const double& roll,
-                                      const double& pitch,
-                                      const double& yaw) :
+                                      const cslibs_math::linear::Vector<double,3> rpy) :
         weight_(weight),
-        rpy_{roll, pitch, yaw}
+        rpy_{rpy}
     {
     }
 
 private:
     const double weight_;
-    const std::array<double, 3> rpy_;
+    const cslibs_math::linear::Vector<double, 3> rpy_;
 };
 
 }
 }
 }
 
-#endif // CSLIBS_NDT_MATCHING_CERES_ROTATION_COST_FUNCTOR_3D_QUATERNION_HPP
+#endif // CSLIBS_NDT_MATCHING_CERES_ROTATION_COST_FUNCTOR_RPY_3D_HPP

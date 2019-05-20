@@ -7,7 +7,7 @@ namespace ceres {
 
 enum class Flag { DIRECT, INTERPOLATION };
 
-template <typename ndt_t, Flag flag>
+template <typename ndt_t, Flag flag_t>
 class ScanMatchCostFunctor;
 
 }

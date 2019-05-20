@@ -25,7 +25,7 @@ public:
     {
         T delta;
         T r0(rotation_);
-        AngleDifference(&r0, rotation, &delta);
+        AngleDifference(&r0, &(rotation[0]), &delta);
 
         residual[0] = weight_ * delta;
         return true;
@@ -37,7 +37,7 @@ private:
     {
         static const double _2_M_PI = 2.0 * M_PI;
         auto norm = [](const T* const r) {
-            return ::ceres::atan2(::ceres::sin(r[0]), ::ceres::cos(r[0]));
+            return ::ceres::atan2(::ceres::sin(*r), ::ceres::cos(*r));
         };
 
         const auto a = norm(r0);

@@ -53,13 +53,9 @@ private:
     const points_t points_;
 };
 
-template <typename ndt_t>
-using DirectScanMatchCostFunctor3dQuaternion =
-ScanMatchCostFunctorCreator<ScanMatchCostFunctor3dQuaternion, ScanMatchCostFunctor<ndt_t, Flag::DIRECT>>;
-
-template <typename ndt_t>
-using InterpolationScanMatchCostFunctor3dQuaternion =
-ScanMatchCostFunctorCreator<ScanMatchCostFunctor3dQuaternion, ScanMatchCostFunctor<ndt_t, Flag::INTERPOLATION>>;
+template <typename ndt_t, Flag flag_t>
+using ScanMatchCostFunctor3dQuaternionCreator =
+ScanMatchCostFunctorCreator<ScanMatchCostFunctor3dQuaternion, ScanMatchCostFunctor<ndt_t, flag_t>>;
 
 }
 }

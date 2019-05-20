@@ -14,9 +14,8 @@ class ScanMatchCostFunctorCreator
 {
 public:
     template <typename points_t, typename ... args_t>
-    static inline ::ceres::CostFunction* CreateAutoDiffCostFunction(double weight,
-                                                                    points_t points,
-                                                                    const args_t &...args)
+    static inline ::ceres::CostFunction* CreateAutoDiffCostFunction(
+            double weight, points_t points, const args_t &...args)
     {
         using _child_t = child_t<base_t,points_t>;
 
@@ -26,15 +25,16 @@ public:
                     count);
     }
 
-    template <::ceres::NumericDiffMethodType method = ::ceres::FORWARD, typename points_t, typename ... args_t>
-    static inline ::ceres::CostFunction* CreateNumericDiffCostFunction(double weight,
-                                                                       points_t points,
-                                                                       const args_t &...args)
+    template <::ceres::NumericDiffMethodType numeric_method_t = ::ceres::FORWARD,
+              typename points_t,
+              typename ... args_t>
+    static inline ::ceres::CostFunction* CreateNumericDiffCostFunction(
+            double weight, points_t points, const args_t &...args)
     {
         using _child_t = child_t<base_t,points_t>;
 
         const auto count = points.size();
-        return new ::ceres::NumericDiffCostFunction<_child_t, method, ::ceres::DYNAMIC, _child_t::N0, _child_t::N1>(
+        return new ::ceres::NumericDiffCostFunction<_child_t, numeric_method_t, ::ceres::DYNAMIC, _child_t::N0, _child_t::N1>(
                     new _child_t(weight / std::sqrt(count), std::move(points), args...),
                     ::ceres::DO_NOT_TAKE_OWNERSHIP,
                     count);

@@ -14,7 +14,7 @@ namespace ceres {
 class RotationCostFunctor3dRPY
 {
 public:
-    static ::ceres::CostFunction* CreateAutoDiffCostFunction(double weight,
+    static ::ceres::CostFunction* CreateAutoDiffCostFunction(const double& weight,
                                                              const cslibs_math::linear::Vector<double,3>& rpy)
     {
         return new ::ceres::AutoDiffCostFunction<RotationCostFunctor3dRPY, 3, 3>(
@@ -27,7 +27,7 @@ public:
     {
         for (std::size_t i=0; i<3; ++i) {
             T delta;
-            T r0(rpy_(i));
+            T r0(rpy_[i]);
             AngleDifference(&r0, &(rotation_rpy[i]), &delta);
 
             residual[i] = weight_ * delta;
@@ -52,16 +52,16 @@ private:
         *d = ::ceres::abs(d1) < ::ceres::abs(d2) ? d1 : d2;
     }
 
-    explicit RotationCostFunctor3dRPY(double weight,
+    explicit RotationCostFunctor3dRPY(const double& weight,
                                       const cslibs_math::linear::Vector<double,3> rpy) :
         weight_(weight),
-        rpy_{rpy}
+        rpy_{rpy(0), rpy(1), rpy(2)}
     {
     }
 
 private:
     const double weight_;
-    const cslibs_math::linear::Vector<double, 3> rpy_;
+    const std::array<double, 3> rpy_;
 };
 
 }

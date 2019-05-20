@@ -12,7 +12,7 @@ namespace ceres {
 class RotationCostFunctor2d
 {
 public:
-    static ::ceres::CostFunction* CreateAutoDiffCostFunction(double weight,
+    static ::ceres::CostFunction* CreateAutoDiffCostFunction(const double& weight,
                                                              const double& rotation)
     {
         return new ::ceres::AutoDiffCostFunction<RotationCostFunctor2d, 1, 1>(
@@ -48,7 +48,7 @@ private:
         *d = ::ceres::abs(d1) < ::ceres::abs(d2) ? d1 : d2;
     }
 
-    explicit RotationCostFunctor2d(double weight,
+    explicit RotationCostFunctor2d(const double& weight,
                                    const double& rotation) :
         weight_(weight),
         rotation_(rotation)

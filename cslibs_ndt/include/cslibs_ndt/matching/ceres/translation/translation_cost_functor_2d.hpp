@@ -14,7 +14,7 @@ namespace ceres {
 class TranslationCostFunctor2d
 {
 public:
-    static ::ceres::CostFunction* CreateAutoDiffCostFunction(double weight,
+    static ::ceres::CostFunction* CreateAutoDiffCostFunction(const double &weight,
                                                              const cslibs_math_2d::Vector2d& translation)
     {
         return new ::ceres::AutoDiffCostFunction<TranslationCostFunctor2d, 2, 2>(
@@ -32,18 +32,16 @@ public:
     }
 
 private:
-    explicit TranslationCostFunctor2d(double weight,
+    explicit TranslationCostFunctor2d(const double &weight,
                                       const cslibs_math_2d::Vector2d& translation) :
         weight_(weight),
-        translation_({
-                translation(0),
-                translation(1)})
+        translation_{translation(0), translation(1)}
     {
     }
 
 private:
     const double weight_;
-    const std::array<double, 2> translation_;
+    const std::array<double,2> translation_;
 };
 
 }

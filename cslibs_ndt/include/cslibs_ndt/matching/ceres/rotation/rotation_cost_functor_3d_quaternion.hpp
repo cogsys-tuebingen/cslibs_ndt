@@ -14,7 +14,7 @@ namespace ceres {
 class RotationCostFunctor3dQuaternion
 {
 public:
-    static ::ceres::CostFunction* CreateAutoDiffCostFunction(double weight,
+    static ::ceres::CostFunction* CreateAutoDiffCostFunction(const double& weight,
                                                              const cslibs_math_3d::Quaterniond& rotation)
     {
         return new ::ceres::AutoDiffCostFunction<RotationCostFunctor3dQuaternion, 4, 4>(
@@ -45,7 +45,7 @@ private:
         zw[3] = z[0] * w[3] + z[1] * w[2] - z[2] * w[1] + z[3] * w[0];
     }
 
-    explicit RotationCostFunctor3dQuaternion(double weight,
+    explicit RotationCostFunctor3dQuaternion(const double& weight,
                                              const cslibs_math_3d::Quaterniond& rotation) :
         weight_(weight),
         rotation_inverse_wxyz_({

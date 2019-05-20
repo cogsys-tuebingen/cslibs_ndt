@@ -1,13 +1,13 @@
-#ifndef CSLIBS_NDT_2D_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_3D_RPY_HPP
-#define CSLIBS_NDT_2D_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_3D_RPY_HPP
+#ifndef CSLIBS_NDT_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_3D_RPY_HPP
+#define CSLIBS_NDT_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_3D_RPY_HPP
 
-#include <cslibs_ndt/matching/ceres/scan_match_cost_functor_creator.hpp>
-#include <cslibs_ndt_2d/matching/ceres/scan_match_cost_functor.hpp>
+#include <cslibs_ndt/matching/ceres/map/scan_match_cost_functor_creator.hpp>
+#include <cslibs_ndt/matching/ceres/map/scan_match_cost_functor.hpp>
 
 #include <cslibs_math_3d/linear/point.hpp>
 #include <cslibs_math_3d/linear/quaternion.hpp>
 
-namespace cslibs_ndt_2d {
+namespace cslibs_ndt {
 namespace matching {
 namespace ceres {
 
@@ -18,7 +18,7 @@ class ScanMatchCostFunctor3dRPY : public base_t
     static constexpr int N1 = 3;
 
     template <template <typename,typename> class, typename>
-    friend class ::cslibs_ndt::matching::ceres::ScanMatchCostFunctorCreator;
+    friend class ceres::ScanMatchCostFunctorCreator;
 
 public:
     template<typename T>
@@ -35,7 +35,7 @@ public:
             const Eigen::Matrix<T, 3, 1> local(T(point(0)), T(point(1)), T(point(2)));
             const Eigen::Matrix<T, 3, 1> in_world = rotation * local + translation;
 
-            this->Evaluate(in_world(0), in_world(1), &residual[i]);
+            this->Evaluate(in_world, &residual[i]);
             residual[i] = weight_ * residual[i];
             ++i;
         }
@@ -59,16 +59,14 @@ private:
 
 template <typename ndt_t>
 using DirectScanMatchCostFunctor3dRPY =
-cslibs_ndt::matching::ceres::ScanMatchCostFunctorCreator<
-ScanMatchCostFunctor3dRPY, ScanMatchCostFunctor<ndt_t, Flag::DIRECT>>;
+ScanMatchCostFunctorCreator<ScanMatchCostFunctor3dRPY, ScanMatchCostFunctor<ndt_t, Flag::DIRECT>>;
 
 template <typename ndt_t>
 using InterpolationScanMatchCostFunctor3dRPY =
-cslibs_ndt::matching::ceres::ScanMatchCostFunctorCreator<
-ScanMatchCostFunctor3dRPY, ScanMatchCostFunctor<ndt_t, Flag::INTERPOLATION>>;
+ScanMatchCostFunctorCreator<ScanMatchCostFunctor3dRPY, ScanMatchCostFunctor<ndt_t, Flag::INTERPOLATION>>;
 
 }
 }
 }
 
-#endif // CSLIBS_NDT_2D_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_3D_RPY_HPP
+#endif // CSLIBS_NDT_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_3D_RPY_HPP

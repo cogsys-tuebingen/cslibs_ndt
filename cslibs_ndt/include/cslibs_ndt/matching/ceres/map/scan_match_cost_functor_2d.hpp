@@ -1,10 +1,10 @@
-#ifndef CSLIBS_NDT_2D_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_2D_HPP
-#define CSLIBS_NDT_2D_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_2D_HPP
+#ifndef CSLIBS_NDT_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_2D_HPP
+#define CSLIBS_NDT_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_2D_HPP
 
-#include <cslibs_ndt/matching/ceres/scan_match_cost_functor_creator.hpp>
-#include <cslibs_ndt_2d/matching/ceres/scan_match_cost_functor.hpp>
+#include <cslibs_ndt/matching/ceres/map/scan_match_cost_functor_creator.hpp>
+#include <cslibs_ndt/matching/ceres/map/scan_match_cost_functor.hpp>
 
-namespace cslibs_ndt_2d {
+namespace cslibs_ndt {
 namespace matching {
 namespace ceres {
 
@@ -15,7 +15,7 @@ class ScanMatchCostFunctor2d : public base_t
     static constexpr int N1 = 1;
 
     template <template <typename,typename> class, typename>
-    friend class ::cslibs_ndt::matching::ceres::ScanMatchCostFunctorCreator;
+    friend class ScanMatchCostFunctorCreator;
 
 public:
     template<typename T>
@@ -33,7 +33,7 @@ public:
             const Eigen::Matrix<T, 2, 1> local(T(point(0)), T(point(1)));
             const Eigen::Matrix<T, 2, 1> in_world = rotation * local + translation;
 
-            this->Evaluate(in_world(0), in_world(1), &residual[i]);
+            this->Evaluate(in_world, &residual[i]);
             residual[i] = weight_ * residual[i];
             ++i;
         }
@@ -57,16 +57,14 @@ private:
 
 template <typename ndt_t>
 using DirectScanMatchCostFunctor2d =
-cslibs_ndt::matching::ceres::ScanMatchCostFunctorCreator<
-ScanMatchCostFunctor2d, ScanMatchCostFunctor<ndt_t, Flag::DIRECT>>;
+ScanMatchCostFunctorCreator<ScanMatchCostFunctor2d, ScanMatchCostFunctor<ndt_t, Flag::DIRECT>>;
 
 template <typename ndt_t>
 using InterpolationScanMatchCostFunctor2d =
-cslibs_ndt::matching::ceres::ScanMatchCostFunctorCreator<
-ScanMatchCostFunctor2d, ScanMatchCostFunctor<ndt_t, Flag::INTERPOLATION>>;
+ScanMatchCostFunctorCreator<ScanMatchCostFunctor2d, ScanMatchCostFunctor<ndt_t, Flag::INTERPOLATION>>;
 
 }
 }
 }
 
-#endif // CSLIBS_NDT_2D_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_2D_HPP
+#endif // CSLIBS_NDT_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_2D_HPP

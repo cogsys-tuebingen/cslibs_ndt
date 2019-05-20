@@ -1,25 +1,26 @@
-#ifndef CSLIBS_NDT_2D_MATCHING_CERES_OCCUPANCY_GRIDMAP_COST_FUNCTOR_HPP
-#define CSLIBS_NDT_2D_MATCHING_CERES_OCCUPANCY_GRIDMAP_COST_FUNCTOR_HPP
+#ifndef CSLIBS_NDT_MATCHING_CERES_OCCUPANCY_GRIDMAP_COST_FUNCTOR_HPP
+#define CSLIBS_NDT_MATCHING_CERES_OCCUPANCY_GRIDMAP_COST_FUNCTOR_HPP
 
 #include <cslibs_ndt/map/map.hpp>
-#include <cslibs_math_2d/linear/point.hpp>
+#include <cslibs_ndt/matching/ceres/map/scan_match_cost_functor.hpp>
 
 #include <ceres/cubic_interpolation.h>
 #include <type_traits>
 
-namespace cslibs_ndt_2d {
+namespace cslibs_ndt {
 namespace matching {
 namespace ceres {
 
 template <cslibs_ndt::map::tags::option option_t,
+          std::size_t Dim,
           typename _T,
           template <typename, typename, typename...> class backend_t,
           template <typename, typename, typename...> class dynamic_backend_t>
 class ScanMatchCostFunctor<
-        cslibs_ndt::map::Map<option_t,2,cslibs_ndt::OccupancyDistribution,_T,backend_t,dynamic_backend_t>,
+        cslibs_ndt::map::Map<option_t,Dim,cslibs_ndt::OccupancyDistribution,_T,backend_t,dynamic_backend_t>,
         Flag::DIRECT>
 {
-    using ndt_t = cslibs_ndt::map::Map<option_t,2,cslibs_ndt::OccupancyDistribution,_T,backend_t,dynamic_backend_t>;
+    using ndt_t = cslibs_ndt::map::Map<option_t,Dim,cslibs_ndt::OccupancyDistribution,_T,backend_t,dynamic_backend_t>;
 
     using ivm_t = typename ndt_t::inverse_sensor_model_t;
     using point_t = typename ndt_t::point_t;
@@ -33,36 +34,51 @@ protected:
     {
     }
 
-    inline void Evaluate(const double& x, const double& y, double* const value) const
+    template <int _D>
+    inline void Evaluate(const Eigen::Matrix<double,_D,1>& q, double* const value) const
     {
-        *value = 1.0 - map_.sampleNonNormalized(point_t(x,y), ivm_);
+        Eigen::Matrix<_T,Dim,1> p = Eigen::Matrix<_T,Dim,1>::Zero();
+        for (std::size_t i=0; i<std::min(_D,static_cast<int>(Dim)); ++i)
+            p(i) = q(i);
+
+        *value = 1.0 - map_.sampleNonNormalized(point_t(p), ivm_);
     }
 
-    template <typename JetT>
-    inline void Evaluate(const JetT& x, const JetT& y, JetT* const value) const
+    template <typename JetT, int _D>
+    inline void Evaluate(const Eigen::Matrix<JetT,_D,1>& q, JetT* const value) const
     {
-        const point_t pt(x.a, y.a);
+        point_t pt;
+        Eigen::Matrix<JetT,Dim,1> p = Eigen::Matrix<JetT,Dim,1>::Zero();
+        for (std::size_t i=0; i<std::min(_D,static_cast<int>(Dim)); ++i) {
+            p(i)  = q(i);
+            pt(i) = q(i).a;
+        }
+
         const bundle_t* bundle = map_.get(pt);
 
-        const Eigen::Matrix<JetT, 2, 1> p(x,y);
         JetT retval(1);
         if (bundle) {
-            for (std::size_t i=0; i<4; ++i) {
+            for (std::size_t i=0; i<ndt_t::bin_count; ++i) {
                 if (const auto& bi = bundle->at(i)) {
                     if (const auto& di = bi->getDistribution()) {
                         if (!di->valid())
                             continue;
                         auto sample = [&p,&di]() {
-                            const auto &m = di->getMean();
-                            const auto &i = di->getInformationMatrix();
+                            const auto &mean_tmp = di->getMean();
+                            const auto &inf_tmp  = di->getInformationMatrix();
 
-                            const Eigen::Matrix<JetT, 2, 1> mean(JetT(m(0)), JetT(m(1)));
-                            Eigen::Matrix<JetT, 2, 2> inf; inf << JetT(i(0,0)), JetT(i(0,1)), JetT(i(1,0)), JetT(i(1,1));
-                            const Eigen::Matrix<JetT, 2, 1> q = p - mean;
-                            const JetT exponent = -JetT(0.5) * q.transpose() * inf * q;
+                            Eigen::Matrix<JetT, Dim, 1> mean;
+                            Eigen::Matrix<JetT, Dim, Dim> inf;
+                            for (std::size_t x=0; x<Dim; ++x) {
+                                mean(x) = JetT(mean_tmp(x));
+                                for (std::size_t y=0; y<Dim; ++y)
+                                    inf(x,y) = JetT(inf_tmp(x,y));
+                            }
+                            const Eigen::Matrix<JetT, Dim, 1> diff = p - mean;
+                            const JetT exponent = -JetT(0.5) * diff.transpose() * inf * diff;
                             return ::ceres::exp(exponent);
                         };
-                        retval -= 0.25 * bi->getOccupancy(ivm_) * sample();
+                        retval -= JetT(ndt_t::div_count) * JetT(bi->getOccupancy(ivm_)) * sample();
                     }
                 }
             }
@@ -75,6 +91,7 @@ private:
     const typename ivm_t::Ptr& ivm_;
 };
 
+// only possible for maps of dimension 2
 template <cslibs_ndt::map::tags::option option_t,
           typename _T,
           template <typename, typename, typename...> class backend_t,
@@ -104,11 +121,11 @@ protected:
     {
     }
 
-    template<typename T>
-    inline void Evaluate(const T& x, const T& y, T* const value) const
+    template <typename T, int _D>
+    inline void Evaluate(const Eigen::Matrix<T,_D,1>& q, T* const value) const
     {
-        interpolator_.Evaluate(x / sampling_resolution_,
-                               y / sampling_resolution_,
+        interpolator_.Evaluate(q(0) / sampling_resolution_,
+                               q(1) / sampling_resolution_,
                                value);
     }
 
@@ -131,4 +148,4 @@ private:
 }
 }
 
-#endif // CSLIBS_NDT_2D_MATCHING_CERES_OCCUPANCY_GRIDMAP_COST_FUNCTOR_HPP
+#endif // CSLIBS_NDT_MATCHING_CERES_OCCUPANCY_GRIDMAP_COST_FUNCTOR_HPP

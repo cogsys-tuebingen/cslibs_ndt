@@ -1,6 +1,7 @@
 #ifndef CSLIBS_NDT_2D_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_2D_HPP
 #define CSLIBS_NDT_2D_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_2D_HPP
 
+#include <cslibs_ndt/matching/ceres/scan_match_cost_functor_creator.hpp>
 #include <cslibs_ndt_2d/matching/ceres/scan_match_cost_functor.hpp>
 
 namespace cslibs_ndt_2d {
@@ -14,7 +15,7 @@ class ScanMatchCostFunctor2d : public base_t
     static constexpr int N1 = 1;
 
     template <template <typename,typename> class, typename>
-    friend class ScanMatchCostFunctorCreator;
+    friend class ::cslibs_ndt::matching::ceres::ScanMatchCostFunctorCreator;
 
 public:
     template<typename T>
@@ -56,11 +57,13 @@ private:
 
 template <typename ndt_t>
 using DirectScanMatchCostFunctor2d =
-ScanMatchCostFunctorCreator<ScanMatchCostFunctor2d, DirectScanMatchCostFunctor<ndt_t>>;
+cslibs_ndt::matching::ceres::ScanMatchCostFunctorCreator<
+ScanMatchCostFunctor2d, ScanMatchCostFunctor<ndt_t, Flag::DIRECT>>;
 
 template <typename ndt_t>
 using InterpolationScanMatchCostFunctor2d =
-ScanMatchCostFunctorCreator<ScanMatchCostFunctor2d, InterpolationScanMatchCostFunctor<ndt_t>>;
+cslibs_ndt::matching::ceres::ScanMatchCostFunctorCreator<
+ScanMatchCostFunctor2d, ScanMatchCostFunctor<ndt_t, Flag::INTERPOLATION>>;
 
 }
 }

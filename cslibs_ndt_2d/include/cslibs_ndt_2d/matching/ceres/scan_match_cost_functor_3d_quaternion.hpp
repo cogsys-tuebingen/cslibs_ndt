@@ -1,7 +1,9 @@
 #ifndef CSLIBS_NDT_2D_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_3D_QUATERNION_HPP
 #define CSLIBS_NDT_2D_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_3D_QUATERNION_HPP
 
+#include <cslibs_ndt/matching/ceres/scan_match_cost_functor_creator.hpp>
 #include <cslibs_ndt_2d/matching/ceres/scan_match_cost_functor.hpp>
+
 #include <cslibs_math_3d/linear/point.hpp>
 
 namespace cslibs_ndt_2d {
@@ -15,7 +17,7 @@ class ScanMatchCostFunctor3dQuaternion : public base_t
     static constexpr int N1 = 4;
 
     template <template <typename,typename> class, typename>
-    friend class ScanMatchCostFunctorCreator;
+    friend class ::cslibs_ndt::matching::ceres::ScanMatchCostFunctorCreator;
 
 public:
     template<typename T>
@@ -53,11 +55,13 @@ private:
 
 template <typename ndt_t>
 using DirectScanMatchCostFunctor3dQuaternion =
-ScanMatchCostFunctorCreator<ScanMatchCostFunctor3dQuaternion, DirectScanMatchCostFunctor<ndt_t>>;
+cslibs_ndt::matching::ceres::ScanMatchCostFunctorCreator<
+ScanMatchCostFunctor3dQuaternion, ScanMatchCostFunctor<ndt_t, Flag::DIRECT>>;
 
 template <typename ndt_t>
 using InterpolationScanMatchCostFunctor3dQuaternion =
-ScanMatchCostFunctorCreator<ScanMatchCostFunctor3dQuaternion, InterpolationScanMatchCostFunctor<ndt_t>>;
+cslibs_ndt::matching::ceres::ScanMatchCostFunctorCreator<
+ScanMatchCostFunctor3dQuaternion, ScanMatchCostFunctor<ndt_t, Flag::INTERPOLATION>>;
 
 }
 }

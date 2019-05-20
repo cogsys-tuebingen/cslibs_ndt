@@ -10,49 +10,50 @@
 
 namespace cslibs_ndt_2d {
 namespace matching {
+namespace ceres {
 
 template <template <typename,typename> class child_t, typename base_t>
-class CeresScanMatchCostFunctorCreator
+class ScanMatchCostFunctorCreator
 {
 public:
     template <typename points_t, typename ... args_t>
-    static inline ceres::CostFunction* CreateAutoDiffCostFunction(double weight,
-                                                                  points_t points,
-                                                                  const args_t &...args)
+    static inline ::ceres::CostFunction* CreateAutoDiffCostFunction(double weight,
+                                                                    points_t points,
+                                                                    const args_t &...args)
     {
         using _child_t = child_t<base_t,points_t>;
 
         const auto count = points.size();
-        return new ceres::AutoDiffCostFunction<_child_t, ceres::DYNAMIC, _child_t::N0, _child_t::N1>(
+        return new ::ceres::AutoDiffCostFunction<_child_t, ::ceres::DYNAMIC, _child_t::N0, _child_t::N1>(
                     new _child_t(weight / std::sqrt(count), std::move(points), args...),
                     count);
     }
 
-    template <ceres::NumericDiffMethodType method = ceres::FORWARD, typename points_t, typename ... args_t>
-    static inline ceres::CostFunction* CreateNumericDiffCostFunction(double weight,
-                                                                     points_t points,
-                                                                     const args_t &...args)
+    template <::ceres::NumericDiffMethodType method = ::ceres::FORWARD, typename points_t, typename ... args_t>
+    static inline ::ceres::CostFunction* CreateNumericDiffCostFunction(double weight,
+                                                                       points_t points,
+                                                                       const args_t &...args)
     {
         using _child_t = child_t<base_t,points_t>;
 
         const auto count = points.size();
-        return new ceres::NumericDiffCostFunction<_child_t, method, ceres::DYNAMIC, _child_t::N0, _child_t::N1>(
+        return new ::ceres::NumericDiffCostFunction<_child_t, method, ::ceres::DYNAMIC, _child_t::N0, _child_t::N1>(
                     new _child_t(weight / std::sqrt(count), std::move(points), args...),
-                    ceres::DO_NOT_TAKE_OWNERSHIP,
+                    ::ceres::DO_NOT_TAKE_OWNERSHIP,
                     count);
     }
 };
 
 template <typename ndt_t>  // enable if with test for occupancy gridmap
-class CeresDirectScanMatchCostFunctor
+class DirectScanMatchCostFunctor
 {
     using ivm_t = typename ndt_t::inverse_sensor_model_t;
     using point_t = typename ndt_t::point_t;
     using bundle_t = typename ndt_t::distribution_bundle_t;
 
 protected:
-    explicit inline CeresDirectScanMatchCostFunctor(const ndt_t& map,
-                                                    const typename ivm_t::Ptr& ivm) :
+    explicit inline DirectScanMatchCostFunctor(const ndt_t& map,
+                                               const typename ivm_t::Ptr& ivm) :
         map_(map),
         ivm_(ivm)
     {
@@ -85,7 +86,7 @@ protected:
                             Eigen::Matrix<JetT, 2, 2> inf; inf << JetT(i(0,0)), JetT(i(0,1)), JetT(i(1,0)), JetT(i(1,1));
                             const Eigen::Matrix<JetT, 2, 1> q = p - mean;
                             const JetT exponent = -JetT(0.5) * q.transpose() * inf * q;
-                            return ceres::exp(exponent);
+                            return ::ceres::exp(exponent);
                         };
                         retval -= 0.25 * bi->getOccupancy(ivm_) * sample();
                     }
@@ -101,7 +102,7 @@ private:
 };
 
 template <typename ndt_t>  // enable if with test for occupancy gridmap
-class CeresInterpolationScanMatchCostFunctor
+class InterpolationScanMatchCostFunctor
 {
     static constexpr int DATA_DIMENSION = 1;
 
@@ -109,12 +110,12 @@ class CeresInterpolationScanMatchCostFunctor
     using point_t = typename ndt_t::point_t;
 
     template <typename>
-    friend class ceres::BiCubicInterpolator;
+    friend class ::ceres::BiCubicInterpolator;
 
 protected:
-    explicit inline CeresInterpolationScanMatchCostFunctor(const ndt_t& map,
-                                                           const typename ivm_t::Ptr& ivm,
-                                                           const double& sampling_resolution) :
+    explicit inline InterpolationScanMatchCostFunctor(const ndt_t& map,
+                                                      const typename ivm_t::Ptr& ivm,
+                                                      const double& sampling_resolution) :
         map_(map),
         ivm_(ivm),
         sampling_resolution_(sampling_resolution),
@@ -142,8 +143,10 @@ private:
     const ndt_t& map_;
     const typename ivm_t::Ptr& ivm_;
     const double sampling_resolution_;
-    const ceres::BiCubicInterpolator<CeresInterpolationScanMatchCostFunctor> interpolator_;
+    const ::ceres::BiCubicInterpolator<InterpolationScanMatchCostFunctor> interpolator_;
 };
+
+}
 }
 }
 

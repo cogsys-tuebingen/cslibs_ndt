@@ -1,20 +1,21 @@
-#ifndef CSLIBS_NDT_2D_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_3D_HPP
-#define CSLIBS_NDT_2D_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_3D_HPP
+#ifndef CSLIBS_NDT_2D_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_3D_QUATERNION_HPP
+#define CSLIBS_NDT_2D_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_3D_QUATERNION_HPP
 
-#include <cslibs_ndt_2d/matching/ceres_scan_match_cost_functor.hpp>
+#include <cslibs_ndt_2d/matching/ceres/scan_match_cost_functor.hpp>
 #include <cslibs_math_3d/linear/point.hpp>
 
 namespace cslibs_ndt_2d {
 namespace matching {
+namespace ceres {
 
 template <typename base_t, typename points_t>
-class CeresScanMatchCostFunctor3d : public base_t
+class ScanMatchCostFunctor3dQuaternion : public base_t
 {
     static constexpr int N0 = 3;
     static constexpr int N1 = 4;
 
     template <template <typename,typename> class, typename>
-    friend class CeresScanMatchCostFunctorCreator;
+    friend class ScanMatchCostFunctorCreator;
 
 public:
     template<typename T>
@@ -37,9 +38,9 @@ public:
 
 private:
     template <typename ... args_t>
-    explicit inline CeresScanMatchCostFunctor3d(const double& weight,
-                                                points_t&& points,
-                                                const args_t &...args) :
+    explicit inline ScanMatchCostFunctor3dQuaternion(const double& weight,
+                                                     points_t&& points,
+                                                     const args_t &...args) :
         base_t(args...),
         weight_(weight),
         points_(points)
@@ -51,14 +52,15 @@ private:
 };
 
 template <typename ndt_t>
-using CeresDirectScanMatchCostFunctor3d =
-CeresScanMatchCostFunctorCreator<CeresScanMatchCostFunctor3d, CeresDirectScanMatchCostFunctor<ndt_t>>;
+using DirectScanMatchCostFunctor3dQuaternion =
+ScanMatchCostFunctorCreator<ScanMatchCostFunctor3dQuaternion, DirectScanMatchCostFunctor<ndt_t>>;
 
 template <typename ndt_t>
-using CeresInterpolationScanMatchCostFunctor3d =
-CeresScanMatchCostFunctorCreator<CeresScanMatchCostFunctor3d, CeresInterpolationScanMatchCostFunctor<ndt_t>>;
+using InterpolationScanMatchCostFunctor3dQuaternion =
+ScanMatchCostFunctorCreator<ScanMatchCostFunctor3dQuaternion, InterpolationScanMatchCostFunctor<ndt_t>>;
 
 }
 }
+}
 
-#endif // CSLIBS_NDT_2D_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_3D_HPP
+#endif // CSLIBS_NDT_2D_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_3D_QUATERNION_HPP

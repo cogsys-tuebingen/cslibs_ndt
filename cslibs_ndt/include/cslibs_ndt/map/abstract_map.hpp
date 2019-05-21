@@ -301,19 +301,34 @@ protected:
     virtual void updateIndices(const index_t &chunk_index) const = 0;
     virtual bool valid(const index_t &index) const = 0;
 
-    inline index_t toBundleIndex(const point_t &p_w) const
+    inline index_t toBundleIndex(const point_t &p_w,
+                                 point_t &p_m) const
     {
-        const point_t p_m = m_T_w_ * p_w;
+        p_m = m_T_w_ * p_w;
         index_t retval;
         for (std::size_t i=0; i<Dim; ++i)
             retval[i] = static_cast<int>(std::floor(p_m(i) * bundle_resolution_inv_));
         return retval;
     }
 
+    inline index_t toBundleIndex(const point_t &p_w) const
+    {
+        point_t p_m;
+        return toBundleIndex(p_w, p_m);
+    }
+
     inline bool toBundleIndex(const point_t &p_w,
                               index_t &index) const
     {
         index = toBundleIndex(p_w);
+        return valid(index);
+    }
+
+    inline bool toBundleIndex(const point_t &p_w,
+                              point_t &p_m,
+                              index_t &index) const
+    {
+        index = toBundleIndex(p_w, p_m);
         return valid(index);
     }
 

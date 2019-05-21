@@ -45,12 +45,13 @@ public:
     inline void insert(const point_t &p)
     {
         index_t bi;
-        if (!this->toBundleIndex(p, bi))
+        point_t pm;
+        if (!this->toBundleIndex(p, pm, bi))
             return;
 
         distribution_bundle_t *bundle = this->getAllocate(bi);
         for (std::size_t i=0; i<this->bin_count; ++i)
-            bundle->at(i)->data().add(p);
+            bundle->at(i)->data().add(pm);
     }
 
     inline void insert(const typename pointcloud_t::ConstPtr &points,
@@ -66,11 +67,12 @@ public:
     {
         dynamic_distribution_storage_t storage;
         for (auto p = points_begin; p != points_end; ++p) {
-            const point_t pm = points_origin * *p;
-            if (pm.isNormal()) {
-                const index_t &bi = this->toBundleIndex(pm);
+            const point_t pw = points_origin * *p;
+            if (pw.isNormal()) {
+                point_t pm;
+                const index_t &bi = this->toBundleIndex(pw,pm);
                 distribution_t *d = storage.get(bi);
-                (d ? d : &storage.insert(bi, distribution_t()))->data().add(this->m_T_w_ * pm);
+                (d ? d : &storage.insert(bi, distribution_t()))->data().add(pm);
             }
         }
 
@@ -84,7 +86,9 @@ public:
 
     inline T sample(const point_t &p) const
     {
-        return sample(p, this->toBundleIndex(p));
+        point_t pm;
+        const index_t& i = this->toBundleIndex(p, pm);
+        return sample(pm, i);
     }
 
     inline T sample(const point_t &p,
@@ -103,7 +107,7 @@ public:
         auto evaluate = [this, &p, &bundle]() {
             T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)
-                retval += this->div_count * bundle->at(i)->data().sample(this->m_T_w_ * p);
+                retval += this->div_count * bundle->at(i)->data().sample(p);
             return retval;
         };
         return bundle ? evaluate() : T();
@@ -111,7 +115,9 @@ public:
 
     inline T sampleNonNormalized(const point_t &p) const
     {
-        return sampleNonNormalized(p, this->toBundleIndex(p));
+        point_t pm;
+        const index_t& i = this->toBundleIndex(p, pm);
+        return sampleNonNormalized(pm, i);
     }
 
     inline T sampleNonNormalized(const point_t &p,
@@ -130,7 +136,7 @@ public:
         auto evaluate = [this, &p, &bundle]() {
             T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)
-                retval += this->div_count * bundle->at(i)->data().sampleNonNormalized(this->m_T_w_ * p);
+                retval += this->div_count * bundle->at(i)->data().sampleNonNormalized(p);
             return retval;
         };
         return bundle ? evaluate() : T();

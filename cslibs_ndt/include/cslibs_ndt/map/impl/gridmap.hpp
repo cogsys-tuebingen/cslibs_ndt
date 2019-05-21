@@ -70,7 +70,7 @@ public:
             if (pm.isNormal()) {
                 const index_t &bi = this->toBundleIndex(pm);
                 distribution_t *d = storage.get(bi);
-                (d ? d : &storage.insert(bi, distribution_t()))->data().add(pm);
+                (d ? d : &storage.insert(bi, distribution_t()))->data().add(this->m_T_w_ * pm);
             }
         }
 
@@ -103,7 +103,7 @@ public:
         auto evaluate = [this, &p, &bundle]() {
             T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)
-                retval += this->div_count * bundle->at(i)->data().sample(p);
+                retval += this->div_count * bundle->at(i)->data().sample(this->m_T_w_ * p);
             return retval;
         };
         return bundle ? evaluate() : T();
@@ -130,7 +130,7 @@ public:
         auto evaluate = [this, &p, &bundle]() {
             T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)
-                retval += this->div_count * bundle->at(i)->data().sampleNonNormalized(p);
+                retval += this->div_count * bundle->at(i)->data().sampleNonNormalized(this->m_T_w_ * p);
             return retval;
         };
         return bundle ? evaluate() : T();

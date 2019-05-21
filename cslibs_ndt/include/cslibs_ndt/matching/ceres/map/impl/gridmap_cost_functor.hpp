@@ -31,6 +31,29 @@ protected:
     {
     }
 
+    template <typename JetT>
+    inline void transform(const Eigen::Matrix<JetT,2,1>& p,
+                          const cslibs_math_2d::Transform2<_T>& tf,
+                          Eigen::Matrix<JetT,2,1>& p_prime) const
+    {
+        const JetT& c = ::ceres::cos(JetT(tf.yaw()));
+        const JetT& s = ::ceres::sin(JetT(tf.yaw()));
+        Eigen::Matrix<JetT,2,2> rot; rot << c, -s, s, c;
+        const Eigen::Matrix<JetT,2,1> trans(tf.tx(),tf.ty());
+        p_prime = rot * p + trans;
+    }
+
+    template <typename JetT>
+    inline void transform(const Eigen::Matrix<JetT,3,1>& p,
+                          const cslibs_math_3d::Transform3<_T>& tf,
+                          Eigen::Matrix<JetT,3,1>& p_prime) const
+    {
+        const auto& r = tf.rotation();
+        const Eigen::Quaternion<JetT> rot(JetT(r.w()), JetT(r.x()), JetT(r.y()), JetT(r.z()));
+        const Eigen::Matrix<JetT,3,1> trans(tf.tx(), tf.ty(), tf.tz());
+        p_prime = rot * p + trans;
+    }
+
     template <int _D>
     inline void Evaluate(const Eigen::Matrix<double,_D,1>& q, double* const value) const
     {
@@ -52,6 +75,9 @@ protected:
         }
 
         const bundle_t* bundle = map_.get(pt);
+        const auto& origin_inv = map_.getInitialOrigin().inverse();
+        Eigen::Matrix<JetT,Dim,1> p_prime;
+        transform(p, origin_inv, p_prime);
 
         JetT retval(1);
         if (bundle) {
@@ -60,7 +86,7 @@ protected:
                     if (const auto& di = bi->getDistribution()) {
                         if (!di->valid())
                             continue;
-                        auto sample = [&p,&di]() {
+                        auto sample = [&p_prime,&di]() {
                             const auto &mean_tmp = di->getMean();
                             const auto &inf_tmp  = di->getInformationMatrix();
 
@@ -71,7 +97,7 @@ protected:
                                 for (std::size_t y=0; y<Dim; ++y)
                                     inf(x,y) = JetT(inf_tmp(x,y));
                             }
-                            const Eigen::Matrix<JetT, Dim, 1> diff = p - mean;
+                            const Eigen::Matrix<JetT, Dim, 1> diff = p_prime - mean;
                             const JetT exponent = -JetT(0.5) * diff.transpose() * inf * diff;
                             return ::ceres::exp(exponent);
                         };

@@ -50,7 +50,7 @@ public:
                        const point_t &end_p)
     {
         const index_t &end_index = this->toBundleIndex(end_p);
-        updateOccupied(end_index, end_p);
+        updateOccupied(end_index, this->m_T_w_ * end_p);
 
         line_iterator_t it(this->m_T_w_ * start_p, this->m_T_w_ * end_p, this->bundle_resolution_);
         while (!it.done()) {
@@ -77,7 +77,7 @@ public:
             if (pm.isNormal()) {
                 const index_t &bi = this->toBundleIndex(pm);
                 distribution_t *d = storage.get(bi);
-                (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
+                (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(this->m_T_w_ * pm);
             }
         }
 
@@ -87,7 +87,7 @@ public:
                 return;
             updateOccupied(bi, d.getDistribution());
 
-            line_iterator_t it(start_p, this->m_T_w_ * point_t(d.getDistribution()->getMean()), this->bundle_resolution_);
+            line_iterator_t it(start_p, /*this->m_T_w_ */ point_t(d.getDistribution()->getMean()), this->bundle_resolution_);
             const std::size_t n = d.numOccupied();
             while (!it.done()) {
                 updateFree(it(), n);
@@ -150,7 +150,7 @@ public:
             if (pm.isNormal()) {
                 const index_t &bi = this->toBundleIndex(pm);
                 distribution_t *d = storage.get(bi);
-                (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
+                (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(this->m_T_w_ * pm);
             }
         }
 
@@ -159,7 +159,7 @@ public:
             if (!d.getDistribution())
                 return;
 
-            const point_t end_p = this->m_T_w_ * point_t(d.getDistribution()->getMean());
+            const point_t end_p = /*this->m_T_w_ */ point_t(d.getDistribution()->getMean());
             line_iterator_t it(start_p, end_p, this->bundle_resolution_);
 
             const std::size_t n = d.numOccupied();
@@ -176,53 +176,6 @@ public:
             if ((visibility *= current_visibility(bi)) >= ivm_visibility->getProbPrior())
                 updateOccupied(bi, d.getDistribution());
         });
-    }
-
-    template <typename line_iterator_t = default_iterator_t>
-    inline T getRange(const point_t &start_p,
-                      const point_t &end_p,
-                      const typename inverse_sensor_model_t::Ptr &ivm,
-                      const T &occupied_threshold) const
-    {
-        if (!ivm)
-            throw std::runtime_error("[OccupancyGridMap]: inverse model not set");
-
-        auto to_bundle_index = [this](const point_t &p) {
-            index_t retval;
-            for (std::size_t i=0; i<Dim; ++i)
-                retval[i] = static_cast<int>(std::floor(p(i) * this->bundle_resolution_inv_));
-            return retval;
-        };
-        const index_t start_index = to_bundle_index(start_p);
-        const index_t end_index   = to_bundle_index(end_p);
-        line_iterator_t it(start_index, end_index);
-
-        auto occupied = [this, &ivm, &occupied_threshold](const index_t &bi) {
-            distribution_bundle_t *bundle = this->bundle_storage_->get(bi);
-            auto occupancy = [this, &bundle, &ivm]() {
-                T retval = T();
-                for (std::size_t i=0; i<this->bin_count; ++i)
-                    retval += this->div_count * bundle->at(i)->getOccupancy(ivm);
-                return retval;
-            };
-            return bundle && (occupancy() >= occupied_threshold);
-        };
-
-        while (!it.done()) {
-            if (occupied(it())) {
-                auto to_point = [this](const index_t& bi) {
-                    point_t retval;
-                    for (std::size_t i=0; i<Dim; ++i)
-                        retval(i) = static_cast<T>(bi[i]) * this->bundle_resolution_;
-                    return retval;
-                };
-                return (start_p - to_point(it())).length();
-            }
-
-            ++ it;
-        }
-
-        return (start_p - end_p).length();
     }
 
     inline T sample(const point_t &p,
@@ -252,11 +205,11 @@ public:
         if (!ivm)
             throw std::runtime_error("[OccupancyGridMap]: inverse model not set");
 
-        auto sample = [&p, &ivm] (const distribution_t *d) {
-            auto do_sample = [&p, &ivm, &d]() {
+        auto sample = [this,&p, &ivm] (const distribution_t *d) {
+            auto do_sample = [this,&p, &ivm, &d]() {
                 const auto &handle = d;
                 return handle->getDistribution() ?
-                            handle->getDistribution()->sample(p) * handle->getOccupancy(ivm) : T();
+                            handle->getDistribution()->sample(this->m_T_w_ * p) * handle->getOccupancy(ivm) : T();
             };
             return d ? do_sample() : T();
         };
@@ -297,11 +250,11 @@ public:
         if (!ivm)
             throw std::runtime_error("[OccupancyGridMap]: inverse model not set");
 
-        auto sample = [&p, &ivm] (const distribution_t *d) {
-            auto do_sample = [&p, &ivm, &d]() {
+        auto sample = [this,&p, &ivm] (const distribution_t *d) {
+            auto do_sample = [this,&p, &ivm, &d]() {
                 const auto &handle = d;
                 return handle->getDistribution() ?
-                            handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(ivm) : T();
+                            handle->getDistribution()->sampleNonNormalized(this->m_T_w_ * p) * handle->getOccupancy(ivm) : T();
             };
             return d ? do_sample() : T();
         };

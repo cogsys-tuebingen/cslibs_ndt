@@ -39,7 +39,7 @@ inline void from(
                             sampling_resolution,
                             std::ceil(src.getHeight() / sampling_resolution),
                             std::ceil(src.getWidth()  / sampling_resolution)));
-    std::fill(dst->getData().begin(), dst->getData().end(), 0.5);//T());
+    std::fill(dst->getData().begin(), dst->getData().end(), T(0.5));
 
     const T bundle_resolution = src.getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
@@ -63,7 +63,7 @@ inline void from(
                                                   static_cast<T>(bi[1]) * bundle_resolution + static_cast<T>(l) * sampling_resolution);
                 const std::size_t u = (bi[0] - min_bi[0]) * chunk_step + k;
                 const std::size_t v = (bi[1] - min_bi[1]) * chunk_step + l;
-                dst->at(u,v) = sample(/*origin * */p, b);
+                dst->at(u,v) = sample(p, b);
             }
         }
     });
@@ -91,7 +91,7 @@ inline void from(
                             sampling_resolution,
                             std::ceil(src.getHeight() / sampling_resolution),
                             std::ceil(src.getWidth()  / sampling_resolution)));
-    std::fill(dst->getData().begin(), dst->getData().end(), 0.5);//T());
+    std::fill(dst->getData().begin(), dst->getData().end(), T(0.5));
 
     const T bundle_resolution = src.getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
@@ -123,7 +123,7 @@ inline void from(
                                                   static_cast<T>(bi[1]) * bundle_resolution + static_cast<T>(l) * sampling_resolution);
                 const std::size_t u = (bi[0] - min_bi[0]) * chunk_step + k;
                 const std::size_t v = (bi[1] - min_bi[1]) * chunk_step + l;
-                dst->at(u,v) = sample(/*origin * */p, b);
+                dst->at(u,v) = sample(p, b);
             }
         }
     });
@@ -151,7 +151,7 @@ inline void from(
                             sampling_resolution,
                             std::ceil(src.getHeight() / sampling_resolution),
                             std::ceil(src.getWidth()  / sampling_resolution)));
-    std::fill(dst->getData().begin(), dst->getData().end(), 0.5);//T());
+    std::fill(dst->getData().begin(), dst->getData().end(), T(0.5));
 
     const T bundle_resolution = src.getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
@@ -183,7 +183,7 @@ inline void from(
                                                   static_cast<T>(bi[1]) * bundle_resolution + static_cast<T>(l) * sampling_resolution);
                 const std::size_t u = (bi[0] - min_bi[0]) * chunk_step + k;
                 const std::size_t v = (bi[1] - min_bi[1]) * chunk_step + l;
-                dst->at(u,v) = sample(/*origin * */p, b);
+                dst->at(u,v) = sample(p, b);
             }
         }
     });

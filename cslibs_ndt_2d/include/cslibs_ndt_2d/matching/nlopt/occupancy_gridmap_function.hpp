@@ -23,6 +23,11 @@ public:
         const ndt_t* map_;
         const std::vector<point_t>* points_;
         const typename ndt_t::inverse_sensor_model_t::Ptr* ivm_;
+
+        std::array<double,3> initial_guess_;
+        double translation_weight_;
+        double rotation_weight_;
+        double map_weight_;
     };
 
     inline static double apply(unsigned n, const double *x, double *grad, void* ptr)
@@ -46,7 +51,8 @@ public:
         std::size_t count = 0;
         for (const auto& p : points) {
             const typename ndt_t::point_t q = current_transform * typename ndt_t::point_t(p(0),p(1));
-
+            //++count; //--> ATE: 2.9094, RPE: 0.0142 (thr. 0.3)
+            //         //--> ATE: 2.9094, RPE: 0.0142 (thr. 0.0)
             const auto& bundle = map.get(q);
             if (!bundle)
                 continue;
@@ -56,8 +62,12 @@ public:
             for (std::size_t i=0; i<4; ++i) {
                 if (const auto& bi = bundle->at(i)) {
                     if (const auto& di = bi->getDistribution()) {
+                        //++count; //--> ATE: 2.7647, RPE: 0.0139 (thr. 0.3)
+                        //         //--> ATE: 2.9947, RPE: 0.0142 (thr. 0.0)
                         if (!di->valid())
                             continue;
+                        //++count; //--> ATE: 3.0394, RPE: 0.0123 (thr. 0.3)
+                        //         //--> ATE: 2.6005 RPE: 0.0150 (thr. 0.0)
 
                         const auto& mean = di->getMean();
                         const auto inf = di->getInformationMatrix();
@@ -87,6 +97,11 @@ public:
         if (grad) {
           for (int i=0; i<3; ++i)
             grad[i] /= static_cast<double>(count);
+        } else {
+            const auto initial_guess = (object.initial_guess_);
+            const double trans_diff = hypot(x[0] - initial_guess[0], x[1] - initial_guess[1]);
+            const double rot_diff = std::fabs(cslibs_math::common::angle::difference(x[2], initial_guess[2]));
+            return (object.map_weight_)/* * points.size()*/ * fi + (object.translation_weight_) * trans_diff + (object.rotation_weight_) * rot_diff;
         }
         return fi;
     }

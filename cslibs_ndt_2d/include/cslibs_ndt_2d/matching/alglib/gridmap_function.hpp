@@ -24,180 +24,68 @@ public:
     struct Functor {
         const ndt_t* map_;
         const std::vector<point_t>* points_;
+
+        std::array<double,3> initial_guess_;
+        double translation_weight_;
+        double rotation_weight_;
+        double map_weight_;
     };
 
-    inline static void apply(const ::alglib::real_1d_array &x, double &f, void* ptr)
+    inline static void apply(const ::alglib::real_1d_array &x, ::alglib::real_1d_array &fi, void *ptr)
     {
-        const Functor& object = *((Functor*)ptr);
-        const auto& points    = *(object.points_);
-        const auto& map       = *(object.map_);
-        const auto& orig_inv  = map.getInitialOrigin().inverse();
-
-        f = 0;
-
-        const typename ndt_t::pose_t current_transform(x[0],x[1],x[2]);
-        std::size_t count = 0;
-        for (const auto& p : points) {
-            const typename ndt_t::point_t q = current_transform * typename ndt_t::point_t(p(0),p(1));
-
-            const auto& bundle = map.get(q);
-            if (!bundle)
-                continue;
-            ++count;
-
-            const typename ndt_t::point_t q_prime = orig_inv * q;
-            for (std::size_t i=0; i<4; ++i) {
-                if (const auto& bi = bundle->at(i)) {
-                    if (const auto& di = bi->getDistribution()) {
-                        if (!di->valid())
-                            continue;
-
-                        const auto& mean = di->getMean();
-                        const auto inf = di->getInformationMatrix();
-
-                        const auto& qm = q_prime.data() - mean;
-                        const auto& qm_inf = qm.transpose() * inf;
-                        const auto& exponent = -0.5 * qm_inf * qm;
-                        const double score = 0.25 * std::exp(exponent);
-                        f -= score;
-                    }
-                }
-            }
+        // check that all necessary information is given
+        const auto& casted_ptr = (Functor*)ptr;
+        if (!casted_ptr) {
+            std::cerr << "Correct Functor not given..." << std::endl;
+            return;
         }
 
-        f /= static_cast<double>(count);
+        // dissolve Functor
+        const Functor& object = *casted_ptr;
+        const auto& points    = *(object.points_);
+        const auto& map       = *(object.map_);
+
+        fi[0] = 0;
+        const typename ndt_t::pose_t current_transform(x[0],x[1],x[2]);
+
+        // evaluate function
+        for (const auto& p : points) {
+            const typename ndt_t::point_t q = current_transform * typename ndt_t::point_t(p(0),p(1));
+            fi[0] += 1.0 - map.sampleNonNormalized(q);
+        }
+
+        // calculate translational and rotational function component
+        const auto& initial_guess = (object.initial_guess_);
+        const double trans_diff = hypot(x[0] - initial_guess[0], x[1] - initial_guess[1]);
+        const double rot_diff = cslibs_math::common::angle::difference(x[2], initial_guess[2]);
+
+        // apply weights
+        fi[0] = object.map_weight_ * fi[0] / static_cast<double>(points.size()) +
+                object.translation_weight_ * trans_diff +
+                object.rotation_weight_ * std::fabs(rot_diff);
+        fi[0] = std::sqrt(std::fabs(fi[0]));
     }
 
-    inline static void apply(const ::alglib::real_1d_array &x, double &f, ::alglib::real_1d_array &jac, void* ptr)
+    inline static double mapScore(const ::alglib::real_1d_array &x, const ::alglib::real_1d_array &fi, void* ptr)
     {
-        const Functor& object = *((Functor*)ptr);
-        const auto& points    = *(object.points_);
-        const auto& map       = *(object.map_);
-        const auto& orig_inv  = map.getInitialOrigin().inverse();
-
-        f = 0;
-        for (int i=0; i<3; ++i)
-          jac[i] = 0;
-
-        const typename ndt_t::pose_t current_transform(x[0],x[1],x[2]);
-        const auto& s = current_transform.sin();
-        const auto& c = current_transform.cos();
-
-        std::size_t count = 0;
-        for (const auto& p : points) {
-            const typename ndt_t::point_t q = current_transform * typename ndt_t::point_t(p(0),p(1));
-
-            const auto& bundle = map.get(q);
-            if (!bundle)
-                continue;
-            ++count;
-
-            const typename ndt_t::point_t q_prime = orig_inv * q;
-            for (std::size_t i=0; i<4; ++i) {
-                if (const auto& bi = bundle->at(i)) {
-                    if (const auto& di = bi->getDistribution()) {
-                        if (!di->valid())
-                            continue;
-
-                        const auto& mean = di->getMean();
-                        const auto inf = di->getInformationMatrix();
-
-                        const auto& qm = q_prime.data() - mean;
-                        const auto& qm_inf = qm.transpose() * inf;
-                        const auto& exponent = -0.5 * qm_inf * qm;
-                        const double score = 0.25 * std::exp(exponent);
-                        f -= score;
-
-                        std::array<Eigen::Matrix<_T,2,1>,3> d;
-                        d[0] << 1, 0;
-                        d[1] << 0, 1;
-                        d[2] << -s*qm(0)-c*qm(1), c*qm(0)-s*qm(1);
-                        jac[0] += score * qm_inf * d[0];
-                        jac[1] += score * qm_inf * d[1];
-                        jac[2] += score * qm_inf * d[2];
-                    }
-                }
-            }
+        // check that all necessary information is given
+        const auto& casted_ptr = (Functor*)ptr;
+        if (!casted_ptr) {
+            std::cerr << "Correct Functor not given..." << std::endl;
+            return 0;
         }
 
-        f /= static_cast<double>(count);
-        for (int i=0; i<3; ++i)
-          jac[i] /= static_cast<double>(count);
-    }
+        // calculate translational and rotational function component
+        const Functor& object = *casted_ptr;
+        const auto& initial_guess = (object.initial_guess_);
+        const double trans_diff   = hypot(x[0] - initial_guess[0], x[1] - initial_guess[1]);
+        const double rot_diff     = cslibs_math::common::angle::difference(x[2], initial_guess[2]);
 
-    inline static void apply(const ::alglib::real_1d_array &x, double &f, ::alglib::real_1d_array &jac, ::alglib::real_2d_array &hes, void* ptr)
-    {
-        const Functor& object = *((Functor*)ptr);
-        const auto& points    = *(object.points_);
-        const auto& map       = *(object.map_);
-        const auto& orig_inv  = map.getInitialOrigin().inverse();
-
-        f = 0;
-        for (int i=0; i<3; ++i) {
-          jac[i] = 0;
-          for (int j=0; j<3; ++j)
-            hes[i][j] = 0;
-        }
-
-        const typename ndt_t::pose_t current_transform(x[0],x[1],x[2]);
-        const auto& s = current_transform.sin();
-        const auto& c = current_transform.cos();
-
-        std::size_t count = 0;
-        for (const auto& p : points) {
-            const typename ndt_t::point_t q = current_transform * typename ndt_t::point_t(p(0),p(1));
-
-            const auto& bundle = map.get(q);
-            if (!bundle)
-                continue;
-            ++count;
-
-            const typename ndt_t::point_t q_prime = orig_inv * q;
-            for (std::size_t i=0; i<4; ++i) {
-                if (const auto& bi = bundle->at(i)) {
-                    if (const auto& di = bi->getDistribution()) {
-                        if (!di->valid())
-                            continue;
-
-                        const auto& mean = di->getMean();
-                        const auto inf = di->getInformationMatrix();
-
-                        const auto& qm = q_prime.data() - mean;
-                        const auto& qm_inf = qm.transpose() * inf;
-                        const auto& exponent = -0.5 * qm_inf * qm;
-                        const double score = 0.25 * std::exp(exponent);
-                        f -= score;
-
-                        std::array<Eigen::Matrix<_T,2,1>,3> d;
-                        d[0] << 1, 0;
-                        d[1] << 0, 1;
-                        d[2] << -s*qm(0)-c*qm(1), c*qm(0)-s*qm(1);
-                        jac[0] += score * qm_inf * d[0];
-                        jac[1] += score * qm_inf * d[1];
-                        jac[2] += score * qm_inf * d[2];
-
-                        Eigen::Matrix<_T,2,1> h;
-                        h << -c*qm[0]+s*qm[1], -s*qm[0]-c*qm[1];
-                        hes[0][0] += score * ((qm_inf*d[0]).value()*(-qm_inf*d[0]).value() + d[0].transpose()*inf*d[0]);
-                        hes[0][1] += score * ((qm_inf*d[0]).value()*(-qm_inf*d[1]).value() + d[1].transpose()*inf*d[0]);
-                        hes[0][2] += score * ((qm_inf*d[0]).value()*(-qm_inf*d[2]).value() + d[2].transpose()*inf*d[0]);
-                        hes[1][0] += score * ((qm_inf*d[1]).value()*(-qm_inf*d[0]).value() + d[0].transpose()*inf*d[1]);
-                        hes[1][1] += score * ((qm_inf*d[1]).value()*(-qm_inf*d[1]).value() + d[1].transpose()*inf*d[1]);
-                        hes[1][2] += score * ((qm_inf*d[1]).value()*(-qm_inf*d[2]).value() + d[2].transpose()*inf*d[1]);
-                        hes[2][0] += score * ((qm_inf*d[2]).value()*(-qm_inf*d[0]).value() + d[0].transpose()*inf*d[2]);
-                        hes[2][1] += score * ((qm_inf*d[2]).value()*(-qm_inf*d[1]).value() + d[1].transpose()*inf*d[2]);
-                        hes[2][2] += score * ((qm_inf*d[2]).value()*(-qm_inf*d[2]).value() + qm_inf*h + d[2].transpose()*inf*d[2]);
-                    }
-                }
-            }
-        }
-
-        f /= static_cast<double>(count);
-        for (int i=0; i<3; ++i) {
-          jac[i] /= static_cast<double>(count);
-          for (int j=0; j<3; ++j)
-            hes[i][j] /= static_cast<double>(count);
-        }
+        // extract real fvalue (map correlation value)
+        return 1.0 - (fi[0] -
+                object.translation_weight_ * trans_diff -
+                object.rotation_weight_ * std::fabs(rot_diff)) /
+                object.map_weight_;
     }
 };
 

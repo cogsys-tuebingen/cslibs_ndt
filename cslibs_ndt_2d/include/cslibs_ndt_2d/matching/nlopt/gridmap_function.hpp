@@ -57,7 +57,7 @@ public:
         // evaluate function
         for (const auto& p : points) {
             const typename ndt_t::point_t q = current_transform * typename ndt_t::point_t(p(0),p(1));
-            fi -= map.sampleNonNormalized(q);
+            fi += 1.0 - map.sampleNonNormalized(q);
         }
 
         // calculate translational and rotational function component
@@ -71,6 +71,28 @@ public:
              object.rotation_weight_ * std::fabs(rot_diff);
 
         return fi;
+    }
+
+    inline static double mapScore(const double *x, const double &fi, void* ptr)
+    {
+        // check that all necessary information is given
+        const auto& casted_ptr = (Functor*)ptr;
+        if (!casted_ptr) {
+            std::cerr << "Correct Functor not given..." << std::endl;
+            return 0;
+        }
+
+        // calculate translational and rotational function component
+        const Functor& object = *casted_ptr;
+        const auto& initial_guess = (object.initial_guess_);
+        const double trans_diff   = hypot(x[0] - initial_guess[0], x[1] - initial_guess[1]);
+        const double rot_diff     = cslibs_math::common::angle::difference(x[2], initial_guess[2]);
+
+        // extract real fvalue (map correlation value)
+        return 1.0 - (&fi -
+                object.translation_weight_ * trans_diff -
+                object.rotation_weight_ * std::fabs(rot_diff)) /
+                object.map_weight_;
     }
 };
 

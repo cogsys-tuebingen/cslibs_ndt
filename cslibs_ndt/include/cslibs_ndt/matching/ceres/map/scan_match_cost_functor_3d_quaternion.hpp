@@ -27,12 +27,13 @@ public:
         const Eigen::Quaternion<T>   rotation(raw_rotation_wxyz[0], raw_rotation_wxyz[1], raw_rotation_wxyz[2], raw_rotation_wxyz[3]);
 
         std::size_t i = 0;
+        const double size = static_cast<double>(points_.size());
         for (const auto& point : points_) {
             const Eigen::Matrix<T, 3, 1> local(T(point(0)), T(point(1)), T(point(2)));
             const Eigen::Matrix<T, 3, 1> in_world = rotation * local + translation;
 
             this->Evaluate(in_world, &residual[i]);
-            residual[i] = weight_ * residual[i];
+            residual[i] = ::ceres::sqrt(weight_) * residual[i] / size;
             ++i;
         }
         return true;

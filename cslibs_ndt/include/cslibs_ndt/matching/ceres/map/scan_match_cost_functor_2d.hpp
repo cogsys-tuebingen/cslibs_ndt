@@ -29,12 +29,13 @@ public:
         rotation(1,1) = ::ceres::cos(raw_rotation[0]);
 
         std::size_t i = 0;
+        const double size = static_cast<double>(points_.size());
         for (const auto& point : points_) {
             const Eigen::Matrix<T, 2, 1> local(T(point(0)), T(point(1)));
             const Eigen::Matrix<T, 2, 1> in_world = rotation * local + translation;
 
             this->Evaluate(in_world, &residual[i]);
-            residual[i] = weight_ * residual[i];
+            residual[i] = ::ceres::sqrt(weight_) * residual[i] / size;
             ++i;
         }
         return true;

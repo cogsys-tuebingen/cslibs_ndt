@@ -12,8 +12,11 @@
 #include <cslibs_ndt/matching/ceres/map/scan_match_cost_functor_3d_quaternion.hpp>
 #include <cslibs_ndt/matching/ceres/map/scan_match_cost_functor_3d_rpy.hpp>
 
+#include <cslibs_ndt/matching/ceres/local_parameterization.hpp>
+
 #include <type_traits>
 #include <ceres/problem.h>
+#include <ceres/local_parameterization.h>
 
 namespace cslibs_ndt {
 namespace matching {
@@ -26,8 +29,8 @@ inline void Problem2d(const double& translation_weight, const double& rotation_w
                       ::ceres::Problem& problem,
                       const args_t &...args)
 {
-    problem.AddParameterBlock(ceres_translation, 2, nullptr);
-    problem.AddParameterBlock(ceres_rotation, 1, nullptr);
+    problem.AddParameterBlock(ceres_translation, 2, nullptr); //TODO
+    problem.AddParameterBlock(ceres_rotation, 1, nullptr);    //TODO
 
     if (map_weight != 0.0) {
       problem.AddResidualBlock(
@@ -58,10 +61,13 @@ inline void Problem3dQuaternion(const double& translation_weight, const double& 
                                 const cslibs_math::linear::Vector<double,3>& translation, const cslibs_math_3d::Quaterniond& rotation,
                                 double* ceres_translation, double* ceres_rotation,
                                 ::ceres::Problem& problem,
+                                const bool only_yaw,
                                 const args_t &...args)
 {
-    problem.AddParameterBlock(ceres_translation, 3, nullptr);
-    problem.AddParameterBlock(ceres_rotation, 4, nullptr);
+    problem.AddParameterBlock(ceres_translation, 3, only_yaw ? new ::ceres::SubsetParameterization(3, { 2 }) :
+                                                               nullptr);
+    problem.AddParameterBlock(ceres_rotation, 4, only_yaw ? YawOnlyQuaternionPlus::CreateAutoDiff() :
+                                                            new ::ceres::QuaternionParameterization());
 
     if (map_weight != 0.0) {
       problem.AddResidualBlock(
@@ -94,8 +100,8 @@ inline void Problem3dRPY(const double& translation_weight, const double& rotatio
                          ::ceres::Problem& problem,
                          const args_t &...args)
 {
-    problem.AddParameterBlock(ceres_translation, 3, nullptr);
-    problem.AddParameterBlock(ceres_rotation, 3, nullptr);
+    problem.AddParameterBlock(ceres_translation, 3, nullptr); //TODO
+    problem.AddParameterBlock(ceres_rotation, 3, nullptr);    //TODO
 
     if (map_weight != 0.0) {
       problem.AddResidualBlock(

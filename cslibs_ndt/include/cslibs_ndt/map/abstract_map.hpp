@@ -248,37 +248,6 @@ public:
         }
     }
 
-    inline index_t toBundleIndex(const point_t &p_w,
-                                 point_t &p_m) const
-    {
-        p_m = m_T_w_ * p_w;
-        index_t retval;
-        for (std::size_t i=0; i<Dim; ++i)
-            retval[i] = static_cast<int>(std::floor(p_m(i) * bundle_resolution_inv_));
-        return retval;
-    }
-
-    inline index_t toBundleIndex(const point_t &p_w) const
-    {
-        point_t p_m;
-        return toBundleIndex(p_w, p_m);
-    }
-
-    inline bool toBundleIndex(const point_t &p_w,
-                              index_t &index) const
-    {
-        index = toBundleIndex(p_w);
-        return valid(index);
-    }
-
-    inline bool toBundleIndex(const point_t &p_w,
-                              point_t &p_m,
-                              index_t &index) const
-    {
-        index = toBundleIndex(p_w, p_m);
-        return valid(index);
-    }
-
     inline std::size_t getByteSize() const
     {
         std::size_t size = sizeof(*this) + bundle_storage_->byte_size();
@@ -342,6 +311,37 @@ protected:
             if (expandDistribution(bundle->at(i)))
                 return true;
         return false;
+    }
+
+    inline index_t toBundleIndex(const point_t &p_w,
+                                 point_t &p_m) const
+    {
+        p_m = m_T_w_ * p_w;
+        index_t retval;
+        for (std::size_t i=0; i<Dim; ++i)
+            retval[i] = static_cast<int>(std::floor(p_m(i) * bundle_resolution_inv_));
+        return retval;
+    }
+
+    inline index_t toBundleIndex(const point_t &p_w) const
+    {
+        point_t p_m;
+        return toBundleIndex(p_w, p_m);
+    }
+
+    inline bool toBundleIndex(const point_t &p_w,
+                              index_t &index) const
+    {
+        index = toBundleIndex(p_w);
+        return valid(index);
+    }
+
+    inline bool toBundleIndex(const point_t &p_w,
+                              point_t &p_m,
+                              index_t &index) const
+    {
+        index = toBundleIndex(p_w, p_m);
+        return valid(index);
     }
 
     template <std::size_t DD, typename std::size_t... counter>

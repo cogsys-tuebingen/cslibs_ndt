@@ -24,9 +24,9 @@ public:
         const Eigen::Matrix<T, 2, 1> translation(raw_translation[0], raw_translation[1]);
         Eigen::Matrix<T, 2, 2> rotation;
         rotation(0,0) = ::ceres::cos(raw_rotation[0]);
-        rotation(0,1) =-::ceres::sin(raw_rotation[0]);
         rotation(1,0) = ::ceres::sin(raw_rotation[0]);
-        rotation(1,1) = ::ceres::cos(raw_rotation[0]);
+        rotation(0,1) =-rotation(1,0);
+        rotation(1,1) = rotation(0,0);
 
         std::size_t i = 0;
         const double size = static_cast<double>(points_.size());

@@ -24,7 +24,6 @@ class ScanMatchCostFunctor<
 
     using ivm_t = typename ndt_t::inverse_sensor_model_t;
     using point_t = typename ndt_t::point_t;
-    using index_t = typename ndt_t::index_t;
     using bundle_t = typename ndt_t::distribution_bundle_t;
 
 protected:
@@ -80,11 +79,12 @@ protected:
             pt(i) = q(i).a;
         }
 
-        const bundle_t* const& bundle = map_.get(pt);
-        const Eigen::Matrix<JetT,Dim,1>& p_prime = transformToMap(p);
-
+        const bundle_t* bundle = map_.get(pt);
         JetT retval(1);
+
         if (bundle) {
+            const Eigen::Matrix<JetT,Dim,1>& p_prime = transformToMap(p);
+
             for (std::size_t i=0; i<ndt_t::bin_count; ++i) {
                 if (const auto& bi = bundle->at(i)) {
                     if (const auto& di = bi->getDistribution()) {

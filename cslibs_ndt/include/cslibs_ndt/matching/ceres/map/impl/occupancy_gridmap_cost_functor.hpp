@@ -36,38 +36,28 @@ protected:
     }
 
     template <typename JetT>
-    inline void transform(const Eigen::Matrix<JetT,2,1>& p,
-                          const cslibs_math_2d::Transform2<_T>& tf,
-                          Eigen::Matrix<JetT,2,1>& p_prime) const
+    inline Eigen::Matrix<JetT,2,1> transformToMap(const Eigen::Matrix<JetT,2,1>& p) const
     {
-        const JetT& c = ::ceres::cos(JetT(tf.yaw()));
-        const JetT& s = ::ceres::sin(JetT(tf.yaw()));
-        Eigen::Matrix<JetT,2,2> rot; rot << c, -s, s, c;
-        const Eigen::Matrix<JetT,2,1> trans(tf.tx(),tf.ty());
-        p_prime = rot * p + trans;
+        static const auto& origin_inv = map_.getInitialOrigin().inverse();
+
+        static const JetT& c = ::ceres::cos(JetT(origin_inv.yaw()));
+        static const JetT& s = ::ceres::sin(JetT(origin_inv.yaw()));
+        static Eigen::Matrix<JetT,2,2> rot; rot << c, -s, s, c;
+        static const Eigen::Matrix<JetT,2,1> trans(origin_inv.tx(),origin_inv.ty());
+
+        return rot * p + trans;
     }
 
     template <typename JetT>
-    inline void transform(const Eigen::Matrix<JetT,3,1>& p,
-                          const cslibs_math_3d::Transform3<_T>& tf,
-                          Eigen::Matrix<JetT,3,1>& p_prime) const
+    inline Eigen::Matrix<JetT,3,1> transformToMap(const Eigen::Matrix<JetT,3,1>& p) const
     {
-        const auto& r = tf.rotation();
-        const Eigen::Quaternion<JetT> rot(JetT(r.w()), JetT(r.x()), JetT(r.y()), JetT(r.z()));
-        const Eigen::Matrix<JetT,3,1> trans(tf.tx(), tf.ty(), tf.tz());
-        p_prime = rot * p + trans;
-    }
+        static const auto& origin_inv = map_.getInitialOrigin().inverse();
 
-    inline const bundle_t* getBundle(const point_t& pt) const
-    {
-        const index_t bi = map_.toBundleIndex(pt);
-        const auto& it = cache_.find(bi);
-        if (it != cache_.end())
-            return it->second;
+        static const auto& r = origin_inv.rotation();
+        static const Eigen::Quaternion<JetT> rot(JetT(r.w()), JetT(r.x()), JetT(r.y()), JetT(r.z()));
+        static const Eigen::Matrix<JetT,3,1> trans(origin_inv.tx(), origin_inv.ty(), origin_inv.tz());
 
-        const bundle_t* bundle = map_.get(bi);
-        cache_[bi] = bundle;
-        return bundle;
+        return rot * p + trans;
     }
 
     template <int _D>
@@ -77,9 +67,7 @@ protected:
         for (std::size_t i=0; i<std::min(_D,static_cast<int>(Dim)); ++i)
             p(i) = q(i);
 
-        const point_t pt(p);
-        const bundle_t* bundle = getBundle(pt);
-        *value = 1.0 - map_.sampleNonNormalized(pt, bundle, ivm_);
+        *value = 1.0 - map_.sampleNonNormalized(point_t(p), ivm_);
     }
 
     template <typename JetT, int _D>
@@ -92,10 +80,8 @@ protected:
             pt(i) = q(i).a;
         }
 
-        const bundle_t* bundle = getBundle(pt);
-        const auto& origin_inv = map_.getInitialOrigin().inverse();
-        Eigen::Matrix<JetT,Dim,1> p_prime;
-        transform(p, origin_inv, p_prime);
+        const bundle_t* const& bundle = map_.get(pt);
+        const Eigen::Matrix<JetT,Dim,1>& p_prime = transformToMap(p);
 
         JetT retval(1);
         if (bundle) {
@@ -130,8 +116,6 @@ protected:
 private:
     const ndt_t& map_;
     const typename ivm_t::Ptr& ivm_;
-
-    mutable std::unordered_map<index_t,const bundle_t*> cache_;
 };
 
 // only possible for maps of dimension 2

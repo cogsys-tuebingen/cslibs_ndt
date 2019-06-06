@@ -29,8 +29,8 @@ inline void Problem2d(const double& translation_weight, const double& rotation_w
                       ::ceres::Problem& problem,
                       const args_t &...args)
 {
-    problem.AddParameterBlock(ceres_translation, 2, nullptr); //TODO
-    problem.AddParameterBlock(ceres_rotation, 1, nullptr);    //TODO
+    problem.AddParameterBlock(ceres_translation, 2, nullptr);
+    problem.AddParameterBlock(ceres_rotation, 1, EulerPlus<1>::CreateAutoDiff());
 
     if (map_weight != 0.0) {
       problem.AddResidualBlock(
@@ -98,10 +98,13 @@ inline void Problem3dRPY(const double& translation_weight, const double& rotatio
                          const cslibs_math::linear::Vector<double,3>& translation, const cslibs_math::linear::Vector<double,3>& rotation,
                          double* ceres_translation, double* ceres_rotation,
                          ::ceres::Problem& problem,
+                         const bool only_yaw,
                          const args_t &...args)
 {
-    problem.AddParameterBlock(ceres_translation, 3, nullptr); //TODO
-    problem.AddParameterBlock(ceres_rotation, 3, nullptr);    //TODO
+    problem.AddParameterBlock(ceres_translation, 3, only_yaw ? new ::ceres::SubsetParameterization(3, { 2 }) :
+                                                               nullptr);
+    problem.AddParameterBlock(ceres_rotation, 3, only_yaw ? YawOnlyEulerPlus::CreateAutoDiff() :
+                                                            EulerPlus<3>::CreateAutoDiff());
 
     if (map_weight != 0.0) {
       problem.AddResidualBlock(

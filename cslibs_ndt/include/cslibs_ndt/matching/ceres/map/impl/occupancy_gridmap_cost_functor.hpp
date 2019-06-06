@@ -24,6 +24,7 @@ class ScanMatchCostFunctor<
 
     using ivm_t = typename ndt_t::inverse_sensor_model_t;
     using point_t = typename ndt_t::point_t;
+    using index_t = typename ndt_t::index_t;
     using bundle_t = typename ndt_t::distribution_bundle_t;
 
 protected:
@@ -57,6 +58,18 @@ protected:
         p_prime = rot * p + trans;
     }
 
+    inline const bundle_t* getBundle(const point_t& pt) const
+    {
+        const index_t bi = map_.toBundleIndex(pt);
+        const auto& it = cache_.find(bi);
+        if (it != cache_.end())
+            return it->second;
+
+        const bundle_t* bundle = map_.get(bi);
+        cache_[bi] = bundle;
+        return bundle;
+    }
+
     template <int _D>
     inline void Evaluate(const Eigen::Matrix<double,_D,1>& q, double* const value) const
     {
@@ -64,7 +77,9 @@ protected:
         for (std::size_t i=0; i<std::min(_D,static_cast<int>(Dim)); ++i)
             p(i) = q(i);
 
-        *value = 1.0 - map_.sampleNonNormalized(point_t(p), ivm_);
+        const point_t pt(p);
+        const bundle_t* bundle = getBundle(pt);
+        *value = 1.0 - map_.sampleNonNormalized(pt, bundle, ivm_);
     }
 
     template <typename JetT, int _D>
@@ -77,7 +92,7 @@ protected:
             pt(i) = q(i).a;
         }
 
-        const bundle_t* bundle = map_.get(pt);
+        const bundle_t* bundle = getBundle(pt);
         const auto& origin_inv = map_.getInitialOrigin().inverse();
         Eigen::Matrix<JetT,Dim,1> p_prime;
         transform(p, origin_inv, p_prime);
@@ -115,6 +130,8 @@ protected:
 private:
     const ndt_t& map_;
     const typename ivm_t::Ptr& ivm_;
+
+    mutable std::unordered_map<index_t,const bundle_t*> cache_;
 };
 
 // only possible for maps of dimension 2

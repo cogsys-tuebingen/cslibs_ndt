@@ -39,10 +39,9 @@ protected:
     {
         static const auto& origin_inv = map_.getInitialOrigin().inverse();
 
-        static const JetT& c = ::ceres::cos(JetT(origin_inv.yaw()));
-        static const JetT& s = ::ceres::sin(JetT(origin_inv.yaw()));
-        static Eigen::Matrix<JetT,2,2> rot; rot << c, -s, s, c;
-        static const Eigen::Matrix<JetT,2,1> trans(origin_inv.tx(),origin_inv.ty());
+        static const Eigen::Matrix<JetT,2,2> rot =
+                Eigen::Rotation2D<JetT>(JetT(origin_inv.yaw())).toRotationMatrix();
+        static const Eigen::Matrix<JetT,2,1> trans(JetT(origin_inv.tx()),JetT(origin_inv.ty()));
 
         return rot * p + trans;
     }
@@ -54,7 +53,7 @@ protected:
 
         static const auto& r = origin_inv.rotation();
         static const Eigen::Quaternion<JetT> rot(JetT(r.w()), JetT(r.x()), JetT(r.y()), JetT(r.z()));
-        static const Eigen::Matrix<JetT,3,1> trans(origin_inv.tx(), origin_inv.ty(), origin_inv.tz());
+        static const Eigen::Matrix<JetT,3,1> trans(JetT(origin_inv.tx()), JetT(origin_inv.ty()), JetT(origin_inv.tz()));
 
         return rot * p + trans;
     }
@@ -66,7 +65,7 @@ protected:
         for (std::size_t i=0; i<std::min(_D,static_cast<int>(Dim)); ++i)
             p(i) = q(i);
 
-        *value = 1.0 - map_.sampleNonNormalized(point_t(p), ivm_);
+        *value = 1.0 - static_cast<double>(map_.sampleNonNormalized(point_t(p), ivm_));
     }
 
     template <typename JetT, int _D>
@@ -80,37 +79,28 @@ protected:
         }
 
         const bundle_t* bundle = map_.get(pt);
-        JetT retval(1);
-
+        *value = static_cast<JetT>(1.0);
         if (bundle) {
             const Eigen::Matrix<JetT,Dim,1>& p_prime = transformToMap(p);
 
             for (std::size_t i=0; i<ndt_t::bin_count; ++i) {
                 if (const auto& bi = bundle->at(i)) {
+                    const double occ = static_cast<double>(bi->getOccupancy(ivm_));
                     if (const auto& di = bi->getDistribution()) {
                         if (!di->valid())
                             continue;
-                        auto sample = [&p_prime,&di]() {
-                            const auto &mean_tmp = di->getMean();
-                            const auto &inf_tmp  = di->getInformationMatrix();
 
-                            Eigen::Matrix<JetT, Dim, 1> mean;
-                            Eigen::Matrix<JetT, Dim, Dim> inf;
-                            for (std::size_t x=0; x<Dim; ++x) {
-                                mean(x) = JetT(mean_tmp(x));
-                                for (std::size_t y=0; y<Dim; ++y)
-                                    inf(x,y) = JetT(inf_tmp(x,y));
-                            }
-                            const Eigen::Matrix<JetT, Dim, 1> diff = p_prime - mean;
-                            const JetT exponent = -JetT(0.5) * diff.transpose() * inf * diff;
-                            return ::ceres::exp(exponent);
-                        };
-                        retval -= JetT(ndt_t::div_count) * JetT(bi->getOccupancy(ivm_)) * sample();
+                        const Eigen::Matrix<JetT,Dim,1> diff =
+                                p_prime - di->getMean().template cast<double>();
+                        const Eigen::Matrix<double,Dim,Dim> inf =
+                                di->getInformationMatrix().template cast<double>();
+
+                        const JetT sample = ::ceres::exp((-0.5 * diff.transpose() * inf * diff).eval().value());
+                        *value -= static_cast<double>(ndt_t::div_count) * sample * occ;
                     }
                 }
             }
         }
-        *value = retval;
     }
 
 private:
@@ -131,6 +121,10 @@ class ScanMatchCostFunctor<
 
     using ivm_t = typename ndt_t::inverse_sensor_model_t;
     using point_t = typename ndt_t::point_t;
+
+    using transform_t = typename ndt_t::pose_t;
+    using bundle_t = typename ndt_t::distribution_bundle_t;
+    using index_t = typename ndt_t::index_t;
 
     template <typename>
     friend class ::ceres::BiCubicInterpolator;

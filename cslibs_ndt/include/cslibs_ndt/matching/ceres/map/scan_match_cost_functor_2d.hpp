@@ -21,12 +21,9 @@ public:
     template<typename T>
     inline bool operator()(const T* const raw_translation, const T* const raw_rotation, T* residual) const
     {
-        const Eigen::Matrix<T, 2, 1> translation(raw_translation[0], raw_translation[1]);
-        Eigen::Matrix<T, 2, 2> rotation;
-        rotation(0,0) = ::ceres::cos(raw_rotation[0]);
-        rotation(1,0) = ::ceres::sin(raw_rotation[0]);
-        rotation(0,1) =-rotation(1,0);
-        rotation(1,1) = rotation(0,0);
+        const Eigen::Matrix<T,2,1> translation(raw_translation[0], raw_translation[1]);
+        const Eigen::Matrix<T,2,2> rotation =
+                Eigen::Rotation2D<T>(raw_rotation[0]).toRotationMatrix();
 
         std::size_t i = 0;
         const double size = static_cast<double>(points_.size());

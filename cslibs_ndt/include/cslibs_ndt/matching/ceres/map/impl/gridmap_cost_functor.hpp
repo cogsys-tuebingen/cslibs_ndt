@@ -36,10 +36,9 @@ protected:
     {
         static const auto& origin_inv = map_.getInitialOrigin().inverse();
 
-        static const JetT& c = ::ceres::cos(JetT(origin_inv.yaw()));
-        static const JetT& s = ::ceres::sin(JetT(origin_inv.yaw()));
-        static Eigen::Matrix<JetT,2,2> rot; rot << c, -s, s, c;
-        static const Eigen::Matrix<JetT,2,1> trans(origin_inv.tx(),origin_inv.ty());
+        static const Eigen::Matrix<JetT,2,2> rot =
+                Eigen::Rotation2D<JetT>(JetT(origin_inv.yaw())).toRotationMatrix();
+        static const Eigen::Matrix<JetT,2,1> trans(JetT(origin_inv.tx()),JetT(origin_inv.ty()));
 
         return rot * p + trans;
     }
@@ -51,7 +50,7 @@ protected:
 
         static const auto& r = origin_inv.rotation();
         static const Eigen::Quaternion<JetT> rot(JetT(r.w()), JetT(r.x()), JetT(r.y()), JetT(r.z()));
-        static const Eigen::Matrix<JetT,3,1> trans(origin_inv.tx(), origin_inv.ty(), origin_inv.tz());
+        static const Eigen::Matrix<JetT,3,1> trans(JetT(origin_inv.tx()), JetT(origin_inv.ty()), JetT(origin_inv.tz()));
 
         return rot * p + trans;
     }
@@ -75,10 +74,8 @@ protected:
             p(i)  = q(i);
             pt(i) = q(i).a;
         }
-
-        const bundle_t* const& bundle = map_.get(pt);
-        JetT retval(1);
-
+        const bundle_t* bundle = map_.get(pt);
+        *value = static_cast<JetT>(1.0);
         if (bundle) {
             const Eigen::Matrix<JetT,Dim,1>& p_prime = transformToMap(p);
 
@@ -87,27 +84,18 @@ protected:
                     if (const auto& di = bi->getDistribution()) {
                         if (!di->valid())
                             continue;
-                        auto sample = [&p_prime,&di]() {
-                            const auto &mean_tmp = di->getMean();
-                            const auto &inf_tmp  = di->getInformationMatrix();
 
-                            Eigen::Matrix<JetT, Dim, 1> mean;
-                            Eigen::Matrix<JetT, Dim, Dim> inf;
-                            for (std::size_t x=0; x<Dim; ++x) {
-                                mean(x) = JetT(mean_tmp(x));
-                                for (std::size_t y=0; y<Dim; ++y)
-                                    inf(x,y) = JetT(inf_tmp(x,y));
-                            }
-                            const Eigen::Matrix<JetT, Dim, 1> diff = p_prime - mean;
-                            const JetT exponent = -JetT(0.5) * diff.transpose() * inf * diff;
-                            return ::ceres::exp(exponent);
-                        };
-                        retval -= JetT(ndt_t::div_count) * sample();
+                        const Eigen::Matrix<JetT,Dim,1> diff =
+                                p_prime - di->getMean().template cast<double>();
+                        const Eigen::Matrix<double,Dim,Dim> inf =
+                                di->getInformationMatrix().template cast<double>();
+
+                        const JetT sample = ::ceres::exp((-0.5 * diff.transpose() * inf * diff).eval().value());
+                        *value -= static_cast<double>(ndt_t::div_count) * sample;
                     }
                 }
             }
         }
-        *value = retval;
     }
 
 private:

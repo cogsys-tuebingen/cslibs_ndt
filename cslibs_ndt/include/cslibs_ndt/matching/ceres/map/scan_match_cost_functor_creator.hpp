@@ -15,13 +15,13 @@ class ScanMatchCostFunctorCreator
 public:
     template <typename points_t, typename ... args_t>
     static inline ::ceres::CostFunction* CreateAutoDiffCostFunction(
-            double weight, points_t points, const args_t &...args)
+            double weight, points_t&& points, const args_t &...args)
     {
         using _child_t = child_t<base_t,points_t>;
 
-        const auto count = points.size();
+        const auto& count = points.size();
         return new ::ceres::AutoDiffCostFunction<_child_t, ::ceres::DYNAMIC, _child_t::N0, _child_t::N1>(
-                    new _child_t(weight / std::sqrt(count), std::move(points), args...),
+                    new _child_t(weight / std::sqrt(count), points, args...),
                     count);
     }
 
@@ -29,14 +29,14 @@ public:
               typename points_t,
               typename ... args_t>
     static inline ::ceres::CostFunction* CreateNumericDiffCostFunction(
-            double weight, points_t points, const args_t &...args)
+            double weight, points_t&& points, const args_t &...args)
     {
         using _child_t = child_t<base_t,points_t>;
 
-        const auto count = points.size();
+        const auto& count = points.size();
         return new ::ceres::NumericDiffCostFunction<_child_t, numeric_method_t, ::ceres::DYNAMIC, _child_t::N0, _child_t::N1>(
-                    new _child_t(weight / std::sqrt(count), std::move(points), args...),
-                    ::ceres::DO_NOT_TAKE_OWNERSHIP,
+                    new _child_t(weight / std::sqrt(count), points, args...),
+                    ::ceres::TAKE_OWNERSHIP,
                     count);
     }
 };

@@ -12,15 +12,14 @@ namespace matching {
 namespace ceres {
 
 template <cslibs_ndt::map::tags::option option_t,
-          std::size_t Dim,
           typename _T,
           template <typename, typename, typename...> class backend_t,
           template <typename, typename, typename...> class dynamic_backend_t>
 class ScanMatchCostFunctor<
-        cslibs_ndt::map::Map<option_t,Dim,cslibs_ndt::OccupancyDistribution,_T,backend_t,dynamic_backend_t>,
+        cslibs_ndt::map::Map<option_t,2,cslibs_ndt::OccupancyDistribution,_T,backend_t,dynamic_backend_t>,
         Flag::DIRECT>
 {
-    using ndt_t = cslibs_ndt::map::Map<option_t,Dim,cslibs_ndt::OccupancyDistribution,_T,backend_t,dynamic_backend_t>;
+    using ndt_t = cslibs_ndt::map::Map<option_t,2,cslibs_ndt::OccupancyDistribution,_T,backend_t,dynamic_backend_t>;
 
     using ivm_t = typename ndt_t::inverse_sensor_model_t;
     using point_t = typename ndt_t::point_t;
@@ -30,58 +29,34 @@ protected:
     explicit inline ScanMatchCostFunctor(const ndt_t& map,
                                          const typename ivm_t::Ptr& ivm) :
         map_(map),
-        ivm_(ivm)
+        ivm_(ivm),
+        resolution_inv_(1.0 / map_.getBundleResolution())
     {
-    }
-
-    template <typename JetT>
-    inline Eigen::Matrix<JetT,2,1> transformToMap(const Eigen::Matrix<JetT,2,1>& p) const
-    {
-        static const auto& origin_inv = map_.getInitialOrigin().inverse();
-
-        static const Eigen::Matrix<double,2,2> rot =
-                Eigen::Rotation2D<double>(double(origin_inv.yaw())).toRotationMatrix();
-        static const Eigen::Matrix<double,2,1> trans(double(origin_inv.tx()),double(origin_inv.ty()));
-
-        return rot * p + trans;
-    }
-
-    template <typename JetT>
-    inline Eigen::Matrix<JetT,3,1> transformToMap(const Eigen::Matrix<JetT,3,1>& p) const
-    {
-        static const auto& origin_inv = map_.getInitialOrigin().inverse();
-
-        static const auto& r = origin_inv.rotation();
-        static const Eigen::Quaternion<double> rot(double(r.w()), double(r.x()), double(r.y()), double(r.z()));
-        static const Eigen::Matrix<double,3,1> trans(double(origin_inv.tx()), double(origin_inv.ty()), double(origin_inv.tz()));
-
-        return rot * p + trans;
+        const auto& origin_inv = map_.getInitialOrigin().inverse();
+        rot_ = Eigen::Rotation2D<double>(static_cast<double>(origin_inv.yaw())).toRotationMatrix();
+        trans_ = Eigen::Matrix<double,2,1>(static_cast<double>(origin_inv.tx()),static_cast<double>(origin_inv.ty()));
     }
 
     template <int _D>
     inline void Evaluate(const Eigen::Matrix<double,_D,1>& q, double* const value) const
     {
-        point_t pt;
-        for (std::size_t i=0; i<std::min(_D,static_cast<int>(Dim)); ++i)
-            pt(i) = static_cast<_T>(q(i));
-
-        *value = 1.0 - static_cast<double>(map_.sampleNonNormalized(pt, ivm_));
+        point_t pt((q.template topRows<2>().template cast<_T>()).eval());
+        *value = 1.0 - map_.sampleNonNormalized(pt, ivm_);
     }
 
     template <typename JetT, int _D>
     inline void Evaluate(const Eigen::Matrix<JetT,_D,1>& q, JetT* const value) const
     {
-        point_t pt;
-        Eigen::Matrix<JetT,Dim,1> p = Eigen::Matrix<JetT,Dim,1>::Zero();
-        for (std::size_t i=0; i<std::min(_D,static_cast<int>(Dim)); ++i) {
-            p(i)  = q(i);
-            pt(i) = q(i).a;
-        }
+        const Eigen::Matrix<JetT,2,1>& p = q.template topRows<2>();
 
-        const bundle_t* bundle = map_.get(pt);
-        *value = static_cast<JetT>(1.0);
+        const Eigen::Matrix<JetT,2,1>& p_prime = rot_ * p + trans_;
+        std::array<int,2> bi;
+        for (std::size_t i=0; i<2; ++i)
+            bi[i] = std::floor(p_prime(i).a * resolution_inv_);
+
+        const bundle_t* bundle = map_.get(bi);
+        *value = JetT(1.0);
         if (bundle) {
-            const Eigen::Matrix<JetT,Dim,1>& p_prime = transformToMap(p);
 
             for (std::size_t i=0; i<ndt_t::bin_count; ++i) {
                 if (const auto& bi = bundle->at(i)) {
@@ -90,12 +65,12 @@ protected:
                         if (!di->valid())
                             continue;
 
-                        const Eigen::Matrix<JetT,Dim,1> diff =
+                        const Eigen::Matrix<JetT,2,1> diff =
                                 p_prime - di->getMean().template cast<double>();
-                        const Eigen::Matrix<double,Dim,Dim> inf =
+                        const Eigen::Matrix<double,2,2> inf =
                                 di->getInformationMatrix().template cast<double>();
 
-                        const JetT sample = ::ceres::exp((-0.5 * diff.transpose() * inf * diff).value());
+                        const auto& sample = ::ceres::exp((-0.5 * diff.transpose() * inf * diff).value());
                         *value -= static_cast<double>(ndt_t::div_count) * sample * occ;
                     }
                 }
@@ -106,6 +81,90 @@ protected:
 private:
     const ndt_t& map_;
     const typename ivm_t::Ptr& ivm_;
+
+    const double resolution_inv_;
+    Eigen::Matrix<double,2,2> rot_;
+    Eigen::Matrix<double,2,1> trans_;
+};
+
+template <cslibs_ndt::map::tags::option option_t,
+          typename _T,
+          template <typename, typename, typename...> class backend_t,
+          template <typename, typename, typename...> class dynamic_backend_t>
+class ScanMatchCostFunctor<
+        cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,_T,backend_t,dynamic_backend_t>,
+        Flag::DIRECT>
+{
+    using ndt_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,_T,backend_t,dynamic_backend_t>;
+
+    using ivm_t = typename ndt_t::inverse_sensor_model_t;
+    using point_t = typename ndt_t::point_t;
+    using bundle_t = typename ndt_t::distribution_bundle_t;
+
+protected:
+    explicit inline ScanMatchCostFunctor(const ndt_t& map,
+                                         const typename ivm_t::Ptr& ivm) :
+        map_(map),
+        ivm_(ivm),
+        resolution_inv_(1.0 / map_.getBundleResolution())
+    {
+        const auto& origin_inv = map_.getInitialOrigin().inverse();
+        const auto& r = origin_inv.rotation();
+        rot_ = Eigen::Quaternion<double>(
+                    static_cast<double>(r.w()), static_cast<double>(r.x()),
+                    static_cast<double>(r.y()), static_cast<double>(r.z()));
+        trans_ = Eigen::Matrix<double,3,1>(
+                    static_cast<double>(origin_inv.tx()), static_cast<double>(origin_inv.ty()), static_cast<double>(origin_inv.tz()));
+    }
+
+    template <int _D>
+    inline void Evaluate(const Eigen::Matrix<double,_D,1>& q, double* const value) const
+    {
+        point_t pt((q.template topRows<3>().template cast<_T>()).eval());
+        *value = 1.0 - map_.sampleNonNormalized(pt, ivm_);
+    }
+
+    template <typename JetT, int _D>
+    inline void Evaluate(const Eigen::Matrix<JetT,_D,1>& q, JetT* const value) const
+    {
+        const Eigen::Matrix<JetT,3,1>& p = q.template topRows<3>();
+
+        const Eigen::Matrix<JetT,3,1>& p_prime = rot_ * p + trans_;
+        std::array<int,3> bi;
+        for (std::size_t i=0; i<3; ++i)
+            bi[i] = std::floor(p_prime(i).a * resolution_inv_);
+
+        const bundle_t* bundle = map_.get(bi);
+        *value = JetT(1.0);
+        if (bundle) {
+
+            for (std::size_t i=0; i<ndt_t::bin_count; ++i) {
+                if (const auto& bi = bundle->at(i)) {
+                    const double occ = static_cast<double>(bi->getOccupancy(ivm_));
+                    if (const auto& di = bi->getDistribution()) {
+                        if (!di->valid())
+                            continue;
+
+                        const Eigen::Matrix<JetT,3,1> diff =
+                                p_prime - di->getMean().template cast<double>();
+                        const Eigen::Matrix<double,3,3> inf =
+                                di->getInformationMatrix().template cast<double>();
+
+                        const auto& sample = ::ceres::exp((-0.5 * diff.transpose() * inf * diff).value());
+                        *value -= static_cast<double>(ndt_t::div_count) * sample * occ;
+                    }
+                }
+            }
+        }
+    }
+
+private:
+    const ndt_t& map_;
+    const typename ivm_t::Ptr& ivm_;
+
+    const double resolution_inv_;
+    Eigen::Quaternion<double> rot_;
+    Eigen::Matrix<double,3,1> trans_;
 };
 
 // only possible for maps of dimension 2
@@ -142,8 +201,14 @@ protected:
     {
     }
 
-    template <typename T, int _D>
-    inline void Evaluate(const Eigen::Matrix<T,_D,1>& q, T* const value) const
+    template <int _D>
+    inline void Evaluate(const Eigen::Matrix<double,_D,1>& q, double* const value) const
+    {
+        *value = 1.0 - map_.sampleNonNormalized(point_t(q(0),q(1)), ivm_);
+    }
+
+    template <typename JetT, int _D>
+    inline void Evaluate(const Eigen::Matrix<JetT,_D,1>& q, JetT* const value) const
     {
         interpolator_.Evaluate(q(0) / sampling_resolution_,
                                q(1) / sampling_resolution_,

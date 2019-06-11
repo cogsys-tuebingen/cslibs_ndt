@@ -37,8 +37,7 @@ protected:
     template <int _D>
     inline void Evaluate(const Eigen::Matrix<double,_D,1>& q, double* const value) const
     {
-        point_t pt((q.template topRows<2>().template cast<_T>()).eval());
-        *value = 1.0 - map_.sampleNonNormalized(pt);
+        *value = 1.0 - map_.sampleNonNormalized(point_t(q(0),q(1)));
     }
 
     template <typename JetT, int _D>
@@ -47,9 +46,8 @@ protected:
         const Eigen::Matrix<JetT,2,1>& p = q.template topRows<2>();
 
         const Eigen::Matrix<JetT,2,1>& p_prime = rot_ * p + trans_;
-        std::array<int,2> bi;
-        for (std::size_t i=0; i<2; ++i)
-            bi[i] = std::floor(p_prime(i).a * resolution_inv_);
+        const std::array<int,2> bi{{static_cast<int>(std::floor(p_prime(0).a * resolution_inv_)),
+                                    static_cast<int>(std::floor(p_prime(1).a * resolution_inv_))}};
 
         const bundle_t* bundle = map_.get(bi);
         *value = JetT(1.0);
@@ -112,8 +110,7 @@ protected:
     template <int _D>
     inline void Evaluate(const Eigen::Matrix<double,_D,1>& q, double* const value) const
     {
-        point_t pt((q.template topRows<3>().template cast<_T>()).eval());
-        *value = 1.0 - map_.sampleNonNormalized(pt);
+        *value = 1.0 - map_.sampleNonNormalized(point_t(q(0),q(1),q(2)));
     }
 
     template <typename JetT, int _D>
@@ -122,9 +119,9 @@ protected:
         const Eigen::Matrix<JetT,3,1>& p = q.template topRows<3>();
 
         const Eigen::Matrix<JetT,3,1>& p_prime = rot_ * p + trans_;
-        std::array<int,3> bi;
-        for (std::size_t i=0; i<3; ++i)
-            bi[i] = std::floor(p_prime(i).a * resolution_inv_);
+        const std::array<int,2> bi{{static_cast<int>(std::floor(p_prime(0).a * resolution_inv_)),
+                                    static_cast<int>(std::floor(p_prime(1).a * resolution_inv_)),
+                                    static_cast<int>(std::floor(p_prime(2).a * resolution_inv_))}};
 
         const bundle_t* bundle = map_.get(bi);
         *value = JetT(1.0);

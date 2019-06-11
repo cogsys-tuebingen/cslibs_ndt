@@ -36,9 +36,9 @@ protected:
     {
         static const auto& origin_inv = map_.getInitialOrigin().inverse();
 
-        static const Eigen::Matrix<JetT,2,2> rot =
-                Eigen::Rotation2D<JetT>(JetT(origin_inv.yaw())).toRotationMatrix();
-        static const Eigen::Matrix<JetT,2,1> trans(JetT(origin_inv.tx()),JetT(origin_inv.ty()));
+        static const Eigen::Matrix<double,2,2> rot =
+                Eigen::Rotation2D<double>(double(origin_inv.yaw())).toRotationMatrix();
+        static const Eigen::Matrix<double,2,1> trans(double(origin_inv.tx()),double(origin_inv.ty()));
 
         return rot * p + trans;
     }
@@ -49,8 +49,8 @@ protected:
         static const auto& origin_inv = map_.getInitialOrigin().inverse();
 
         static const auto& r = origin_inv.rotation();
-        static const Eigen::Quaternion<JetT> rot(JetT(r.w()), JetT(r.x()), JetT(r.y()), JetT(r.z()));
-        static const Eigen::Matrix<JetT,3,1> trans(JetT(origin_inv.tx()), JetT(origin_inv.ty()), JetT(origin_inv.tz()));
+        static const Eigen::Quaternion<double> rot(double(r.w()), double(r.x()), double(r.y()), double(r.z()));
+        static const Eigen::Matrix<double,3,1> trans(double(origin_inv.tx()), double(origin_inv.ty()), double(origin_inv.tz()));
 
         return rot * p + trans;
     }
@@ -58,11 +58,11 @@ protected:
     template <int _D>
     inline void Evaluate(const Eigen::Matrix<double,_D,1>& q, double* const value) const
     {
-        Eigen::Matrix<_T,Dim,1> p = Eigen::Matrix<_T,Dim,1>::Zero();
+        point_t pt;
         for (std::size_t i=0; i<std::min(_D,static_cast<int>(Dim)); ++i)
-            p(i) = q(i);
+            pt(i) = static_cast<_T>(q(i));
 
-        *value = 1.0 - map_.sampleNonNormalized(point_t(p));
+        *value = 1.0 - map_.sampleNonNormalized(pt);
     }
 
     template <typename JetT, int _D>

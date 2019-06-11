@@ -27,6 +27,7 @@ inline void Problem2d(const double& translation_weight, const double& rotation_w
                       const cslibs_math::linear::Vector<double,2>& translation, const double& rotation,
                       double* ceres_translation, double* ceres_rotation,
                       ::ceres::Problem& problem,
+                      const bool use_numeric_diff,
                       const args_t &...args)
 {
     problem.AddParameterBlock(ceres_translation, 2, nullptr);
@@ -34,6 +35,9 @@ inline void Problem2d(const double& translation_weight, const double& rotation_w
 
     if (map_weight != 0.0) {
       problem.AddResidualBlock(
+                  use_numeric_diff ?
+            cslibs_ndt::matching::ceres::ScanMatchCostFunctor2dCreator<ndt_t, flag_t>::
+                  CreateNumericDiffCostFunction(map_weight, args...) :
             cslibs_ndt::matching::ceres::ScanMatchCostFunctor2dCreator<ndt_t, flag_t>::
                   CreateAutoDiffCostFunction(map_weight, args...),
             nullptr,
@@ -62,6 +66,7 @@ inline void Problem3dQuaternion(const double& translation_weight, const double& 
                                 double* ceres_translation, double* ceres_rotation,
                                 ::ceres::Problem& problem,
                                 const bool only_yaw,
+                                const bool use_numeric_diff,
                                 const args_t &...args)
 {
     problem.AddParameterBlock(ceres_translation, 3, only_yaw ? new ::ceres::SubsetParameterization(3, { 2 }) :
@@ -71,6 +76,9 @@ inline void Problem3dQuaternion(const double& translation_weight, const double& 
 
     if (map_weight != 0.0) {
       problem.AddResidualBlock(
+                  use_numeric_diff ?
+            cslibs_ndt::matching::ceres::ScanMatchCostFunctor3dQuaternionCreator<ndt_t, flag_t>::
+                  CreateNumericDiffCostFunction(map_weight, args...) :
             cslibs_ndt::matching::ceres::ScanMatchCostFunctor3dQuaternionCreator<ndt_t, flag_t>::
                   CreateAutoDiffCostFunction(map_weight, args...),
             nullptr,
@@ -99,6 +107,7 @@ inline void Problem3dRPY(const double& translation_weight, const double& rotatio
                          double* ceres_translation, double* ceres_rotation,
                          ::ceres::Problem& problem,
                          const bool only_yaw,
+                         const bool use_numeric_diff,
                          const args_t &...args)
 {
     problem.AddParameterBlock(ceres_translation, 3, only_yaw ? new ::ceres::SubsetParameterization(3, { 2 }) :
@@ -108,6 +117,9 @@ inline void Problem3dRPY(const double& translation_weight, const double& rotatio
 
     if (map_weight != 0.0) {
       problem.AddResidualBlock(
+                  use_numeric_diff ?
+            cslibs_ndt::matching::ceres::ScanMatchCostFunctor3dRPYCreator<ndt_t, flag_t>::
+                  CreateNumericDiffCostFunction(map_weight, args...) :
             cslibs_ndt::matching::ceres::ScanMatchCostFunctor3dRPYCreator<ndt_t, flag_t>::
                   CreateAutoDiffCostFunction(map_weight, args...),
             nullptr,

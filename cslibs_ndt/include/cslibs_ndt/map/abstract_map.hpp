@@ -11,7 +11,6 @@
 #include <cslibs_ndt/utility/utility.hpp>
 
 #include <cslibs_math/common/array.hpp>
-#include <cslibs_math/utility/traits.hpp>
 
 #include <cslibs_indexed_storage/storage.hpp>
 #include <cslibs_indexed_storage/operations/clustering.hpp>
@@ -43,7 +42,7 @@ public:
     using index_t       = std::array<int,Dim>;
 
     static constexpr std::size_t bin_count  = utility::two_pow(Dim);
-    static constexpr T div_count = cslibs_math::utility::traits<T>::One / static_cast<T>(bin_count);
+    static constexpr T div_count = 1.0 / static_cast<T>(bin_count);
 
     using index_list_t                      = std::array<index_t, bin_count>;
     using distribution_t                    = data_t<T,Dim>;
@@ -66,8 +65,8 @@ public:
                        const index_t &min_bundle_index,
                        const index_t &max_bundle_index) :
         resolution_(resolution),
-        bundle_resolution_(cslibs_math::utility::traits<T>::Half * resolution_),
-        bundle_resolution_inv_(cslibs_math::utility::traits<T>::One / bundle_resolution_),
+        bundle_resolution_(0.5 * resolution_),
+        bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
         min_bundle_index_(min_bundle_index),
@@ -84,8 +83,8 @@ public:
                        const distribution_bundle_storage_ptr_t &bundles,
                        const distribution_storage_array_t      &storage) :
         resolution_(resolution),
-        bundle_resolution_(cslibs_math::utility::traits<T>::Half * resolution_),
-        bundle_resolution_inv_(cslibs_math::utility::traits<T>::One / bundle_resolution_),
+        bundle_resolution_(0.5 * resolution_),
+        bundle_resolution_inv_(1.0 / bundle_resolution_),
         w_T_m_(origin),
         m_T_w_(w_T_m_.inverse()),
         min_bundle_index_(min_bundle_index),

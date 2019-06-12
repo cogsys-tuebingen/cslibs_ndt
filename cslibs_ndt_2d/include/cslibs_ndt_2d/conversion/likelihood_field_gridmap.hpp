@@ -29,7 +29,7 @@ inline void from(
 
     assert(threshold <= 1.0);
     assert(threshold >= 0.0);
-    const T exp_factor_hit = (cslibs_math::utility::traits<T>::Half / (sigma_hit * sigma_hit));
+    const T exp_factor_hit = (0.5 / (sigma_hit * sigma_hit));
 
     using src_map_t = cslibs_ndt::map::Map<option_t,2,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t>;
     using dst_map_t = cslibs_gridmaps::static_maps::LikelihoodFieldGridmap<T,T>;
@@ -97,7 +97,7 @@ inline void from(
 
     assert(threshold <= 1.0);
     assert(threshold >= 0.0);
-    const T exp_factor_hit = (cslibs_math::utility::traits<T>::Half / (sigma_hit * sigma_hit));
+    const T exp_factor_hit = (0.5 / (sigma_hit * sigma_hit));
 
     using src_map_t = cslibs_ndt::map::Map<option_t,2,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t>;
     using dst_map_t = cslibs_gridmaps::static_maps::LikelihoodFieldGridmap<T>;

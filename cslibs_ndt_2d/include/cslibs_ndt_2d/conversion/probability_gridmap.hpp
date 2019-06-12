@@ -15,7 +15,7 @@ namespace conversion {
 template <typename T>
 inline T validate(const T& val)
 {
-    if (val < 0 || val > cslibs_math::utility::traits<T>::One || !std::isnormal(val))
+    if (val < 0 || val > 1.0 || !std::isnormal(val))
         return T();
     return val;
 }

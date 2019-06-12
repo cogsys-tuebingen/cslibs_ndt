@@ -72,7 +72,7 @@ public:
         inverse_model_ = nullptr;
     }
 
-    inline void updateOccupied(const point_t& p, const T& w = cslibs_math::utility::traits<T>::One)
+    inline void updateOccupied(const point_t& p, const T& w = 1.0)
     {
         if (!distribution_)
             distribution_.reset(new distribution_t());

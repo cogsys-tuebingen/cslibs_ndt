@@ -27,4 +27,8 @@ class Function;
 }
 }
 
+// partial specializations can be found in
+// cslibs_ndt_2d,
+// cslibs_ndt_3d
+
 #endif CSLIBS_NDT_MATCHING_ALGLIB_FUNCTION_HPP

@@ -56,8 +56,8 @@ public:
 
         // calculate translational and rotational function component
         const auto& initial_guess = (object.initial_guess_);
-        const double trans_diff = hypot(x[0] - initial_guess[0], x[1] - initial_guess[1]);
-        const double rot_diff = cslibs_math::common::angle::difference(x[2], initial_guess[2]);
+        const double trans_diff   = hypot(x[0] - initial_guess[0], x[1] - initial_guess[1]);
+        const double rot_diff     = cslibs_math::common::angle::difference(x[2], initial_guess[2]);
 
         // apply weights
         fi[0] = object.map_weight_ * fi[0] / static_cast<double>(points.size()) +
@@ -76,7 +76,7 @@ public:
         }
 
         // calculate translational and rotational function component
-        const Functor& object = *casted_ptr;
+        const Functor& object     = *casted_ptr;
         const auto& initial_guess = (object.initial_guess_);
         const double trans_diff   = hypot(x[0] - initial_guess[0], x[1] - initial_guess[1]);
         const double rot_diff     = cslibs_math::common::angle::difference(x[2], initial_guess[2]);

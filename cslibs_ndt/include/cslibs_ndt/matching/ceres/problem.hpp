@@ -14,9 +14,10 @@
 
 #include <cslibs_ndt/matching/ceres/local_parameterization.hpp>
 
-#include <type_traits>
 #include <ceres/problem.h>
 #include <ceres/local_parameterization.h>
+
+#include <type_traits>
 
 namespace cslibs_ndt {
 namespace matching {

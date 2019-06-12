@@ -14,8 +14,8 @@ class ScanMatchCostFunctor;
 }
 }
 
-// partial specializations
-#include <cslibs_ndt/matching/ceres/map/impl/gridmap_cost_functor.hpp>
-#include <cslibs_ndt/matching/ceres/map/impl/occupancy_gridmap_cost_functor.hpp>
+// partial specializations can be found in
+// cslibs_ndt_2d,
+// cslibs_ndt_3d
 
 #endif // CSLIBS_NDT_MATCHING_CERES_SCAN_MATCH_COST_FUNCTOR_HPP

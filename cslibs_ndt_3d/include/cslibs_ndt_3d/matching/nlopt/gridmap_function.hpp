@@ -29,6 +29,8 @@ public:
         double rotation_weight_;
         double map_weight_;
     };
+    using FunctorRPY = Functor<6>;
+    using FunctorQuaternion = Functor<7>;
 
     inline static double apply(unsigned n, const double *x, double *grad, void* ptr)
     {

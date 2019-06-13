@@ -31,6 +31,8 @@ public:
         double rotation_weight_;
         double map_weight_;
     };
+    using FunctorRPY = Functor<6>;
+    using FunctorQuaternion = Functor<7>;
 
     inline static double apply(const ::alglib::real_1d_array &x, ::alglib::real_1d_array &fi, void *ptr)
     {

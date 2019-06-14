@@ -57,7 +57,8 @@ public:
         // evaluate function
         for (const auto& p : points) {
             const typename ndt_t::point_t q = current_transform * typename ndt_t::point_t(p(0),p(1));
-            fi += 1.0 - map.sampleNonNormalized(q);
+            const double score = map.sampleNonNormalized(q);
+            fi += std::isnormal(score) ? (1.0 - score) : 1.0;
         }
 
         // calculate translational and rotational function component

@@ -66,7 +66,6 @@ public:
         fi[0] = object.map_weight_ * fi[0] / static_cast<double>(points.size()) +
                 object.translation_weight_ * trans_diff +
                 object.rotation_weight_ * std::fabs(rot_diff);
-        fi[0] = std::sqrt(std::fabs(fi[0]));
     }
 
     inline static double mapScore(const ::alglib::real_1d_array &x, const ::alglib::real_1d_array &fi, void* ptr)

@@ -33,6 +33,12 @@ public:
     using FunctorRPY = Functor<6>;
     using FunctorQuaternion = Functor<7>;
 
+    inline static double hypot(const double& x, const double& y, const double& z)
+    {
+        auto sq = [](const double& v) { return v*v; };
+        return std::sqrt(sq(x) + sq(y) + sq(z));
+    }
+
     inline static double apply(unsigned n, const double *x, double *grad, void* ptr)
     {
         // deduce correct function
@@ -41,10 +47,10 @@ public:
 
         // call function
         if (casted_to_rpy && !casted_to_quaternion)
-            applyRPY(n,x,grad,ptr);
+            return applyRPY(n,x,grad,ptr);
         else if (casted_to_quaternion && !casted_to_rpy)
-            applyQuaternion(n,x,grad,ptr);
-        else if (!casted_to_rpy && !casted_to_quaternion)
+            return applyQuaternion(n,x,grad,ptr);
+        else //if (!casted_to_rpy && !casted_to_quaternion)
             throw std::runtime_error("Wrong Functor given; neither RPY nor Quaternion function can be applied!");
     }
 
@@ -56,10 +62,10 @@ public:
 
         // call function
         if (casted_to_rpy && !casted_to_quaternion)
-            mapScoreRPY(x,fi,ptr);
+            return mapScoreRPY(x,fi,ptr);
         else if (casted_to_quaternion && !casted_to_rpy)
-            mapScoreQuaternion(x,fi,ptr);
-        else if (!casted_to_rpy && !casted_to_quaternion)
+            return mapScoreQuaternion(x,fi,ptr);
+        else //if (!casted_to_rpy && !casted_to_quaternion)
             throw std::runtime_error("Wrong Functor given; neither RPY nor Quaternion function can be applied!");
     }
 
@@ -128,7 +134,7 @@ public:
                                           cslibs_math::common::angle::difference(x[5], initial_guess[5]));
 
         // extract real fvalue (map correlation value)
-        return 1.0 - (&fi -
+        return 1.0 - (fi -
                 object.translation_weight_ * trans_diff -
                 object.rotation_weight_ * std::fabs(rot_diff)) /
                 object.map_weight_;
@@ -203,7 +209,7 @@ public:
                                           cslibs_math::common::angle::difference(rot.yaw(), initial_guess[5]));
 
         // extract real fvalue (map correlation value)
-        return 1.0 - (&fi -
+        return 1.0 - (fi -
                 object.translation_weight_ * trans_diff -
                 object.rotation_weight_ * std::fabs(rot_diff)) /
                 object.map_weight_;

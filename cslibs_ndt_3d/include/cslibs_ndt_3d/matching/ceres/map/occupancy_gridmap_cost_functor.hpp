@@ -45,12 +45,10 @@ protected:
     }
 
     template <typename JetT, int _D>
-    inline void Evaluate(const Eigen::Matrix<JetT,_D,1>& q, JetT* const value) const
+    inline void Evaluate(const Eigen::Matrix<JetT,_D,1>& p, JetT* const value) const
     {
-        const Eigen::Matrix<JetT,3,1>& p = q.template topRows<3>();
-
-        const Eigen::Matrix<JetT,3,1>& p_prime = rot_ * p + trans_;
-        const std::array<int,2> bi{{static_cast<int>(std::floor(p_prime(0).a * resolution_inv_)),
+        const Eigen::Matrix<JetT,3,1>& p_prime = rot_.matrix() * p + trans_;
+        const std::array<int,3> bi{{static_cast<int>(std::floor(p_prime(0).a * resolution_inv_)),
                                     static_cast<int>(std::floor(p_prime(1).a * resolution_inv_)),
                                     static_cast<int>(std::floor(p_prime(2).a * resolution_inv_))}};
 

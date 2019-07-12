@@ -21,14 +21,32 @@ class ScanMatchCostFunctor3dRPY : public base_t
     friend class ceres::ScanMatchCostFunctorCreator;
 
 public:
-    template<typename T>
+    template <typename T>
+    inline Eigen::Quaternion<T> toEigen(const T* const raw_rotation_rpy) const
+    {
+        const T roll_2    = raw_rotation_rpy[0] * 0.5;
+        const T pitch_2   = raw_rotation_rpy[1] * 0.5;
+        const T yaw_2     = raw_rotation_rpy[2] * 0.5;
+        const T cos_roll  = ::ceres::cos(roll_2);
+        const T sin_roll  = ::ceres::sin(roll_2);
+        const T cos_pitch = ::ceres::cos(pitch_2);
+        const T sin_pitch = ::ceres::sin(pitch_2);
+        const T cos_yaw   = ::ceres::cos(yaw_2);
+        const T sin_yaw   = ::ceres::sin(yaw_2);
+
+        const T data_x = sin_roll * cos_pitch * cos_yaw - cos_roll * sin_pitch * sin_yaw;
+        const T data_y = cos_roll * sin_pitch * cos_yaw + sin_roll * cos_pitch * sin_yaw;
+        const T data_z = cos_roll * cos_pitch * sin_yaw - sin_roll * sin_pitch * cos_yaw;
+        const T data_w = cos_roll * cos_pitch * cos_yaw + sin_roll * sin_pitch * sin_yaw;
+
+        return Eigen::Quaternion<T>{ data_w, data_x, data_y, data_z };
+    }
+
+    template <typename T>
     inline bool operator()(const T* const raw_translation, const T* const raw_rotation_rpy, T* residual) const
     {
         const Eigen::Matrix<T, 3, 1> translation(raw_translation[0], raw_translation[1], raw_translation[2]);
-        const Eigen::Quaternion<T>   rotation =
-                cslibs_math_3d::Quaternion<T>(T(raw_rotation_rpy[0]),
-                                              T(raw_rotation_rpy[1]),
-                                              T(raw_rotation_rpy[2])).toEigen();
+        const Eigen::Quaternion<T> rotation = toEigen(raw_rotation_rpy);
 
         std::size_t i = 0;
         const double size = static_cast<double>(points_.size());

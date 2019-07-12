@@ -198,7 +198,7 @@ public:
                                           cslibs_math::common::angle::difference(rot.yaw(), initial_guess[5]));
 
         // extract real fvalue (map correlation value)
-        return 1.0 - (&fi -
+        return 1.0 - (fi -
                 object.translation_weight_ * trans_diff -
                 object.rotation_weight_ * std::fabs(rot_diff)) /
                 object.map_weight_;

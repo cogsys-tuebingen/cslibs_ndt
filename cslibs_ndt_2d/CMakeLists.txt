@@ -31,7 +31,7 @@ include_directories(
 
 cslibs_ndt_2d_show_headers()
 
-cslibs_ndt_add_unit_test_gtest(${PROJECT_NAME}_test_serialization
+cslibs_ndt_2d_add_unit_test_gtest(${PROJECT_NAME}_test_serialization
     SRCS test/serialization.cpp
 )
 target_link_libraries(${PROJECT_NAME}_test_serialization

@@ -41,36 +41,6 @@ public:
         return std::sqrt(sq(x) + sq(y) + sq(z));
     }
 
-    inline static void apply(const ::alglib::real_1d_array &x, ::alglib::real_1d_array &fi, void *ptr)
-    {
-        // deduce correct function
-        const auto& casted_to_rpy = (Functor<6>*)ptr;
-        const auto& casted_to_quaternion = (Functor<7>*)ptr;
-
-        // call function
-        if (casted_to_rpy && !casted_to_quaternion)
-            applyRPY(x,fi,ptr);
-        else if (casted_to_quaternion && !casted_to_rpy)
-            applyQuaternion(x,fi,ptr);
-        else //if (!casted_to_rpy && !casted_to_quaternion)
-            throw std::runtime_error("Wrong Functor given; neither RPY nor Quaternion function can be applied!");
-    }
-
-    inline static double mapScore(const ::alglib::real_1d_array &x, const ::alglib::real_1d_array &fi, void* ptr)
-    {
-        // deduce correct function
-        const auto& casted_to_rpy = (Functor<6>*)ptr;
-        const auto& casted_to_quaternion = (Functor<7>*)ptr;
-
-        // call function
-        if (casted_to_rpy && !casted_to_quaternion)
-            return mapScoreRPY(x,fi,ptr);
-        else if (casted_to_quaternion && !casted_to_rpy)
-            return mapScoreQuaternion(x,fi,ptr);
-        else //if (!casted_to_rpy && !casted_to_quaternion)
-            throw std::runtime_error("Wrong Functor given; neither RPY nor Quaternion function can be applied!");
-    }
-
     inline static void applyRPY(const ::alglib::real_1d_array &x, ::alglib::real_1d_array &fi, void *ptr)
     {
         // check that all necessary information is given

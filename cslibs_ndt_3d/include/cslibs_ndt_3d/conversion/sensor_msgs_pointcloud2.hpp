@@ -40,12 +40,13 @@ inline void from(
     memcpy(&dst.data[0], &tmp[0], data_size);
 }
 
-template<typename T,
-         typename ndt_t,
-         typename = typename std::enable_if<std::is_same<ndt_t, cslibs_ndt_3d::dynamic_maps::Gridmap<T>>::value
-                                            || std::is_same<ndt_t, cslibs_ndt_3d::static_maps::Gridmap<T>>::value>::type>
+
+template <cslibs_ndt::map::tags::option option_t,
+          typename T,
+          template <typename, typename, typename...> class backend_t,
+          template <typename, typename, typename...> class dynamic_backend_t>
 inline void from(
-        ndt_t &src,
+        cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t> &src,
         sensor_msgs::PointCloud2 &dst,
         const bool &allocate_all = true,
         const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
@@ -53,6 +54,7 @@ inline void from(
     if (allocate_all)
         src.allocatePartiallyAllocatedBundles();
 
+    using ndt_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t>;
     using index_t = std::array<int, 3>;
     using point_t = typename ndt_t::point_t;
     using distribution_t = typename ndt_t::distribution_t;
@@ -102,15 +104,16 @@ inline void from(
     if (!src)
         return;
 
-    from<T>(*src, dst, allocate_all, transform);
+    from(*src, dst, allocate_all, transform);
 }
 
-template<typename T,
-         typename ndt_t,
-         typename = typename std::enable_if<std::is_same<ndt_t, cslibs_ndt_3d::dynamic_maps::OccupancyGridmap<T>>::value
-                                            || std::is_same<ndt_t, cslibs_ndt_3d::static_maps::OccupancyGridmap<T>>::value>::type>
+
+template <cslibs_ndt::map::tags::option option_t,
+          typename T,
+          template <typename, typename, typename...> class backend_t,
+          template <typename, typename, typename...> class dynamic_backend_t>
 inline void from(
-        ndt_t &src,
+        cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t> &src,
         sensor_msgs::PointCloud2 &dst,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
         const T &threshold = 0.169,
@@ -120,6 +123,7 @@ inline void from(
     if (allocate_all)
         src.allocatePartiallyAllocatedBundles();
 
+    using ndt_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t>;
     using index_t = std::array<int, 3>;
     using point_t = typename ndt_t::point_t;
     using distribution_t = typename ndt_t::distribution_t;
@@ -182,7 +186,7 @@ inline void from(
     if (!src)
         return;
 
-    from<T>(*src, dst, ivm, threshold, allocate_all, transform);
+    from(*src, dst, ivm, threshold, allocate_all, transform);
 }
 
 }

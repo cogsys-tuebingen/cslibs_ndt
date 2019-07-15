@@ -39,36 +39,6 @@ public:
         return std::sqrt(sq(x) + sq(y) + sq(z));
     }
 
-    inline static double apply(unsigned n, const double *x, double *grad, void* ptr)
-    {
-        // deduce correct function
-        const auto& casted_to_rpy = (Functor<6>*)ptr;
-        const auto& casted_to_quaternion = (Functor<7>*)ptr;
-
-        // call function
-        if (casted_to_rpy && !casted_to_quaternion)
-            return applyRPY(n,x,grad,ptr);
-        else if (casted_to_quaternion && !casted_to_rpy)
-            return applyQuaternion(n,x,grad,ptr);
-        else //if (!casted_to_rpy && !casted_to_quaternion)
-            throw std::runtime_error("Wrong Functor given; neither RPY nor Quaternion function can be applied!");
-    }
-
-    inline static double mapScore(const double *x, const double &fi, void* ptr)
-    {
-        // deduce correct function
-        const auto& casted_to_rpy = (Functor<6>*)ptr;
-        const auto& casted_to_quaternion = (Functor<7>*)ptr;
-
-        // call function
-        if (casted_to_rpy && !casted_to_quaternion)
-            return mapScoreRPY(x,fi,ptr);
-        else if (casted_to_quaternion && !casted_to_rpy)
-            return mapScoreQuaternion(x,fi,ptr);
-        else //if (!casted_to_rpy && !casted_to_quaternion)
-            throw std::runtime_error("Wrong Functor given; neither RPY nor Quaternion function can be applied!");
-    }
-
     inline static double applyRPY(unsigned n, const double *x, double *grad, void* ptr)
     {
         // since f is discontinuous, use derivative-free algorithms!

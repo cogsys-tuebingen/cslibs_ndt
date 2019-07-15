@@ -40,7 +40,6 @@ inline void from(
     memcpy(&dst.data[0], &tmp[0], data_size);
 }
 
-
 template <cslibs_ndt::map::tags::option option_t,
           typename T,
           template <typename, typename, typename...> class backend_t,
@@ -76,7 +75,8 @@ inline void from(
     };
 
     std::vector<float> tmp;
-    auto process_bundle = [&src, &tmp, &transform, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
+    const auto& origin = transform * src.getInitialOrigin();
+    auto process_bundle = [&src, &tmp, &origin, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
         typename distribution_t::distribution_t d;
         for (std::size_t i = 0 ; i < 8 ; ++i)
             d += b.at(i)->data();
@@ -84,7 +84,7 @@ inline void from(
             return;
 
         cslibs_math_3d::Point3<T> mean(d.getMean());
-        cslibs_math_3d::Point3<T> p = transform * mean;
+        cslibs_math_3d::Point3<T> p = origin * mean;
         tmp.emplace_back(static_cast<float>(p(0)));
         tmp.emplace_back(static_cast<float>(p(1)));
         tmp.emplace_back(static_cast<float>(p(2)));
@@ -150,7 +150,8 @@ inline void from(
     };
 
     std::vector<float> tmp;
-    auto process_bundle = [&src, &tmp, &ivm, &threshold, &transform, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
+    const auto& origin = transform * src.getInitialOrigin();
+    auto process_bundle = [&src, &tmp, &ivm, &threshold, &origin, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
         typename distribution_t::distribution_t d;
         T occupancy = 0.0;
 
@@ -164,7 +165,7 @@ inline void from(
             return;
 
         cslibs_math_3d::Point3<T> mean(d.getMean());
-        cslibs_math_3d::Point3<T> p = transform * mean;
+        cslibs_math_3d::Point3<T> p = origin * mean;
         tmp.emplace_back(static_cast<float>(p(0)));
         tmp.emplace_back(static_cast<float>(p(1)));
         tmp.emplace_back(static_cast<float>(p(2)));

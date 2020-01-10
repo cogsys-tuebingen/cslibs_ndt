@@ -57,23 +57,28 @@ public:
         const typename ndt_t::pose_t current_transform(x[0],x[1],x[2]);
 
         // evaluate function
+        auto sq = [](const double& x) { return x * x; };
+        const double num_points =  static_cast<double>(points.size());
         for (const auto& p : points) {
             const typename ndt_t::point_t q = current_transform * typename ndt_t::point_t(p(0),p(1));
             const double score = map.sampleNonNormalized(q, ivm);
-            fi += std::isnormal(score) ? (1.0 - score) : 1.0;
+            fi += 0.5 * object.map_weight_ * sq((std::isnormal(score) ? (1.0 - score) : 1.0) / num_points);
+            //fi += std::isnormal(score) ? (1.0 - score) : 1.0;
         }
 
         // calculate translational and rotational function component
         const auto& initial_guess = (object.initial_guess_);
-        const double trans_diff = hypot(x[0] - initial_guess[0], x[1] - initial_guess[1]);
+        //const double trans_diff = hypot(x[0] - initial_guess[0], x[1] - initial_guess[1]);
         const double rot_diff = cslibs_math::common::angle::difference(x[2], initial_guess[2]);
 
         // apply weights
-        fi = object.map_weight_ * fi / static_cast<double>(points.size()) +
+        /*fi = object.map_weight_ * fi / static_cast<double>(points.size()) +
              object.translation_weight_ * trans_diff +
-             object.rotation_weight_ * std::fabs(rot_diff);
+             object.rotation_weight_ * std::fabs(rot_diff);*/
+        fi += object.translation_weight_ * (sq(x[0] - initial_guess[0]) + sq(x[1] - initial_guess[1]));
+        fi += object.rotation_weight_ * sq(rot_diff);
 
-        return fi;
+        return 0.5*fi;
     }
 
     inline static double mapScore(const double *x, const double &fi, void* ptr)

@@ -11,6 +11,13 @@ template <typename T>
 inline bool saveBinary(const typename cslibs_ndt_2d::dynamic_maps::WeightedOccupancyGridmap<T>::Ptr &map,
                        const std::string &path)
 {
+    return cslibs_ndt::serialization::saveBinary<cslibs_ndt::map::tags::dynamic_map,2,cslibs_ndt::WeightedOccupancyDistribution,T>(*map, path);
+}
+
+template <typename T>
+inline bool saveBinary(const cslibs_ndt_2d::dynamic_maps::WeightedOccupancyGridmap<T> &map,
+                       const std::string &path)
+{
     return cslibs_ndt::serialization::saveBinary<cslibs_ndt::map::tags::dynamic_map,2,cslibs_ndt::WeightedOccupancyDistribution,T>(map, path);
 }
 

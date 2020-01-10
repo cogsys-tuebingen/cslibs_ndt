@@ -49,9 +49,8 @@ public:
         if (!this->toBundleIndex(p, pm, bi))
             return;
 
-        distribution_bundle_t *bundle = this->getAllocate(bi);
-        for (std::size_t i=0; i<this->bin_count; ++i)
-            bundle->at(i)->data().add(pm);
+        if (pm.isNormal())
+            update(bi, pm);
     }
 
     inline void insert(const typename pointcloud_t::ConstPtr &points,
@@ -65,23 +64,19 @@ public:
                        const iterator_t &points_end,
                        const pose_t &points_origin = pose_t())
     {
-        dynamic_distribution_storage_t storage;
+        std::unordered_map<index_t, typename distribution_t::distribution_t> updates;//std::size_t> updates;
         for (auto p = points_begin; p != points_end; ++p) {
             const point_t pw = points_origin * *p;
             if (pw.isNormal()) {
                 point_t pm;
-                const index_t &bi = this->toBundleIndex(pw,pm);
-                distribution_t *d = storage.get(bi);
-                (d ? d : &storage.insert(bi, distribution_t()))->data().add(pm);
+                index_t bi;
+                if (this->toBundleIndex(pw, pm, bi))
+                    updates[bi] += pm;
             }
         }
 
-        storage.traverse([this](const index_t& bi, const distribution_t &d) {
-            distribution_bundle_t *bundle = this->getAllocate(bi);
-            const typename distribution_t::distribution_t &dist = d.data();
-            for (std::size_t i=0; i<this->bin_count; ++i)
-                bundle->at(i)->data() += dist;
-        });
+        for (const auto& pair : updates)
+            updateOccupied(pair.first, pair.second);
     }
 
     inline T sample(const point_t &p) const
@@ -145,7 +140,23 @@ public:
 protected:
     virtual inline bool expandDistribution(const distribution_t* d) const override
     {
-        return d && d->data().getN() >= 3;
+        return d && d->data().valid();
+    }
+
+    inline void update(const index_t& bi,
+                       const point_t& p)
+    {
+        distribution_bundle_t *bundle = this->getAllocate(bi);
+        for (std::size_t i=0; i<this->bin_count; ++i)
+            bundle->at(i)->data().add(p);
+    }
+
+    inline void updateOccupied(const index_t &bi,
+                               const typename distribution_t::distribution_t &d) const
+    {
+        distribution_bundle_t *bundle = this->getAllocate(bi);
+        for (std::size_t i=0; i<this->bin_count; ++i)
+            bundle->at(i)->data() += d;
     }
 };
 }

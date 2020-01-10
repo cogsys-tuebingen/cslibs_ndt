@@ -55,10 +55,7 @@ public:
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
     using dynamic_distribution_storage_t    = cis::Storage<distribution_t, index_t, dynamic_backend_t>;
 
-    using neighborhood_t = cis::operations::clustering::GridNeighborhoodStatic<std::tuple_size<index_t>::value, 3>;
-
-    template <std::size_t DD>
-    using vector_t = cslibs_math::linear::Vector<T,DD>;
+    using neighborhood_t = cis::operations::clustering::GridNeighborhoodStatic<Dim, 3>;
 
     inline AbstractMap(const pose_t  &origin,
                        const T       &resolution,
@@ -126,10 +123,9 @@ public:
      */
     inline point_t getMin() const
     {
-        point_t min;
-        for (std::size_t i=0; i<Dim; ++i)
-            min(i) = static_cast<T>(min_bundle_index_[i]) * bundle_resolution_;
-        return min;
+        return utility::toPoint<point_t>([this](const std::size_t& i) {
+            return min_bundle_index_[i] * bundle_resolution_;
+        });
     }
 
     /**
@@ -138,10 +134,9 @@ public:
      */
     inline point_t getMax() const
     {
-        point_t max;
-        for (std::size_t i=0; i<Dim; ++i)
-            max(i) = static_cast<T>(max_bundle_index_[i] + 1) * bundle_resolution_;
-        return max;
+        return utility::toPoint<point_t>([this](const std::size_t& i) {
+            return (max_bundle_index_[i]+1) * bundle_resolution_;
+        });
     }
 
     /**
@@ -221,7 +216,7 @@ public:
 
     inline virtual bool validate(const pose_2d_t &p_w_2d) const
     {
-        const point_t p_w = toPoint(p_w_2d.translation());
+        const point_t p_w = utility::toPoint<point_t>(p_w_2d.translation());
         return valid(toBundleIndex(p_w));
     }
 
@@ -234,17 +229,19 @@ public:
 
         for (const index_t &bi : bis) {
             const distribution_bundle_t *bundle = bundle_storage_->get(bi);
-            bool do_expand = expandBundle(bundle);
-            if (do_expand) {
+            if (bundle->expand() && expandBundle(bundle)) {
                 grid.visit([this, &bi](typename neighborhood_t::offset_t o) {
                     index_t ii;
-                    for (std::size_t i=0; i<Dim; ++i)
+                    utility::for_each<Dim>([&ii,&bi,&o](const std::size_t &i) {
                         ii[i] = bi[i] + o[i];
+                    });
                     if (valid(ii))
                         getAllocate(ii);
                 });
+                bundle->setExpanded();
             }
         }
+        return;
     }
 
     inline std::size_t getByteSize() const
@@ -267,34 +264,25 @@ protected:
     mutable distribution_storage_array_t       storage_;
     mutable distribution_bundle_storage_ptr_t  bundle_storage_;
 
-    inline static distribution_t* getAllocate(const distribution_storage_ptr_t &s,
-                                              const index_t &i)
+    template <typename content_t, typename storage_t>
+    inline content_t* getAllocate(const storage_t &s,
+                                  const index_t &i) const
     {
-        distribution_t *d = s->get(i);
-        return d ? d : &(s->insert(i, distribution_t()));
+        content_t *d = s->get(i);
+        return d ? d : &(s->insert(i, content_t()));
     }
 
     inline distribution_bundle_t *getAllocate(const index_t &bi) const
     {
-        auto get_allocate = [this](const index_t &bi) {
-            distribution_bundle_t *bundle = bundle_storage_->get(bi);
+        distribution_bundle_t *bundle = getAllocate<distribution_bundle_t>(bundle_storage_, bi);
 
-            auto allocate_bundle = [this, &bi]() {
-                const index_list_t indices = utility::generate_indices<index_list_t,Dim>(bi);
+        utility::apply_indices<bin_count,Dim>(bi, [this,&bundle](const std::size_t& i, const index_t& index) {
+            if (!bundle->at(i))
+                bundle->at(i) = getAllocate<distribution_t>(storage_[i], index);
+        });
 
-                distribution_bundle_t b;
-                std::size_t id = 0;
-                for (const auto& index : indices) {
-                    b[id] = getAllocate(storage_[id], index);
-                    ++id;
-                }
-                updateIndices(bi);
-                return &(bundle_storage_->insert(bi, b));
-            };
-            return bundle ? bundle : allocate_bundle();
-        };
-
-        return get_allocate(bi);
+        updateIndices(bi);
+        return bundle;
     }
 
     virtual void updateIndices(const index_t &chunk_index) const = 0;
@@ -316,10 +304,9 @@ protected:
                                  point_t &p_m) const
     {
         p_m = m_T_w_ * p_w;
-        index_t retval;
-        for (std::size_t i=0; i<Dim; ++i)
-            retval[i] = static_cast<int>(std::floor(p_m(i) * bundle_resolution_inv_));
-        return retval;
+        return utility::toIndex<Dim>([this,&p_m](const std::size_t& i) {
+            return static_cast<int>(std::floor(p_m(i) * bundle_resolution_inv_));
+        });
     }
 
     inline index_t toBundleIndex(const point_t &p_w) const
@@ -341,21 +328,6 @@ protected:
     {
         index = toBundleIndex(p_w, p_m);
         return valid(index);
-    }
-
-    template <std::size_t DD, typename std::size_t... counter>
-    static inline point_t toPoint(vector_t<DD> p, utility::integer_sequence<std::size_t,counter...>)
-    {
-        auto at = [&p](const std::size_t &c) {
-            return (c >= DD) ? T(0) : p(c);
-        };
-        return point_t(at(counter)...);
-    }
-
-    template <std::size_t DD>
-    static inline point_t toPoint(vector_t<DD> p)
-    {
-        return toPoint(p, utility::make_integer_sequence<std::size_t, point_t::Dimension>{});
     }
 };
 }

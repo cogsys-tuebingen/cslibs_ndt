@@ -26,7 +26,7 @@ template <map::tags::option option_t,
           typename T,
           template <typename, typename, typename...> class backend_t = map::tags::default_types<option_t>::template default_backend_t,
           template <typename, typename, typename...> class dynamic_backend_t = map::tags::default_types<option_t>::template default_dynamic_backend_t>
-inline bool saveBinary(const typename cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_t,dynamic_backend_t>::Ptr &map,
+inline bool saveBinary(const cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_t,dynamic_backend_t> &map,
                        const std::string &path)
 {
     using path_t     = boost::filesystem::path;
@@ -57,7 +57,7 @@ inline bool saveBinary(const typename cslibs_ndt::map::Map<option_t,Dim,data_t,T
     }
 
     /// step four: write out the storages
-    storages_t storages = map->getStorages();
+    storages_t storages = map.getStorages();
 
     std::array<std::thread, map_t::bin_count> threads;
     std::atomic_bool success(true);
@@ -127,7 +127,7 @@ inline bool loadBinary(const std::string &path,
         return false;
 
     l.allocateBundles(bundles, storages);
-    l.setMap(map, bundles, storages);
+    l.createMap(bundles, storages, map);
     return true;
 }
 

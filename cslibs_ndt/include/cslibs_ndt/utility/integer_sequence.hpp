@@ -22,8 +22,8 @@ struct merge_and_renumber<integer_sequence<T, I1...>, integer_sequence<T, I2...>
 
 template <typename T, std::size_t N>
 struct integer_sequence_maker
-        : merge_and_renumber<typename integer_sequence_maker<T, N/2>::type,
-                typename integer_sequence_maker<T, N - N/2>::type>
+        : merge_and_renumber<typename integer_sequence_maker<T, (N>>1)>::type,
+                typename integer_sequence_maker<T, N - (N>>1)>::type>
 {};
 
 template<typename T> struct integer_sequence_maker<T,0> : integer_sequence<T> { };

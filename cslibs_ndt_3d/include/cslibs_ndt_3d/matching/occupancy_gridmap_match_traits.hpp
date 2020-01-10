@@ -46,7 +46,7 @@ struct MatchTraits<MapT, typename std::enable_if<Is3dOccupancyGridmap<MapT>::val
                                 double& score,
                                 gradient_t& g,
                                 hessian_t& h)
-    {
+    {/*
         static constexpr double d1 = 0.95;
         static constexpr double d2 = 1 - d1;
 
@@ -98,7 +98,7 @@ struct MatchTraits<MapT, typename std::enable_if<Is3dOccupancyGridmap<MapT>::val
             }
 
             score += s;
-        }
+        }*/
     }
 };
 

@@ -73,9 +73,10 @@ struct loader<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_b
             allocate_bundle(index);
     }
 
-    inline void setMap(typename map_t::Ptr &map,
-                       const std::shared_ptr<bundle_storage_t>& bundles,
-                       const storages_t& storages) const {
+    inline void createMap(const std::shared_ptr<bundle_storage_t>& bundles,
+                          const storages_t& storages,
+                          typename map_t::Ptr& map) const
+    {
         map.reset(new map_t(pose_,
                             resolution_,
                             size_,
@@ -136,9 +137,10 @@ struct loader<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_
             allocate_bundle(index);
     }
 
-    inline void setMap(typename map_t::Ptr &map,
-                       const std::shared_ptr<bundle_storage_t>& bundles,
-                       const storages_t& storages) const {
+    inline void createMap(const std::shared_ptr<bundle_storage_t>& bundles,
+                          const storages_t& storages,
+                          typename map_t::Ptr& map) const
+    {
         map.reset(new map_t(pose_,
                             resolution_,
                             min_index_,
@@ -175,14 +177,14 @@ struct header<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_b
     using size_t   = typename map_t::size_t;
     using loader_t = loader<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_backend_t>;
 
-    static inline void write(const typename map_t::Ptr &map, YAML::Node &n)
+    static inline void write(const map_t &map, YAML::Node &n)
     {
         std::vector<index_t> indices;
-        map->getBundleIndices(indices);
-        n["origin"]     = map->getInitialOrigin();
-        n["resolution"] = map->getResolution();
-        n["size"]       = map->getSize();
-        n["min_index"]  = map->getMinBundleIndex();
+        map.getBundleIndices(indices);
+        n["origin"]     = map.getInitialOrigin();
+        n["resolution"] = map.getResolution();
+        n["size"]       = map.getSize();
+        n["min_index"]  = map.getMinBundleIndex();
         n["bundles"]    = indices;
     }
 
@@ -208,14 +210,14 @@ struct header<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_
     using pose_t   = typename map_t::pose_t;
     using loader_t = loader<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_backend_t>;
 
-    static inline void write(const typename map_t::Ptr &map, YAML::Node &n)
+    static inline void write(const map_t &map, YAML::Node &n)
     {
         std::vector<index_t> indices;
-        map->getBundleIndices(indices);
-        n["origin"]     = map->getInitialOrigin();
-        n["resolution"] = map->getResolution();
-        n["min_index"]  = map->getMinBundleIndex();
-        n["max_index"]  = map->getMaxBundleIndex();
+        map.getBundleIndices(indices);
+        n["origin"]     = map.getInitialOrigin();
+        n["resolution"] = map.getResolution();
+        n["min_index"]  = map.getMinBundleIndex();
+        n["max_index"]  = map.getMaxBundleIndex();
         n["bundles"]    = indices;
     }
 

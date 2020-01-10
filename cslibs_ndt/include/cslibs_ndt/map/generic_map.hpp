@@ -63,7 +63,7 @@ public:
     {
         index_t offset;
         for (std::size_t i=0; i<Dim; ++i)
-            offset[i] = cslibs_math::common::div<int>(min_bundle_index[i], 2);
+            offset[i] = min_bundle_index[i] >> 1;
         this->storage_[0]->template set<cis::option::tags::array_size>(size);
         this->storage_[0]->template set<cis::option::tags::array_offset>(offset);
 

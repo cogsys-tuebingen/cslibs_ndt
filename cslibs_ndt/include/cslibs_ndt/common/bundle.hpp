@@ -5,14 +5,17 @@
 
 namespace cslibs_ndt {
 template<typename T, std::size_t Size>
-class Bundle
+class EIGEN_ALIGN16 Bundle
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    using allocator_t = Eigen::aligned_allocator<Bundle<T,Size>>;
+
     using bundle_t = Bundle<T, Size>;
     using data_t   = std::array<T, Size>;
 
     inline Bundle() :
-        id_(n_ ++)
+        expand_(true)
     {
     }
 
@@ -21,30 +24,6 @@ public:
     inline static std::size_t size()
     {
         return Size;
-    }
-
-    inline Bundle(const Bundle &other) :
-        data_(other.data_),
-        id_(n_ ++)
-    {
-    }
-
-   inline  Bundle(Bundle &&other) :
-        data_(std::move(other.data_)),
-        id_(n_ ++)
-    {
-    }
-
-    inline Bundle& operator = (const Bundle &other)
-    {
-        data_ = other.data_;
-        return *this;
-    }
-
-    inline Bundle& operator = (Bundle &&other)
-    {
-        data_ = std::move(other.data_);
-        return *this;
     }
 
     inline T& operator [] (const std::size_t i)
@@ -77,6 +56,16 @@ public:
         return data_;
     }
 
+    inline bool expand() const
+    {
+        return expand_;
+    }
+
+    inline void setExpanded() const
+    {
+        expand_ = false;
+    }
+
     inline void merge(const Bundle &)
     {
     }
@@ -84,11 +73,6 @@ public:
     inline std::size_t byte_size() const
     {
         return sizeof(*this);
-    }
-
-    inline const int& id() const
-    {
-        return id_;
     }
 
     inline typename data_t::const_iterator begin() const
@@ -112,13 +96,9 @@ public:
     }
 
 private:
-    data_t     data_;
-    const int  id_;
-    static int n_;
+    data_t       data_;
+    mutable bool expand_;
 };
-
-template<typename T, std::size_t Size>
-int Bundle<T, Size>::n_ = 0;
 }
 
 #endif // CSLIBS_NDT_COMMON_BUNDLE_HPP

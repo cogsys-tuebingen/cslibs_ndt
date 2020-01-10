@@ -6,5 +6,6 @@
 #include <cslibs_ndt/utility/merge.hpp>
 #include <cslibs_ndt/utility/create.hpp>
 #include <cslibs_ndt/utility/for_each.hpp>
+#include <cslibs_ndt/utility/to_point.hpp>
 
 #endif // CSLIBS_NDT_UTILITY_HPP

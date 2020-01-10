@@ -3,11 +3,15 @@
 
 #include <cslibs_math_2d/linear/pose.hpp>
 #include <cslibs_math_2d/linear/pointcloud.hpp>
+#include <cslibs_math_2d/algorithms/ndt_iterator.hpp>
 #include <cslibs_math_2d/algorithms/simple_iterator.hpp>
+#include <cslibs_math_2d/algorithms/bresenham.hpp>
 
 #include <cslibs_math_3d/linear/pose.hpp>
 #include <cslibs_math_3d/linear/pointcloud.hpp>
+#include <cslibs_math_3d/algorithms/ndt_iterator.hpp>
 #include <cslibs_math_3d/algorithms/simple_iterator.hpp>
+#include <cslibs_math_3d/algorithms/bresenham.hpp>
 
 #include <cslibs_indexed_storage/backends.hpp>
 namespace cis = cslibs_indexed_storage;
@@ -49,7 +53,7 @@ struct traits<2,T>
     using transform_t           = cslibs_math_2d::Transform2<T>;
     using point_t               = cslibs_math_2d::Point2<T>;
     using pointcloud_t          = cslibs_math_2d::Pointcloud2<T>;
-    using default_iterator_t    = cslibs_math_2d::algorithms::SimpleIterator<T>;
+    using default_iterator_t    = cslibs_math_2d::algorithms::NDTIterator<T>;
 };
 
 template <typename T>
@@ -60,7 +64,7 @@ struct traits<3,T>
     using transform_t           = cslibs_math_3d::Transform3<T>;
     using point_t               = cslibs_math_3d::Point3<T>;
     using pointcloud_t          = cslibs_math_3d::Pointcloud3<T>;
-    using default_iterator_t    = cslibs_math_3d::algorithms::SimpleIterator<T>;
+    using default_iterator_t    = cslibs_math_3d::algorithms::NDTIterator<T>;
 };
 
 }

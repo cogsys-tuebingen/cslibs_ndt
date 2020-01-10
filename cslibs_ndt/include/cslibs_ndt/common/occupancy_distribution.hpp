@@ -25,7 +25,7 @@ public:
     using ivm_t                     = cslibs_gridmaps::utility::InverseModel<T>;
 
     inline OccupancyDistribution() :
-        num_free_(0)
+        num_free_(0ul)
     {
     }
 
@@ -43,31 +43,21 @@ public:
 
     inline OccupancyDistribution(const OccupancyDistribution &other) :
         num_free_(other.num_free_),
-        distribution_(other.distribution_),
-        occupancy_(other.occupancy_),
-        inverse_model_(other.inverse_model_)
+        distribution_(other.distribution_ ? new distribution_t(*(other.distribution_)) : nullptr)
     {
     }
 
     inline OccupancyDistribution& operator = (const OccupancyDistribution &other)
     {
-        num_free_      = other.num_free_;
-        distribution_  = other.distribution_;
-        occupancy_     = other.occupancy_;
-        inverse_model_ = other.inverse_model_;
+        num_free_ = other.num_free_;
+        if (other.distribution_)
+            distribution_.reset(new distribution_t(*(other.distribution_)));
         return *this;
     }
 
-    inline void updateFree()
+    inline void updateFree(const std::size_t &n)
     {
-        ++ num_free_;
-        inverse_model_ = nullptr;
-    }
-
-    inline void updateFree(const std::size_t &num_free)
-    {
-        num_free_ += num_free;
-        inverse_model_ = nullptr;
+        num_free_ += n;
     }
 
     inline void updateOccupied(const point_t & p)
@@ -75,20 +65,15 @@ public:
         if (!distribution_)
             distribution_.reset(new distribution_t());
 
-        distribution_->add(p);
-        inverse_model_ = nullptr;
+        *distribution_ += p;
     }
 
-    inline void updateOccupied(const distribution_ptr_t &d)
+    inline void updateOccupied(const distribution_t &d)
     {
-        if (!d)
-            return;
-
         if (!distribution_)
-            distribution_.reset(new distribution_t());
-
-        *distribution_ += *d;
-        inverse_model_ = nullptr;
+            distribution_.reset(new distribution_t(d));
+        else
+            *distribution_ += d;
     }
 
     inline std::size_t numFree() const
@@ -111,19 +96,13 @@ public:
 
     inline T getOccupancy(const ivm_t &inverse_model) const
     {
-        if (&inverse_model == inverse_model_)
-            return occupancy_;
-
-        inverse_model_ = &inverse_model;
-        occupancy_ = distribution_ ?
-                    cslibs_math::common::LogOdds<T>::from(
-                        static_cast<T>(num_free_) * inverse_model_->getLogOddsFree() +
-                        distribution_->getN() * inverse_model_->getLogOddsOccupied() -
-                        static_cast<T>(num_free_ + distribution_->getN()) * inverse_model_->getLogOddsPrior()) :
-                    cslibs_math::common::LogOdds<T>::from(
-                        static_cast<T>(num_free_) * inverse_model_->getLogOddsFree() -
-                        static_cast<T>(num_free_) * inverse_model_->getLogOddsPrior());
-        return occupancy_;
+        return distribution_ ?
+                cslibs_math::common::LogOdds<T>::from(
+                    num_free_ *
+                    (inverse_model.getLogOddsFree() - inverse_model.getLogOddsPrior()) +
+                    distribution_->getN() *
+                    (inverse_model.getLogOddsOccupied() - inverse_model.getLogOddsPrior()))
+                  : T(0.0);
     }
 
     inline const distribution_ptr_t &getDistribution() const
@@ -146,11 +125,8 @@ public:
     }
 
 private:
-    std::size_t        num_free_;
-    distribution_ptr_t distribution_;
-
-    mutable T            occupancy_     = 0;
-    mutable const ivm_t* inverse_model_ = nullptr; // may point to invalid memory!
+    std::size_t        num_free_     = 0ul;
+    distribution_ptr_t distribution_ = nullptr;
 };
 }
 

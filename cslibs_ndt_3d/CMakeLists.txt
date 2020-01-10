@@ -1,9 +1,14 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(cslibs_ndt_3d CXX)
 
-set(CSLIBS_NDT_USE_OMP False)
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+include(cmake/cslibs_ndt_3d_enable_c++11.cmake)
+include(cmake/cslibs_ndt_3d_extras.cmake)
+include(cmake/cslibs_ndt_3d_show_headers.cmake)
+include(cmake/cslibs_ndt_3d_add_unit_test_gtest.cmake)
 
 find_package(catkin REQUIRED COMPONENTS
     cslibs_ndt
@@ -41,6 +46,10 @@ catkin_package(
                  message_generation
                  message_runtime
                  std_msgs
+  CFG_EXTRAS     cslibs_ndt_3d_enable_c++11.cmake
+                 cslibs_ndt_3d_extras.cmake
+                 cslibs_ndt_3d_show_headers.cmake
+                 cslibs_ndt_3d_add_unit_test_gtest.cmake
 )
 
 include_directories(

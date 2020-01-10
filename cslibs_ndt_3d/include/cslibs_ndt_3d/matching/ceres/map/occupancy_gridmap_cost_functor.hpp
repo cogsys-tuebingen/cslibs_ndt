@@ -60,6 +60,7 @@ protected:
                 if (const auto& bi = bundle->at(i)) {
                     const double occ = static_cast<double>(bi->getOccupancy(ivm_));
                     if (const auto& di = bi->getDistribution()) {
+                    //const auto& di = bi->getDistribution();
                         if (!di->valid())
                             continue;
 

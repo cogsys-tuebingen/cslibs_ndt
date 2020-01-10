@@ -11,6 +11,13 @@ template <typename T>
 inline bool saveBinary(const typename cslibs_ndt_3d::dynamic_maps::Gridmap<T>::Ptr &map,
                        const std::string &path)
 {
+    return cslibs_ndt::serialization::saveBinary<cslibs_ndt::map::tags::dynamic_map,3,cslibs_ndt::Distribution,T>(*map, path);
+}
+
+template <typename T>
+inline bool saveBinary(const cslibs_ndt_3d::dynamic_maps::Gridmap<T> &map,
+                       const std::string &path)
+{
     return cslibs_ndt::serialization::saveBinary<cslibs_ndt::map::tags::dynamic_map,3,cslibs_ndt::Distribution,T>(map, path);
 }
 

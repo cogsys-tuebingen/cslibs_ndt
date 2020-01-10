@@ -15,7 +15,7 @@ namespace conversion {
 template <typename T>
 inline T validate(const T& val)
 {
-    if (val < 0 || val > 1.0 || !std::isnormal(val))
+    if (/*val < 0 ||*/ val > 1.0 || !std::isnormal(val))
         return T();
     return val;
 }
@@ -28,7 +28,8 @@ inline void from(
         const typename cslibs_ndt::map::Map<option_t,2,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t> &src,
         typename cslibs_gridmaps::static_maps::ProbabilityGridmap<T,T>::Ptr &dst,
         const T sampling_resolution,
-        const bool allocate_all = true)
+        const bool &allocate_all = false,
+        const T &default_value = 0.0)
 {
     if (allocate_all)
         src.allocatePartiallyAllocatedBundles();
@@ -39,16 +40,20 @@ inline void from(
                             sampling_resolution,
                             std::ceil(src.getHeight() / sampling_resolution),
                             std::ceil(src.getWidth()  / sampling_resolution)));
-    std::fill(dst->getData().begin(), dst->getData().end(), T(0.5));
+    std::fill(dst->getData().begin(), dst->getData().end(), default_value);
 
     const T bundle_resolution = src.getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
     auto sample = [](const cslibs_math_2d::Point2<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
-        return src_map_t::div_count * (validate(bundle.at(0)->data().sampleNonNormalized(p)) +
-                                       validate(bundle.at(1)->data().sampleNonNormalized(p)) +
-                                       validate(bundle.at(2)->data().sampleNonNormalized(p)) +
-                                       validate(bundle.at(3)->data().sampleNonNormalized(p)));
+        auto sample_dist = [&p,&bundle](const std::size_t& i) {
+            const auto& handle = bundle.at(i);
+            return handle? handle->data().sampleNonNormalized(p) : T();
+        };
+        return src_map_t::div_count * (validate(sample_dist(0)) +
+                                       validate(sample_dist(1)) +
+                                       validate(sample_dist(2)) +
+                                       validate(sample_dist(3)));
     };
 
     using index_t = std::array<int, 2>;
@@ -78,7 +83,8 @@ inline void from(
         typename cslibs_gridmaps::static_maps::ProbabilityGridmap<T,T>::Ptr &dst,
         const T sampling_resolution,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &inverse_model,
-        const bool allocate_all = true)
+        const bool &allocate_all = false,
+        const T &default_value = 0.0)
 {
     if (!inverse_model)
         return;
@@ -91,17 +97,19 @@ inline void from(
                             sampling_resolution,
                             std::ceil(src.getHeight() / sampling_resolution),
                             std::ceil(src.getWidth()  / sampling_resolution)));
-    std::fill(dst->getData().begin(), dst->getData().end(), T(0.5));
+    std::fill(dst->getData().begin(), dst->getData().end(), default_value);
 
     const T bundle_resolution = src.getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
-    auto sample = [&inverse_model](const cslibs_math_2d::Point2<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
+    auto sample = [&inverse_model](
+            const cslibs_math_2d::Point2<T> &p,
+            const typename src_map_t::distribution_bundle_t &bundle) {
         auto sample = [&p, &inverse_model](const typename src_map_t::distribution_t *d) {
             auto do_sample = [&p, &inverse_model, &d]() {
-                return (d->getDistribution() && d->getDistribution()->valid()) ?
-                            validate(d->getDistribution()->sampleNonNormalized(p)) *
-                            validate(d->getOccupancy(inverse_model)) : T();
+                const auto &handle = d;
+                return handle->getDistribution() ?
+                            handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(inverse_model) : T();
             };
             return d ? do_sample() : T();
         };
@@ -115,7 +123,7 @@ inline void from(
     const index_t min_bi = src.getMinBundleIndex();
 
     const auto& origin = src.getInitialOrigin();
-    src.traverse([&dst, &origin, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
+    src.traverse([&src, &dst, &origin, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -138,7 +146,8 @@ inline void from(
         typename cslibs_gridmaps::static_maps::ProbabilityGridmap<T,T>::Ptr &dst,
         const T sampling_resolution,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &inverse_model,
-        const bool allocate_all = true)
+        const bool &allocate_all = false,
+        const T &default_value = 0.0)
 {
     if (!inverse_model)
         return;
@@ -151,7 +160,7 @@ inline void from(
                             sampling_resolution,
                             std::ceil(src.getHeight() / sampling_resolution),
                             std::ceil(src.getWidth()  / sampling_resolution)));
-    std::fill(dst->getData().begin(), dst->getData().end(), T(0.5));
+    std::fill(dst->getData().begin(), dst->getData().end(), default_value);
 
     const T bundle_resolution = src.getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
@@ -233,7 +242,8 @@ inline void from(
         const typename cslibs_ndt_2d::dynamic_maps::Gridmap<T>::Ptr &src,
         typename cslibs_gridmaps::static_maps::ProbabilityGridmap<T,T>::Ptr &dst,
         const T &sampling_resolution,
-        const bool allocate_all   = true)
+        const bool &allocate_all = false,
+        const T &default_value = 0.0)
 {
     if (!src)
         return;
@@ -242,7 +252,7 @@ inline void from(
             T,
             cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_backend_t,
             cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_dynamic_backend_t>(
-                *src, dst, sampling_resolution, allocate_all);
+                *src, dst, sampling_resolution, allocate_all, default_value);
 }
 
 template <typename T>
@@ -251,7 +261,8 @@ inline void from(
         typename cslibs_gridmaps::static_maps::ProbabilityGridmap<T,T>::Ptr &dst,
         const T &sampling_resolution,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &inverse_model,
-        const bool allocate_all   = true)
+        const bool &allocate_all = false,
+        const T &default_value = 0.0)
 {
     if (!src)
         return;
@@ -260,7 +271,7 @@ inline void from(
             T,
             cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_backend_t,
             cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_dynamic_backend_t>(
-                *src, dst, sampling_resolution, inverse_model, allocate_all);
+                *src, dst, sampling_resolution, inverse_model, allocate_all, default_value);
 }
 
 template <typename T>
@@ -269,7 +280,8 @@ inline void from(
         typename cslibs_gridmaps::static_maps::ProbabilityGridmap<T,T>::Ptr &dst,
         const T &sampling_resolution,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &inverse_model,
-        const bool allocate_all   = true)
+        const bool &allocate_all = false,
+        const T &default_value = 0.0)
 {
     if (!src)
         return;
@@ -278,7 +290,7 @@ inline void from(
             T,
             cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_backend_t,
             cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_dynamic_backend_t>(
-                *src, dst, sampling_resolution, inverse_model, allocate_all);
+                *src, dst, sampling_resolution, inverse_model, allocate_all, default_value);
 }
 }
 }

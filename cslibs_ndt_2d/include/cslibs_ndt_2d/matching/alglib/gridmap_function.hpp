@@ -45,25 +45,22 @@ public:
         const auto& points    = *(object.points_);
         const auto& map       = *(object.map_);
 
-        fi[0] = 0;
         const typename ndt_t::pose_t current_transform(x[0],x[1],x[2]);
 
         // evaluate function
+        std::size_t i=0;
+        const double num_points =  static_cast<double>(points.size());
         for (const auto& p : points) {
             const typename ndt_t::point_t q = current_transform * typename ndt_t::point_t(p(0),p(1));
             const double score = map.sampleNonNormalized(q);
-            fi[0] += std::isnormal(score) ? (1.0 - score) : 1.0;
+            fi[i++] = std::sqrt(0.5 * object.map_weight_) * (std::isnormal(score) ? (1.0 - score) : 1.0) / num_points;
         }
 
         // calculate translational and rotational function component
         const auto& initial_guess = (object.initial_guess_);
-        const double trans_diff   = hypot(x[0] - initial_guess[0], x[1] - initial_guess[1]);
-        const double rot_diff     = cslibs_math::common::angle::difference(x[2], initial_guess[2]);
-
-        // apply weights
-        fi[0] = object.map_weight_ * fi[0] / static_cast<double>(points.size()) +
-                object.translation_weight_ * trans_diff +
-                object.rotation_weight_ * std::fabs(rot_diff);
+        fi[i++] = std::sqrt(0.5 * object.translation_weight_) * (x[0] - initial_guess[0]);
+        fi[i++] = std::sqrt(0.5 * object.translation_weight_) * (x[1] - initial_guess[1]);
+        fi[i++] = std::sqrt(0.5 * object.rotation_weight_) * std::fabs(cslibs_math::common::angle::difference(x[2], initial_guess[2]));
     }
 
     inline static double mapScore(const ::alglib::real_1d_array &x, const ::alglib::real_1d_array &fi, void* ptr)
@@ -75,17 +72,18 @@ public:
             return 0;
         }
 
-        // calculate translational and rotational function component
-        const Functor& object     = *casted_ptr;
-        const auto& initial_guess = (object.initial_guess_);
-        const double trans_diff   = hypot(x[0] - initial_guess[0], x[1] - initial_guess[1]);
-        const double rot_diff     = cslibs_math::common::angle::difference(x[2], initial_guess[2]);
+        // calculate scaling
+        const Functor& object   = *casted_ptr;
+        const double num_points = object.points_->size();
+        const double scale      = std::sqrt(2.0 / object.map_weight_);
+        const double absolute   = 1.0 / num_points;
 
-        // extract real fvalue (map correlation value)
-        return 1.0 - (fi[0] -
-                object.translation_weight_ * trans_diff -
-                object.rotation_weight_ * std::fabs(rot_diff)) /
-                object.map_weight_;
+        // extract score from fi
+        double score = 0.0;
+        for (std::size_t i=0; i<num_points; ++i)
+            score += (absolute - (fi[i] * scale));
+
+        return score;
     }
 };
 

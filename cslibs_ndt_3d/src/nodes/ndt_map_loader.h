@@ -81,7 +81,7 @@ private:
             cslibs_ndt_3d::conversion::from<T>(map_ndt, *map_ndt_means_);
             map_ndt_means_->header.frame_id = "/map";
 
-            cslibs_ndt_3d::conversion::from<T>(map_ndt, map_ndt_distributions_);
+            //cslibs_ndt_3d::conversion::from<T>(map_ndt, map_ndt_distributions_);
             if (map_ndt_distributions_)
                 map_ndt_distributions_->header.frame_id = "/map";
         }
@@ -97,7 +97,7 @@ private:
             cslibs_ndt_3d::conversion::from<T>(map_occ_ndt, *map_occ_ndt_means_, ivm);
             map_occ_ndt_means_->header.frame_id = "/map";
 
-            cslibs_ndt_3d::conversion::from<T>(map_occ_ndt, map_occ_ndt_distributions_, ivm);
+            //cslibs_ndt_3d::conversion::from<T>(map_occ_ndt, map_occ_ndt_distributions_, ivm);
             if (map_occ_ndt_distributions_)
                 map_occ_ndt_distributions_->header.frame_id = "/map";
         }

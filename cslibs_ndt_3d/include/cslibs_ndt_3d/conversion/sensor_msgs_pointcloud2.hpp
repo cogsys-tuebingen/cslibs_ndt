@@ -47,7 +47,7 @@ template <cslibs_ndt::map::tags::option option_t,
 inline void from(
         cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t> &src,
         sensor_msgs::PointCloud2 &dst,
-        const bool &allocate_all = true,
+        const bool &allocate_all = false,
         const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
     if (allocate_all)
@@ -98,7 +98,7 @@ template <typename T>
 inline void from(
         const typename cslibs_ndt_3d::dynamic_maps::Gridmap<T>::Ptr &src,
         sensor_msgs::PointCloud2 &dst,
-        const bool &allocate_all = true,
+        const bool &allocate_all = false,
         const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
     if (!src)
@@ -117,7 +117,7 @@ inline void from(
         sensor_msgs::PointCloud2 &dst,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
         const T &threshold = 0.169,
-        const bool &allocate_all = true,
+        const bool &allocate_all = false,
         const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
     if (allocate_all)
@@ -130,15 +130,15 @@ inline void from(
     using distribution_bundle_t = typename ndt_t::distribution_bundle_t;
     auto sample = [&ivm](const distribution_t *d,
                          const point_t &p) -> T {
-        auto evaluate = [&ivm, d, p] {
+        auto evaluate = [&ivm, &d, &p] {
             const auto &handle = d;
-            return d && handle->getDistribution() ?
-                        handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(ivm) : 0.0;
+            return handle->getDistribution() ?
+                        handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(ivm) : T(0.0);
         };
-        return d ? evaluate() : 0.0;
+        return d ? evaluate() : T(0.0);
     };
     auto sample_bundle = [&sample](const distribution_bundle_t &b,
-                                   const point_t &p) -> T {
+                                   const point_t& p) -> T {
         return 0.125 * (sample(b.at(0), p) +
                         sample(b.at(1), p) +
                         sample(b.at(2), p) +
@@ -152,24 +152,35 @@ inline void from(
     std::vector<float> tmp;
     const auto& origin = transform * src.getInitialOrigin();
     auto process_bundle = [&src, &tmp, &ivm, &threshold, &origin, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
-        typename distribution_t::distribution_t d;
+        /*typename distribution_t::distribution_t d;
         T occupancy = 0.0;
 
         for (std::size_t i = 0 ; i < 8 ; ++i) {
             const auto &handle = b.at(i);
+            if (handle) {
             occupancy += 0.125 * handle->getOccupancy(ivm);
+            //if (handle)//
             if (const auto &d_tmp = handle->getDistribution())
                 d += *d_tmp;
+            }
         }
         if (d.getN() == 0 || occupancy < threshold)
-            return;
-
+            return;/*/
+        for (std::size_t i = 0 ; i < 8 ; ++i) {
+            const auto& handle = b.at(i);
+            if (!handle) continue;
+            const auto& d_tmp = handle->getDistribution();
+            if (!d_tmp) continue;
+            const auto& d = *d_tmp;
+            if (d.getN() == 0 || handle->getOccupancy(ivm) < threshold) continue;
+//*/
         cslibs_math_3d::Point3<T> mean(d.getMean());
         cslibs_math_3d::Point3<T> p = origin * mean;
         tmp.emplace_back(static_cast<float>(p(0)));
         tmp.emplace_back(static_cast<float>(p(1)));
         tmp.emplace_back(static_cast<float>(p(2)));
         tmp.emplace_back(static_cast<float>(sample_bundle(b, mean)));
+    }
     };
     src.traverse(process_bundle);
     from(tmp, dst);
@@ -181,7 +192,7 @@ inline void from(
         sensor_msgs::PointCloud2 &dst,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
         const T &threshold = 0.169,
-        const bool &allocate_all = true,
+        const bool &allocate_all = false,
         const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
     if (!src)

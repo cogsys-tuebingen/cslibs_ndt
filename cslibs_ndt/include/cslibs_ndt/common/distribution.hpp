@@ -11,11 +11,11 @@
 
 namespace cslibs_ndt {
 template<typename T, std::size_t Dim>
-class EIGEN_ALIGN16 Distribution
+class /*EIGEN_ALIGN16*/ Distribution
 {
 public:
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t              = Eigen::aligned_allocator<Distribution<T,Dim>>;
+//    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+//    using allocator_t              = Eigen::aligned_allocator<Distribution<T,Dim>>;
 
     using distribution_container_t = Distribution<T,Dim>;
     using distribution_t           = cslibs_math::statistics::StableDistribution<T,Dim,3>;

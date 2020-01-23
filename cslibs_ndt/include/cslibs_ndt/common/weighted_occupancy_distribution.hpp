@@ -11,11 +11,11 @@
 
 namespace cslibs_ndt {
 template<typename T, std::size_t Dim>
-class EIGEN_ALIGN16 WeightedOccupancyDistribution
+class /*EIGEN_ALIGN16*/ WeightedOccupancyDistribution
 {
 public:
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t               = Eigen::aligned_allocator<WeightedOccupancyDistribution<T,Dim>>;
+//    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+//    using allocator_t               = Eigen::aligned_allocator<WeightedOccupancyDistribution<T,Dim>>;
 
     using Ptr                       = std::shared_ptr<WeightedOccupancyDistribution<T,Dim>>;
     using distribution_container_t  = WeightedOccupancyDistribution<T,Dim>;

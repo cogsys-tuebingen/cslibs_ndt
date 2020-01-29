@@ -90,7 +90,20 @@ inline void from(
         tmp.emplace_back(static_cast<float>(p(2)));
         tmp.emplace_back(static_cast<float>(sample_bundle(b, mean)));
     };
-    src.traverse(process_bundle);
+
+    auto process_item = [&src, &tmp, &origin, &sample](const index_t &bi, const distribution_t& d) {
+        cslibs_math_3d::Point3<T> mean(d.data().getMean());
+        cslibs_math_3d::Point3<T> p = origin * mean;
+        tmp.emplace_back(static_cast<float>(p(0)));
+        tmp.emplace_back(static_cast<float>(p(1)));
+        tmp.emplace_back(static_cast<float>(p(2)));
+        tmp.emplace_back(static_cast<float>(sample(&d,mean)));
+    };
+    const auto& storages = src.getStorages();
+    for (const auto& storage : storages) {
+        storage->traverse(process_item);
+    }
+    //src.traverse(process_bundle);
     from(tmp, dst);
 }
 
@@ -182,7 +195,22 @@ inline void from(
         tmp.emplace_back(static_cast<float>(sample_bundle(b, mean)));
     }
     };
-    src.traverse(process_bundle);
+    //src.traverse(process_bundle);
+
+    auto process_item = [&src, &tmp, &origin, &sample](const index_t &bi, const distribution_t& d) {
+        const auto dd = d.getDistribution();
+        if (!dd) return;
+        cslibs_math_3d::Point3<T> mean(dd->getMean());
+        cslibs_math_3d::Point3<T> p = origin * mean;
+        tmp.emplace_back(static_cast<float>(p(0)));
+        tmp.emplace_back(static_cast<float>(p(1)));
+        tmp.emplace_back(static_cast<float>(p(2)));
+        tmp.emplace_back(static_cast<float>(sample(&d,mean)));
+    };
+    const auto& storages = src.getStorages();
+    for (const auto& storage : storages) {
+        storage->traverse(process_item);
+    }
     from(tmp, dst);
 }
 

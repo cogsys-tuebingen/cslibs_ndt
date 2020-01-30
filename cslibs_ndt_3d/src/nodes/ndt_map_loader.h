@@ -5,7 +5,7 @@
 #include <cslibs_ndt_3d/serialization/dynamic_maps/occupancy_gridmap.hpp>
 
 #include <sensor_msgs/PointCloud2.h>
-#include <cslibs_ndt_3d/DistributionArray.h>
+#include <visualization_msgs/MarkerArray.h>
 
 #include <cslibs_ndt_3d/conversion/sensor_msgs_pointcloud2.hpp>
 #include <cslibs_ndt_3d/conversion/distributions.hpp>
@@ -46,11 +46,11 @@ private:
     ros::Publisher      pub_occ_ndt_distributions_;
     ros::ServiceServer  service_;
 
-    sensor_msgs::PointCloud2::Ptr         map_ndt_means_;
-    sensor_msgs::PointCloud2::Ptr         map_occ_ndt_means_;
+    sensor_msgs::PointCloud2::Ptr map_ndt_means_;
+    sensor_msgs::PointCloud2::Ptr map_occ_ndt_means_;
 
-    cslibs_ndt_3d::DistributionArray::Ptr map_ndt_distributions_;
-    cslibs_ndt_3d::DistributionArray::Ptr map_occ_ndt_distributions_;
+    visualization_msgs::MarkerArray::Ptr map_ndt_distributions_;
+    visualization_msgs::MarkerArray::Ptr map_occ_ndt_distributions_;
 
     template <typename T>
     bool setup()
@@ -67,8 +67,11 @@ private:
         const std::string topic_ndt_distributions     = nh_.param<std::string>("topic_ndt_distributions",     "/map/3d/ndt/distributions");
         const std::string topic_occ_ndt_distributions = nh_.param<std::string>("topic_occ_ndt_distributions", "/map/3d/occ_ndt/distributions");
 
-        pub_ndt_distributions_     = nh_.advertise<cslibs_ndt_3d::DistributionArray>(topic_ndt_distributions,     1);
-        pub_occ_ndt_distributions_ = nh_.advertise<cslibs_ndt_3d::DistributionArray>(topic_occ_ndt_distributions, 1);
+        pub_ndt_distributions_     = nh_.advertise<visualization_msgs::MarkerArray>(topic_ndt_distributions,     1);
+        pub_occ_ndt_distributions_ = nh_.advertise<visualization_msgs::MarkerArray>(topic_occ_ndt_distributions, 1);
+
+        const ros::Time   time  = ros::Time::now();
+        const std::string frame = nh_.param<std::string>("map_frame", "/map");
 
         if (path_ndt != "") {
             typename cslibs_ndt_3d::dynamic_maps::Gridmap<T>::Ptr map_ndt;
@@ -79,11 +82,10 @@ private:
 
             map_ndt_means_.reset(new sensor_msgs::PointCloud2);
             cslibs_ndt_3d::conversion::from<T>(map_ndt, *map_ndt_means_);
-            map_ndt_means_->header.frame_id = "/map";
+            map_ndt_means_->header.stamp    = time;
+            map_ndt_means_->header.frame_id = frame;
 
-            //cslibs_ndt_3d::conversion::from<T>(map_ndt, map_ndt_distributions_);
-            if (map_ndt_distributions_)
-                map_ndt_distributions_->header.frame_id = "/map";
+            cslibs_ndt_3d::conversion::from<T>(map_ndt, map_ndt_distributions_, time, frame);
         }
         if (path_occ_ndt != "") {
             typename cslibs_ndt_3d::dynamic_maps::OccupancyGridmap<T>::Ptr map_occ_ndt;
@@ -95,11 +97,10 @@ private:
             typename cslibs_gridmaps::utility::InverseModel<T>::Ptr ivm(new cslibs_gridmaps::utility::InverseModel<T>(0.5, 0.45, 0.65));
             map_occ_ndt_means_.reset(new sensor_msgs::PointCloud2);
             cslibs_ndt_3d::conversion::from<T>(map_occ_ndt, *map_occ_ndt_means_, ivm);
-            map_occ_ndt_means_->header.frame_id = "/map";
+            map_occ_ndt_means_->header.stamp    = time;
+            map_occ_ndt_means_->header.frame_id = frame;
 
-            //cslibs_ndt_3d::conversion::from<T>(map_occ_ndt, map_occ_ndt_distributions_, ivm);
-            if (map_occ_ndt_distributions_)
-                map_occ_ndt_distributions_->header.frame_id = "/map";
+            cslibs_ndt_3d::conversion::from<T>(map_occ_ndt, map_occ_ndt_distributions_, ivm, time, frame);
         }
 
         service_ = nh_.advertiseService(nh_.getNamespace() + "/resend", &NDTMapLoader::resend, this);
@@ -114,22 +115,25 @@ private:
             ROS_ERROR_STREAM("What can I say, I have nothing to offer!");
             return false;
         }
+        const ros::Time time = ros::Time::now();
 
         if (map_ndt_means_) {
-            map_ndt_means_->header.stamp = ros::Time::now();
+            map_ndt_means_->header.stamp = time;
             pub_ndt_means_.publish(map_ndt_means_);
         }
         if (map_occ_ndt_means_) {
-            map_occ_ndt_means_->header.stamp = ros::Time::now();
+            map_occ_ndt_means_->header.stamp = time;
             pub_occ_ndt_means_.publish(map_occ_ndt_means_);
         }
 
         if (map_ndt_distributions_) {
-            map_ndt_distributions_->header.stamp = ros::Time::now();
+            for (auto& m : map_ndt_distributions_->markers)
+                m.header.stamp = time;
             pub_ndt_distributions_.publish(map_ndt_distributions_);
         }
         if (map_occ_ndt_distributions_) {
-            map_occ_ndt_distributions_->header.stamp = ros::Time::now();
+            for (auto& m : map_occ_ndt_distributions_->markers)
+                m.header.stamp = time;
             pub_occ_ndt_distributions_.publish(map_occ_ndt_distributions_);
         }
 

@@ -1,14 +1,14 @@
-#ifndef CSLIBS_NDT_3D_CONVERSION_DISTRIBUTIONS_HPP
-#define CSLIBS_NDT_3D_CONVERSION_DISTRIBUTIONS_HPP
+#ifndef CSLIBS_NDT_2D_CONVERSION_DISTRIBUTIONS_HPP
+#define CSLIBS_NDT_2D_CONVERSION_DISTRIBUTIONS_HPP
 
-#include <cslibs_ndt_3d/dynamic_maps/gridmap.hpp>
-#include <cslibs_ndt_3d/dynamic_maps/occupancy_gridmap.hpp>
+#include <cslibs_ndt_2d/dynamic_maps/gridmap.hpp>
+#include <cslibs_ndt_2d/dynamic_maps/occupancy_gridmap.hpp>
 
 #include <cslibs_math/color/color.hpp>
 #include <cslibs_math/common/angle.hpp>
 #include <visualization_msgs/MarkerArray.h>
 
-namespace cslibs_ndt_3d {
+namespace cslibs_ndt_2d {
 namespace conversion {
 
 template <cslibs_ndt::map::tags::option option_t,
@@ -16,14 +16,15 @@ template <cslibs_ndt::map::tags::option option_t,
           template <typename, typename, typename...> class backend_t,
           template <typename, typename, typename...> class dynamic_backend_t>
 inline void from(
-        const cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t> &src,
+        const cslibs_ndt::map::Map<option_t,2,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t> &src,
         visualization_msgs::MarkerArray &dst,
         const ros::Time& time,
         const std::string &frame,
-        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
+        const typename cslibs_math_2d::Pose2<T> &transform = typename cslibs_math_2d::Pose2<T>(),
+        const cslibs_math::color::Color<T> &color = cslibs_math::color::Color<T>(0.0, 0.45, 0.63))
 {
-    using src_map_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t>;
-    using index_t = std::array<int, 3>;
+    using src_map_t = cslibs_ndt::map::Map<option_t,2,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t>;
+    using index_t = std::array<int, 2>;
     using point_t = typename src_map_t::point_t;
     using pose_t = typename src_map_t::pose_t;
     using distribution_t = typename src_map_t::distribution_t;
@@ -43,10 +44,7 @@ inline void from(
     marker.id++;
 
     const auto& origin = transform * src.getInitialOrigin();
-    const T min_height = (origin * src.getMin())(2);
-    const T max_height = (origin * src.getMax())(2);
-
-    auto process_item = [&dst,&marker,&origin,&min_height,&max_height](
+    auto process_item = [&dst,&marker,&origin,&color](
             const index_t &bi, const distribution_t& d) {
         const auto& data = d.data();
         const auto& mean = data.getMean();
@@ -54,11 +52,14 @@ inline void from(
 
         marker.pose.position.x = p(0);
         marker.pose.position.y = p(1);
-        marker.pose.position.z = p(2);
+        marker.pose.position.z = 0;
 
-        const auto& evec = data.getEigenVectors();
+        const auto& evec_tmp = data.getEigenVectors();
+        Eigen::Matrix<T,3,3> evec = Eigen::Matrix<T,3,3>::Identity(3,3);
+        evec.topLeftCorner(2,2) = evec_tmp;
         const Eigen::Quaternion<T> orientation =
-                origin.rotation().toEigen() * Eigen::Quaternion<T>(evec);
+                cslibs_math_3d::Quaternion<T>(origin.yaw()).toEigen() * Eigen::Quaternion<T>(evec);
+
 
         marker.pose.orientation.x = orientation.x();
         marker.pose.orientation.y = orientation.y();
@@ -68,10 +69,8 @@ inline void from(
         const auto& eval = data.getEigenValues();
         marker.scale.x = std::max(static_cast<T>(1e-4),T(2.)*std::sqrt(eval(0)));
         marker.scale.y = std::max(static_cast<T>(1e-4),T(2.)*std::sqrt(eval(1)));
-        marker.scale.z = std::max(static_cast<T>(1e-4),T(2.)*std::sqrt(eval(2)));
+        marker.scale.z = static_cast<T>(1e-4);
 
-        cslibs_math::color::Color<T> color =
-                cslibs_math::color::interpolateColor(p(2), min_height, max_height);
         marker.color.a = 1;
         marker.color.r = color.r;
         marker.color.g = color.g;
@@ -89,17 +88,18 @@ inline void from(
 
 template <typename T>
 inline void from(
-        const typename cslibs_ndt_3d::dynamic_maps::Gridmap<T>::Ptr &src,
+        const typename cslibs_ndt_2d::dynamic_maps::Gridmap<T>::Ptr &src,
         visualization_msgs::MarkerArray::Ptr &dst,
         const ros::Time& time,
         const std::string &frame,
-        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
+        const typename cslibs_math_2d::Pose2<T> &transform = typename cslibs_math_2d::Pose2<T>(),
+        const cslibs_math::color::Color<T> &color = cslibs_math::color::Color<T>(0.0, 0.45, 0.63))
 {
     if (!src)
         return;
     dst.reset(new visualization_msgs::MarkerArray());
 
-    from(*src,*dst,time,frame,transform);
+    from(*src,*dst,time,frame,transform,color);
 }
 
 template <cslibs_ndt::map::tags::option option_t,
@@ -107,16 +107,17 @@ template <cslibs_ndt::map::tags::option option_t,
           template <typename, typename, typename...> class backend_t,
           template <typename, typename, typename...> class dynamic_backend_t>
 inline void from(
-        const cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t> &src,
+        const cslibs_ndt::map::Map<option_t,2,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t> &src,
         visualization_msgs::MarkerArray &dst,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
         const ros::Time& time,
         const std::string &frame,
-        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>(),
+        const typename cslibs_math_2d::Pose2<T> &transform = typename cslibs_math_2d::Pose2<T>(),
+        const cslibs_math::color::Color<T> &color = cslibs_math::color::Color<T>(0.0, 0.45, 0.63),
         const T &occupancy_threshold = 0.5)
 {
-    using src_map_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t>;
-    using index_t = std::array<int, 3>;
+    using src_map_t = cslibs_ndt::map::Map<option_t,2,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t>;
+    using index_t = std::array<int, 2>;
     using point_t = typename src_map_t::point_t;
     using pose_t = typename src_map_t::pose_t;
     using distribution_t = typename src_map_t::distribution_t;
@@ -136,10 +137,7 @@ inline void from(
     marker.id++;
 
     const auto& origin = transform * src.getInitialOrigin();
-    const T min_height = (origin * src.getMin())(2);
-    const T max_height = (origin * src.getMax())(2);
-
-    auto process_item = [&dst,&ivm,&occupancy_threshold,&marker,&origin,&min_height,&max_height](
+    auto process_item = [&dst,&ivm,&occupancy_threshold,&marker,&origin,&color](
             const index_t &bi, const distribution_t& d) {
         const T occupancy = d.getOccupancy(ivm);
         if (occupancy < occupancy_threshold)
@@ -153,11 +151,13 @@ inline void from(
 
         marker.pose.position.x = p(0);
         marker.pose.position.y = p(1);
-        marker.pose.position.z = p(2);
+        marker.pose.position.z = 0;
 
-        const auto& evec = data->getEigenVectors();
+        const auto& evec_tmp = data->getEigenVectors();
+        Eigen::Matrix<T,3,3> evec = Eigen::Matrix<T,3,3>::Identity(3,3);
+        evec.topLeftCorner(2,2) = evec_tmp;
         const Eigen::Quaternion<T> orientation =
-                origin.rotation().toEigen() * Eigen::Quaternion<T>(evec);
+                cslibs_math_3d::Quaternion<T>(origin.yaw()).toEigen() * Eigen::Quaternion<T>(evec);
 
         marker.pose.orientation.x = orientation.x();
         marker.pose.orientation.y = orientation.y();
@@ -167,10 +167,8 @@ inline void from(
         const auto& eval = data->getEigenValues();
         marker.scale.x = std::max(static_cast<T>(1e-4),T(2.)*std::sqrt(eval(0)));
         marker.scale.y = std::max(static_cast<T>(1e-4),T(2.)*std::sqrt(eval(1)));
-        marker.scale.z = std::max(static_cast<T>(1e-4),T(2.)*std::sqrt(eval(2)));
+        marker.scale.z = static_cast<T>(1e-4);
 
-        cslibs_math::color::Color<T> color =
-                cslibs_math::color::interpolateColor(p(2), min_height, max_height);
         marker.color.a = occupancy;
         marker.color.r = color.r;
         marker.color.g = color.g;
@@ -188,22 +186,23 @@ inline void from(
 
 template <typename T>
 inline void from(
-        const typename cslibs_ndt_3d::dynamic_maps::OccupancyGridmap<T>::Ptr &src,
+        const typename cslibs_ndt_2d::dynamic_maps::OccupancyGridmap<T>::Ptr &src,
         visualization_msgs::MarkerArray::Ptr &dst,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr& ivm,
         const ros::Time& time,
         const std::string &frame,
-        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>(),
+        const typename cslibs_math_2d::Pose2<T> &transform = typename cslibs_math_2d::Pose2<T>(),
+        const cslibs_math::color::Color<T> &color = cslibs_math::color::Color<T>(0.0, 0.45, 0.63),
         const T &occupancy_threshold = 0.5)
 {
     if (!src || !ivm)
         return;
     dst.reset(new visualization_msgs::MarkerArray());
 
-    from(*src,*dst,ivm,time,frame,transform,occupancy_threshold);
+    from(*src,*dst,ivm,time,frame,transform,color,occupancy_threshold);
 }
 
 }
 }
 
-#endif // CSLIBS_NDT_3D_CONVERSION_DISTRIBUTIONS_HPP
+#endif // CSLIBS_NDT_2D_CONVERSION_DISTRIBUTIONS_HPP

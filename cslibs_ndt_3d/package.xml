@@ -24,12 +24,7 @@
   <depend>roscpp</depend>
   <depend>tf</depend>
   <depend>yaml-cpp</depend>
-  <depend>rviz</depend>
-  <depend>std_msgs</depend>
-  <exec_depend>message_runtime</exec_depend>
-  <depend>message_generation</depend>
 
   <export>
-    <rviz plugin="${prefix}/plugins.xml"/>
   </export>
 </package>

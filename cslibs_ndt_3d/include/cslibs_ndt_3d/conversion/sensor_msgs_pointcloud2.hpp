@@ -62,35 +62,9 @@ inline void from(
                      const point_t &p) -> T {
         return d ? d->data().sampleNonNormalized(p) : 0.0;
     };
-    auto sample_bundle = [&sample](const distribution_bundle_t &b,
-                                   const point_t &p) -> T {
-        return 0.125 * (sample(b.at(0), p) +
-                        sample(b.at(1), p) +
-                        sample(b.at(2), p) +
-                        sample(b.at(3), p) +
-                        sample(b.at(4), p) +
-                        sample(b.at(5), p) +
-                        sample(b.at(6), p) +
-                        sample(b.at(7), p));
-    };
 
     std::vector<float> tmp;
     const auto& origin = transform * src.getInitialOrigin();
-    auto process_bundle = [&src, &tmp, &origin, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
-        typename distribution_t::distribution_t d;
-        for (std::size_t i = 0 ; i < 8 ; ++i)
-            d += b.at(i)->data();
-        if (d.getN() == 0)
-            return;
-
-        cslibs_math_3d::Point3<T> mean(d.getMean());
-        cslibs_math_3d::Point3<T> p = origin * mean;
-        tmp.emplace_back(static_cast<float>(p(0)));
-        tmp.emplace_back(static_cast<float>(p(1)));
-        tmp.emplace_back(static_cast<float>(p(2)));
-        tmp.emplace_back(static_cast<float>(sample_bundle(b, mean)));
-    };
-
     auto process_item = [&src, &tmp, &origin, &sample](const index_t &bi, const distribution_t& d) {
         cslibs_math_3d::Point3<T> mean(d.data().getMean());
         cslibs_math_3d::Point3<T> p = origin * mean;
@@ -99,11 +73,11 @@ inline void from(
         tmp.emplace_back(static_cast<float>(p(2)));
         tmp.emplace_back(static_cast<float>(sample(&d,mean)));
     };
+
     const auto& storages = src.getStorages();
     for (const auto& storage : storages) {
         storage->traverse(process_item);
     }
-    //src.traverse(process_bundle);
     from(tmp, dst);
 }
 
@@ -119,7 +93,6 @@ inline void from(
 
     from(*src, dst, allocate_all, transform);
 }
-
 
 template <cslibs_ndt::map::tags::option option_t,
           typename T,
@@ -150,56 +123,13 @@ inline void from(
         };
         return d ? evaluate() : T(0.0);
     };
-    auto sample_bundle = [&sample](const distribution_bundle_t &b,
-                                   const point_t& p) -> T {
-        return 0.125 * (sample(b.at(0), p) +
-                        sample(b.at(1), p) +
-                        sample(b.at(2), p) +
-                        sample(b.at(3), p) +
-                        sample(b.at(4), p) +
-                        sample(b.at(5), p) +
-                        sample(b.at(6), p) +
-                        sample(b.at(7), p));
-    };
 
     std::vector<float> tmp;
     const auto& origin = transform * src.getInitialOrigin();
-    auto process_bundle = [&src, &tmp, &ivm, &threshold, &origin, &sample_bundle](const index_t &bi, const distribution_bundle_t &b) {
-        /*typename distribution_t::distribution_t d;
-        T occupancy = 0.0;
-
-        for (std::size_t i = 0 ; i < 8 ; ++i) {
-            const auto &handle = b.at(i);
-            if (handle) {
-            occupancy += 0.125 * handle->getOccupancy(ivm);
-            //if (handle)//
-            if (const auto &d_tmp = handle->getDistribution())
-                d += *d_tmp;
-            }
-        }
-        if (d.getN() == 0 || occupancy < threshold)
-            return;/*/
-        for (std::size_t i = 0 ; i < 8 ; ++i) {
-            const auto& handle = b.at(i);
-            if (!handle) continue;
-            const auto& d_tmp = handle->getDistribution();
-            if (!d_tmp) continue;
-            const auto& d = *d_tmp;
-            if (d.getN() == 0 || handle->getOccupancy(ivm) < threshold) continue;
-//*/
-        cslibs_math_3d::Point3<T> mean(d.getMean());
-        cslibs_math_3d::Point3<T> p = origin * mean;
-        tmp.emplace_back(static_cast<float>(p(0)));
-        tmp.emplace_back(static_cast<float>(p(1)));
-        tmp.emplace_back(static_cast<float>(p(2)));
-        tmp.emplace_back(static_cast<float>(sample_bundle(b, mean)));
-    }
-    };
-    //src.traverse(process_bundle);
-
     auto process_item = [&src, &tmp, &origin, &sample](const index_t &bi, const distribution_t& d) {
         const auto dd = d.getDistribution();
-        if (!dd) return;
+        if (!dd)
+            return;
         cslibs_math_3d::Point3<T> mean(dd->getMean());
         cslibs_math_3d::Point3<T> p = origin * mean;
         tmp.emplace_back(static_cast<float>(p(0)));
@@ -207,6 +137,7 @@ inline void from(
         tmp.emplace_back(static_cast<float>(p(2)));
         tmp.emplace_back(static_cast<float>(sample(&d,mean)));
     };
+
     const auto& storages = src.getStorages();
     for (const auto& storage : storages) {
         storage->traverse(process_item);

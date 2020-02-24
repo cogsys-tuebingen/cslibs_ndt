@@ -123,7 +123,7 @@ public:
      */
     inline point_t getMin() const
     {
-        return utility::toPoint<point_t>([this](const std::size_t& i) {
+        return utility::to_point<point_t>([this](const std::size_t& i) {
             return min_bundle_index_[i] * bundle_resolution_;
         });
     }
@@ -134,7 +134,7 @@ public:
      */
     inline point_t getMax() const
     {
-        return utility::toPoint<point_t>([this](const std::size_t& i) {
+        return utility::to_point<point_t>([this](const std::size_t& i) {
             return (max_bundle_index_[i]+1) * bundle_resolution_;
         });
     }
@@ -216,7 +216,7 @@ public:
 
     inline virtual bool validate(const pose_2d_t &p_w_2d) const
     {
-        const point_t p_w = utility::toPoint<point_t>(p_w_2d.translation());
+        const point_t p_w = utility::to_point<point_t>(p_w_2d.translation());
         return valid(toBundleIndex(p_w));
     }
 
@@ -274,11 +274,16 @@ protected:
 
     inline distribution_bundle_t *getAllocate(const index_t &bi) const
     {
-        distribution_bundle_t *bundle = getAllocate<distribution_bundle_t>(bundle_storage_, bi);
 
+        distribution_bundle_t *bundle = bundle_storage_->get(bi);
+        if (bundle)
+            return bundle;
+
+        bundle = &(bundle_storage_->insert(bi, distribution_bundle_t()));
         utility::apply_indices<bin_count,Dim>(bi, [this,&bundle](const std::size_t& i, const index_t& index) {
-            if (!bundle->at(i))
-                bundle->at(i) = getAllocate<distribution_t>(storage_[i], index);
+            auto& b = bundle->at(i);
+            if (!b)
+                b = getAllocate<distribution_t>(storage_[i], index);
         });
 
         updateIndices(bi);
@@ -304,7 +309,7 @@ protected:
                                  point_t &p_m) const
     {
         p_m = m_T_w_ * p_w;
-        return utility::toIndex<Dim>([this,&p_m](const std::size_t& i) {
+        return utility::to_index<Dim>([this,&p_m](const std::size_t& i) {
             return static_cast<int>(std::floor(p_m(i) * bundle_resolution_inv_));
         });
     }

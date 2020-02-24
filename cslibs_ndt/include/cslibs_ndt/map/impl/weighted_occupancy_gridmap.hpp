@@ -92,7 +92,7 @@ public:
             line_iterator_t it(start_p, point_t(d.getDistribution()->getMean()), this->bundle_resolution_);
             const T w = d.weightOccupied();
             while (!it.done()) {
-                updateFree(it(), 1, w); // TODO
+                updateFree(it(), w); // TODO
                 ++ it;
             }
         });
@@ -172,7 +172,7 @@ public:
                 if ((visibility *= current_visibility(bit)) < ivm_visibility->getProbPrior())
                     return;
 
-                updateFree(bit, 1, ww);  // TODO!
+                updateFree(bit, ww);  // TODO!
                 ++ it;
             }
 
@@ -286,13 +286,12 @@ protected:
             bundle->at(i)->updateFree();
     }
 
-    inline void updateFree(const index_t     &bi,
-                           const std::size_t &n,
-                           const T           &w) const
+    inline void updateFree(const index_t &bi,
+                           const T       &w) const
     {
         distribution_bundle_t *bundle = this->getAllocate(bi);
         for (std::size_t i=0; i<this->bin_count; ++i)
-            bundle->at(i)->updateFree(n, w);
+            bundle->at(i)->updateFree(w);
     }
 
     inline void updateOccupied(const index_t &bi,

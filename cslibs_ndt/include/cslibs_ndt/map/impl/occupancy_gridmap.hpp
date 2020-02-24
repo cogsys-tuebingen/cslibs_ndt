@@ -98,8 +98,9 @@ public:
                     point_t pm;
                     index_t bi;
                     if (this->toBundleIndex(pw, pm, bi)) {
-                        dist_t *d = updates.get(bi);
-                        d ? (*d += pm) : (updates.insert(bi, dist_t(pm)));
+                        updates.insert(bi, dist_t(pm));
+                        //dist_t *d = updates.get(bi);
+                        //d ? (*d += pm) : (updates.insert(bi, dist_t(pm)));
                     }
                 }
             }
@@ -108,14 +109,15 @@ public:
         num_storage_t updates_free;
         const auto& start = this->m_T_w_ * points_origin.translation();
         updates.traverse([this,&start,&updates_free](const index_t& i, const dist_t& d) {
-            updateOccupied(i, d);
+            updateOccupied(i,d);
 
             line_iterator_t it(start, point_t(d.getMean()), this->bundle_resolution_);//start_bi, pair.first);
             const std::size_t n = d.getN();
             while (!it.done()) {
                 const index_t& bi = it();
-                Num *num = updates_free.get(bi);
-                num ? (num->n += n) : (updates_free.insert(bi, Num(n)));
+                updates_free.insert(bi, Num(n));
+                //Num *num = updates_free.get(bi);
+                //num ? (num->n += n) : (updates_free.insert(bi, Num(n)));
                 ++it;
             }
         }
@@ -309,6 +311,55 @@ public:
         return bundle ? evaluate() : T();
     }
 
+    inline T sampleNonNormalizedBilinear(const point_t &p,
+                                         const typename inverse_sensor_model_t::Ptr &ivm) const
+    {
+        point_t pm;
+        const index_t& i = this->toBundleIndex(p, pm);
+        return sampleNonNormalizedBilinear(pm, i, ivm);
+    }
+
+    inline T sampleNonNormalizedBilinear(const point_t &p,
+                                         const index_t &bi,
+                                         const typename inverse_sensor_model_t::Ptr &ivm) const
+    {
+        if (!ivm)
+            throw std::runtime_error("[OccupancyGridMap]: inverse model not set");
+
+        if (!this->valid(bi))
+            return T();
+
+        distribution_bundle_t *bundle  = this->bundle_storage_->get(bi);
+        const auto& weights = utility::get_bilinear_interpolation_weights(bi,p,this->bundle_resolution_inv_);
+        return sampleNonNormalizedBilinear(p, weights, bundle, ivm);
+    }
+
+    inline T sampleNonNormalizedBilinear(const point_t &p,
+                                         const std::array<T,Dim> &weights,
+                                         const distribution_bundle_t* bundle,
+                                         const typename inverse_sensor_model_t::Ptr &ivm) const
+    {
+        if (!ivm)
+            throw std::runtime_error("[OccupancyGridMap]: inverse model not set");
+
+        auto sample = [&p, &ivm] (const distribution_t *d) {
+            auto do_sample = [&p, &ivm, &d]() {
+                const auto &handle = d;
+                return handle->getDistribution() ?
+                            handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(ivm) : T(0.0);
+            };
+            return d ? do_sample() : T();
+        };
+
+        auto evaluate = [this, &p, &weights, &bundle, &sample]() {
+            T retval = T();
+            for (std::size_t i=0; i<this->bin_count; ++i)
+                retval += utility::to_bilinear_interpolation_weight(weights,i) * sample(bundle->at(i));
+            return retval;
+        };
+        return bundle ? evaluate() : T();
+    }
+
 protected:
     virtual inline bool expandDistribution(const distribution_t* d) const override
     {
@@ -318,7 +369,7 @@ protected:
     inline void updateFree(const index_t     &bi,
                            const std::size_t &n) const
     {
-        distribution_bundle_t *bundle = this->getAllocate(bi);
+        const distribution_bundle_t *bundle = this->getAllocate(bi);
         for (std::size_t i=0; i<this->bin_count; ++i)
             bundle->at(i)->updateFree(n);
     }
@@ -326,7 +377,7 @@ protected:
     inline void updateOccupied(const index_t &bi,
                                const typename distribution_t::distribution_t &d) const
     {
-        distribution_bundle_t* bundle = this->getAllocate(bi);
+        const distribution_bundle_t* bundle = this->getAllocate(bi);
         for (std::size_t i=0; i<this->bin_count; ++i) {
             bundle->at(i)->updateOccupied(d);
         }

@@ -4,6 +4,8 @@
 #include <cslibs_ndt/map/generic_map.hpp>
 #include <cslibs_ndt/common/distribution.hpp>
 
+#include <cslibs_ndt/utility/bilinear_interpolation.hpp>
+
 namespace cslibs_ndt {
 namespace map {
 template <tags::option option_t,
@@ -76,7 +78,7 @@ public:
         }
 
         for (const auto& pair : updates)
-            updateOccupied(pair.first, pair.second);
+            update(pair.first, pair.second);
     }
 
     inline T sample(const point_t &p) const
@@ -137,6 +139,37 @@ public:
         return bundle ? evaluate() : T();
     }
 
+    inline T sampleNonNormalizedBilinear(const point_t &p) const
+    {
+        point_t pm;
+        const index_t& i = this->toBundleIndex(p, pm);
+        return sampleNonNormalizedBilinear(pm, i);
+    }
+
+    inline T sampleNonNormalizedBilinear(const point_t &p,
+                                         const index_t &bi) const
+    {
+        if (!this->valid(bi))
+            return T();
+
+        distribution_bundle_t *bundle = this->bundle_storage_->get(bi);
+        const auto& weights = utility::get_bilinear_interpolation_weights(bi,p,this->bundle_resolution_inv_);
+        return sampleNonNormalizedBilinear(p, weights, bundle);
+    }
+
+    inline T sampleNonNormalizedBilinear(const point_t &p,
+                                         const std::array<T,Dim> &weights,
+                                         const distribution_bundle_t *bundle) const
+    {
+        auto evaluate = [this, &p, &weights, &bundle]() {
+            T retval = T();
+            for (std::size_t i=0; i<this->bin_count; ++i)
+                retval += utility::to_bilinear_interpolation_weight(weights,i) * bundle->at(i)->data().sampleNonNormalized(p);
+            return retval;
+        };
+        return bundle ? evaluate() : T();
+    }
+
 protected:
     virtual inline bool expandDistribution(const distribution_t* d) const override
     {
@@ -144,17 +177,17 @@ protected:
     }
 
     inline void update(const index_t& bi,
-                       const point_t& p)
+                       const point_t& p) const
     {
-        distribution_bundle_t *bundle = this->getAllocate(bi);
+        const distribution_bundle_t *bundle = this->getAllocate(bi);
         for (std::size_t i=0; i<this->bin_count; ++i)
             bundle->at(i)->data().add(p);
     }
 
-    inline void updateOccupied(const index_t &bi,
-                               const typename distribution_t::distribution_t &d) const
+    inline void update(const index_t &bi,
+                       const typename distribution_t::distribution_t &d) const
     {
-        distribution_bundle_t *bundle = this->getAllocate(bi);
+        const distribution_bundle_t *bundle = this->getAllocate(bi);
         for (std::size_t i=0; i<this->bin_count; ++i)
             bundle->at(i)->data() += d;
     }

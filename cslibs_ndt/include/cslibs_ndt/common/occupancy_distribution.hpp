@@ -115,8 +115,16 @@ public:
         return distribution_;
     }
 
-    inline void merge(const OccupancyDistribution&)
-    {
+    inline void merge(const OccupancyDistribution &other)
+    {/*
+        num_free_ += other.num_free_;
+
+        if (other.distribution_) {
+            if (distribution_)
+                *distribution_ += *(other.distribution_);
+            else
+                distribution_ = other.distribution_;
+        }*/
     }
 
     inline std::size_t byte_size() const

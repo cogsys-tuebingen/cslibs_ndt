@@ -11,16 +11,16 @@
 
 namespace cslibs_ndt {
 template<typename T, std::size_t Dim>
-class /*EIGEN_ALIGN16*/ Distribution
+class Distribution
 {
 public:
-//    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-//    using allocator_t              = Eigen::aligned_allocator<Distribution<T,Dim>>;
-
-    using distribution_container_t = Distribution<T,Dim>;
     using distribution_t           = cslibs_math::statistics::StableDistribution<T,Dim,3>;
 
     inline Distribution()
+    {
+    }
+    inline Distribution(const distribution_t& d) :
+        data_(std::move(d))
     {
     }
 
@@ -48,26 +48,6 @@ public:
         return *this;
     }
 
-    inline operator const distribution_t& () const
-    {
-        return data_;
-    }
-
-    inline operator distribution_t& ()
-    {
-        return data_;
-    }
-
-    inline operator distribution_t () const
-    {
-        return data_;
-    }
-
-    inline operator distribution_t* ()
-    {
-        return &data_;
-    }
-
     inline const distribution_t& data() const
     {
         return data_;
@@ -78,8 +58,9 @@ public:
         return data_;
     }
 
-    inline void merge(const Distribution &)
+    inline void merge(const Distribution &other)
     {
+        //data_ += other.data_;
     }
 
     inline std::size_t byte_size() const

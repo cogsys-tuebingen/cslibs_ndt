@@ -25,51 +25,38 @@ public:
     using ivm_t                     = cslibs_gridmaps::utility::InverseModel<T>;
 
     inline WeightedOccupancyDistribution() :
-        num_free_(0),
         weight_free_(0)
     {
     }
 
-    inline WeightedOccupancyDistribution(const std::size_t num_free,
-                                         const T           weight_free) :
-        num_free_(num_free),
+    inline WeightedOccupancyDistribution(const T weight_free) :
         weight_free_(weight_free)
     {
     }
 
-    inline WeightedOccupancyDistribution(const std::size_t    num_free,
-                                         const T              weight_free,
+    inline WeightedOccupancyDistribution(const T weight_free,
                                          const distribution_t data) :
-        num_free_(num_free),
         weight_free_(weight_free),
         distribution_(new distribution_t(data))
     {
     }
 
     inline WeightedOccupancyDistribution(const WeightedOccupancyDistribution &other) :
-        num_free_(other.num_free_),
         weight_free_(other.weight_free_),
-        distribution_(other.distribution_),
-        occupancy_(other.occupancy_),
-        inverse_model_(other.inverse_model_)
+        distribution_(other.distribution_)
     {
     }
 
     inline WeightedOccupancyDistribution& operator = (const WeightedOccupancyDistribution &other)
     {
-        num_free_      = other.num_free_;
         weight_free_   = other.weight_free_;
         distribution_  = other.distribution_;
-        occupancy_     = other.occupancy_;
-        inverse_model_ = other.inverse_model_;
         return *this;
     }
 
-    inline void updateFree(const std::size_t& num_free = 1, const T& weight_free = 1.0)
+    inline void updateFree(const T& weight_free = 1.0)
     {
-        num_free_     += num_free;
         weight_free_  += weight_free;
-        inverse_model_ = nullptr;
     }
 
     inline void updateOccupied(const point_t& p, const T& w = 1.0)
@@ -78,7 +65,6 @@ public:
             distribution_.reset(new distribution_t());
 
         distribution_->add(p, w);
-        inverse_model_ = nullptr;
     }
 
     inline void updateOccupied(const distribution_ptr_t &d)
@@ -90,17 +76,11 @@ public:
             distribution_.reset(new distribution_t());
 
         *distribution_ += *d;
-        inverse_model_ = nullptr;
     }
 
     inline T weightFree() const
     {
         return weight_free_;
-    }
-
-    inline std::size_t numFree() const
-    {
-        return num_free_;
     }
 
     inline T weightOccupied() const
@@ -118,19 +98,14 @@ public:
 
     inline T getOccupancy(const ivm_t &inverse_model) const
     {
-        if (&inverse_model == inverse_model_)
-            return occupancy_;
-
-        inverse_model_ = &inverse_model;
-        occupancy_ = distribution_ ?
+        return distribution_ ?
                     cslibs_math::common::LogOdds<T>::from(
-                        weight_free_ * inverse_model_->getLogOddsFree() +
-                        distribution_->getWeight() * inverse_model_->getLogOddsOccupied() -
-                        static_cast<T>(num_free_ + distribution_->getSampleCount()) * inverse_model_->getLogOddsPrior()) :
+                        weight_free_ * inverse_model.getLogOddsFree() +
+                        distribution_->getWeight() * inverse_model.getLogOddsOccupied() -
+                        (weight_free_ + distribution_->getWeight()) * inverse_model.getLogOddsPrior()) :
                     cslibs_math::common::LogOdds<T>::from(
-                        weight_free_ * inverse_model_->getLogOddsFree() -
-                        static_cast<T>(num_free_) * inverse_model_->getLogOddsPrior());
-        return occupancy_;
+                        weight_free_ * inverse_model.getLogOddsFree() -
+                        weight_free_ * inverse_model.getLogOddsPrior());
     }
 
     inline const distribution_ptr_t &getDistribution() const
@@ -143,8 +118,16 @@ public:
         return distribution_;
     }
 
-    inline void merge(const WeightedOccupancyDistribution&)
+    inline void merge(const WeightedOccupancyDistribution &other)
     {
+        weight_free_ += other.weight_free_;
+
+        if (other.distribution_) {
+            if (distribution_)
+                *distribution_ += *(other.distribution_);
+            else
+                distribution_ = other.distribution_;
+        }
     }
 
     inline std::size_t byte_size() const
@@ -153,12 +136,8 @@ public:
     }
 
 private:
-    std::size_t        num_free_;
     T                  weight_free_;
     distribution_ptr_t distribution_;
-
-    mutable T            occupancy_     = 0;
-    mutable const ivm_t* inverse_model_ = nullptr; // may point to invalid memory!
 };
 }
 

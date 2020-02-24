@@ -126,7 +126,10 @@ inline void from(
 
     std::vector<float> tmp;
     const auto& origin = transform * src.getInitialOrigin();
-    auto process_item = [&src, &tmp, &origin, &sample](const index_t &bi, const distribution_t& d) {
+    auto process_item = [&src, &tmp, &origin, &sample, &ivm, &threshold](const index_t &bi, const distribution_t& d) {
+        if (d.getOccupancy(ivm) < threshold)
+            return;
+
         const auto dd = d.getDistribution();
         if (!dd)
             return;

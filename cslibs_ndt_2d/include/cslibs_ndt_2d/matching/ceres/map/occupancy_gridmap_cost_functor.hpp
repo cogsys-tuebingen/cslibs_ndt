@@ -54,16 +54,7 @@ protected:
         const bundle_t* bundle = map_.get(bi);
         *value = JetT(1.0);
         if (bundle) {
-            /*const std::array<JetT,2> weights{(bi[0] & 1) ? (JetT(1.)-(p_prime(0) * resolution_inv_ - ::ceres::floor(p_prime(0) * resolution_inv_))) :
-                                                           (p_prime(0) * resolution_inv_ - ::ceres::floor(p_prime(0) * resolution_inv_)),
-                                             (bi[1] & 1) ? (JetT(1.)-(p_prime(1) * resolution_inv_ - ::ceres::floor(p_prime(1) * resolution_inv_))) :
-                                                           (p_prime(1) * resolution_inv_ - ::ceres::floor(p_prime(1) * resolution_inv_))};
-            const std::array<JetT,4> bin_weights{(JetT(1.)-weights[0])*(JetT(1.)-weights[1]),
-                                                 weights[0]*(JetT(1.)-weights[1]),
-                                                 (JetT(1.)-weights[0])*weights[1],
-                                                 weights[0]*weights[1]};
-
-            */for (std::size_t i=0; i<ndt_t::bin_count; ++i) {
+            for (std::size_t i=0; i<ndt_t::bin_count; ++i) {
                 if (const auto& bi = bundle->at(i)) {
                     const double occ = static_cast<double>(bi->getOccupancy(ivm_));
                     if (const auto& di = bi->getDistribution()) {
@@ -76,7 +67,7 @@ protected:
                                 di->getInformationMatrix().template cast<double>();
 
                         const auto& sample = ::ceres::exp((-0.5 * diff.transpose() * inf * diff).value());
-                        *value -= /*bin_weights[i] /*/static_cast<double>(ndt_t::div_count) * sample * occ;
+                        *value -= static_cast<double>(ndt_t::div_count) * sample * occ;
                     }
                 }
             }

@@ -22,7 +22,8 @@ inline void from(
         const T &maximum_distance = 2.0,
         const T &sigma_hit        = 0.5,
         const T &threshold        = 0.169,
-        const bool allocate_all   = true)
+        const bool &allocate_all  = true,
+        const bool &bilinear      = false)
 {
     if (allocate_all)
         src.allocatePartiallyAllocatedBundles();
@@ -37,23 +38,16 @@ inline void from(
                             sampling_resolution,
                             std::ceil(src.getHeight() / sampling_resolution),
                             std::ceil(src.getWidth()  / sampling_resolution)));
-    std::fill(dst->getData().begin(), dst->getData().end(), T(0.5));
+    std::fill(dst->getData().begin(), dst->getData().end(), T(0.0));
 
     const T bundle_resolution = src.getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
-
-    auto sample = [](const cslibs_math_2d::Point2<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
-        return src_map_t::div_count * (bundle.at(0)->data().sampleNonNormalized(p) +
-                                       bundle.at(1)->data().sampleNonNormalized(p) +
-                                       bundle.at(2)->data().sampleNonNormalized(p) +
-                                       bundle.at(3)->data().sampleNonNormalized(p));
-    };
 
     using index_t = std::array<int, 2>;
     const index_t min_bi = src.getMinBundleIndex();
 
     const auto& origin = src.getInitialOrigin();
-    src.traverse([&dst, &origin, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
+    src.traverse([&src, &dst, &origin, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &bilinear]
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -61,7 +55,15 @@ inline void from(
                                                   static_cast<T>(bi[1]) * bundle_resolution + static_cast<T>(l) * sampling_resolution);
                 const std::size_t u = (bi[0] - min_bi[0]) * chunk_step + k;
                 const std::size_t v = (bi[1] - min_bi[1]) * chunk_step + l;
-                dst->at(u,v) = sample(p, b);
+                if (bilinear) {
+                    const std::array<T,2> w{
+                        (bi[0] & 1) ? (static_cast<T>(k)/static_cast<T>(chunk_step)) :
+                                      (T(1.) - static_cast<T>(k)/static_cast<T>(chunk_step)),
+                        (bi[1] & 1) ? (static_cast<T>(l)/static_cast<T>(chunk_step)) :
+                                      (T(1.) - static_cast<T>(l)/static_cast<T>(chunk_step))};
+                    dst->at(u,v) = src.sampleNonNormalizedBilinear(p, w, &b);
+                } else
+                    dst->at(u,v) = src.sampleNonNormalized(p, &b);
             }
         }
     });
@@ -88,7 +90,8 @@ inline void from(
         const T &maximum_distance = 2.0,
         const T &sigma_hit        = 0.5,
         const T &threshold        = 0.169,
-        const bool allocate_all   = true)
+        const bool &allocate_all  = true,
+        const bool &bilinear      = false)
 {
     if (!inverse_model)
         return;
@@ -105,31 +108,16 @@ inline void from(
                             sampling_resolution,
                             std::ceil(src.getHeight() / sampling_resolution),
                             std::ceil(src.getWidth()  / sampling_resolution)));
-    std::fill(dst->getData().begin(), dst->getData().end(), T(0.5));
+    std::fill(dst->getData().begin(), dst->getData().end(), T(0.0));
 
     const T bundle_resolution = src.getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
-
-    auto sample = [&inverse_model](const cslibs_math_2d::Point2<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
-        auto sample = [&p, &inverse_model](const typename src_map_t::distribution_t *d) {
-            auto do_sample = [&p, &inverse_model, &d]() {
-                const auto &handle = d;
-                return handle->getDistribution() ?
-                            handle->getDistribution()->sampleNonNormalized(p) * handle->getOccupancy(inverse_model) : T();
-            };
-            return d ? do_sample() : T();
-        };
-        return src_map_t::div_count * (sample(bundle.at(0)) +
-                                       sample(bundle.at(1)) +
-                                       sample(bundle.at(2)) +
-                                       sample(bundle.at(3)));
-    };
 
     using index_t = std::array<int, 2>;
     const index_t min_bi = src.getMinBundleIndex();
 
     const auto& origin = src.getInitialOrigin();
-    src.traverse([&dst, &origin, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
+    src.traverse([&src, &dst, &origin, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &inverse_model, &bilinear]
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -137,7 +125,15 @@ inline void from(
                                                   static_cast<T>(bi[1]) * bundle_resolution + static_cast<T>(l) * sampling_resolution);
                 const std::size_t u = (bi[0] - min_bi[0]) * chunk_step + k;
                 const std::size_t v = (bi[1] - min_bi[1]) * chunk_step + l;
-                dst->at(u,v) = sample(p, b);
+                if (bilinear) {
+                    const std::array<T,2> w{
+                        (bi[0] & 1) ? (static_cast<T>(k)/static_cast<T>(chunk_step)) :
+                                      (T(1.) - static_cast<T>(k)/static_cast<T>(chunk_step)),
+                        (bi[1] & 1) ? (static_cast<T>(l)/static_cast<T>(chunk_step)) :
+                                      (T(1.) - static_cast<T>(l)/static_cast<T>(chunk_step))};
+                    dst->at(u,v) = src.sampleNonNormalizedBilinear(p, w, &b, inverse_model);
+                } else
+                    dst->at(u,v) = src.sampleNonNormalized(p, &b, inverse_model);
             }
         }
     });
@@ -160,7 +156,8 @@ inline void from(
         const T &maximum_distance = 2.0,
         const T &sigma_hit        = 0.5,
         const T &threshold        = 0.169,
-        const bool allocate_all   = true)
+        const bool &allocate_all  = true,
+        const bool &bilinear      = false)
 {
     if (!src)
         return;
@@ -169,7 +166,7 @@ inline void from(
             T,
             cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_backend_t,
             cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_dynamic_backend_t>(
-                *src, dst, sampling_resolution, maximum_distance, sigma_hit, threshold, allocate_all);
+                *src, dst, sampling_resolution, maximum_distance, sigma_hit, threshold, allocate_all, bilinear);
 }
 
 template <typename T>
@@ -181,7 +178,8 @@ inline void from(
         const T &maximum_distance = 2.0,
         const T &sigma_hit        = 0.5,
         const T &threshold        = 0.169,
-        const bool allocate_all   = true)
+        const bool &allocate_all  = true,
+        const bool &bilinear      = false)
 {
     if (!src)
         return;
@@ -190,7 +188,7 @@ inline void from(
             T,
             cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_backend_t,
             cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_dynamic_backend_t>(
-                *src, dst, sampling_resolution, inverse_model, maximum_distance, sigma_hit, threshold, allocate_all);
+                *src, dst, sampling_resolution, inverse_model, maximum_distance, sigma_hit, threshold, allocate_all, bilinear);
 }
 }
 }

@@ -29,7 +29,8 @@ inline void from(
         typename cslibs_gridmaps::static_maps::ProbabilityGridmap<T,T>::Ptr &dst,
         const T sampling_resolution,
         const bool &allocate_all = false,
-        const T &default_value = 0.0)
+        const T &default_value   = 0.0,
+        const bool &bilinear     = false)
 {
     if (allocate_all)
         src.allocatePartiallyAllocatedBundles();
@@ -49,7 +50,7 @@ inline void from(
     const index_t min_bi = src.getMinBundleIndex();
 
     const auto& origin = src.getInitialOrigin();
-    src.traverse([&src, &dst, &origin, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi]
+    src.traverse([&src, &dst, &origin, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &bilinear]
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -57,11 +58,15 @@ inline void from(
                                                   static_cast<T>(bi[1]) * bundle_resolution + static_cast<T>(l) * sampling_resolution);
                 const std::size_t u = (bi[0] - min_bi[0]) * chunk_step + k;
                 const std::size_t v = (bi[1] - min_bi[1]) * chunk_step + l;
-                const std::array<T,2> w{(bi[0] & 1) ? (static_cast<T>(k)/static_cast<T>(chunk_step)) :
-                                                      (T(1.) - static_cast<T>(k)/static_cast<T>(chunk_step)),
-                                        (bi[1] & 1) ? (static_cast<T>(l)/static_cast<T>(chunk_step)) :
-                                                      (T(1.) - static_cast<T>(l)/static_cast<T>(chunk_step))};
-                dst->at(u,v) = src.sampleNonNormalizedBilinear(p, w, &b);
+                if (bilinear) {
+                    const std::array<T,2> w{
+                        (bi[0] & 1) ? (static_cast<T>(k)/static_cast<T>(chunk_step)) :
+                                      (T(1.) - static_cast<T>(k)/static_cast<T>(chunk_step)),
+                        (bi[1] & 1) ? (static_cast<T>(l)/static_cast<T>(chunk_step)) :
+                                      (T(1.) - static_cast<T>(l)/static_cast<T>(chunk_step))};
+                    dst->at(u,v) = src.sampleNonNormalizedBilinear(p, w, &b);
+                } else
+                    dst->at(u,v) = src.sampleNonNormalized(p, &b);
             }
         }
     });
@@ -77,7 +82,8 @@ inline void from(
         const T sampling_resolution,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &inverse_model,
         const bool &allocate_all = false,
-        const T &default_value = 0.0)
+        const T &default_value   = 0.0,
+        const bool &bilinear     = false)
 {
     if (!inverse_model)
         return;
@@ -99,7 +105,7 @@ inline void from(
     const index_t min_bi = src.getMinBundleIndex();
 
     const auto& origin = src.getInitialOrigin();
-    src.traverse([&src, &dst, &origin, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &inverse_model]
+    src.traverse([&src, &dst, &origin, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &inverse_model, &bilinear]
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -107,11 +113,15 @@ inline void from(
                                                   static_cast<T>(bi[1]) * bundle_resolution + static_cast<T>(l) * sampling_resolution);
                 const std::size_t u = (bi[0] - min_bi[0]) * chunk_step + k;
                 const std::size_t v = (bi[1] - min_bi[1]) * chunk_step + l;
-                const std::array<T,2> w{(bi[0] & 1) ? (static_cast<T>(k)/static_cast<T>(chunk_step)) :
-                                                      (T(1.) - static_cast<T>(k)/static_cast<T>(chunk_step)),
-                                        (bi[1] & 1) ? (static_cast<T>(l)/static_cast<T>(chunk_step)) :
-                                                      (T(1.) - static_cast<T>(l)/static_cast<T>(chunk_step))};
-                dst->at(u,v) = src.sampleNonNormalizedBilinear(p, w, &b, inverse_model);
+                if (bilinear) {
+                    const std::array<T,2> w{
+                        (bi[0] & 1) ? (static_cast<T>(k)/static_cast<T>(chunk_step)) :
+                                      (T(1.) - static_cast<T>(k)/static_cast<T>(chunk_step)),
+                        (bi[1] & 1) ? (static_cast<T>(l)/static_cast<T>(chunk_step)) :
+                                      (T(1.) - static_cast<T>(l)/static_cast<T>(chunk_step))};
+                    dst->at(u,v) = src.sampleNonNormalizedBilinear(p, w, &b, inverse_model);
+                } else
+                    dst->at(u,v) = src.sampleNonNormalized(p, &b, inverse_model);
             }
         }
     });
@@ -127,7 +137,8 @@ inline void from(
         const T sampling_resolution,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &inverse_model,
         const bool &allocate_all = false,
-        const T &default_value = 0.0)
+        const T &default_value   = 0.0,
+        const bool& bilinear     = false)
 {
     if (!inverse_model)
         return;
@@ -145,26 +156,11 @@ inline void from(
     const T bundle_resolution = src.getBundleResolution();
     const int chunk_step = static_cast<int>(bundle_resolution / sampling_resolution);
 
-    auto sample = [&inverse_model](const cslibs_math_2d::Point2<T> &p, const typename src_map_t::distribution_bundle_t &bundle) {
-        auto sample = [&p, &inverse_model](const typename src_map_t::distribution_t *d) {
-            auto do_sample = [&p, &inverse_model, &d]() {
-                return (d->getDistribution() && d->getDistribution()->valid()) ?
-                            validate(d->getDistribution()->sampleNonNormalized(p)) *
-                            validate(d->getOccupancy(inverse_model)) : T();
-            };
-            return d ? do_sample() : T();
-        };
-        return src_map_t::div_count * (sample(bundle.at(0)) +
-                                       sample(bundle.at(1)) +
-                                       sample(bundle.at(2)) +
-                                       sample(bundle.at(3)));
-    };
-
     using index_t = std::array<int, 2>;
     const index_t min_bi = src.getMinBundleIndex();
 
     const auto& origin = src.getInitialOrigin();
-    src.traverse([&dst, &origin, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &sample]
+    src.traverse([&src, &dst, &origin, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &inverse_model, &bilinear]
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -172,8 +168,16 @@ inline void from(
                                                   static_cast<T>(bi[1]) * bundle_resolution + static_cast<T>(l) * sampling_resolution);
                 const std::size_t u = (bi[0] - min_bi[0]) * chunk_step + k;
                 const std::size_t v = (bi[1] - min_bi[1]) * chunk_step + l;
-                dst->at(u,v) = sample(p, b);
-            }
+                if (bilinear) {
+                    const std::array<T,2> w{
+                        (bi[0] & 1) ? (static_cast<T>(k)/static_cast<T>(chunk_step)) :
+                                      (T(1.) - static_cast<T>(k)/static_cast<T>(chunk_step)),
+                        (bi[1] & 1) ? (static_cast<T>(l)/static_cast<T>(chunk_step)) :
+                                      (T(1.) - static_cast<T>(l)/static_cast<T>(chunk_step))};
+                    dst->at(u,v) = src.sampleNonNormalizedBilinear(p, w, &b, inverse_model);
+                } else
+                    dst->at(u,v) = src.sampleNonNormalized(p, &b, inverse_model);
+             }
         }
     });
 }
@@ -223,7 +227,8 @@ inline void from(
         typename cslibs_gridmaps::static_maps::ProbabilityGridmap<T,T>::Ptr &dst,
         const T &sampling_resolution,
         const bool &allocate_all = false,
-        const T &default_value = 0.0)
+        const T &default_value   = 0.0,
+        const bool &bilinear     = false)
 {
     if (!src)
         return;
@@ -232,7 +237,7 @@ inline void from(
             T,
             cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_backend_t,
             cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_dynamic_backend_t>(
-                *src, dst, sampling_resolution, allocate_all, default_value);
+                *src, dst, sampling_resolution, allocate_all, default_value, bilinear);
 }
 
 template <typename T>
@@ -242,7 +247,8 @@ inline void from(
         const T &sampling_resolution,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &inverse_model,
         const bool &allocate_all = false,
-        const T &default_value = 0.0)
+        const T &default_value   = 0.0,
+        const bool &bilinear     = false)
 {
     if (!src)
         return;
@@ -251,7 +257,7 @@ inline void from(
             T,
             cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_backend_t,
             cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_dynamic_backend_t>(
-                *src, dst, sampling_resolution, inverse_model, allocate_all, default_value);
+                *src, dst, sampling_resolution, inverse_model, allocate_all, default_value, bilinear);
 }
 
 template <typename T>
@@ -261,7 +267,8 @@ inline void from(
         const T &sampling_resolution,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &inverse_model,
         const bool &allocate_all = false,
-        const T &default_value = 0.0)
+        const T &default_value   = 0.0,
+        const bool &bilinear     = false)
 {
     if (!src)
         return;
@@ -270,7 +277,7 @@ inline void from(
             T,
             cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_backend_t,
             cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_dynamic_backend_t>(
-                *src, dst, sampling_resolution, inverse_model, allocate_all, default_value);
+                *src, dst, sampling_resolution, inverse_model, allocate_all, default_value, bilinear);
 }
 }
 }

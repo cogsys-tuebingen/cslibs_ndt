@@ -14,7 +14,7 @@ template<typename T, std::size_t Dim>
 class Distribution
 {
 public:
-    using distribution_t           = cslibs_math::statistics::StableDistribution<T,Dim,3>;
+    using distribution_t = cslibs_math::statistics::StableDistribution<T,Dim,3>;
 
     inline Distribution()
     {
@@ -60,7 +60,7 @@ public:
 
     inline void merge(const Distribution &other)
     {
-        //data_ += other.data_;
+        data_ += other.data_;
     }
 
     inline std::size_t byte_size() const

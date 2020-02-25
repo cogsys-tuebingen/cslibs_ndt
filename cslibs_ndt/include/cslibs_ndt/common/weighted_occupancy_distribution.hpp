@@ -121,7 +121,6 @@ public:
     inline void merge(const WeightedOccupancyDistribution &other)
     {
         weight_free_ += other.weight_free_;
-
         if (other.distribution_) {
             if (distribution_)
                 *distribution_ += *(other.distribution_);

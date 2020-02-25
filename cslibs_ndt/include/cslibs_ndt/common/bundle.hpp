@@ -66,11 +66,7 @@ public:
         expand_ = false;
     }
 
-    inline void merge(const Bundle&)
-    {
-    }
-
-    inline void merge()
+    inline void merge(const Bundle &)
     {
     }
 

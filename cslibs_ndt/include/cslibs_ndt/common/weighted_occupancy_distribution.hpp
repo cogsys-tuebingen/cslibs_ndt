@@ -99,13 +99,22 @@ public:
     inline T getOccupancy(const ivm_t &inverse_model) const
     {
         return distribution_ ?
-                    cslibs_math::common::LogOdds<T>::from(
+                    cslibs_math::common::LogOdds<T>::from(/*
+                        num_free_ *
+                        (inverse_model.getLogOddsFree() - inverse_model.getLogOddsPrior()) +
+                        distribution_->getN() *
+                        (inverse_model.getLogOddsOccupied() - inverse_model.getLogOddsPrior())*/
+                        weight_free_ * inverse_model.getLogOddsFree() +
+                        distribution_->getWeight() * inverse_model.getLogOddsOccupied() -
+                        (weight_free_ + distribution_->getWeight() - 1) * inverse_model.getLogOddsPrior())
+                      : T(0.0);
+/*                    cslibs_math::common::LogOdds<T>::from(
                         weight_free_ * inverse_model.getLogOddsFree() +
                         distribution_->getWeight() * inverse_model.getLogOddsOccupied() -
                         (weight_free_ + distribution_->getWeight()) * inverse_model.getLogOddsPrior()) :
                     cslibs_math::common::LogOdds<T>::from(
                         weight_free_ * inverse_model.getLogOddsFree() -
-                        weight_free_ * inverse_model.getLogOddsPrior());
+                        weight_free_ * inverse_model.getLogOddsPrior());*/
     }
 
     inline const distribution_ptr_t &getDistribution() const

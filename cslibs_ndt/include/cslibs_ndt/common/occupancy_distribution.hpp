@@ -55,9 +55,9 @@ public:
         return *this;
     }
 
-    inline void updateFree(const std::size_t &n)
+    inline void updateFree()
     {
-        num_free_ += n;
+        ++num_free_;
     }
 
     inline void updateOccupied(const point_t & p)

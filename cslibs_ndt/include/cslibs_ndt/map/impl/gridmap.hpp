@@ -44,17 +44,6 @@ public:
     inline Map(const base_t &other) : base_t(other) { }
     inline Map(base_t &&other) : base_t(other) { }
 
-    inline void insert(const point_t &p)
-    {
-        index_t bi;
-        point_t pm;
-        if (!this->toBundleIndex(p, pm, bi))
-            return;
-
-        if (pm.isNormal())
-            update(bi, pm);
-    }
-
     inline void insert(const typename pointcloud_t::ConstPtr &points,
                        const pose_t &points_origin = pose_t())
     {
@@ -66,7 +55,7 @@ public:
                        const iterator_t &points_end,
                        const pose_t &points_origin = pose_t())
     {
-        std::unordered_map<index_t, typename distribution_t::distribution_t> updates;//std::size_t> updates;
+        std::map<index_t, typename distribution_t::distribution_t> updates;
         for (auto p = points_begin; p != points_end; ++p) {
             const point_t pw = points_origin * *p;
             if (pw.isNormal()) {

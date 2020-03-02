@@ -119,6 +119,80 @@ public:
             std::cout << "[OccupancyGridmap]: Cannot evaluate visibility, using model-free update rule instead!" << std::endl;
             return insert<line_iterator_t>(points_begin, points_end, points_origin);
         }
+
+
+        using dist_t = typename distribution_t::distribution_t;
+        std::map<index_t, dist_t> updates;
+        for (auto p = points_begin; p != points_end; ++p) {
+            if (p->isNormal()) {
+                const point_t pw = points_origin * *p;
+                if (pw.isNormal()) {
+                    point_t pm;
+                    index_t bi;
+                    if (this->toBundleIndex(pw, pm, bi))
+                        updates[bi] += pm;
+                }
+            }
+        }
+
+        std::unordered_set<index_t> updates_free;
+        const auto& start = this->m_T_w_ * points_origin.translation();
+
+        const index_t start_bi = this->toBundleIndex(points_origin.translation());
+        auto current_visibility = [this, &ivm, &start_bi, &ivm_visibility, &points_origin](const index_t &bi, const point_t& end) {
+            auto generate_occlusion_index = [&bi,&start_bi](const std::size_t& counter) {
+                index_t retval = bi;
+                retval[counter] += ((bi[counter] > start_bi[counter]) ? -1 : 1);
+                return retval;
+            };
+            auto occupancy = [this, &ivm, &points_origin, &end](const index_t &bi) {
+                const distribution_bundle_t *bundle = this->get(bi);
+                T retval = T(0.);
+                if (bundle) {
+                    for (std::size_t i=0; i<this->bin_count; ++i) {
+                        retval += this->div_count * bundle->at(i)->getOccupancy(ivm);
+                    }
+                }
+                return retval;
+            };
+
+            T occlusion_prob = T(1.);
+            for (std::size_t i=0; i<Dim; ++i) {
+                const index_t test_index = generate_occlusion_index(i);
+                if (this->valid(test_index))
+                    occlusion_prob = std::min(occlusion_prob, occupancy(test_index));
+            }
+            return ivm_visibility->getProbFree() * occlusion_prob +
+                   ivm_visibility->getProbOccupied() * (T(1.) - occlusion_prob);
+        };
+
+        for (const auto& pair : updates) {
+            const index_t& i = pair.first;
+            const dist_t&  d = pair.second;
+
+            T visibility = T(1.);
+            const auto& end = point_t(d.getMean());
+            line_iterator_t it(start, end, this->bundle_resolution_);
+            while (!it.done()) {
+                const index_t& bi = it();
+                if ((visibility *= current_visibility(bi,end)) < ivm_visibility->getProbPrior())
+                    return;
+
+                updates_free.insert(bi);
+                ++it;
+            }
+
+            if ((visibility *= current_visibility(i,end)) >= ivm_visibility->getProbPrior()) {
+                const auto& n = d.getN();
+                updateOccupied(i, dist_t(1, d.getMean(), d.getScatter()/n));
+            }
+        }
+
+        for (const auto& pair : updates)
+            updates_free.erase(pair.first);
+
+        for (const auto& val : updates_free)
+            updateFree(val);
 /*
         const index_t start_bi = this->toBundleIndex(points_origin.translation());
         auto occupancy = [this, &ivm](const index_t &bi) {

@@ -208,10 +208,18 @@ public:
 
     inline void getBundleIndices(std::vector<index_t> &indices) const
     {
-        auto add_index = [&indices](const index_t &i, const distribution_bundle_t &) {
+        auto add_index = [&indices](const index_t &i, const distribution_bundle_t &b) {
             indices.emplace_back(i);
         };
         bundle_storage_->traverse(add_index);
+    }
+
+    inline void getBundles(std::vector<std::pair<const index_t,const distribution_bundle_t*>> &bundles) const
+    {
+        auto add_bundle = [&bundles](const index_t &i, const distribution_bundle_t &b) {
+            bundles.emplace_back(std::pair<const index_t,const distribution_bundle_t*>(i,&b));
+        };
+        bundle_storage_->traverse(add_bundle);
     }
 
     inline virtual bool validate(const pose_2d_t &p_w_2d) const
@@ -220,27 +228,31 @@ public:
         return valid(toBundleIndex(p_w));
     }
 
-    inline void allocatePartiallyAllocatedBundles() const
+    inline void allocatePartiallyAllocatedBundle(const index_t& bi, const distribution_bundle_t* bundle) const
     {
-        std::vector<index_t> bis;
-        getBundleIndices(bis);
-
         static constexpr neighborhood_t grid{};
 
-        for (const index_t &bi : bis) {
-            const distribution_bundle_t *bundle = bundle_storage_->get(bi);
-            if (bundle->expand() && expandBundle(bundle)) {
-                grid.visit([this, &bi](typename neighborhood_t::offset_t o) {
-                    index_t ii;
-                    utility::for_each<Dim>([&ii,&bi,&o](const std::size_t &i) {
-                        ii[i] = bi[i] + o[i];
-                    });
-                    if (valid(ii))
-                        getAllocate(ii);
+        if (bundle->expand() && expandBundle(bundle)) {
+            grid.visit([this, &bi](typename neighborhood_t::offset_t o) {
+                index_t ii;
+                utility::for_each<Dim>([&ii,&bi,&o](const std::size_t &i) {
+                    ii[i] = bi[i] + o[i];
                 });
-                bundle->setExpanded();
-            }
+                if (valid(ii))
+                    getAllocate(ii);
+            });
+            bundle->setExpanded();
         }
+    }
+
+    inline void allocatePartiallyAllocatedBundles() const
+    {
+        std::vector<std::pair<const index_t,const distribution_bundle_t*>> bis;
+        getBundles(bis);
+
+        for (const auto &pair : bis)
+            allocatePartiallyAllocatedBundle(pair.first, pair.second);
+
         return;
     }
 

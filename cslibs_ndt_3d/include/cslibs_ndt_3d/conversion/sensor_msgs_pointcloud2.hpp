@@ -45,10 +45,10 @@ template <cslibs_ndt::map::tags::option option_t,
           template <typename, typename, typename...> class backend_t,
           template <typename, typename, typename...> class dynamic_backend_t>
 inline void from(
-        cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t> &src,
+        const cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t> &src,
         sensor_msgs::PointCloud2 &dst,
-        const bool &allocate_all = false,
-        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
+        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>(),
+        const bool &allocate_all = false)
 {
     if (allocate_all)
         src.allocatePartiallyAllocatedBundles();
@@ -85,13 +85,13 @@ template <typename T>
 inline void from(
         const typename cslibs_ndt_3d::dynamic_maps::Gridmap<T>::Ptr &src,
         sensor_msgs::PointCloud2 &dst,
-        const bool &allocate_all = false,
-        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
+        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>(),
+        const bool &allocate_all = false)
 {
     if (!src)
         return;
 
-    from(*src, dst, allocate_all, transform);
+    from(*src, dst, transform, allocate_all);
 }
 
 template <cslibs_ndt::map::tags::option option_t,
@@ -99,12 +99,12 @@ template <cslibs_ndt::map::tags::option option_t,
           template <typename, typename, typename...> class backend_t,
           template <typename, typename, typename...> class dynamic_backend_t>
 inline void from(
-        cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t> &src,
+        const cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t> &src,
         sensor_msgs::PointCloud2 &dst,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
+        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>(),
         const T &threshold = 0.169,
-        const bool &allocate_all = false,
-        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
+        const bool &allocate_all = false)
 {
     if (allocate_all)
         src.allocatePartiallyAllocatedBundles();
@@ -153,14 +153,14 @@ inline void from(
         const typename cslibs_ndt_3d::dynamic_maps::OccupancyGridmap<T>::Ptr &src,
         sensor_msgs::PointCloud2 &dst,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
+        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>(),
         const T &threshold = 0.169,
-        const bool &allocate_all = false,
-        const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
+        const bool &allocate_all = false)
 {
     if (!src)
         return;
 
-    from(*src, dst, ivm, threshold, allocate_all, transform);
+    from(*src, dst, ivm, transform, threshold, allocate_all);
 }
 
 }

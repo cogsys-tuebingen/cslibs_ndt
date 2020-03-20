@@ -60,7 +60,12 @@ public:
         ++num_free_;
     }
 
-    inline void updateOccupied(const point_t & p)
+    inline void updateFree(const std::size_t &n)
+    {
+        num_free_ += n;
+    }
+
+    inline void updateOccupied(const point_t &p)
     {
         if (!distribution_)
             distribution_.reset(new distribution_t());

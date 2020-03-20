@@ -75,19 +75,19 @@ public:
             }
         }
 
-        std::unordered_set<index_t> updates_free;
+        std::unordered_map<index_t,std::size_t> updates_free;
         const auto& start = this->m_T_w_ * points_origin.translation();
         for (const auto& pair : updates) {
             const index_t& i = pair.first;
             const dist_t&  d = pair.second;
 
             const auto& n = d.getN();
-            updateOccupied(i, dist_t(1, d.getMean(), d.getScatter()/n));
+            updateOccupied(i, d);
 
             line_iterator_t it(start, point_t(d.getMean()), this->bundle_resolution_);
             while (!it.done()) {
                 const index_t& bi = it();
-                updates_free.insert(bi);
+                updates_free[bi] += n;
                 ++it;
             }
         }
@@ -95,8 +95,8 @@ public:
         for (const auto& pair : updates)
             updates_free.erase(pair.first);
 
-        for (const auto& val : updates_free)
-            updateFree(val);
+        for (const auto& pair : updates_free)
+            updateFree(pair.first, pair.second);
     }
 
     template <typename line_iterator_t = default_iterator_t>
@@ -410,6 +410,13 @@ protected:
         const distribution_bundle_t *bundle = this->getAllocate(bi);
         for (std::size_t i=0; i<this->bin_count; ++i)
             bundle->at(i)->updateFree();
+    }
+
+    inline void updateFree(const index_t &bi, const std::size_t &n) const
+    {
+        const distribution_bundle_t *bundle = this->getAllocate(bi);
+        for (std::size_t i=0; i<this->bin_count; ++i)
+            bundle->at(i)->updateFree(n);
     }
 
     inline void updateOccupied(const index_t &bi,

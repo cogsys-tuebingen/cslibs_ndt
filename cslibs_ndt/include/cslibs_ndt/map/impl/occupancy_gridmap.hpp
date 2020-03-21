@@ -135,7 +135,7 @@ public:
             }
         }
 
-        std::unordered_set<index_t> updates_free;
+        std::unordered_map<index_t,std::size_t> updates_free;
         const auto& start = this->m_T_w_ * points_origin.translation();
 
         const index_t start_bi = this->toBundleIndex(points_origin.translation());
@@ -172,88 +172,28 @@ public:
 
             T visibility = T(1.);
             const auto& end = point_t(d.getMean());
+            const auto& n = d.getN();
+
             line_iterator_t it(start, end, this->bundle_resolution_);
             while (!it.done()) {
                 const index_t& bi = it();
                 if ((visibility *= current_visibility(bi,end)) < ivm_visibility->getProbPrior())
                     return;
 
-                updates_free.insert(bi);
+                updates_free[bi] += n;
                 ++it;
             }
 
             if ((visibility *= current_visibility(i,end)) >= ivm_visibility->getProbPrior()) {
-                const auto& n = d.getN();
-                updateOccupied(i, dist_t(1, d.getMean(), d.getScatter()/n));
+                updateOccupied(i, d);
             }
         }
 
         for (const auto& pair : updates)
             updates_free.erase(pair.first);
 
-        for (const auto& val : updates_free)
-            updateFree(val);
-/*
-        const index_t start_bi = this->toBundleIndex(points_origin.translation());
-        auto occupancy = [this, &ivm](const index_t &bi) {
-            const distribution_bundle_t *bundle = this->getAllocate(bi);
-            T retval = T();
-            if (bundle) {
-                for (std::size_t i=0; i<this->bin_count; ++i)
-                    retval += this->div_count * bundle->at(i)->getOccupancy(ivm);
-            }
-            return retval;
-        };
-        auto current_visibility = [this, &start_bi, &ivm_visibility, &occupancy](const index_t &bi) {
-            T occlusion_prob = 1.0;
-            auto generate_occlusion_index = [&bi,&start_bi](const std::size_t& counter) {
-                index_t retval = bi;
-                retval[counter] += ((bi[counter] > start_bi[counter]) ? -1 : 1);
-                return retval;
-            };
-
-            for (std::size_t i=0; i<Dim; ++i) {
-                const index_t test_index = generate_occlusion_index(i);
-                if (this->valid(test_index))
-                    occlusion_prob = std::min(occlusion_prob, occupancy(test_index));
-            }
-            return ivm_visibility->getProbFree() * occlusion_prob +
-                   ivm_visibility->getProbOccupied() * (1.0 - occlusion_prob);
-        };
-
-        dynamic_distribution_storage_t storage;
-        for (auto p = points_begin; p != points_end; ++p) {
-            const point_t pw = points_origin * *p;
-            if (pw.isNormal()) {
-                point_t pm;
-                const index_t &bi = this->toBundleIndex(pw,pm);
-                distribution_t *d = storage.get(bi);
-                (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
-            }
-        }
-
-        const point_t start_p = this->m_T_w_ * points_origin.translation();
-        storage.traverse([this, &ivm_visibility, &start_p, &current_visibility](const index_t& bi, const distribution_t &d) {
-            if (!d.getDistribution())
-                return;
-
-            const point_t end_p = point_t(d.getDistribution()->getMean());
-            line_iterator_t it(start_p, end_p, this->bundle_resolution_);
-
-            const std::size_t n = d.numOccupied();
-            T visibility = 1.0;
-            while (!it.done()) {
-                const index_t bit = it();
-                if ((visibility *= current_visibility(bit)) < ivm_visibility->getProbPrior())
-                    return;
-
-                updateFree(bit, n);
-                ++ it;
-            }
-
-            if ((visibility *= current_visibility(bi)) >= ivm_visibility->getProbPrior())
-                updateOccupied(bi, d.getDistribution());
-        });*/
+        for (const auto& pair : updates_free)
+            updateFree(pair.first, pair.second);
     }
 
     inline T sample(const point_t &p,

@@ -26,10 +26,9 @@ private:
 
 template <cslibs_ndt::map::tags::option option_t,
           typename T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
+          template <typename, typename, typename...> class backend_t>
 inline void rgbFrom(
-        cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t> &src,
+        cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t> &src,
         sensor_msgs::PointCloud2 &dst,
         const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>(),
         const bool& allocate_all = false)
@@ -37,7 +36,7 @@ inline void rgbFrom(
     if (allocate_all)
         src.allocatePartiallyAllocatedBundles();
 
-    using ndt_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t>;
+    using ndt_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t>;
     using index_t = std::array<int, 3>;
     using point_t = typename ndt_t::point_t;
     using distribution_t = typename ndt_t::distribution_t;
@@ -76,10 +75,9 @@ inline void rgbFrom(
 
 template <cslibs_ndt::map::tags::option option_t,
           typename T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
+          template <typename, typename, typename...> class backend_t>
 inline void rgbFrom(
-        cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t> &src,
+        cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t> &src,
         sensor_msgs::PointCloud2 &dst,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
         const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>(),
@@ -89,7 +87,7 @@ inline void rgbFrom(
     if (allocate_all)
         src.allocatePartiallyAllocatedBundles();
 
-    using ndt_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t>;
+    using ndt_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t>;
     using index_t = std::array<int, 3>;
     using point_t = typename ndt_t::point_t;
     using distribution_t = typename ndt_t::distribution_t;

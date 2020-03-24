@@ -13,10 +13,9 @@ namespace cslibs_ndt_2d {
 namespace conversion {
 template <cslibs_ndt::map::tags::option option_t,
           typename T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
+          template <typename, typename, typename...> class backend_t>
 inline void from(
-        const typename cslibs_ndt::map::Map<option_t,2,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t> &src,
+        const typename cslibs_ndt::map::Map<option_t,2,cslibs_ndt::Distribution,T,backend_t> &src,
         typename cslibs_gridmaps::static_maps::DistanceGridmap<T,T>::Ptr &dst,
         const T &sampling_resolution,
         const T &maximum_distance = 2.0,
@@ -27,7 +26,7 @@ inline void from(
     if (allocate_all)
         src.allocatePartiallyAllocatedBundles();
 
-    using src_map_t = cslibs_ndt::map::Map<option_t,2,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t>;
+    using src_map_t = cslibs_ndt::map::Map<option_t,2,cslibs_ndt::Distribution,T,backend_t>;
     using dst_map_t = cslibs_gridmaps::static_maps::DistanceGridmap<T,T>;
     dst.reset(new dst_map_t(src.getOrigin(),
                             sampling_resolution,
@@ -71,10 +70,9 @@ inline void from(
 
 template <cslibs_ndt::map::tags::option option_t,
           typename T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
+          template <typename, typename, typename...> class backend_t>
 inline void from(
-        const typename cslibs_ndt::map::Map<option_t,2,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t> &src,
+        const typename cslibs_ndt::map::Map<option_t,2,cslibs_ndt::OccupancyDistribution,T,backend_t> &src,
         typename cslibs_gridmaps::static_maps::DistanceGridmap<T>::Ptr &dst,
         const T &sampling_resolution,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &inverse_model,
@@ -88,7 +86,7 @@ inline void from(
     if (allocate_all)
         src.allocatePartiallyAllocatedBundles();
 
-    using src_map_t = cslibs_ndt::map::Map<option_t,2,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t>;
+    using src_map_t = cslibs_ndt::map::Map<option_t,2,cslibs_ndt::OccupancyDistribution,T,backend_t>;
     using dst_map_t = cslibs_gridmaps::static_maps::DistanceGridmap<T,T>;
     dst.reset(new dst_map_t(src.getOrigin(),
                             sampling_resolution,
@@ -145,8 +143,7 @@ inline void from(
     return from<
             cslibs_ndt::map::tags::dynamic_map,
             T,
-            cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_backend_t,
-            cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_dynamic_backend_t>(
+            cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_backend_t>(
                 *src, dst, sampling_resolution, maximum_distance, threshold, allocate_all, bilinear);
 }
 
@@ -166,8 +163,7 @@ inline void from(
     return from<
             cslibs_ndt::map::tags::dynamic_map,
             T,
-            cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_backend_t,
-            cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_dynamic_backend_t>(
+            cslibs_ndt::map::tags::default_types<cslibs_ndt::map::tags::dynamic_map>::default_backend_t>(
                 *src, dst, sampling_resolution, inverse_model, maximum_distance, threshold, allocate_all, bilinear);
 }
 }

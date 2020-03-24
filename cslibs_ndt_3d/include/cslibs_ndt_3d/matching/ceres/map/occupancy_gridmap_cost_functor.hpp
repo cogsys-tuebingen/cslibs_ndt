@@ -10,13 +10,12 @@ namespace ceres {
 
 template <cslibs_ndt::map::tags::option option_t,
           typename _T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
+          template <typename, typename, typename...> class backend_t>
 class ScanMatchCostFunctor<
-        cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,_T,backend_t,dynamic_backend_t>,
+        cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,_T,backend_t>,
         Flag::DIRECT>
 {
-    using ndt_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,_T,backend_t,dynamic_backend_t>;
+    using ndt_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,_T,backend_t>;
 
     using ivm_t = typename ndt_t::inverse_sensor_model_t;
     using point_t = typename ndt_t::point_t;

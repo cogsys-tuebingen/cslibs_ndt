@@ -5,12 +5,9 @@
 
 namespace cslibs_ndt {
 template<typename T, std::size_t Size>
-class /*EIGEN_ALIGN16*/ Bundle
+class Bundle
 {
 public:
-//    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-//    using allocator_t = Eigen::aligned_allocator<Bundle<T,Size>>;
-
     using bundle_t = Bundle<T, Size>;
     using data_t   = std::array<T, Size>;
 

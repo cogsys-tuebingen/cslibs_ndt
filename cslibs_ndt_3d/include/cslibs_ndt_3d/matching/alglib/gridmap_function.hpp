@@ -13,13 +13,12 @@ namespace alglib {
 template <cslibs_ndt::map::tags::option option_t,
           typename _T,
           template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t,
           typename point_t>
 class Function<
-        cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,_T,backend_t,dynamic_backend_t>,
+        cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,_T,backend_t>,
         point_t> {
 public:
-    using ndt_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,_T,backend_t,dynamic_backend_t>;
+    using ndt_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,_T,backend_t>;
 
     template <std::size_t n> // n=6: xyz rpy  (Euler);
     struct Functor {         // n=7: xyz xyzw (Quaternion)

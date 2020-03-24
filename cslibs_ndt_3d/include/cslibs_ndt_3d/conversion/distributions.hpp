@@ -13,16 +13,15 @@ namespace conversion {
 
 template <cslibs_ndt::map::tags::option option_t,
           typename T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
+          template <typename, typename, typename...> class backend_t>
 inline void from(
-        const cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t> &src,
+        const cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t> &src,
         visualization_msgs::MarkerArray &dst,
         const ros::Time& time,
         const std::string &frame,
         const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>())
 {
-    using src_map_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t,dynamic_backend_t>;
+    using src_map_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t>;
     using index_t = std::array<int, 3>;
     using point_t = typename src_map_t::point_t;
     using pose_t = typename src_map_t::pose_t;
@@ -104,10 +103,9 @@ inline void from(
 
 template <cslibs_ndt::map::tags::option option_t,
           typename T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
+          template <typename, typename, typename...> class backend_t>
 inline void from(
-        const cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t> &src,
+        const cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t> &src,
         visualization_msgs::MarkerArray &dst,
         const typename cslibs_gridmaps::utility::InverseModel<T>::Ptr &ivm,
         const ros::Time& time,
@@ -115,7 +113,7 @@ inline void from(
         const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>(),
         const T &occupancy_threshold = 0.5)
 {
-    using src_map_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t,dynamic_backend_t>;
+    using src_map_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t>;
     using index_t = std::array<int, 3>;
     using point_t = typename src_map_t::point_t;
     using pose_t = typename src_map_t::pose_t;

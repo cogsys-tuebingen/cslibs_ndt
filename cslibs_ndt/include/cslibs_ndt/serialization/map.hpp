@@ -24,13 +24,12 @@ template <map::tags::option option_t,
           std::size_t Dim,
           template <typename,std::size_t> class data_t,
           typename T,
-          template <typename, typename, typename...> class backend_t = map::tags::default_types<option_t>::template default_backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t = map::tags::default_types<option_t>::template default_dynamic_backend_t>
-inline bool saveBinary(const cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_t,dynamic_backend_t> &map,
+          template <typename, typename, typename...> class backend_t = map::tags::default_types<option_t>::template default_backend_t>
+inline bool saveBinary(const cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_t> &map,
                        const std::string &path)
 {
     using path_t     = boost::filesystem::path;
-    using map_t      = cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_t,dynamic_backend_t>;
+    using map_t      = cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_t>;
     using paths_t    = std::array<path_t, map_t::bin_count>;
     using binary_t   = cslibs_ndt::binary<data_t, T, Dim, Dim, backend_t>;
     using storages_t = typename map_t::distribution_storage_array_t;
@@ -52,7 +51,7 @@ inline bool saveBinary(const cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_
         std::ofstream out((path_root / path_file).string(), std::fstream::trunc);
         YAML::Emitter yaml(out);
         YAML::Node n;
-        header<option_t,Dim,data_t,T,backend_t,dynamic_backend_t>::write(map,n);
+        header<option_t,Dim,data_t,T,backend_t>::write(map,n);
         yaml << n;
     }
 
@@ -76,13 +75,12 @@ template <map::tags::option option_t,
           std::size_t Dim,
           template <typename,std::size_t> class data_t,
           typename T,
-          template <typename, typename, typename...> class backend_t = map::tags::default_types<option_t>::template default_backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t = map::tags::default_types<option_t>::template default_dynamic_backend_t>
+          template <typename, typename, typename...> class backend_t = map::tags::default_types<option_t>::template default_backend_t>
 inline bool loadBinary(const std::string &path,
-                       typename cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_t,dynamic_backend_t>::Ptr &map)
+                       typename cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_t>::Ptr &map)
 {
     using path_t            = boost::filesystem::path;
-    using map_t             = cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_t,dynamic_backend_t>;
+    using map_t             = cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_t>;
     using paths_t           = std::array<path_t, map_t::bin_count>;
     using bundle_storage_t  = typename map_t::distribution_bundle_storage_t;
     using storages_t        = typename map_t::distribution_storage_array_t;
@@ -109,8 +107,7 @@ inline bool loadBinary(const std::string &path,
     storages_t storages;
 
     YAML::Node n = YAML::LoadFile((path_root / path_file).string());
-    const loader<option_t,Dim,data_t,T,backend_t,dynamic_backend_t> l =
-            header<option_t,Dim,data_t,T,backend_t,dynamic_backend_t>::load(n);
+    const loader<option_t,Dim,data_t,T,backend_t> l = header<option_t,Dim,data_t,T,backend_t>::load(n);
 
     std::array<std::thread, map_t::bin_count> threads;
     std::atomic_bool success(true);

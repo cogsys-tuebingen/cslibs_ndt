@@ -11,27 +11,25 @@ template <tags::option option_t,
           std::size_t Dim,
           template <typename,std::size_t> class data_t,
           typename T,
-          template <typename, typename, typename...> class backend_t = tags::default_types<option_t>::template default_backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t = tags::default_types<option_t>::template default_dynamic_backend_t>
+          template <typename, typename, typename...> class backend_t = tags::default_types<option_t>::template default_backend_t>
 class EIGEN_ALIGN16 GenericMap :
-        public AbstractMap<option_t, Dim, data_t, T, backend_t, dynamic_backend_t> {};
+        public AbstractMap<option_t, Dim, data_t, T, backend_t> {};
 
 template <std::size_t Dim,
           template <typename,std::size_t> class data_t,
           typename T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
-class EIGEN_ALIGN16 GenericMap<tags::static_map, Dim, data_t, T, backend_t, dynamic_backend_t> :
-        public AbstractMap<tags::static_map, Dim, data_t, T, backend_t, dynamic_backend_t>
+          template <typename, typename, typename...> class backend_t>
+class EIGEN_ALIGN16 GenericMap<tags::static_map, Dim, data_t, T, backend_t> :
+        public AbstractMap<tags::static_map, Dim, data_t, T, backend_t>
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t   = Eigen::aligned_allocator<GenericMap<tags::static_map, Dim, data_t, T, backend_t, dynamic_backend_t>>;
+    using allocator_t   = Eigen::aligned_allocator<GenericMap<tags::static_map, Dim, data_t, T, backend_t>>;
 
-    using ConstPtr      = std::shared_ptr<const GenericMap<tags::static_map, Dim, data_t, T, backend_t, dynamic_backend_t>>;
-    using Ptr           = std::shared_ptr<GenericMap<tags::static_map, Dim, data_t, T, backend_t, dynamic_backend_t>>;
+    using ConstPtr      = std::shared_ptr<const GenericMap<tags::static_map, Dim, data_t, T, backend_t>>;
+    using Ptr           = std::shared_ptr<GenericMap<tags::static_map, Dim, data_t, T, backend_t>>;
 
-    using base_t = AbstractMap<tags::static_map, Dim, data_t, T, backend_t, dynamic_backend_t>;
+    using base_t = AbstractMap<tags::static_map, Dim, data_t, T, backend_t>;
     using typename base_t::pose_t;
     using typename base_t::transform_t;
     using typename base_t::point_t;
@@ -46,7 +44,6 @@ public:
     using typename base_t::distribution_const_bundle_t;
     using typename base_t::distribution_bundle_storage_t;
     using typename base_t::distribution_bundle_storage_ptr_t;
-    using typename base_t::dynamic_distribution_storage_t;
 
     using size_t        = std::array<std::size_t,Dim>;
     using size_m_t      = std::array<T,Dim>;
@@ -178,19 +175,18 @@ protected:
 template <std::size_t Dim,
           template <typename,std::size_t> class data_t,
           typename T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
-class EIGEN_ALIGN16 GenericMap<tags::dynamic_map, Dim, data_t, T, backend_t, dynamic_backend_t> :
-        public AbstractMap<tags::dynamic_map, Dim, data_t, T, backend_t, dynamic_backend_t>
+          template <typename, typename, typename...> class backend_t>
+class EIGEN_ALIGN16 GenericMap<tags::dynamic_map, Dim, data_t, T, backend_t> :
+        public AbstractMap<tags::dynamic_map, Dim, data_t, T, backend_t>
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t   = Eigen::aligned_allocator<GenericMap<tags::dynamic_map, Dim, data_t, T, backend_t, dynamic_backend_t>>;
+    using allocator_t   = Eigen::aligned_allocator<GenericMap<tags::dynamic_map, Dim, data_t, T, backend_t>>;
 
-    using ConstPtr      = std::shared_ptr<const GenericMap<tags::dynamic_map, Dim, data_t, T, backend_t, dynamic_backend_t>>;
-    using Ptr           = std::shared_ptr<GenericMap<tags::dynamic_map, Dim, data_t, T, backend_t, dynamic_backend_t>>;
+    using ConstPtr      = std::shared_ptr<const GenericMap<tags::dynamic_map, Dim, data_t, T, backend_t>>;
+    using Ptr           = std::shared_ptr<GenericMap<tags::dynamic_map, Dim, data_t, T, backend_t>>;
 
-    using base_t = AbstractMap<tags::dynamic_map, Dim, data_t, T, backend_t, dynamic_backend_t>;
+    using base_t = AbstractMap<tags::dynamic_map, Dim, data_t, T, backend_t>;
     using typename base_t::pose_t;
     using typename base_t::transform_t;
     using typename base_t::point_t;
@@ -205,7 +201,6 @@ public:
     using typename base_t::distribution_const_bundle_t;
     using typename base_t::distribution_bundle_storage_t;
     using typename base_t::distribution_bundle_storage_ptr_t;
-    using typename base_t::dynamic_distribution_storage_t;
 
     using size_m_t = std::array<T,Dim>;
 

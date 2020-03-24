@@ -9,19 +9,18 @@ namespace map {
 template <tags::option option_t,
           std::size_t Dim,
           typename T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
-class EIGEN_ALIGN16 Map<option_t,Dim,WeightedOccupancyDistribution,T,backend_t,dynamic_backend_t> :
-        public GenericMap<option_t,Dim,WeightedOccupancyDistribution,T,backend_t,dynamic_backend_t>
+          template <typename, typename, typename...> class backend_t>
+class EIGEN_ALIGN16 Map<option_t,Dim,WeightedOccupancyDistribution,T,backend_t> :
+        public GenericMap<option_t,Dim,WeightedOccupancyDistribution,T,backend_t>
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t = Eigen::aligned_allocator<Map<option_t,Dim,WeightedOccupancyDistribution,T,backend_t,dynamic_backend_t>>;
+    using allocator_t = Eigen::aligned_allocator<Map<option_t,Dim,WeightedOccupancyDistribution,T,backend_t>>;
 
-    using ConstPtr = std::shared_ptr<const Map<option_t,Dim,WeightedOccupancyDistribution,T,backend_t,dynamic_backend_t>>;
-    using Ptr      = std::shared_ptr<Map<option_t,Dim,WeightedOccupancyDistribution,T,backend_t,dynamic_backend_t>>;
+    using ConstPtr = std::shared_ptr<const Map<option_t,Dim,WeightedOccupancyDistribution,T,backend_t>>;
+    using Ptr      = std::shared_ptr<Map<option_t,Dim,WeightedOccupancyDistribution,T,backend_t>>;
 
-    using base_t = GenericMap<option_t,Dim,WeightedOccupancyDistribution,T,backend_t,dynamic_backend_t>;
+    using base_t = GenericMap<option_t,Dim,WeightedOccupancyDistribution,T,backend_t>;
     using typename base_t::pose_t;
     using typename base_t::transform_t;
     using typename base_t::point_t;
@@ -36,7 +35,6 @@ public:
     using typename base_t::distribution_const_bundle_t;
     using typename base_t::distribution_bundle_storage_t;
     using typename base_t::distribution_bundle_storage_ptr_t;
-    using typename base_t::dynamic_distribution_storage_t;
 
     using inverse_sensor_model_t = cslibs_gridmaps::utility::InverseModel<T>;
     using default_iterator_t     = typename map::traits<Dim,T>::default_iterator_t;
@@ -46,25 +44,10 @@ public:
     inline Map(base_t &&other) : base_t(other) { }
 
     template <typename line_iterator_t = default_iterator_t>
-    inline void insert(const point_t &start_p,
-                       const point_t &end_p)
-    {
-        point_t end_pm;
-        const index_t &end_index = this->toBundleIndex(end_p, end_pm);
-        updateOccupied(end_index, end_pm);
-
-        line_iterator_t it(this->m_T_w_ * start_p, end_pm, this->bundle_resolution_);
-        while (!it.done()) {
-            updateFree(it());
-            ++ it;
-        }
-    }
-
-    template <typename line_iterator_t = default_iterator_t>
     inline void insert(const typename cslibs_math::linear::Pointcloud<point_t>::ConstPtr &points,
                        const pose_t &points_origin = pose_t())
     {
-        return insert(points->begin(), points->end(), points_origin);
+        return insert<line_iterator_t>(points->begin(), points->end(), points_origin);
     }
 
     template <typename line_iterator_t = default_iterator_t, typename iterator_t>
@@ -72,30 +55,42 @@ public:
                        const iterator_t& points_end,
                        const pose_t &points_origin = pose_t())
     {
-        dynamic_distribution_storage_t storage;
+        using dist_t = typename distribution_t::distribution_t;
+        std::map<index_t, dist_t> updates;
         for (auto p = points_begin; p != points_end; ++p) {
-            const point_t pw = points_origin * *p;
-            if (pw.isNormal()) {
-                point_t pm;
-                const index_t &bi = this->toBundleIndex(pw,pm);
-                distribution_t *d = storage.get(bi);
-                (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
+            if (p->isNormal()) {
+                const point_t pw = points_origin * *p;
+                if (pw.isNormal()) {
+                    point_t pm;
+                    index_t bi;
+                    if (this->toBundleIndex(pw, pm, bi))
+                        updates[bi].add(pm);
+                }
             }
         }
 
-        const point_t start_p = this->m_T_w_ * points_origin.translation();
-        storage.traverse([this, &start_p](const index_t& bi, const distribution_t &d) {
-            if (!d.getDistribution())
-                return;
-            updateOccupied(bi, d.getDistribution());
+        std::unordered_map<index_t,T> updates_free;
+        const auto& start = this->m_T_w_ * points_origin.translation();
+        for (const auto& pair : updates) {
+            const index_t& i = pair.first;
+            const dist_t&  d = pair.second;
 
-            line_iterator_t it(start_p, point_t(d.getDistribution()->getMean()), this->bundle_resolution_);
-            const T w = d.weightOccupied();
+            const auto& w = d.getWeight();
+            updateOccupied(i, d);
+
+            line_iterator_t it(start, point_t(d.getMean()), this->bundle_resolution_);
             while (!it.done()) {
-                updateFree(it(), w); // TODO
-                ++ it;
+                const index_t& bi = it();
+                updates_free[bi] += w;
+                ++it;
             }
-        });
+        }
+
+        for (const auto& pair : updates)
+            updates_free.erase(pair.first);
+
+        for (const auto& pair : updates_free)
+            updateFree(pair.first, pair.second);
     }
 
     template <typename line_iterator_t = default_iterator_t>
@@ -118,67 +113,81 @@ public:
             std::cout << "[WeightedOccupancyGridmap]: Cannot evaluate visibility, using model-free update rule instead!" << std::endl;
             return insert(points_begin, points_end, points_origin);
         }
-/*
-        const index_t start_bi = this->toBundleIndex(points_origin.translation());
-        auto occupancy = [this, &ivm](const index_t &bi) {
-            const distribution_bundle_t *bundle = this->getAllocate(bi);
-            T retval = T();
-            if (bundle) {
-                for (std::size_t i=0; i<this->bin_count; ++i)
-                    retval += this->div_count * bundle->at(i)->getOccupancy(ivm);
+
+
+        using dist_t = typename distribution_t::distribution_t;
+        std::map<index_t, dist_t> updates;
+        for (auto p = points_begin; p != points_end; ++p) {
+            if (p->isNormal()) {
+                const point_t pw = points_origin * *p;
+                if (pw.isNormal()) {
+                    point_t pm;
+                    index_t bi;
+                    if (this->toBundleIndex(pw, pm, bi))
+                        updates[bi].add(pm);
+                }
             }
-            return retval;
-        };
-        auto current_visibility = [this, &start_bi, &ivm_visibility, &occupancy](const index_t &bi) {
-            T occlusion_prob = 1.0;
+        }
+
+        std::unordered_map<index_t,T> updates_free;
+        const auto& start = this->m_T_w_ * points_origin.translation();
+
+        const index_t start_bi = this->toBundleIndex(points_origin.translation());
+        auto current_visibility = [this, &ivm, &start_bi, &ivm_visibility, &points_origin](const index_t &bi, const point_t& end) {
             auto generate_occlusion_index = [&bi,&start_bi](const std::size_t& counter) {
                 index_t retval = bi;
                 retval[counter] += ((bi[counter] > start_bi[counter]) ? -1 : 1);
                 return retval;
             };
+            auto occupancy = [this, &ivm, &points_origin, &end](const index_t &bi) {
+                const distribution_bundle_t *bundle = this->get(bi);
+                T retval = T(0.);
+                if (bundle) {
+                    for (std::size_t i=0; i<this->bin_count; ++i) {
+                        retval += this->div_count * bundle->at(i)->getOccupancy(ivm);
+                    }
+                }
+                return retval;
+            };
 
+            T occlusion_prob = T(1.);
             for (std::size_t i=0; i<Dim; ++i) {
                 const index_t test_index = generate_occlusion_index(i);
                 if (this->valid(test_index))
                     occlusion_prob = std::min(occlusion_prob, occupancy(test_index));
             }
             return ivm_visibility->getProbFree() * occlusion_prob +
-                   ivm_visibility->getProbOccupied() * (1.0 - occlusion_prob);
+                   ivm_visibility->getProbOccupied() * (T(1.) - occlusion_prob);
         };
 
-        dynamic_distribution_storage_t storage;
-        for (auto p = points_begin; p != points_end; ++p) {
-            const point_t pw = points_origin * *p;
-            if (pw.isNormal()) {
-                point_t pm;
-                const index_t &bi = this->toBundleIndex(pw,pm);
-                distribution_t *d = storage.get(bi);
-                (d ? d : &storage.insert(bi, distribution_t()))->updateOccupied(pm);
+        for (const auto& pair : updates) {
+            const index_t& i = pair.first;
+            const dist_t&  d = pair.second;
+
+            T visibility = T(1.);
+            const auto& end = point_t(d.getMean());
+            const auto& w = d.getWeight();
+
+            line_iterator_t it(start, end, this->bundle_resolution_);
+            while (!it.done()) {
+                const index_t& bi = it();
+                if ((visibility *= current_visibility(bi,end)) < ivm_visibility->getProbPrior())
+                    return;
+
+                updates_free[bi] += w;
+                ++it;
+            }
+
+            if ((visibility *= current_visibility(i,end)) >= ivm_visibility->getProbPrior()) {
+                updateOccupied(i, d);
             }
         }
 
-        const point_t start_p = this->m_T_w_ * points_origin.translation();
-        storage.traverse([this, &ivm_visibility, &start_p, &current_visibility](const index_t& bi, const distribution_t &d) {
-            if (!d.getDistribution())
-                return;
+        for (const auto& pair : updates)
+            updates_free.erase(pair.first);
 
-            const point_t end_p = point_t(d.getDistribution()->getMean());
-            line_iterator_t it(start_p, end_p, this->bundle_resolution_);
-
-            const T ww = d.weightOccupied();
-            T visibility = 1.0;
-            while (!it.done()) {
-                const index_t bit = it();
-                if ((visibility *= current_visibility(bit)) < ivm_visibility->getProbPrior())
-                    return;
-
-                updateFree(bit, ww);  // TODO!
-                ++ it;
-            }
-
-            if ((visibility *= current_visibility(bi)) >= ivm_visibility->getProbPrior())
-                updateOccupied(bi, d.getDistribution());
-        });*/
+        for (const auto& pair : updates_free)
+            updateFree(pair.first, pair.second);
     }
 
     inline T sample(const point_t &p,

@@ -10,9 +10,8 @@ template <tags::option option_t,
           std::size_t Dim,
           template <typename,std::size_t> class data_t,
           typename T,
-          template <typename, typename, typename...> class backend_t = tags::default_types<option_t>::template default_backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t = tags::default_types<option_t>::template default_dynamic_backend_t>
-class EIGEN_ALIGN16 Map : public GenericMap<option_t,Dim,data_t,T,backend_t,dynamic_backend_t> {};
+          template <typename, typename, typename...> class backend_t = tags::default_types<option_t>::template default_backend_t>
+class EIGEN_ALIGN16 Map : public GenericMap<option_t,Dim,data_t,T,backend_t> {};
 
 }
 }

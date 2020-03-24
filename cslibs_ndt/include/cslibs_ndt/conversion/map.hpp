@@ -36,9 +36,7 @@ template <map::tags::option option_to_t,
           template <typename,std::size_t> class data_t,
           typename T,
           template <typename, typename, typename...> class backend_to_t = map::tags::default_types<option_to_t>::template default_backend_t,
-          template <typename, typename, typename...> class dynamic_backend_to_t = map::tags::default_types<option_to_t>::template default_dynamic_backend_t,
-          template <typename, typename, typename...> class backend_from_t = map::tags::default_types<option_from_t>::template default_backend_t,
-          template <typename, typename, typename...> class dynamic_backend_from_t = map::tags::default_types<option_from_t>::template default_dynamic_backend_t>
+          template <typename, typename, typename...> class backend_from_t = map::tags::default_types<option_from_t>::template default_backend_t>
 struct convert {};
 
 template <map::tags::option option_from_t,
@@ -46,12 +44,10 @@ template <map::tags::option option_from_t,
           template <typename,std::size_t> class data_t,
           typename T,
           template <typename, typename, typename...> class backend_to_t,
-          template <typename, typename, typename...> class dynamic_backend_to_t,
-          template <typename, typename, typename...> class backend_from_t,
-          template <typename, typename, typename...> class dynamic_backend_from_t>
-struct convert<map::tags::dynamic_map,option_from_t,Dim,data_t,T,backend_to_t,dynamic_backend_to_t,backend_from_t,dynamic_backend_from_t> {
-    using src_map_t = map::Map<option_from_t,Dim,data_t,T,backend_from_t,dynamic_backend_from_t>;
-    using dst_map_t = map::Map<map::tags::dynamic_map,Dim,data_t,T,backend_to_t,dynamic_backend_to_t>;
+          template <typename, typename, typename...> class backend_from_t>
+struct convert<map::tags::dynamic_map,option_from_t,Dim,data_t,T,backend_to_t,backend_from_t> {
+    using src_map_t = map::Map<option_from_t,Dim,data_t,T,backend_from_t>;
+    using dst_map_t = map::Map<map::tags::dynamic_map,Dim,data_t,T,backend_to_t>;
 
     static inline typename dst_map_t::Ptr from(const typename src_map_t::Ptr& src)
     {
@@ -80,12 +76,10 @@ template <map::tags::option option_from_t,
           template <typename,std::size_t> class data_t,
           typename T,
           template <typename, typename, typename...> class backend_to_t,
-          template <typename, typename, typename...> class dynamic_backend_to_t,
-          template <typename, typename, typename...> class backend_from_t,
-          template <typename, typename, typename...> class dynamic_backend_from_t>
-struct convert<map::tags::static_map,option_from_t,Dim,data_t,T,backend_to_t,dynamic_backend_to_t,backend_from_t,dynamic_backend_from_t> {
-    using src_map_t = map::Map<option_from_t,Dim,data_t,T,backend_from_t,dynamic_backend_from_t>;
-    using dst_map_t = map::Map<map::tags::static_map,Dim,data_t,T,backend_to_t,dynamic_backend_to_t>;
+          template <typename, typename, typename...> class backend_from_t>
+struct convert<map::tags::static_map,option_from_t,Dim,data_t,T,backend_to_t,backend_from_t> {
+    using src_map_t = map::Map<option_from_t,Dim,data_t,T,backend_from_t>;
+    using dst_map_t = map::Map<map::tags::static_map,Dim,data_t,T,backend_to_t>;
 
     static inline typename dst_map_t::Ptr from(const typename src_map_t::Ptr& src)
     {

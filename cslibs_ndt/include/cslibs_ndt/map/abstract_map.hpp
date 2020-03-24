@@ -23,16 +23,15 @@ template <tags::option option_t,
           std::size_t Dim,
           template <typename,std::size_t> class data_t,
           typename T,
-          template <typename, typename, typename...> class backend_t = tags::default_types<option_t>::template default_backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t = tags::default_types<option_t>::template default_dynamic_backend_t>
+          template <typename, typename, typename...> class backend_t = tags::default_types<option_t>::template default_backend_t>
 class EIGEN_ALIGN16 AbstractMap
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t   = Eigen::aligned_allocator<AbstractMap<option_t,Dim,data_t,T,backend_t,dynamic_backend_t>>;
+    using allocator_t   = Eigen::aligned_allocator<AbstractMap<option_t,Dim,data_t,T,backend_t>>;
 
-    using ConstPtr      = std::shared_ptr<const AbstractMap<option_t,Dim,data_t,T,backend_t,dynamic_backend_t>>;
-    using Ptr           = std::shared_ptr<AbstractMap<option_t,Dim,data_t,T,backend_t,dynamic_backend_t>>;
+    using ConstPtr      = std::shared_ptr<const AbstractMap<option_t,Dim,data_t,T,backend_t>>;
+    using Ptr           = std::shared_ptr<AbstractMap<option_t,Dim,data_t,T,backend_t>>;
 
     using pose_2d_t     = typename traits<Dim,T>::pose_2d_t;
     using pose_t        = typename traits<Dim,T>::pose_t;
@@ -53,7 +52,6 @@ public:
     using distribution_const_bundle_t       = cslibs_ndt::Bundle<const distribution_t*, bin_count>;
     using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, backend_t>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
-    using dynamic_distribution_storage_t    = cis::Storage<distribution_t, index_t, dynamic_backend_t>;
 
     using neighborhood_t = cis::operations::clustering::GridNeighborhoodStatic<Dim, 3>;
 

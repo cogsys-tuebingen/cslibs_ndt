@@ -13,19 +13,18 @@ namespace map {
 template <tags::option option_t,
           std::size_t Dim,
           typename T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
-class EIGEN_ALIGN16 Map<option_t,Dim,OccupancyDistribution,T,backend_t,dynamic_backend_t> :
-        public GenericMap<option_t,Dim,OccupancyDistribution,T,backend_t,dynamic_backend_t>
+          template <typename, typename, typename...> class backend_t>
+class EIGEN_ALIGN16 Map<option_t,Dim,OccupancyDistribution,T,backend_t> :
+        public GenericMap<option_t,Dim,OccupancyDistribution,T,backend_t>
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    using allocator_t = Eigen::aligned_allocator<Map<option_t,Dim,OccupancyDistribution,T,backend_t,dynamic_backend_t>>;
+    using allocator_t = Eigen::aligned_allocator<Map<option_t,Dim,OccupancyDistribution,T,backend_t>>;
 
-    using ConstPtr = std::shared_ptr<const Map<option_t,Dim,OccupancyDistribution,T,backend_t,dynamic_backend_t>>;
-    using Ptr      = std::shared_ptr<Map<option_t,Dim,OccupancyDistribution,T,backend_t,dynamic_backend_t>>;
+    using ConstPtr = std::shared_ptr<const Map<option_t,Dim,OccupancyDistribution,T,backend_t>>;
+    using Ptr      = std::shared_ptr<Map<option_t,Dim,OccupancyDistribution,T,backend_t>>;
 
-    using base_t = GenericMap<option_t,Dim,OccupancyDistribution,T,backend_t,dynamic_backend_t>;
+    using base_t = GenericMap<option_t,Dim,OccupancyDistribution,T,backend_t>;
     using typename base_t::pose_t;
     using typename base_t::transform_t;
     using typename base_t::point_t;
@@ -40,7 +39,6 @@ public:
     using typename base_t::distribution_const_bundle_t;
     using typename base_t::distribution_bundle_storage_t;
     using typename base_t::distribution_bundle_storage_ptr_t;
-    using typename base_t::dynamic_distribution_storage_t;
 
     using inverse_sensor_model_t = cslibs_gridmaps::utility::InverseModel<T>;
     using default_iterator_t     = typename map::traits<Dim,T>::default_iterator_t;
@@ -119,7 +117,6 @@ public:
             std::cout << "[OccupancyGridmap]: Cannot evaluate visibility, using model-free update rule instead!" << std::endl;
             return insert<line_iterator_t>(points_begin, points_end, points_origin);
         }
-
 
         using dist_t = typename distribution_t::distribution_t;
         std::map<index_t, dist_t> updates;

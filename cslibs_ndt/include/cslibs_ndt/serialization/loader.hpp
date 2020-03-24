@@ -16,17 +16,15 @@ template <map::tags::option option_t,
           std::size_t Dim,
           template <typename,std::size_t> class data_t,
           typename T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
+          template <typename, typename, typename...> class backend_t>
 struct loader {};
 
 template <std::size_t Dim,
           template <typename,std::size_t> class data_t,
           typename T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
-struct loader<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_backend_t> {
-    using map_t             = cslibs_ndt::map::Map<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_backend_t>;
+          template <typename, typename, typename...> class backend_t>
+struct loader<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t> {
+    using map_t             = cslibs_ndt::map::Map<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t>;
     using index_t           = typename map_t::index_t;
     using pose_t            = typename map_t::pose_t;
     using size_t            = typename map_t::size_t;
@@ -95,10 +93,9 @@ struct loader<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_b
 template <std::size_t Dim,
           template <typename,std::size_t> class data_t,
           typename T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
-struct loader<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_backend_t> {
-    using map_t             = cslibs_ndt::map::Map<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_backend_t>;
+          template <typename, typename, typename...> class backend_t>
+struct loader<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t> {
+    using map_t             = cslibs_ndt::map::Map<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t>;
     using index_t           = typename map_t::index_t;
     using pose_t            = typename map_t::pose_t;
     using bundle_storage_t  = typename map_t::distribution_bundle_storage_t;
@@ -161,21 +158,19 @@ template <map::tags::option option_t,
           std::size_t Dim,
           template <typename,std::size_t> class data_t,
           typename T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
+          template <typename, typename, typename...> class backend_t>
 struct header {};
 
 template <std::size_t Dim,
           template <typename,std::size_t> class data_t,
           typename T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
-struct header<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_backend_t> {
-    using map_t    = cslibs_ndt::map::Map<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_backend_t>;
+          template <typename, typename, typename...> class backend_t>
+struct header<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t> {
+    using map_t    = cslibs_ndt::map::Map<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t>;
     using index_t  = typename map_t::index_t;
     using pose_t   = typename map_t::pose_t;
     using size_t   = typename map_t::size_t;
-    using loader_t = loader<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_backend_t>;
+    using loader_t = loader<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t>;
 
     static inline void write(const map_t &map, YAML::Node &n)
     {
@@ -202,13 +197,12 @@ struct header<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t,dynamic_b
 template <std::size_t Dim,
           template <typename,std::size_t> class data_t,
           typename T,
-          template <typename, typename, typename...> class backend_t,
-          template <typename, typename, typename...> class dynamic_backend_t>
-struct header<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_backend_t> {
-    using map_t    = cslibs_ndt::map::Map<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_backend_t>;
+          template <typename, typename, typename...> class backend_t>
+struct header<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t> {
+    using map_t    = cslibs_ndt::map::Map<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t>;
     using index_t  = typename map_t::index_t;
     using pose_t   = typename map_t::pose_t;
-    using loader_t = loader<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t,dynamic_backend_t>;
+    using loader_t = loader<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t>;
 
     static inline void write(const map_t &map, YAML::Node &n)
     {

@@ -337,13 +337,6 @@ protected:
         return d && d->getDistribution() && d->getDistribution()->getSampleCount() > 0;
     }
 
-    inline void updateFree(const index_t &bi) const
-    {
-        distribution_bundle_t *bundle = this->getAllocate(bi);
-        for (std::size_t i=0; i<this->bin_count; ++i)
-            bundle->at(i)->updateFree();
-    }
-
     inline void updateFree(const index_t &bi,
                            const T       &w) const
     {
@@ -353,16 +346,7 @@ protected:
     }
 
     inline void updateOccupied(const index_t &bi,
-                               const point_t &p,
-                               const T       &w = 1.0) const
-    {
-        distribution_bundle_t *bundle = this->getAllocate(bi);
-        for (std::size_t i=0; i<this->bin_count; ++i)
-            bundle->at(i)->updateOccupied(p, w);
-    }
-
-    inline void updateOccupied(const index_t &bi,
-                               const typename distribution_t::distribution_ptr_t &d) const
+                               const typename distribution_t::distribution_t &d) const
     {
         distribution_bundle_t *bundle = this->getAllocate(bi);
         for (std::size_t i=0; i<this->bin_count; ++i)

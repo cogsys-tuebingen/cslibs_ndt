@@ -56,7 +56,6 @@ inline void from(
     using index_t = std::array<int, 3>;
     using point_t = typename ndt_t::point_t;
     using distribution_t = typename ndt_t::distribution_t;
-    using distribution_bundle_t = typename ndt_t::distribution_bundle_t;
     auto sample = [](const distribution_t *d,
                      const point_t &p) -> T {
         return d ? d->data().sampleNonNormalized(p) : 0.0;
@@ -111,7 +110,6 @@ inline void from(
     using index_t = std::array<int, 3>;
     using point_t = typename ndt_t::point_t;
     using distribution_t = typename ndt_t::distribution_t;
-    using distribution_bundle_t = typename ndt_t::distribution_bundle_t;
     auto sample = [&ivm](const distribution_t *d,
                          const point_t &p) -> T {
         auto evaluate = [&ivm, &d, &p] {

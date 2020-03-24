@@ -342,14 +342,8 @@ protected:
         return d && d->getDistribution() && d->getDistribution()->valid();
     }
 
-    inline void updateFree(const index_t &bi) const
-    {
-        const distribution_bundle_t *bundle = this->getAllocate(bi);
-        for (std::size_t i=0; i<this->bin_count; ++i)
-            bundle->at(i)->updateFree();
-    }
-
-    inline void updateFree(const index_t &bi, const std::size_t &n) const
+    inline void updateFree(const index_t &bi,
+                           const std::size_t &n) const
     {
         const distribution_bundle_t *bundle = this->getAllocate(bi);
         for (std::size_t i=0; i<this->bin_count; ++i)

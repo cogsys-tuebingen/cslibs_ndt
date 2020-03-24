@@ -67,6 +67,14 @@ public:
         distribution_->add(p, w);
     }
 
+    inline void updateOccupied(const distribution_t &d)
+    {
+        if (!distribution_)
+            distribution_.reset(new distribution_t(d));
+        else
+            *distribution_ += d;
+    }
+
     inline void updateOccupied(const distribution_ptr_t &d)
     {
         if (!d)

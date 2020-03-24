@@ -49,14 +49,14 @@ public:
 
     inline WeightedOccupancyDistribution& operator = (const WeightedOccupancyDistribution &other)
     {
-        weight_free_   = other.weight_free_;
-        distribution_  = other.distribution_;
+        weight_free_  = other.weight_free_;
+        distribution_ = other.distribution_;
         return *this;
     }
 
     inline void updateFree(const T& weight_free = 1.0)
     {
-        weight_free_  += weight_free;
+        weight_free_ += weight_free;
     }
 
     inline void updateOccupied(const point_t& p, const T& w = 1.0)

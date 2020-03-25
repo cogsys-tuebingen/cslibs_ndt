@@ -102,6 +102,11 @@ public:
     {
     }
 
+    inline bool empty() const
+    {
+        return false;
+    }
+
     inline const distribution_bundle_t* getDistributionBundle(const index_t &bi) const
     {
         return valid(bi) ? this->getAllocate(bi) : nullptr;

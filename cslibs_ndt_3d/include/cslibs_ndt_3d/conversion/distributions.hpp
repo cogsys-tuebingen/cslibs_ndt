@@ -24,9 +24,7 @@ inline void from(
     using src_map_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t>;
     using index_t = std::array<int, 3>;
     using point_t = typename src_map_t::point_t;
-    using pose_t = typename src_map_t::pose_t;
     using distribution_t = typename src_map_t::distribution_t;
-    using bundle_t = typename src_map_t::distribution_bundle_t;
 
     visualization_msgs::Marker marker;
     marker.header.stamp = time;
@@ -116,9 +114,7 @@ inline void from(
     using src_map_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t>;
     using index_t = std::array<int, 3>;
     using point_t = typename src_map_t::point_t;
-    using pose_t = typename src_map_t::pose_t;
     using distribution_t = typename src_map_t::distribution_t;
-    using bundle_t = typename src_map_t::distribution_bundle_t;
 
     visualization_msgs::Marker marker;
     marker.header.stamp = time;

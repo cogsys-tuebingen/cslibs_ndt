@@ -45,8 +45,8 @@ public:
     using typename base_t::distribution_bundle_storage_t;
     using typename base_t::distribution_bundle_storage_ptr_t;
 
-    using size_t        = std::array<std::size_t,Dim>;
-    using size_m_t      = std::array<T,Dim>;
+    using size_t   = std::array<std::size_t,Dim>;
+    using size_m_t = std::array<T,Dim>;
 
     inline GenericMap(const pose_t  &origin,
                       const T       &resolution,
@@ -207,6 +207,7 @@ public:
     using typename base_t::distribution_bundle_storage_t;
     using typename base_t::distribution_bundle_storage_ptr_t;
 
+    using size_t   = std::array<std::size_t,Dim>;
     using size_m_t = std::array<T,Dim>;
 
     inline GenericMap(const T resolution) :
@@ -272,6 +273,14 @@ public:
         size_m_t result;
         for (std::size_t i=0; i<Dim; ++i)
             result[i] = (this->max_bundle_index_[i] - this->min_bundle_index_[i] + 1) * this->bundle_resolution_;
+        return result;
+    }
+
+    inline size_t getSize() const
+    {
+        size_t result;
+        for (std::size_t i=0; i<Dim; ++i)
+            result[i] = (this->max_bundle_index_[i] - this->min_bundle_index_[i]);
         return result;
     }
 

@@ -85,7 +85,8 @@ public:
             line_iterator_t it(start, point_t(d.getMean()), this->bundle_resolution_);
             while (!it.done()) {
                 const index_t& bi = it();
-                updates_free[bi] += n;
+                if (this->valid(bi))
+                    updates_free[bi] += n;
                 ++it;
             }
         }
@@ -177,7 +178,8 @@ public:
                 if ((visibility *= current_visibility(bi,end)) < ivm_visibility->getProbPrior())
                     return;
 
-                updates_free[bi] += n;
+                if (this->valid(bi))
+                    updates_free[bi] += n;
                 ++it;
             }
 

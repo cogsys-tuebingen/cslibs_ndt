@@ -12,7 +12,8 @@ public:
     using data_t   = std::array<T, Size>;
 
     inline Bundle() :
-        expand_(true)
+        expand_(true),
+        data_({})
     {
     }
 

@@ -11,65 +11,28 @@
 
 namespace cslibs_ndt {
 template<typename T, std::size_t Dim>
-class Distribution
+class EIGEN_ALIGN16 Distribution : public cslibs_math::statistics::StableDistribution<T,Dim,3>
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    using allocator_t = Eigen::aligned_allocator<Distribution<T,Dim>>;
     using distribution_t = cslibs_math::statistics::StableDistribution<T,Dim,3>;
-
-    inline Distribution()
-    {
-    }
-    inline Distribution(const distribution_t& d) :
-        data_(std::move(d))
-    {
-    }
-
-    inline virtual ~Distribution() = default;
-
-    inline Distribution(const Distribution &other) :
-        data_(other.data_)
-    {
-    }
-
-   inline  Distribution(Distribution &&other) :
-        data_(std::move(other.data_))
-    {
-    }
-
-    inline Distribution& operator = (const Distribution &other)
-    {
-        data_ = other.data_;
-        return *this;
-    }
-
-    inline Distribution& operator = (Distribution &&other)
-    {
-        data_ = std::move(other.data_);
-        return *this;
-    }
 
     inline const distribution_t& data() const
     {
-        return data_;
+        return *this;
     }
 
     inline distribution_t& data()
     {
-        return data_;
-    }
-
-    inline void merge(const Distribution &other)
-    {
-        data_ += other.data_;
+        return *this;
     }
 
     inline std::size_t byte_size() const
     {
         return sizeof(*this);
     }
-
-private:
-    distribution_t  data_;
 };
 }
+
 #endif // CSLIBS_NDT_COMMON_DISTRIBUTION_HPP

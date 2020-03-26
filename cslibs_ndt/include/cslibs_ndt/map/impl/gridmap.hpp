@@ -163,14 +163,6 @@ protected:
         return d && d->data().valid();
     }
 
-    inline void update(const index_t& bi,
-                       const point_t& p) const
-    {
-        const distribution_bundle_t *bundle = this->getAllocate(bi);
-        for (std::size_t i=0; i<this->bin_count; ++i)
-            bundle->at(i)->data().add(p);
-    }
-
     inline void update(const index_t &bi,
                        const typename distribution_t::distribution_t &d) const
     {

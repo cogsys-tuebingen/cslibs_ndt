@@ -38,9 +38,7 @@ inline void rgbFrom(
 
     using ndt_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::Distribution,T,backend_t>;
     using index_t = std::array<int, 3>;
-    using point_t = typename ndt_t::point_t;
     using distribution_t = typename ndt_t::distribution_t;
-    using distribution_bundle_t = typename ndt_t::distribution_bundle_t;
 
     cslibs_math_3d::PointcloudRGB3<T> cloud;
     const auto& origin = transform * src.getInitialOrigin();
@@ -89,9 +87,7 @@ inline void rgbFrom(
 
     using ndt_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t>;
     using index_t = std::array<int, 3>;
-    using point_t = typename ndt_t::point_t;
     using distribution_t = typename ndt_t::distribution_t;
-    using distribution_bundle_t = typename ndt_t::distribution_bundle_t;
 
     cslibs_math_3d::PointcloudRGB3<T> cloud;
     const auto& origin = transform * src.getInitialOrigin();

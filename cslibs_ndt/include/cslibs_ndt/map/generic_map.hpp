@@ -166,7 +166,7 @@ protected:
     virtual inline bool valid(const index_t &index) const override
     {
         auto is_valid = [this,&index](const std::size_t &c) {
-            return index[c] >= this->min_bundle_index_[c] && index[c] <= this->max_bundle_index_[c];
+            return index[c] >= this->min_bundle_index_[c] && index[c] </*=*/ this->max_bundle_index_[c];
         };
         for (std::size_t i=0; i<Dim; ++i)
             if (!is_valid(i))

@@ -80,7 +80,8 @@ public:
             const dist_t&  d = pair.second;
 
             const auto& n = d.getN();
-            updateOccupied(i, d);
+            if (this->valid(i))
+                updateOccupied(i, d);
 
             line_iterator_t it(start, point_t(d.getMean()), this->bundle_resolution_);
             while (!it.done()) {

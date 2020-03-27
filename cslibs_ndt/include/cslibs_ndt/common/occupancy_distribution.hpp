@@ -52,6 +52,8 @@ public:
         num_free_ = other.num_free_;
         if (other.distribution_)
             distribution_.reset(new distribution_t(*(other.distribution_)));
+        else
+            distribution_.reset();
         return *this;
     }
 

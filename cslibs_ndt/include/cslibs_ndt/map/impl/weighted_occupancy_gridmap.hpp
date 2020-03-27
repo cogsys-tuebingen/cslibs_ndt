@@ -191,7 +191,7 @@ public:
         for (const auto& pair : updates_free)
             updateFree(pair.first, pair.second);
     }
-
+/*
     inline T sample(const point_t &p,
                     const typename inverse_sensor_model_t::Ptr &ivm) const
     {
@@ -237,7 +237,7 @@ public:
         };
         return bundle ? evaluate() : T();
     }
-
+*/
     inline T sampleNonNormalized(const point_t &p,
                                  const typename inverse_sensor_model_t::Ptr &ivm) const
     {

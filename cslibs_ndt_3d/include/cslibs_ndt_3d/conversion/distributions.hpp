@@ -44,16 +44,23 @@ inline void from(
     const T max_height = (origin * src.getMax())(2);
 
     auto process_item = [&dst,&marker,&origin,&min_height,&max_height](
-            const index_t &bi, const distribution_t& d) {
-        const auto& data = d.data();
-        const auto& mean = data.getMean();
+            const index_t &bi, const distribution_t& d) {        
+        const auto& data = d.getDistribution();
+        if (!data) return;
+
+        const auto& mean = data->getMean();
         const auto& p = origin * point_t(mean);
 
         marker.pose.position.x = p(0);
         marker.pose.position.y = p(1);
         marker.pose.position.z = p(2);
 
-        const auto& evec = data.getEigenVectors();
+        typename distribution_t::distribution_t::eigen_values_t eval;
+        typename distribution_t::distribution_t::eigen_vectors_t evec;
+        if (!data->getEigenValuesVectors(eval,evec,true))
+            return;
+
+        //const auto& evec = data.getEigenVectors();
         const Eigen::Quaternion<T> orientation =
                 origin.rotation().toEigen() * Eigen::Quaternion<T>(evec);
 
@@ -62,7 +69,7 @@ inline void from(
         marker.pose.orientation.z = orientation.z();
         marker.pose.orientation.w = orientation.w();
 
-        const auto& eval = data.getEigenValues();
+        //const auto& eval = data.getEigenValues();
         marker.scale.x = std::max(static_cast<T>(1e-4),T(2.)*std::sqrt(eval(0)));
         marker.scale.y = std::max(static_cast<T>(1e-4),T(2.)*std::sqrt(eval(1)));
         marker.scale.z = std::max(static_cast<T>(1e-4),T(2.)*std::sqrt(eval(2)));
@@ -149,7 +156,12 @@ inline void from(
         marker.pose.position.y = p(1);
         marker.pose.position.z = p(2);
 
-        const auto& evec = data->getEigenVectors();
+        typename distribution_t::distribution_t::eigen_values_t eval;
+        typename distribution_t::distribution_t::eigen_vectors_t evec;
+        if (!data->getEigenValuesVectors(eval,evec,true))
+            return;
+
+        //const auto& evec = data->getEigenVectors();
         const Eigen::Quaternion<T> orientation =
                 origin.rotation().toEigen() * Eigen::Quaternion<T>(evec);
 
@@ -158,7 +170,7 @@ inline void from(
         marker.pose.orientation.z = orientation.z();
         marker.pose.orientation.w = orientation.w();
 
-        const auto& eval = data->getEigenValues();
+        //const auto& eval = data->getEigenValues();
         marker.scale.x = std::max(static_cast<T>(1e-4),T(2.)*std::sqrt(eval(0)));
         marker.scale.y = std::max(static_cast<T>(1e-4),T(2.)*std::sqrt(eval(1)));
         marker.scale.z = std::max(static_cast<T>(1e-4),T(2.)*std::sqrt(eval(2)));

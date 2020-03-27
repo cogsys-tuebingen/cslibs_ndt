@@ -58,13 +58,17 @@ inline void from(
     using distribution_t = typename ndt_t::distribution_t;
     auto sample = [](const distribution_t *d,
                      const point_t &p) -> T {
-        return d ? d->data().sampleNonNormalized(p) : 0.0;
+        return d && d->getDistribution() ? d->getDistribution()->sampleNonNormalized(p) : 0.0;
     };
 
     std::vector<float> tmp;
     const auto& origin = transform * src.getInitialOrigin();
     auto process_item = [&src, &tmp, &origin, &sample](const index_t &bi, const distribution_t& d) {
-        cslibs_math_3d::Point3<T> mean(d.data().getMean());
+        const auto dd = d.getDistribution();
+        if (!dd)
+            return;
+
+        cslibs_math_3d::Point3<T> mean(dd->getMean());
         cslibs_math_3d::Point3<T> p = origin * mean;
         tmp.emplace_back(static_cast<float>(p(0)));
         tmp.emplace_back(static_cast<float>(p(1)));

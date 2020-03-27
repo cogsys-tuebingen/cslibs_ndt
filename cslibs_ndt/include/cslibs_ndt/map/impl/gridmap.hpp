@@ -67,7 +67,7 @@ public:
         for (const auto& pair : updates)
             update(pair.first, pair.second);
     }
-
+/*
     inline T sample(const point_t &p) const
     {
         point_t pm;
@@ -95,7 +95,7 @@ public:
             return retval;
         };
         return bundle ? evaluate() : T();
-    }
+    }*/
 
     inline T sampleNonNormalized(const point_t &p) const
     {
@@ -117,10 +117,19 @@ public:
     inline T sampleNonNormalized(const point_t &p,
                                  const distribution_bundle_t *bundle) const
     {
-        auto evaluate = [this, &p, &bundle]() {
+        auto sample = [&p] (const distribution_t *d) {
+            auto do_sample = [&p, &d]() {
+                const auto &handle = d;
+                return handle->getDistribution() ?
+                            handle->getDistribution()->sampleNonNormalized(p) : T(0.0);
+            };
+            return d ? do_sample() : T();
+        };
+
+        auto evaluate = [this, &p, &bundle, &sample]() {
             T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)
-                retval += this->div_count * bundle->at(i)->data().sampleNonNormalized(p);
+                retval += this->div_count * sample(bundle->at(i));//bundle->at(i)->data().sampleNonNormalized(p);
             return retval;
         };
         return bundle ? evaluate() : T();
@@ -148,10 +157,19 @@ public:
                                          const std::array<T,Dim> &weights,
                                          const distribution_bundle_t *bundle) const
     {
-        auto evaluate = [this, &p, &weights, &bundle]() {
+        auto sample = [&p] (const distribution_t *d) {
+            auto do_sample = [&p, &d]() {
+                const auto &handle = d;
+                return handle->getDistribution() ?
+                            handle->getDistribution()->sampleNonNormalized(p) : T(0.0);
+            };
+            return d ? do_sample() : T();
+        };
+
+        auto evaluate = [this, &p, &weights, &bundle, &sample]() {
             T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)
-                retval += utility::to_bilinear_interpolation_weight(weights,i) * bundle->at(i)->data().sampleNonNormalized(p);
+                retval += utility::to_bilinear_interpolation_weight(weights,i) * sample(bundle->at(i));//bundle->at(i)->data().sampleNonNormalized(p);
             return retval;
         };
         return bundle ? evaluate() : T();
@@ -160,7 +178,7 @@ public:
 protected:
     virtual inline bool expandDistribution(const distribution_t* d) const override
     {
-        return d && d->data().valid();
+        return d && d->getDistribution() && d->getDistribution()->valid();//d->data().valid();
     }
 
     inline void update(const index_t &bi,
@@ -168,7 +186,7 @@ protected:
     {
         const distribution_bundle_t *bundle = this->getAllocate(bi);
         for (std::size_t i=0; i<this->bin_count; ++i)
-            bundle->at(i)->data() += d;
+            bundle->at(i)->update(d);//->data() += d;
     }
 };
 }

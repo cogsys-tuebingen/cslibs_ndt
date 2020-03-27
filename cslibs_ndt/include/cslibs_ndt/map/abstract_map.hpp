@@ -256,10 +256,10 @@ public:
 
     inline std::size_t getByteSize() const
     {
-        std::size_t size = sizeof(*this) + bundle_storage_->byte_size();
+        std::size_t size = bundle_storage_->byte_size();
         for (auto &storage : storage_)
             size += storage->byte_size();
-        return size;
+        return sizeof(*this) + size;
     }
 
 protected:

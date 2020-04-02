@@ -96,7 +96,7 @@ struct binary {
     using storage_t = cis::Storage<data_t, index_t, backend_t>;
 
     inline static bool save(const std::shared_ptr<storage_t> &storage,
-                            const boost::filesystem::path        &path)
+                            const boost::filesystem::path &path)
     {
         std::ofstream out(path.string(), std::ios::binary | std::ios::trunc);
         if (!out.is_open()) {
@@ -132,7 +132,7 @@ struct binary {
     }
 
 private:
-    inline static bool loadStorage(const boost::filesystem::path  &path,
+    inline static bool loadStorage(const boost::filesystem::path &path,
                                    std::shared_ptr<storage_t> &storage)
     {
         std::ifstream in(path.string(), std::ios::binary);
@@ -154,7 +154,7 @@ private:
                 storage->insert(index, data);
             }
         } catch (const std::exception &e) {
-            std::cerr << "Faild reading file '" << e.what() << std::endl;
+            std::cerr << "Failed reading file '" << e.what() << std::endl;
             return false;
         }
         return true;

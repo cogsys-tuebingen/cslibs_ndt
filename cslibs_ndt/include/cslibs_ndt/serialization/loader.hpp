@@ -6,6 +6,9 @@
 #include <cslibs_ndt/serialization/filesystem.hpp>
 #include <cslibs_ndt/serialization/storage.hpp>
 
+#include <cslibs_math_2d/serialization/transform.hpp>
+#include <cslibs_math_3d/serialization/transform.hpp>
+
 #include <thread>
 #include <atomic>
 
@@ -183,14 +186,73 @@ struct header<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t> {
         n["bundles"]    = indices;
     }
 
-    static inline loader_t load(const YAML::Node& n) {
+    static inline loader_t* load(const YAML::Node& n)
+    {
         const pose_t               origin     = n["origin"].as<pose_t>();
         const T                    resolution = n["resolution"].as<T>();
         const size_t               size       = n["size"].as<size_t>();
         const index_t              min_index  = n["min_index"].as<index_t>();
         const std::vector<index_t> indices    = n["bundles"].as<std::vector<index_t>>();
 
-        return loader_t(origin,resolution,size,min_index,indices);
+        return new loader_t(origin,resolution,size,min_index,indices);
+    }
+
+    static inline bool save(const map_t& map, const boost::filesystem::path &path)
+    {
+        std::ofstream out(path.string(), std::ios::binary | std::ios::trunc);
+        if (!out.is_open()) {
+            std::cerr << "Could not open '" << path.string() << std::endl;
+            return false;
+        }
+
+        cslibs_math::serialization::transform::binary::write(map.getInitialOrigin(), out);
+        cslibs_math::serialization::io<T>::write(map.getResolution(), out);
+        cslibs_math::serialization::array::binary<std::size_t, Dim>::write(map.getSize(), out);
+        cslibs_math::serialization::array::binary<int, Dim>::write(map.getMinBundleIndex(), out);
+
+        std::vector<index_t> indices;
+        map.getBundleIndices(indices);
+        for (const auto& index : indices)
+            cslibs_math::serialization::array::binary<int, Dim>::write(index, out);
+
+        out.close();
+        return true;
+    }
+
+    static inline loader_t* load(const boost::filesystem::path &path)
+    {
+        std::ifstream in(path.string(), std::ios::binary);
+        if (!in.is_open()) {
+            std::cerr << "Could not open '" << path.string() << std::endl;
+            return nullptr;
+        }
+
+        pose_t origin;
+        T resolution;
+        size_t map_size;
+        index_t min_index;
+        std::vector<index_t> indices;
+        try {
+            in.seekg (0, std::ios::end);
+            const std::size_t size = in.tellg();
+            in.seekg (0, std::ios::beg);
+            std::size_t read = 0;
+            read += cslibs_math::serialization::transform::binary::read(in, origin);
+            resolution = cslibs_math::serialization::io<T>::read(in);
+            read += sizeof(T);
+            read += cslibs_math::serialization::array::binary<std::size_t, Dim>::read(in, map_size);
+            read += cslibs_math::serialization::array::binary<int, Dim>::read(in, min_index);
+            while (read < size) {
+                index_t index;
+                read += cslibs_math::serialization::array::binary<int, Dim>::read(in, index);
+                indices.push_back(index);
+            }
+        } catch (const std::exception &e) {
+            std::cerr << "Failed reading file '" << e.what() << std::endl;
+            return nullptr;
+        }
+
+        return new loader_t(origin,resolution,map_size,min_index,indices);
     }
 };
 
@@ -202,6 +264,7 @@ struct header<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t> {
     using map_t    = cslibs_ndt::map::Map<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t>;
     using index_t  = typename map_t::index_t;
     using pose_t   = typename map_t::pose_t;
+    using size_t   = typename map_t::size_t;
     using loader_t = loader<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t>;
 
     static inline void write(const map_t &map, YAML::Node &n)
@@ -215,14 +278,75 @@ struct header<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t> {
         n["bundles"]    = indices;
     }
 
-    static inline loader_t load(const YAML::Node& n) {
+    static inline loader_t* load(const YAML::Node& n) {
         const pose_t               origin     = n["origin"].as<pose_t>();
         const T                    resolution = n["resolution"].as<T>();
         const index_t              min_index  = n["min_index"].as<index_t>();
         const index_t              max_index  = n["max_index"].as<index_t>();
         const std::vector<index_t> indices    = n["bundles"].as<std::vector<index_t>>();
 
-        return loader_t(origin,resolution,min_index,max_index,indices);
+        return new loader_t(origin,resolution,min_index,max_index,indices);
+    }    
+
+    static inline bool save(const map_t& map, const boost::filesystem::path &path)
+    {
+        std::ofstream out(path.string(), std::ios::binary | std::ios::trunc);
+        if (!out.is_open()) {
+            std::cerr << "Could not open '" << path.string() << std::endl;
+            return false;
+        }
+
+        cslibs_math::serialization::transform::binary::write(map.getInitialOrigin(), out);
+        cslibs_math::serialization::io<T>::write(map.getResolution(), out);
+        cslibs_math::serialization::array::binary<std::size_t, Dim>::write(map.getSize(), out);
+        cslibs_math::serialization::array::binary<int, Dim>::write(map.getMinBundleIndex(), out);
+
+        std::vector<index_t> indices;
+        map.getBundleIndices(indices);
+        for (const auto& index : indices)
+            cslibs_math::serialization::array::binary<int, Dim>::write(index, out);
+
+        out.close();
+        return true;
+    }
+
+    static inline loader_t* load(const boost::filesystem::path &path)
+    {
+        std::ifstream in(path.string(), std::ios::binary);
+        if (!in.is_open()) {
+            std::cerr << "Could not open '" << path.string() << std::endl;
+            return nullptr;
+        }
+
+        pose_t origin;
+        T resolution;
+        size_t map_size;
+        index_t min_index;
+        std::vector<index_t> indices;
+        try {
+            in.seekg (0, std::ios::end);
+            const std::size_t size = in.tellg();
+            in.seekg (0, std::ios::beg);
+            std::size_t read = 0;
+            read += cslibs_math::serialization::transform::binary::read(in, origin);
+            resolution = cslibs_math::serialization::io<T>::read(in);
+            read += sizeof(T);
+            read += cslibs_math::serialization::array::binary<std::size_t, Dim>::read(in, map_size);
+            read += cslibs_math::serialization::array::binary<int, Dim>::read(in, min_index);
+            while (read < size) {
+                index_t index;
+                read += cslibs_math::serialization::array::binary<int, Dim>::read(in, index);
+                indices.push_back(index);
+            }
+        } catch (const std::exception &e) {
+            std::cerr << "Failed reading file '" << e.what() << std::endl;
+            return nullptr;
+        }
+
+        index_t max_index;
+        for (std::size_t i=0; i<Dim; ++i)
+            max_index[i] = min_index[i] + static_cast<int>(map_size[i]);
+        return new loader_t(origin,resolution,min_index,max_index,indices);
     }
 };
 

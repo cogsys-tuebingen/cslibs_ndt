@@ -16,7 +16,7 @@ template <typename T, std::size_t Dim>
 struct convert<Distribution,T,Dim> {
     static inline void from(const Distribution<T,Dim>* const& f, Distribution<T,Dim>* const& t)
     {
-        t->data() = f->data();
+        *t = *f;
     }
 };
 

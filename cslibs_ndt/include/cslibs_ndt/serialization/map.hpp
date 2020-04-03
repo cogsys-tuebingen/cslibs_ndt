@@ -102,13 +102,17 @@ inline bool loadBinary(const std::string &path,
     path_t path_file = path_root / path_t("map.yaml");
     loader<option_t,Dim,data_t,T,backend_t>* l;
 
-    if (cslibs_ndt::common::serialization::check_file(path_file)) {
+    if (cslibs_ndt::common::serialization::check_file_quiet(path_file)) {
         YAML::Node n = YAML::LoadFile((path_root / path_file).string());
         l = header<option_t,Dim,data_t,T,backend_t>::load(n);
     } else {
         path_file = path_root / path_t("map.bin");
-        if (!cslibs_ndt::common::serialization::check_file(path_file))
+        if (!cslibs_ndt::common::serialization::check_file_quiet(path_file)) {
+            std::cerr << "Both '" << (path_root / path_t("map_yaml")).string() << "'\n"
+                      << "and  '" << path_file.string() << "'\n"
+                      << "do not exist!" << std::endl;
             return false;
+        }
         l = header<option_t,Dim,data_t,T,backend_t>::load(path_file);
         if (!l)
             return false;

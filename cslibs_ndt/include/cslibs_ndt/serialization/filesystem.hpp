@@ -20,6 +20,11 @@ inline bool check_directory(const boost::filesystem::path &p)
     return true;
 }
 
+inline bool check_directory_quiet(const boost::filesystem::path &p)
+{
+    return boost::filesystem::exists(p) && boost::filesystem::is_directory((p));
+}
+
 inline bool check_file(const boost::filesystem::path &p)
 {
     if (!boost::filesystem::exists(p)) {
@@ -32,6 +37,11 @@ inline bool check_file(const boost::filesystem::path &p)
     }
 
     return true;
+}
+
+inline bool check_file_quiet(const boost::filesystem::path &p)
+{
+    return boost::filesystem::exists(p) && boost::filesystem::is_regular_file(p);
 }
 
 inline bool create_directory(const boost::filesystem::path &p)

@@ -66,14 +66,18 @@ void testDynamicMap(const typename cslibs_ndt_3d::dynamic_maps::Gridmap<double>:
                 EXPECT_NE(b.at(i),  nullptr);
                 EXPECT_NE(bb->at(i), nullptr);
 
-                const cslibs_math::statistics::Distribution<double, 3, 3> & d  = b.at(i)->data();
-                const cslibs_math::statistics::Distribution<double, 3, 3> & dd = bb->at(i)->data();
+                const cslibs_math::statistics::StableDistribution<double, 3, 3>::Ptr & dp  = b.at(i)->getDistribution();
+                const cslibs_math::statistics::StableDistribution<double, 3, 3>::Ptr & ddp = bb->at(i)->getDistribution();
+                EXPECT_NE(dp, nullptr);
+                EXPECT_NE(ddp, nullptr);
+                const auto& d = *dp;
+                const auto& dd = *ddp;
                 EXPECT_EQ(d.getN(), dd.getN());
 
                 for (std::size_t j = 0 ; j < 3 ; ++ j) {
                     EXPECT_NEAR(d.getMean()(j), dd.getMean()(j), 1e-3);
                     for (std::size_t k = 0 ; k < 3 ; ++ k) {
-                        EXPECT_NEAR(d.getCorrelated()(j, k), dd.getCorrelated()(j, k), 1e-3);
+                        EXPECT_NEAR(d.getScatter()(j, k), dd.getScatter()(j, k), 1e-3);
                         EXPECT_NEAR(d.getCovariance()(j, k), dd.getCovariance()(j, k), 1e-3);
                         EXPECT_NEAR(d.getInformationMatrix()(j, k), dd.getInformationMatrix()(j, k), 1e-3);
                     }
@@ -124,14 +128,18 @@ void testStaticMap(const typename cslibs_ndt_3d::static_maps::Gridmap<double>::P
                 EXPECT_NE(b.at(i),  nullptr);
                 EXPECT_NE(bb->at(i), nullptr);
 
-                const cslibs_math::statistics::Distribution<double, 3, 3> & d  = b.at(i)->data();
-                const cslibs_math::statistics::Distribution<double, 3, 3> & dd = bb->at(i)->data();
+                const cslibs_math::statistics::StableDistribution<double, 3, 3>::Ptr & dp  = b.at(i)->getDistribution();
+                const cslibs_math::statistics::StableDistribution<double, 3, 3>::Ptr & ddp = bb->at(i)->getDistribution();
+                EXPECT_NE(dp, nullptr);
+                EXPECT_NE(ddp, nullptr);
+                const auto& d = *dp;
+                const auto& dd = *ddp;
                 EXPECT_EQ(d.getN(), dd.getN());
 
                 for (std::size_t j = 0 ; j < 3 ; ++ j) {
                     EXPECT_NEAR(d.getMean()(j), dd.getMean()(j), 1e-3);
                     for (std::size_t k = 0 ; k < 3 ; ++ k) {
-                        EXPECT_NEAR(d.getCorrelated()(j, k), dd.getCorrelated()(j, k), 1e-3);
+                        EXPECT_NEAR(d.getScatter()(j, k), dd.getScatter()(j, k), 1e-3);
                         EXPECT_NEAR(d.getCovariance()(j, k), dd.getCovariance()(j, k), 1e-3);
                         EXPECT_NEAR(d.getInformationMatrix()(j, k), dd.getInformationMatrix()(j, k), 1e-3);
                     }
@@ -195,8 +203,8 @@ void testDynamicOccMap(const typename cslibs_ndt_3d::dynamic_maps::OccupancyGrid
                 EXPECT_EQ(b.at(i)->numFree(), bb->at(i)->numFree());
                 EXPECT_EQ(b.at(i)->numOccupied(), bb->at(i)->numOccupied());
 
-                const std::shared_ptr<cslibs_math::statistics::Distribution<double, 3, 3>> d  = b.at(i)->getDistribution();
-                const std::shared_ptr<cslibs_math::statistics::Distribution<double, 3, 3>> dd = bb->at(i)->getDistribution();
+                const std::shared_ptr<cslibs_math::statistics::StableDistribution<double, 3, 3>> d  = b.at(i)->getDistribution();
+                const std::shared_ptr<cslibs_math::statistics::StableDistribution<double, 3, 3>> dd = bb->at(i)->getDistribution();
                 if (d) {
                     EXPECT_NE(dd, nullptr);
                     EXPECT_EQ(d->getN(), dd->getN());
@@ -204,7 +212,7 @@ void testDynamicOccMap(const typename cslibs_ndt_3d::dynamic_maps::OccupancyGrid
                     for (std::size_t j = 0 ; j < 3 ; ++ j) {
                         EXPECT_NEAR(d->getMean()(j), dd->getMean()(j), 1e-3);
                         for (std::size_t k = 0 ; k < 3 ; ++ k) {
-                            EXPECT_NEAR(d->getCorrelated()(j, k), dd->getCorrelated()(j, k), 1e-3);
+                            EXPECT_NEAR(d->getScatter()(j, k), dd->getScatter()(j, k), 1e-3);
                             EXPECT_NEAR(d->getCovariance()(j, k), dd->getCovariance()(j, k), 1e-3);
                             EXPECT_NEAR(d->getInformationMatrix()(j, k), dd->getInformationMatrix()(j, k), 1e-3);
                         }
@@ -260,8 +268,8 @@ void testStaticOccMap(const typename cslibs_ndt_3d::static_maps::OccupancyGridma
                 EXPECT_EQ(b.at(i)->numFree(),     bb->at(i)->numFree());
                 EXPECT_EQ(b.at(i)->numOccupied(), bb->at(i)->numOccupied());
 
-                const std::shared_ptr<cslibs_math::statistics::Distribution<double, 3, 3>> d  = b.at(i)->getDistribution();
-                const std::shared_ptr<cslibs_math::statistics::Distribution<double, 3, 3>> dd = bb->at(i)->getDistribution();
+                const std::shared_ptr<cslibs_math::statistics::StableDistribution<double, 3, 3>> d  = b.at(i)->getDistribution();
+                const std::shared_ptr<cslibs_math::statistics::StableDistribution<double, 3, 3>> dd = bb->at(i)->getDistribution();
                 if (d) {
                     EXPECT_NE(dd, nullptr);
                     EXPECT_EQ(d->getN(), dd->getN());
@@ -269,7 +277,7 @@ void testStaticOccMap(const typename cslibs_ndt_3d::static_maps::OccupancyGridma
                     for (std::size_t j = 0 ; j < 3 ; ++ j) {
                         EXPECT_NEAR(d->getMean()(j), dd->getMean()(j), 1e-3);
                         for (std::size_t k = 0 ; k < 3 ; ++ k) {
-                            EXPECT_NEAR(d->getCorrelated()(j, k), dd->getCorrelated()(j, k), 1e-3);
+                            EXPECT_NEAR(d->getScatter()(j, k), dd->getScatter()(j, k), 1e-3);
                             EXPECT_NEAR(d->getCovariance()(j, k), dd->getCovariance()(j, k), 1e-3);
                             EXPECT_NEAR(d->getInformationMatrix()(j, k), dd->getInformationMatrix()(j, k), 1e-3);
                         }
@@ -297,11 +305,13 @@ cslibs_ndt_3d::dynamic_maps::Gridmap<double>::Ptr generateDynamicMap()
     const double resolution = rng_t<1>(1.0, 5.0).get();
     typename map_t::Ptr map(new map_t(origin, resolution));
     const int num_samples = static_cast<int>(rng_t<1>(MIN_NUM_SAMPLES, MAX_NUM_SAMPLES).get());
+
+    cslibs_math_3d::Pointcloud3d::Ptr cloud(new cslibs_math_3d::Pointcloud3d);
     for (int i = 0 ; i < num_samples ; ++ i) {
         const cslibs_math_3d::Point3d p(rng_coord.get(), rng_coord.get(), rng_coord.get());
-        map->insert(p);
+        cloud->insert(p);
     }
-
+    map->insert(cloud);
     return map;
 }
 
@@ -318,12 +328,16 @@ cslibs_ndt_3d::dynamic_maps::OccupancyGridmap<double>::Ptr generateDynamicOccMap
     const double resolution = rng_t<1>(1.0, 5.0).get();
     typename map_t::Ptr map(new map_t(origin, resolution));
     const int num_samples = static_cast<int>(rng_t<1>(MIN_NUM_SAMPLES, MAX_NUM_SAMPLES).get());
+
+    cslibs_math_3d::Transform3d start(
+                cslibs_math_3d::Vector3d(rng_coord.get(), rng_coord.get(), rng_coord.get()),
+                cslibs_math_3d::Quaternion<double>(rng_angle.get(), rng_angle.get(), rng_angle.get()));
+    cslibs_math_3d::Pointcloud3d::Ptr cloud(new cslibs_math_3d::Pointcloud3d);
     for (int i = 0 ; i < num_samples ; ++ i) {
         const cslibs_math_3d::Point3d p(rng_coord.get(), rng_coord.get(), rng_coord.get());
-        const cslibs_math_3d::Point3d q(rng_coord.get(), rng_coord.get(), rng_coord.get());
-        map->insert(p, q);
+        cloud->insert(p);
     }
-
+    map->insert(cloud, start);
     return map;
 }
 

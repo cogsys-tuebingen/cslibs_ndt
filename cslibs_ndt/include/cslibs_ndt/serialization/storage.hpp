@@ -25,20 +25,22 @@ namespace cslibs_ndt {
 template <typename Tp, std::size_t Size>
 void write(const Distribution<Tp,Size> &d, std::ofstream &out)
 {
-    if (!d.getDistribution())
+    /*if (!d.getDistribution())
         cslibs_math::serialization::binary<cslibs_math::statistics::StableDistribution,Tp,Size,3>::write(out);
     else
-        cslibs_math::serialization::binary<cslibs_math::statistics::StableDistribution,Tp,Size,3>::write(*(d.getDistribution()), out);
+        cslibs_math::serialization::binary<cslibs_math::statistics::StableDistribution,Tp,Size,3>::write(*(d.getDistribution()), out);*/
+    cslibs_math::serialization::binary<cslibs_math::statistics::StableDistribution,Tp,Size,3>::write(d,out);
 }
 
 template <typename Tp, template <typename,std::size_t> class T, std::size_t Size>
 std::size_t read(std::ifstream &in, T<Tp,Size> &d)
 {
-    typename Distribution<Tp,Size>::distribution_t tmp;
+   /* typename Distribution<Tp,Size>::distribution_t tmp;
     std::size_t r = cslibs_math::serialization::binary<cslibs_math::statistics::StableDistribution,Tp,Size,3>::read(in,tmp);
     if (tmp.getN() != 0)
         d.getDistribution().reset(new typename Distribution<Tp,Size>::distribution_t(tmp));
-    return r;
+    return r;*/
+    return cslibs_math::serialization::binary<cslibs_math::statistics::StableDistribution,Tp,Size,3>::read(in,d);
 }
 
 template<typename Tp, std::size_t Size>

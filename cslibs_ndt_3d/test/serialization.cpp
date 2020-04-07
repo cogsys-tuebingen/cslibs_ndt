@@ -66,12 +66,12 @@ void testDynamicMap(const typename cslibs_ndt_3d::dynamic_maps::Gridmap<double>:
                 EXPECT_NE(b.at(i),  nullptr);
                 EXPECT_NE(bb->at(i), nullptr);
 
-                const cslibs_math::statistics::StableDistribution<double, 3, 3>::Ptr & dp  = b.at(i)->getDistribution();
-                const cslibs_math::statistics::StableDistribution<double, 3, 3>::Ptr & ddp = bb->at(i)->getDistribution();
-                EXPECT_NE(dp, nullptr);
+                const cslibs_math::statistics::StableDistribution<double, 3, 3>/*::Ptr*/ & d/*p*/  = *(b.at(i));//->getDistribution();
+                const cslibs_math::statistics::StableDistribution<double, 3, 3>/*::Ptr*/ & dd/*p*/ = *(bb->at(i));//->getDistribution();
+                /*EXPECT_NE(dp, nullptr);
                 EXPECT_NE(ddp, nullptr);
                 const auto& d = *dp;
-                const auto& dd = *ddp;
+                const auto& dd = *ddp;*/
                 EXPECT_EQ(d.getN(), dd.getN());
 
                 for (std::size_t j = 0 ; j < 3 ; ++ j) {
@@ -128,12 +128,12 @@ void testStaticMap(const typename cslibs_ndt_3d::static_maps::Gridmap<double>::P
                 EXPECT_NE(b.at(i),  nullptr);
                 EXPECT_NE(bb->at(i), nullptr);
 
-                const cslibs_math::statistics::StableDistribution<double, 3, 3>::Ptr & dp  = b.at(i)->getDistribution();
-                const cslibs_math::statistics::StableDistribution<double, 3, 3>::Ptr & ddp = bb->at(i)->getDistribution();
-                EXPECT_NE(dp, nullptr);
+                const cslibs_math::statistics::StableDistribution<double, 3, 3>/*::Ptr*/ & d/*p*/  = *(b.at(i));//->getDistribution();
+                const cslibs_math::statistics::StableDistribution<double, 3, 3>/*::Ptr*/ & dd/*p*/ = *(bb->at(i));//->getDistribution();
+/*                EXPECT_NE(dp, nullptr);
                 EXPECT_NE(ddp, nullptr);
                 const auto& d = *dp;
-                const auto& dd = *ddp;
+                const auto& dd = *ddp;*/
                 EXPECT_EQ(d.getN(), dd.getN());
 
                 for (std::size_t j = 0 ; j < 3 ; ++ j) {

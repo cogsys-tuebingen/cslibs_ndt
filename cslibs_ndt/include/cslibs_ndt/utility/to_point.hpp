@@ -1,6 +1,8 @@
 #ifndef CSLIBS_NDT_UTILITY_TO_POINT_HPP
 #define CSLIBS_NDT_UTILITY_TO_POINT_HPP
 
+#include <cslibs_math/linear/vector.hpp>
+
 namespace cslibs_ndt {
 namespace utility {
 

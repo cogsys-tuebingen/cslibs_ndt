@@ -118,12 +118,13 @@ public:
                                  const distribution_bundle_t *bundle) const
     {
         auto sample = [&p] (const distribution_t *d) {
-            auto do_sample = [&p, &d]() {
+            return d ? d->sampleNonNormalized(p) : T(0.0);
+            /*auto do_sample = [&p, &d]() {
                 const auto &handle = d;
                 return handle->getDistribution() ?
                             handle->getDistribution()->sampleNonNormalized(p) : T(0.0);
             };
-            return d ? do_sample() : T();
+            return d ? do_sample() : T();*/
         };
 
         auto evaluate = [this, &p, &bundle, &sample]() {
@@ -158,12 +159,13 @@ public:
                                          const distribution_bundle_t *bundle) const
     {
         auto sample = [&p] (const distribution_t *d) {
-            auto do_sample = [&p, &d]() {
+            /*auto do_sample = [&p, &d]() {
                 const auto &handle = d;
                 return handle->getDistribution() ?
                             handle->getDistribution()->sampleNonNormalized(p) : T(0.0);
             };
-            return d ? do_sample() : T();
+            return d ? do_sample() : T();*/
+            return d ? d->sampleNonNormalized(p) : T(0.0);
         };
 
         auto evaluate = [this, &p, &weights, &bundle, &sample]() {
@@ -178,7 +180,7 @@ public:
 protected:
     virtual inline bool expandDistribution(const distribution_t* d) const override
     {
-        return d && d->getDistribution() && d->getDistribution()->valid();//d->data().valid();
+        return d && d->valid();//d->getDistribution() && d->getDistribution()->valid();//d->data().valid();
     }
 
     inline void update(const index_t &bi,
@@ -186,7 +188,7 @@ protected:
     {
         const distribution_bundle_t *bundle = this->getAllocate(bi);
         for (std::size_t i=0; i<this->bin_count; ++i)
-            bundle->at(i)->update(d);//->data() += d;
+            *bundle->at(i) += d;//->update(d);//->data() += d;
     }
 };
 }

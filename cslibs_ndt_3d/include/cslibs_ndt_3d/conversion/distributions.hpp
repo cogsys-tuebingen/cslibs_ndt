@@ -45,10 +45,10 @@ inline void from(
 
     auto process_item = [&dst,&marker,&origin,&min_height,&max_height](
             const index_t &bi, const distribution_t& d) {        
-        const auto& data = d.getDistribution();
-        if (!data) return;
+        /*const auto& data = d.getDistribution();
+        if (!data) return;*/
 
-        const auto& mean = data->getMean();
+        const auto& mean = /*data->*/d.getMean();
         const auto& p = origin * point_t(mean);
 
         marker.pose.position.x = p(0);
@@ -57,7 +57,7 @@ inline void from(
 
         typename distribution_t::distribution_t::eigen_values_t eval;
         typename distribution_t::distribution_t::eigen_vectors_t evec;
-        if (!data->getEigenValuesVectors(eval,evec,true))
+        if (!/*data->*/d.getEigenValuesVectors(eval,evec,true))
             return;
 
         //const auto& evec = data.getEigenVectors();

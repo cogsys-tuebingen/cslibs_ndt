@@ -43,14 +43,17 @@ public:
     static constexpr std::size_t bin_count  = utility::two_pow(Dim);
     static constexpr T div_count = 1.0 / static_cast<T>(bin_count);
 
+    template <typename type>
+    using data_if                           = typename tags::interface_types<option_t>::template data_if<type>;
+
     using index_list_t                      = std::array<index_t, bin_count>;
     using distribution_t                    = data_t<T,Dim>;
-    using distribution_storage_t            = cis::Storage<distribution_t, index_t, backend_t>;
+    using distribution_storage_t            = cis::Storage<data_if<distribution_t>, index_t, backend_t>;
     using distribution_storage_ptr_t        = std::shared_ptr<distribution_storage_t>;
     using distribution_storage_array_t      = std::array<distribution_storage_ptr_t, bin_count>;
     using distribution_bundle_t             = cslibs_ndt::Bundle<distribution_t*, bin_count>;
     using distribution_const_bundle_t       = cslibs_ndt::Bundle<const distribution_t*, bin_count>;
-    using distribution_bundle_storage_t     = cis::Storage<distribution_bundle_t, index_t, backend_t>;
+    using distribution_bundle_storage_t     = cis::Storage<data_if<distribution_bundle_t>, index_t, backend_t>;
     using distribution_bundle_storage_ptr_t = std::shared_ptr<distribution_bundle_storage_t>;
 
     using neighborhood_t = cis::operations::clustering::GridNeighborhoodStatic<Dim, 3>;

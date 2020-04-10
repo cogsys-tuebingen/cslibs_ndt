@@ -11,21 +11,21 @@ template <typename T>
 inline bool saveBinary(const typename cslibs_ndt_3d::dynamic_maps::OccupancyGridmap<T>::Ptr &map,
                        const std::string &path)
 {
-    return cslibs_ndt::serialization::saveBinary<cslibs_ndt::map::tags::dynamic_map,3,cslibs_ndt::OccupancyDistribution,T>(*map, path);
+    return cslibs_ndt::serialization::binary<cslibs_ndt::map::tags::dynamic_map,3,cslibs_ndt::OccupancyDistribution,T>::save(*map, path);
 }
 
 template <typename T>
 inline bool saveBinary(const cslibs_ndt_3d::dynamic_maps::OccupancyGridmap<T> &map,
                        const std::string &path)
 {
-    return cslibs_ndt::serialization::saveBinary<cslibs_ndt::map::tags::dynamic_map,3,cslibs_ndt::OccupancyDistribution,T>(map, path);
+    return cslibs_ndt::serialization::binary<cslibs_ndt::map::tags::dynamic_map,3,cslibs_ndt::OccupancyDistribution,T>::save(map, path);
 }
 
 template <typename T>
 inline bool loadBinary(const std::string &path,
                        typename cslibs_ndt_3d::dynamic_maps::OccupancyGridmap<T>::Ptr &map)
 {
-    return cslibs_ndt::serialization::loadBinary<cslibs_ndt::map::tags::dynamic_map,3,cslibs_ndt::OccupancyDistribution,T>(path, map);
+    return cslibs_ndt::serialization::binary<cslibs_ndt::map::tags::dynamic_map,3,cslibs_ndt::OccupancyDistribution,T>::load(path, map);
 }
 
 }

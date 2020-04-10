@@ -14,7 +14,7 @@ template <cslibs_ndt::map::tags::option option_t,
 inline bool saveBinary(const cslibs_ndt::map::Map<option_t,3,data_t,T,backend_t> &map,
                        const std::string &path)
 {
-    return cslibs_ndt::serialization::saveBinary<option_t,3,data_t,T,backend_t>(map,path);
+    return cslibs_ndt::serialization::binary<option_t,3,data_t,T,backend_t>::save(map,path);
 }
 
 template <cslibs_ndt::map::tags::option option_t,
@@ -24,7 +24,7 @@ template <cslibs_ndt::map::tags::option option_t,
 inline bool loadBinary(const std::string &path,
                        typename cslibs_ndt::map::Map<option_t,3,data_t,T,backend_t>::Ptr& map)
 {
-    return cslibs_ndt::serialization::loadBinary<option_t,3,data_t,T,backend_t>(path,map);
+    return cslibs_ndt::serialization::binary<option_t,3,data_t,T,backend_t>::load(path,map);
 }
 
 // TODO: load with only one template arg?

@@ -89,13 +89,14 @@ std::size_t read(std::ifstream &in, WeightedOccupancyDistribution<Tp,Size> &d)
     return sizeof(std::size_t) + sizeof(Tp) + r;
 }
 
-template <template <typename,std::size_t> class T, typename Tp, std::size_t Size, std::size_t Dim,
+template <template <typename> typename data_if,
+          template <typename,std::size_t> class T, typename Tp, std::size_t Size, std::size_t Dim,
           template <typename, typename, typename...> class backend_t>
 struct binary {
     using index_t   = std::array<int, Dim>;
     using size_t    = std::array<std::size_t, Dim>;
     using data_t    = T<Tp,Size>;
-    using storage_t = cis::Storage<data_t, index_t, backend_t>;
+    using storage_t = cis::Storage<data_if<data_t>, index_t, backend_t>;
 
     inline static bool save(const std::shared_ptr<storage_t> &storage,
                             const boost::filesystem::path &path)

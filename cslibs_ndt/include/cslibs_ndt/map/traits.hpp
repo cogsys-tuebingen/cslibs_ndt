@@ -28,13 +28,29 @@ struct default_types;
 template <>
 struct default_types<option::static_map> {
     template<typename data_interface_t_, typename index_interface_t_, typename... options_ts_>
-    using default_backend_t         = cis::backend::array::Array<data_interface_t_, index_interface_t_, options_ts_...>;
+    using default_backend_t = cis::backend::array::Array<data_interface_t_, index_interface_t_, options_ts_...>;
 };
 
 template <>
 struct default_types<option::dynamic_map> {
     template<typename data_interface_t_, typename index_interface_t_, typename... options_ts_>
-    using default_backend_t         = cis::backend::simple::UnorderedMap<data_interface_t_, index_interface_t_, options_ts_...>;
+    using default_backend_t = cis::backend::simple::UnorderedMap<data_interface_t_, index_interface_t_, options_ts_...>;
+};
+
+
+template <option o>
+struct interface_types;
+
+template <>
+struct interface_types<option::static_map> {
+    template <typename data_t>
+    using data_if = cis::interface::sparse<data_t>;
+};
+
+template <>
+struct interface_types<option::dynamic_map> {
+    template <typename data_t>
+    using data_if = cis::interface::dense<data_t>;
 };
 }
 

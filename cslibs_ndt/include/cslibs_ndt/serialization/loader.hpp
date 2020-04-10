@@ -34,7 +34,9 @@ struct loader<cslibs_ndt::map::tags::static_map,Dim,data_t,T,backend_t> {
     using bundle_storage_t  = typename map_t::distribution_bundle_storage_t;
     using storage_t         = typename map_t::distribution_storage_ptr_t;
     using storages_t        = typename map_t::distribution_storage_array_t;
-    using binary_t          = cslibs_ndt::binary<data_t, T, Dim, Dim, backend_t>;
+    template <typename type>
+    using data_if           = typename map_t::template data_if<type>;
+    using binary_t          = cslibs_ndt::binary<data_if, data_t, T, Dim, Dim, backend_t>;
     using path_t            = boost::filesystem::path;
     using paths_t           = std::array<path_t, map_t::bin_count>;
 
@@ -104,7 +106,9 @@ struct loader<cslibs_ndt::map::tags::dynamic_map,Dim,data_t,T,backend_t> {
     using bundle_storage_t  = typename map_t::distribution_bundle_storage_t;
     using storage_t         = typename map_t::distribution_storage_ptr_t;
     using storages_t        = typename map_t::distribution_storage_array_t;
-    using binary_t          = cslibs_ndt::binary<data_t, T, Dim, Dim, backend_t>;
+    template <typename type>
+    using data_if           = typename map_t::template data_if<type>;
+    using binary_t          = cslibs_ndt::binary<data_if, data_t, T, Dim, Dim, backend_t>;
     using path_t            = boost::filesystem::path;
     using paths_t           = std::array<path_t, map_t::bin_count>;
 

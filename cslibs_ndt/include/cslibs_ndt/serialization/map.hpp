@@ -25,15 +25,20 @@ template <map::tags::option option_t,
           template <typename,std::size_t> class data_t,
           typename T,
           template <typename, typename, typename...> class backend_t = map::tags::default_types<option_t>::template default_backend_t>
-inline bool saveBinary(const cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_t> &map,
-                       const std::string &path)
+struct binary
 {
-    using path_t     = boost::filesystem::path;
-    using map_t      = cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_t>;
-    using paths_t    = std::array<path_t, map_t::bin_count>;
-    using binary_t   = cslibs_ndt::binary<data_t, T, Dim, Dim, backend_t>;
-    using storages_t = typename map_t::distribution_storage_array_t;
+    using path_t           = boost::filesystem::path;
+    using map_t            = cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_t>;
+    using paths_t          = std::array<path_t, map_t::bin_count>;
+    template <typename type>
+    using data_if          = typename map_t::template data_if<type>;
+    using binary_t         = cslibs_ndt::binary<data_if, data_t, T, Dim, Dim, backend_t>;
+    using storages_t       = typename map_t::distribution_storage_array_t;
+    using bundle_storage_t = typename map_t::distribution_bundle_storage_t;
 
+static inline bool save(const map_t &map,
+                        const std::string &path)
+{
     /// step one: check if the root diretory exists
     path_t path_root(path);
     if (!cslibs_ndt::common::serialization::create_directory(path_root))
@@ -66,20 +71,9 @@ inline bool saveBinary(const cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_
     return success;
 }
 
-template <map::tags::option option_t,
-          std::size_t Dim,
-          template <typename,std::size_t> class data_t,
-          typename T,
-          template <typename, typename, typename...> class backend_t = map::tags::default_types<option_t>::template default_backend_t>
-inline bool loadBinary(const std::string &path,
-                       typename cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_t>::Ptr &map)
+inline static bool load(const std::string &path,
+                        typename map_t::Ptr &map)
 {
-    using path_t            = boost::filesystem::path;
-    using map_t             = cslibs_ndt::map::Map<option_t,Dim,data_t,T,backend_t>;
-    using paths_t           = std::array<path_t, map_t::bin_count>;
-    using bundle_storage_t  = typename map_t::distribution_bundle_storage_t;
-    using storages_t        = typename map_t::distribution_storage_array_t;
-
     /// step one: check if the root diretory exists
     path_t path_root(path);
     if (!cslibs_ndt::common::serialization::check_directory(path_root))
@@ -138,6 +132,7 @@ inline bool loadBinary(const std::string &path,
     delete l;
     return true;
 }
+};
 
 }
 }

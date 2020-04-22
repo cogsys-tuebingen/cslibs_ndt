@@ -5,7 +5,6 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include(cmake/cslibs_ndt_2d_enable_c++11.cmake)
 include(cmake/cslibs_ndt_2d_extras.cmake)
-include(cmake/cslibs_ndt_2d_show_headers.cmake)
 
 find_package(catkin REQUIRED COMPONENTS
     cslibs_ndt
@@ -21,13 +20,12 @@ find_package(Boost COMPONENTS filesystem)
 
 catkin_package(
   INCLUDE_DIRS   include
-  CATKIN_DEPENDS cslibs_ndt 
+  CATKIN_DEPENDS cslibs_ndt
                  cslibs_math_2d
-                 cslibs_time 
+                 cslibs_time
                  cslibs_gridmaps
   CFG_EXTRAS     cslibs_ndt_2d_enable_c++11.cmake
                  cslibs_ndt_2d_extras.cmake
-                 cslibs_ndt_2d_show_headers.cmake
 )
 
 include_directories(
@@ -35,8 +33,6 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
 )
-
-cslibs_ndt_2d_show_headers()
 
 cslibs_ndt_2d_add_unit_test_gtest(${PROJECT_NAME}_test_serialization
     SOURCE_FILES

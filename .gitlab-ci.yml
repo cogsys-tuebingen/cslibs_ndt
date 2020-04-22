@@ -1,0 +1,66 @@
+before_script:
+  # Install ssh-agent if not already installed, it is required by Docker.
+  # (change apt-get to yum if you use a CentOS-based image)
+  - 'apt-get -qq update -y'
+  - 'apt-get -qq install build-essential
+                 openssh-client
+                 libeigen3-dev
+                 libyaml-cpp-dev
+                 libtbb-dev
+                 libopencv-dev
+                 libpcl1-dev
+                 libyaml-cpp-dev
+                 python-catkin-tools
+                 libtinyxml-dev
+                 sudo -y'
+
+  # Run ssh-agent (inside the build environment)
+  - eval $(ssh-agent -s)
+
+  # Add the SSH key stored in SSH_PRIVATE_KEY variable to the agent store
+  - ssh-add <(echo "$SSH_PRIVATE_KEY")
+
+  # For Docker builds disable host key checking. Be aware that by adding that
+  # you are suspectible to man-in-the-middle attacks.
+  # WARNING: Use this only with the Docker executor, if you use it with shell
+  # you will overwrite your user's SSH config.
+  - mkdir -p ~/.ssh
+  - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+  - GIT_USER=gitlab
+  - GIT_HOST=$CI_SERVER_HOST
+  - if [ ! -z "$GIT_USER_OVERRIDE" ]; then GIT_USER=$GIT_USER_OVERRIDE; fi
+  # Here we are at /build/$CI_PROJECT_NAME
+  # For pure catkin projects, we need a workspace:
+  - mkdir -p /build/ws/src/
+  - cd /build/ws
+  - ln -s $CI_PROJECT_DIR src/$CI_PROJECT_NAME
+  # clone dependencies here:
+  - cd src
+  - git clone $GIT_USER@$GIT_HOST:libs/cslibs_indexed_storage.git -b devel cslibs_indexed_storage
+  - git clone $GIT_USER@$GIT_HOST:libs/cslibs_time.git -b devel cslibs_time
+  - git clone $GIT_USER@$GIT_HOST:libs/cslibs_gridmaps.git -b devel cslibs_gridmaps
+  - git clone $GIT_USER@$GIT_HOST:libs/cslibs_math.git -b devel cslibs_math
+  - git clone $GIT_USER@$GIT_HOST:libs/cslibs_utility.git -b devel cslibs_utility
+  - git clone $GIT_USER@$GIT_HOST:libs/cslibs_plugins.git -b devel cslibs_plugins
+  - cd /build/ws/
+
+stages:
+  - build
+
+kinetic:
+  stage: build
+  image: ros:kinetic
+  script:
+    - source /opt/ros/$(ls /opt/ros/ | sort -r | head -n 1)/setup.bash
+    - rosdep install -y -r -i --from-paths src
+    - catkin build
+    - catkin run_tests
+
+melodic:
+  stage: build
+  image: ros:melodic
+  script:
+    - source /opt/ros/$(ls /opt/ros/ | sort -r | head -n 1)/setup.bash
+    - rosdep install -y -r -i --from-paths src
+    - catkin build
+    - catkin run_tests

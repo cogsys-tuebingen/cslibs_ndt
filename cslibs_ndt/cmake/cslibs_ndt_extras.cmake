@@ -2,8 +2,7 @@ add_definitions(-W
                 -Wall
                 -Wno-unused-parameter
                 -Wno-unused-function
-                -fno-strict-aliasing
-                -Wno-deprecated-register)
+                -fno-strict-aliasing)
 
 if(${PROJECT_NAME}_USE_NATIVE OR CS_USE_NATIVE)
     message("${PROJECT_NAME} using -march=native!")

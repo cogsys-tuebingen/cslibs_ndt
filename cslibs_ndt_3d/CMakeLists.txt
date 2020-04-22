@@ -6,7 +6,6 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(cmake/cslibs_ndt_3d_enable_c++11.cmake)
 include(cmake/cslibs_ndt_3d_extras.cmake)
 include(cmake/cslibs_ndt_3d_show_headers.cmake)
-include(cmake/cslibs_ndt_3d_add_unit_test_gtest.cmake)
 
 find_package(catkin REQUIRED COMPONENTS
     cslibs_ndt
@@ -29,7 +28,6 @@ catkin_package(
   CFG_EXTRAS     cslibs_ndt_3d_enable_c++11.cmake
                  cslibs_ndt_3d_extras.cmake
                  cslibs_ndt_3d_show_headers.cmake
-                 cslibs_ndt_3d_add_unit_test_gtest.cmake
 )
 
 include_directories(
@@ -41,7 +39,8 @@ include_directories(
 cslibs_ndt_3d_show_headers()
 
 cslibs_ndt_3d_add_unit_test_gtest(${PROJECT_NAME}_test_serialization
-    SRCS test/serialization.cpp
+    SOURCE_FILES
+        test/serialization.cpp
 )
 target_link_libraries(${PROJECT_NAME}_test_serialization
     ${Boost_LIBRARIES}

@@ -48,8 +48,7 @@ inline void from(
     using index_t = std::array<int, 2>;
     const index_t min_bi = src.getMinBundleIndex();
 
-    const auto& origin = src.getInitialOrigin();
-    src.traverse([&src, &dst, &origin, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &bilinear]
+    src.traverse([&src, &dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &bilinear]
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {
@@ -102,8 +101,7 @@ inline void from(
     using index_t = std::array<int, 2>;
     const index_t min_bi = src.getMinBundleIndex();
 
-    const auto& origin = src.getInitialOrigin();
-    src.traverse([&src, &dst, &origin, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &inverse_model, &bilinear]
+    src.traverse([&src, &dst, &bundle_resolution, &sampling_resolution, &chunk_step, &min_bi, &inverse_model, &bilinear]
                   (const index_t &bi, const typename src_map_t::distribution_bundle_t &b){
         for (int k = 0 ; k < chunk_step ; ++ k) {
             for (int l = 0 ; l < chunk_step ; ++ l) {

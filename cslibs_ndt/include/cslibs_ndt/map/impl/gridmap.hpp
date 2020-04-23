@@ -38,7 +38,7 @@ public:
     using typename base_t::distribution_bundle_storage_t;
     using typename base_t::distribution_bundle_storage_ptr_t;
 
-    using base_t::GenericMap;
+    using base_t::base_t;
     inline Map(const base_t &other) : base_t(other) { }
     inline Map(base_t &&other) : base_t(other) { }
 
@@ -127,7 +127,7 @@ public:
             return d ? do_sample() : T();*/
         };
 
-        auto evaluate = [this, &p, &bundle, &sample]() {
+        auto evaluate = [this, &bundle, &sample]() {
             T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)
                 retval += this->div_count * sample(bundle->at(i));//bundle->at(i)->data().sampleNonNormalized(p);
@@ -168,7 +168,7 @@ public:
             return d ? d->sampleNonNormalized(p) : T(0.0);
         };
 
-        auto evaluate = [this, &p, &weights, &bundle, &sample]() {
+        auto evaluate = [this, &weights, &bundle, &sample]() {
             T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)
                 retval += utility::to_bilinear_interpolation_weight(weights,i) * sample(bundle->at(i));//bundle->at(i)->data().sampleNonNormalized(p);

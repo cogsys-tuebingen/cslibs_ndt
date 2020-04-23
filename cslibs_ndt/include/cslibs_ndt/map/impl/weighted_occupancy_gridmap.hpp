@@ -39,7 +39,7 @@ public:
     using inverse_sensor_model_t = cslibs_gridmaps::utility::InverseModel<T>;
     using default_iterator_t     = typename map::traits<Dim,T>::default_iterator_t;
 
-    using base_t::GenericMap;
+    using base_t::base_t;
     inline Map(const base_t &other) : base_t(other) { }
     inline Map(base_t &&other) : base_t(other) { }
 

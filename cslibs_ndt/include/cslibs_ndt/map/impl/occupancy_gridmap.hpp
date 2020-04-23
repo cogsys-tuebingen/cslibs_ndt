@@ -43,7 +43,7 @@ public:
     using inverse_sensor_model_t = cslibs_gridmaps::utility::InverseModel<T>;
     using default_iterator_t     = typename map::traits<Dim,T>::default_iterator_t;
 
-    using base_t::GenericMap;
+    using base_t::base_t;
     inline Map(const base_t &other) : base_t(other) { }
     inline Map(base_t &&other) : base_t(other) { }
 
@@ -138,13 +138,13 @@ public:
         const auto& start = this->m_T_w_ * points_origin.translation();
 
         const index_t start_bi = this->toBundleIndex(points_origin.translation());
-        auto current_visibility = [this, &ivm, &start_bi, &ivm_visibility, &points_origin](const index_t &bi, const point_t& end) {
+        auto current_visibility = [this, &ivm, &start_bi, &ivm_visibility](const index_t &bi, const point_t& end) {
             auto generate_occlusion_index = [&bi,&start_bi](const std::size_t& counter) {
                 index_t retval = bi;
                 retval[counter] += ((bi[counter] > start_bi[counter]) ? -1 : 1);
                 return retval;
             };
-            auto occupancy = [this, &ivm, &points_origin, &end](const index_t &bi) {
+            auto occupancy = [this, &ivm](const index_t &bi) {
                 const distribution_bundle_t *bundle = this->get(bi);
                 T retval = T(0.);
                 if (bundle) {
@@ -281,7 +281,7 @@ public:
             return d ? do_sample() : T();
         };
 
-        auto evaluate = [this, &p, &bundle, &sample]() {
+        auto evaluate = [this, &bundle, &sample]() {
             T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)
                 retval += this->div_count * sample(bundle->at(i));
@@ -330,7 +330,7 @@ public:
             return d ? do_sample() : T();
         };
 
-        auto evaluate = [this, &p, &weights, &bundle, &sample]() {
+        auto evaluate = [this, &weights, &bundle, &sample]() {
             T retval = T();
             for (std::size_t i=0; i<this->bin_count; ++i)
                 retval += utility::to_bilinear_interpolation_weight(weights,i) * sample(bundle->at(i));

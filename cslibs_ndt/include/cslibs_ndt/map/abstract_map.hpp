@@ -118,6 +118,8 @@ public:
     {
     }
 
+    inline virtual ~AbstractMap() = default;
+
     /**
      * @brief Get minimum in map coordinates.
      * @return the minimum

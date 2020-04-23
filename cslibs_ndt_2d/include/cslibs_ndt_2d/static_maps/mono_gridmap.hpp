@@ -113,6 +113,8 @@ public:
     {
     }
 
+    inline virtual ~Gridmap() = default;
+
     /**
      * @brief Get minimum in map coordinates.
      * @return the minimum

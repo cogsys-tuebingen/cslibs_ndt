@@ -89,7 +89,7 @@ std::size_t read(std::ifstream &in, WeightedOccupancyDistribution<Tp,Size> &d)
     return sizeof(std::size_t) + sizeof(Tp) + r;
 }
 
-template <template <typename> typename data_if,
+template <template <typename> class data_if,
           template <typename,std::size_t> class T, typename Tp, std::size_t Size, std::size_t Dim,
           template <typename, typename, typename...> class backend_t>
 struct binary {

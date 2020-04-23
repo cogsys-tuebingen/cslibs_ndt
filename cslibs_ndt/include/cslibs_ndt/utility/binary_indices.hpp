@@ -62,7 +62,7 @@ template <std::size_t From,
           std::size_t Dim,
           typename Fn,
           typename index_t = std::array<int,Dim>>
-inline constexpr typename std::enable_if<From == To, void>::type
+inline typename std::enable_if<From == To, void>::type
 apply_indices(const index_t& bi, const Fn& function)
 {
 }
@@ -72,7 +72,7 @@ template <std::size_t From,
           std::size_t Dim,
           typename Fn,
           typename index_t = std::array<int,Dim>>
-inline constexpr typename std::enable_if<From < To, void>::type
+inline typename std::enable_if<From < To, void>::type
 apply_indices(const index_t &bi, const Fn &function)
 {
     function(From, generate_index<index_t>(bi,From));
@@ -83,7 +83,7 @@ template <std::size_t bin_count,
           std::size_t Dim,
           typename Fn,
           typename index_t = std::array<int,Dim>>
-inline constexpr void apply_indices(const index_t& bi, const Fn& function)
+inline void apply_indices(const index_t& bi, const Fn& function)
 {
     apply_indices<0,bin_count,Dim,Fn>(bi,function);
 }

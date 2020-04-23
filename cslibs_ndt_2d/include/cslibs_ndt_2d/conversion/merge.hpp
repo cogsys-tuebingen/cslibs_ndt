@@ -28,7 +28,7 @@ inline typename cslibs_ndt_2d::static_maps::mono::Gridmap<T>::Ptr merge(
                                               size,
                                               min_distribution_index));
 
-    auto traverse = [&min_distribution_index, &dst](const index_t &i, const typename src_map_t::distribution_bundle_t &b)
+    auto traverse = [&dst](const index_t &i, const typename src_map_t::distribution_bundle_t &b)
     {
         typename dst_map_t::distribution_t* dst_d = dst->getDistribution(i);
         for(const typename src_map_t::distribution_t *src_d : b) {

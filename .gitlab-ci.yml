@@ -31,6 +31,7 @@ before_script:
   - if [ ! -z "$GIT_USER_OVERRIDE" ]; then GIT_USER=$GIT_USER_OVERRIDE; fi
   # Here we are at /build/$CI_PROJECT_NAME
   # For pure catkin projects, we need a workspace:
+  - gcc --version
   - mkdir -p /build/ws/src/
   - cd /build/ws
   - ln -s $CI_PROJECT_DIR src/$CI_PROJECT_NAME

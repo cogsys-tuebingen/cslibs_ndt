@@ -54,7 +54,7 @@ kinetic:
     - source /opt/ros/$(ls /opt/ros/ | sort -r | head -n 1)/setup.bash
     - rosdep install -y -r -i --from-paths src
     - catkin build
-    - catkin run_tests
+    - catkin run_tests cslibs_ndt cslibs_ndt_2d cslibs_ndt_3d --no-deps
 
 melodic:
   stage: build
@@ -63,4 +63,4 @@ melodic:
     - source /opt/ros/$(ls /opt/ros/ | sort -r | head -n 1)/setup.bash
     - rosdep install -y -r -i --from-paths src
     - catkin build
-    - catkin run_tests
+    - catkin run_tests cslibs_ndt cslibs_ndt_2d cslibs_ndt_3d --no-deps

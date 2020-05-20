@@ -92,9 +92,6 @@ public:
             }
         }
 
-        for (const auto& pair : updates)
-            updates_free.erase(pair.first);
-
         for (const auto& pair : updates_free)
             updateFree(pair.first, pair.second);
     }

@@ -52,8 +52,8 @@ protected:
         if (bundle) {
 
             for (std::size_t i=0; i<ndt_t::bin_count; ++i) {
-                if (const auto& bi = bundle->at(i)) {
-                    const auto& di = bi->data();
+                if (const auto& di = bundle->at(i)) {
+                    //const auto& di = bi;//->data();
                     if (!di.valid())
                         continue;
 

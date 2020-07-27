@@ -46,9 +46,9 @@ public:
         const auto& map       = *(object.map_);
         const auto& ivm       = *(object.ivm_);
 
-        const double& map_weight   = std::sqrt(object.map_weight_);         //*0.5;
-        const double& trans_weight = std::sqrt(object.translation_weight_); //*0.5;
-        const double& rot_weight   = std::sqrt(object.rotation_weight_);    //*0.5;
+        const double& map_weight   = /*std::sqrt*/(object.map_weight_);         //*0.5;
+        const double& trans_weight = /*std::sqrt*/(object.translation_weight_); //*0.5;
+        const double& rot_weight   = /*std::sqrt*/(object.rotation_weight_);    //*0.5;
 
         const typename ndt_t::pose_t current_transform(x[0],x[1],x[2]);
 
@@ -80,7 +80,7 @@ public:
         // calculate scaling
         const Functor& object   = *casted_ptr;
         const double num_points = object.points_->size();
-        const double scale      = std::sqrt(1.0 / object.map_weight_);
+        const double scale      = /*std::sqrt(*/ 1.0 / object.map_weight_;
         const double absolute   = 1.0 / num_points;
 
         // extract score from fi

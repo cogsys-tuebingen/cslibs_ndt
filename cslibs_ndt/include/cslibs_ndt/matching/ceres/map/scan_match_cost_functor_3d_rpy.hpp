@@ -55,6 +55,8 @@ public:
             const Eigen::Matrix<T, 3, 1> in_world = rotation * local + translation;
 
             this->Evaluate(in_world, &residual[i]);
+            if (residual[i] == -residual[i]) // only nan test that works
+                residual[i] = T(0.);
             residual[i] = weight_ * residual[i]; //::ceres::sqrt(weight_) * residual[i] / size;
             ++i;
         }

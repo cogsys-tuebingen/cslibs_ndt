@@ -32,7 +32,7 @@ inline typename cslibs_ndt_2d::static_maps::mono::Gridmap<T>::Ptr merge(
     {
         typename dst_map_t::distribution_t* dst_d = dst->getDistribution(i);
         for(const typename src_map_t::distribution_t *src_d : b) {
-            dst_d->data() += src_d->data();
+            *dst_d += *src_d;
         }
     };
 

@@ -28,10 +28,10 @@ public:
         std::array<T, 4> delta;
         QuaternionProduct(rotation_inverse_wxyz_.data(), rotation_wxyz, delta.data());
 
-        residual[0] = ::ceres::sqrt(weight_) * ::ceres::abs(delta[0]);
-        residual[1] = ::ceres::sqrt(weight_) * ::ceres::abs(delta[1]);
-        residual[2] = ::ceres::sqrt(weight_) * ::ceres::abs(delta[2]);
-        residual[3] = ::ceres::sqrt(weight_) * ::ceres::abs(delta[3]);
+        residual[0] = /*::ceres::sqrt*/(weight_) * /*::ceres::abs*/(delta[0]);
+        residual[1] = /*::ceres::sqrt*/(weight_) * /*::ceres::abs*/(delta[1]);
+        residual[2] = /*::ceres::sqrt*/(weight_) * /*::ceres::abs*/(delta[2]);
+        residual[3] = /*::ceres::sqrt*/(weight_) * /*::ceres::abs*/(delta[3]);
         return true;
     }
 

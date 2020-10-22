@@ -14,6 +14,7 @@
 #include <cslibs_math_3d/algorithms/bresenham.hpp>
 
 #include <cslibs_indexed_storage/backends.hpp>
+#include <cslibs_ndt/backend/octree.hpp>
 namespace cis = cslibs_indexed_storage;
 
 namespace cslibs_ndt {
@@ -34,7 +35,7 @@ struct default_types<option::static_map> {
 template <>
 struct default_types<option::dynamic_map> {
     template<typename data_interface_t_, typename index_interface_t_, typename... options_ts_>
-    using default_backend_t = cis::backend::simple::UnorderedMap<data_interface_t_, index_interface_t_, options_ts_...>;
+    using default_backend_t = cslibs_ndt::backend::OcTree<data_interface_t_, index_interface_t_, options_ts_...>;
 };
 
 

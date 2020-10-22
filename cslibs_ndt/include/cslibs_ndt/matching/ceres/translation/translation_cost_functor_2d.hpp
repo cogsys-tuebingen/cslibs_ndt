@@ -26,7 +26,7 @@ public:
     bool operator()(const T* const translation, T* residual) const
     {
         for (auto i = 0; i < 2; ++i)
-            residual[i] = ::ceres::sqrt(weight_) * ::ceres::abs(translation[i] - translation_[i]);
+            residual[i] = /*::ceres::sqrt*/(weight_) * /*::ceres::abs*/(translation[i] - translation_[i]);
 
         return true;
     }

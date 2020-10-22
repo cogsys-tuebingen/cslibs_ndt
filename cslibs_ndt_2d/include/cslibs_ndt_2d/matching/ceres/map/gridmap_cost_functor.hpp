@@ -52,15 +52,15 @@ protected:
         if (bundle) {
 
             for (std::size_t i=0; i<ndt_t::bin_count; ++i) {
-                if (const auto& bi = bundle->at(i)) {
-                    const auto& di = bi->data();
-                    if (!di.valid())
+                if (const auto& di = bundle->at(i)) {
+                    //const auto& di = bi;//->data();
+                    if (!di->valid())
                         continue;
 
                     const Eigen::Matrix<JetT,2,1> diff =
-                            p_prime - di.getMean().template cast<double>();
+                            p_prime - di->getMean().template cast<double>();
                     const Eigen::Matrix<double,2,2> inf =
-                            di.getInformationMatrix().template cast<double>();
+                            di->getInformationMatrix().template cast<double>();
 
                     const auto& sample = ::ceres::exp((-0.5 * diff.transpose() * inf * diff).value());
                     *value -= static_cast<double>(ndt_t::div_count) * sample;

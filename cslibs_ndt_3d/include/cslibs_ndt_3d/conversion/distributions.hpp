@@ -116,7 +116,7 @@ inline void from(
         const ros::Time& time,
         const std::string &frame,
         const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>(),
-        const T &occupancy_threshold = 0.5)
+        const T occupancy_threshold = 0.5)
 {
     using src_map_t = cslibs_ndt::map::Map<option_t,3,cslibs_ndt::OccupancyDistribution,T,backend_t>;
     using index_t = std::array<int, 3>;
@@ -200,7 +200,7 @@ inline void from(
         const ros::Time& time,
         const std::string &frame,
         const typename cslibs_math_3d::Pose3<T> &transform = typename cslibs_math_3d::Pose3<T>(),
-        const T &occupancy_threshold = 0.5)
+        const T occupancy_threshold = 0.5)
 {
     if (!src || !ivm)
         return;

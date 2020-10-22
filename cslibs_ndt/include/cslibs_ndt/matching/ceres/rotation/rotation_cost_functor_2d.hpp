@@ -27,7 +27,7 @@ public:
         T r0(rotation_);
         AngleDifference(&r0, &(rotation[0]), &delta);
 
-        residual[0] = ::ceres::sqrt(weight_) * ::ceres::abs(delta);
+        residual[0] = /*::ceres::sqrt*/(weight_) * /*::ceres::abs*/(delta);
         return true;
     }
 

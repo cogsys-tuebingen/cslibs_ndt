@@ -19,6 +19,8 @@ This project is divided up into the following subpackages:
 
 ## Usage
 
+Please build with `-DCMAKE_BUILD_TYPE=RelWithDebInfo` or `-DCMAKE_BUILD_TYPE=Release`.
+
 ### Dependencies
 This library depends on the following packages of our research group:
 
